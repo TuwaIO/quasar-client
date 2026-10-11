@@ -3,7 +3,7 @@
  * token, and when to warn about time.
  */
 
-import type { CheckoutMethod, CheckoutPhase, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutMethod, CheckoutPhase, CheckoutQuote, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
 
 /**
  * A screen of the checkout: the steps of a payment (`buyer`, `method`, `pay` or `qr`, `confirm`, `autoPay`) or its
@@ -38,21 +38,25 @@ export interface CheckoutScreenChoices {
 /**
  * The screen for the state of a checkout store.
  *
- * @param state - The `phase` and `checkout` of the store.
+ * @param state - The `phase`, `checkout` and `quote` of the store.
  * @param state.phase - Where the payment stands.
  * @param state.checkout - What the checkout token opens; `null` until loaded.
+ * @param state.quote - The locked price; while the first one is being locked the method screen stays, with its button
+ * busy, so a refused payer or a failed request is shown where the buyer chose.
  * @param choices - What the buyer chose on the page.
  * @returns The screen: `qr` instead of `pay` when the buyer pays with a QR code, `replaced` for an invoice the seller
  * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open.
  */
 export function checkoutScreen(
-  state: { phase: CheckoutPhase; checkout: CheckoutView | null },
+  state: { phase: CheckoutPhase; checkout: CheckoutView | null; quote?: CheckoutQuote | null },
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
   switch (state.phase) {
     case 'selectMethod':
       return 'method';
     case 'quoting':
+      if (!state.quote) return 'method';
+      return choices.payWith === 'qr' ? 'qr' : 'pay';
     case 'awaitingPayment':
     case 'submitting':
       return choices.payWith === 'qr' ? 'qr' : 'pay';

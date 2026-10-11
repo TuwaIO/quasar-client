@@ -6,15 +6,18 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { useCheckoutState, useCheckoutStore } from '../hooks/useCheckoutStore';
+import { useConnectedWallet } from '../hooks/useConnectedWallet';
 import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { formatLabel } from '../i18n';
 import { checkoutScreen, deadlineAnnouncement } from '../utils/checkout';
+import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
 import { focusRing, mono } from './classes';
+import { MethodScreen } from './MethodScreen';
 
 /** Where the checkout is shown. */
 export type PaymentCheckoutDisplay = 'modal' | 'inline' | 'page';
@@ -46,6 +49,11 @@ export interface PaymentCheckoutProps {
   EventSource?: EventSourceConstructor | null;
   /** How often to read the invoice without an event stream, in milliseconds (default `5000`). */
   pollMs?: number;
+  /**
+   * The payment page of the invoice (its `payUrl` from the Quasar API): with it, an EVM method can also be paid by
+   * scanning a QR code that opens the page on a phone.
+   */
+  payUrl?: string;
   /** Classes added to the checkout block. */
   className?: string;
 }
@@ -103,6 +111,8 @@ function ScreenBody() {
   const { screen } = useCheckoutContext();
   if (screen === 'loading') return <LoadingScreen />;
   if (screen === 'error') return <ErrorScreen />;
+  if (screen === 'buyer') return <BuyerScreen />;
+  if (screen === 'method') return <MethodScreen />;
   // Placeholder until the method, payment and outcome screens are added (step 6c.2–6c.4)
   return (
     <div className={cn(mono, 'novapay:flex-1 novapay:p-5 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]')}>
@@ -204,6 +214,7 @@ export function PaymentCheckout({
   api,
   EventSource,
   pollMs,
+  payUrl,
   className,
 }: PaymentCheckoutProps) {
   const settings = useNovaPayments();
@@ -213,7 +224,9 @@ export function PaymentCheckout({
   const locale = state.locale ?? checkout?.invoice.locale ?? 'en';
   const labels = usePaymentsLabels(locale);
   const now = useNow(1000, Boolean(checkout?.invoice.dueAt));
-  const screen = checkoutScreen(state);
+  const wallet = useConnectedWallet();
+  const [payWith, setPayWith] = useState<'wallet' | 'qr'>('wallet');
+  const screen = checkoutScreen(state, { payWith });
   // The details step stays in the steps once the checkout asked for the buyer
   const [askedBuyer, setAskedBuyer] = useState(false);
   if (screen === 'buyer' && !askedBuyer) setAskedBuyer(true);
@@ -223,7 +236,22 @@ export function PaymentCheckout({
     return onClose;
   }, [display, onOpenChange, onClose]);
 
-  const context: CheckoutContextValue = { store, state, checkout, screen, locale, labels, now, close };
+  const context: CheckoutContextValue = {
+    store,
+    state,
+    checkout,
+    screen,
+    locale,
+    labels,
+    now,
+    close,
+    wallet,
+    payWith,
+    setPayWith,
+    payUrl,
+    // Opens the wallet connection of Nova Connect from step 6c.3
+    connectWallet: () => undefined,
+  };
   const frame = (
     <CheckoutContextProvider value={context}>
       <MotionConfig reducedMotion="user">

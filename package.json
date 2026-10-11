@@ -70,6 +70,7 @@
     "@tuwaio/nova-core": ">=0.10",
     "@tuwaio/orbit-core": ">=0.5",
     "@tuwaio/quasar-sdk": ">=0.6",
+    "@tuwaio/satellite-react": ">=0.9",
     "framer-motion": "12.x.x || 13.x.x || 14.x.x",
     "react": ">=19.2.3",
     "zustand": "5.x.x"
@@ -81,6 +82,8 @@
     "@tuwaio/nova-core": "workspace:^",
     "@tuwaio/orbit-core": "0.5.1",
     "@tuwaio/quasar-sdk": "link:../../../sdk/packages/quasar-sdk",
+    "@tuwaio/satellite-core": "^0.9.0",
+    "@tuwaio/satellite-react": "^0.9.0",
     "@types/react": "^19.3.0",
     "@web3icons/common": "^0.11.53",
     "@web3icons/react": "^4.1.24",

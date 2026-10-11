@@ -6,5 +6,6 @@
 
 export * from './en';
 export * from './formatLabel';
+export * from './formatLabelParts';
 export * from './locales';
 export * from './types';

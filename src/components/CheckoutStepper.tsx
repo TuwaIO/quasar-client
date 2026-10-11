@@ -35,7 +35,7 @@ export function CheckoutStepper({ steps, labels, className }: CheckoutStepperPro
               aria-current={step.state === 'current' ? 'step' : undefined}
               className={cn(
                 'novapay:flex novapay:min-w-0 novapay:items-center novapay:gap-1.5',
-                i > 0 && 'novapay:flex-1',
+                i > 0 && 'novapay:flex-auto',
               )}
             >
               {i > 0 && (

@@ -1,4 +1,4 @@
-import type { CheckoutMethod, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutMethod, CheckoutQuote, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
 import { describe, expect, it } from 'vitest';
 
 import { checkoutScreen, checkoutSteps, deadlineAnnouncement, groupMethodsByToken, isQuoteEnding } from './checkout';
@@ -12,11 +12,15 @@ const method = (id: string, symbol: string, chainId: string, featured = false): 
   decimals: 6,
   gasless: 'off',
   featured,
+  markupBps: 0,
+  discountBps: 0,
 });
 
 const BASE = 'eip155:8453';
 const ETH = 'eip155:1';
 const SOLANA = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
+
+const QUOTE = { object: 'checkout_quote' } as CheckoutQuote;
 
 const view = (invoice: Partial<CheckoutView['invoice']> = {}, extra: Partial<CheckoutView> = {}) =>
   ({ invoice: { replacedBy: null, ...invoice }, autoCharge: null, ...extra }) as CheckoutView;
@@ -26,11 +30,18 @@ describe('checkoutScreen', () => {
     expect(checkoutScreen({ phase: 'loading', checkout: null })).toBe('loading');
     expect(checkoutScreen({ phase: 'buyer', checkout: view() })).toBe('buyer');
     expect(checkoutScreen({ phase: 'selectMethod', checkout: view() })).toBe('method');
-    for (const phase of ['quoting', 'awaitingPayment', 'submitting'] as const) {
+    for (const phase of ['awaitingPayment', 'submitting'] as const) {
       expect(checkoutScreen({ phase, checkout: view() })).toBe('pay');
       expect(checkoutScreen({ phase, checkout: view() }, { payWith: 'qr' })).toBe('qr');
     }
     expect(checkoutScreen({ phase: 'confirming', checkout: view() })).toBe('confirm');
+  });
+
+  it('stays on the method while the first price is locked, and on the payment while a price is renewed', () => {
+    expect(checkoutScreen({ phase: 'quoting', checkout: view(), quote: null })).toBe('method');
+    expect(checkoutScreen({ phase: 'quoting', checkout: view(), quote: null }, { payWith: 'qr' })).toBe('method');
+    expect(checkoutScreen({ phase: 'quoting', checkout: view(), quote: QUOTE })).toBe('pay');
+    expect(checkoutScreen({ phase: 'quoting', checkout: view(), quote: QUOTE }, { payWith: 'qr' })).toBe('qr');
   });
 
   it('ends on the outcome, a replaced invoice included, and offers automatic charges after a paid one', () => {

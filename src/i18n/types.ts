@@ -51,6 +51,92 @@ export type NovaPaymentsLabels = {
     /** Under the list once the receipt is issued */
     noteAfterPaid: string;
   };
+  /** The method step: the token, its network and how to pay. */
+  method: {
+    /** Heading (default: `Choose how to pay`) */
+    title: string;
+    /** Under the heading; `{minutes}` is how long a price holds (default: `The price locks for {minutes} minutes when you continue.`) */
+    subtitle: string;
+    /** Name of the token group (default: `Token`) */
+    token: string;
+    /** Under a token with several networks; `{count}` (default: `{count} networks`) */
+    networks: string;
+    /** Name of the network group; `{symbol}` (default: `{symbol} network`) */
+    network: string;
+    /** Badge of the connected wallet's network (default: `Your wallet`) */
+    yourWallet: string;
+    /** Badge of a method the merchant marks (default: `Popular`) */
+    popular: string;
+    /** A method whose gas the merchant may pay (default: `No gas fee`) */
+    noGasFee: string;
+    /** A method whose gas the buyer pays (default: `You pay the network fee`) */
+    buyerPaysGas: string;
+    /** Discount of a method; `{percent}` (default: `−{percent}%`) */
+    discount: string;
+    /** Markup of a method; `{percent}` (default: `+{percent}%`) */
+    markup: string;
+    /** Name of the payment way group (default: `Pay with`) */
+    payWith: string;
+    /** Pay from a wallet in this browser (default: `Wallet`) */
+    wallet: string;
+    /** Under "Wallet" without a connected wallet (default: `MetaMask, Rabby, Phantom…`) */
+    walletHint: string;
+    /** Pay by scanning a QR code (default: `QR code`) */
+    qr: string;
+    /** Under "QR code" (default: `Phone wallet`) */
+    qrHint: string;
+    /** Main button (default: `Continue`) */
+    continue: string;
+    /** While the price is being locked (default: `Getting the price…`) */
+    quoting: string;
+    /** Under the button with both policies; `{terms}`, `{refundPolicy}` are links (default: `By continuing you agree to the seller's {terms} and {refundPolicy}.`) */
+    agreeBoth: string;
+    /** Under the button with one policy; `{link}` (default: `By continuing you agree to the seller's {link}.`) */
+    agreeOne: string;
+    /** No method takes the invoice */
+    noMethods: string;
+  };
+  /** The buyer details step. */
+  buyer: {
+    /** Heading (default: `Your details`) */
+    title: string;
+    /** Under the heading (default: `The seller needs them for the invoice and the receipt.`) */
+    subtitle: string;
+    /** Email field (default: `Email`) */
+    email: string;
+    /** Name field of a person (default: `Name`) */
+    name: string;
+    /** Name field of a company (default: `Company`) */
+    companyName: string;
+    /** First address line (default: `Address`) */
+    addressLine1: string;
+    /** Second address line (default: `Address, line 2`) */
+    addressLine2: string;
+    /** Postal code (default: `Postal code`) */
+    postalCode: string;
+    /** City (default: `City`) */
+    city: string;
+    /** Country (default: `Country`) */
+    country: string;
+    /** Placeholder of the country list (default: `Choose a country`) */
+    chooseCountry: string;
+    /** Tax ID (default: `VAT or tax ID`) */
+    taxId: string;
+    /** Company registration number (default: `Company number`) */
+    registrationNumber: string;
+    /** Marks an optional field (default: `optional`) */
+    optional: string;
+    /** Checkbox for a company invoice (default: `I need an invoice for my company`) */
+    companyInvoice: string;
+    /** A required field is empty (default: `Required`) */
+    required: string;
+    /** The email is not one (default: `Enter an email like name@example.com`) */
+    invalidEmail: string;
+    /** The country is not on the list (default: `Choose a country from the list`) */
+    invalidCountry: string;
+    /** Main button (default: `Continue`) */
+    continue: string;
+  };
   /** The order panel: the seller, the deadline, the lines and the total. */
   summary: {
     /** Badge of a test invoice (default: `Test`) */
