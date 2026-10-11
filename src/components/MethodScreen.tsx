@@ -9,6 +9,7 @@ import { formatLabel, formatLabelParts, type NovaPaymentsLabels } from '../i18n'
 import { groupMethodsByToken } from '../utils/checkout';
 import { shortAddress } from '../utils/format';
 import { canPayWithQr, methodFamily, networkName, payerFor, priceAdjustment } from '../utils/methods';
+import { methodErrorText } from '../utils/outcome';
 import { focusRing, mono } from './classes';
 import { RadioCards } from './RadioCards';
 import { GroupLabel, PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
@@ -296,7 +297,9 @@ export function MethodScreen() {
         {cannotConnect && (
           <ScreenError>{qrAvailable ? labels.pay.connectUnavailable : labels.method.methodUnavailable}</ScreenError>
         )}
-        {state.error && state.phase === 'selectMethod' && <ScreenError>{state.error.message}</ScreenError>}
+        {state.error && state.phase === 'selectMethod' && (
+          <ScreenError>{methodErrorText(state.error, labels)}</ScreenError>
+        )}
       </ScreenContent>
       <ScreenFooter>
         <PrimaryButton busy={quoting} disabled={!selected || !way} onClick={() => void onContinue()}>

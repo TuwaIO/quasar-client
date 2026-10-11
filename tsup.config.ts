@@ -5,7 +5,7 @@ import pkg from './package.json';
 export default defineConfig([
   {
     format: ['cjs', 'esm'],
-    entry: ['./src/index.ts', './src/i18n/index.ts', './src/evm/index.ts'],
+    entry: ['./src/index.ts', './src/i18n/index.ts', './src/evm/index.ts', './src/solana/index.ts'],
     treeshake: true,
     sourcemap: false,
     minify: true,

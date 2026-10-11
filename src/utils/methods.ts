@@ -30,6 +30,8 @@ export interface CheckoutWallet {
   walletId: string;
   /** The wallet name to show. */
   name: string;
+  /** The Satellite Connect connection itself, for the chain adapters (the Solana adapter signs with its account). */
+  connection: unknown;
 }
 
 /** Names of wallets whose connector id is not how they write their name. */
@@ -85,6 +87,7 @@ export function connectedWallet(
     connectorType: connection.connectorType,
     walletId: connection.connectorType.slice(connection.connectorType.indexOf(':') + 1).toLowerCase(),
     name: walletLabel(connection.connectorType),
+    connection,
   };
 }
 

@@ -29,20 +29,20 @@ const method = (chainId: string, extra: Partial<CheckoutMethod> = {}): CheckoutM
 });
 
 describe('connected wallet', () => {
-  it('reads the Satellite connection as CAIP identifiers', () => {
-    expect(
-      connectedWallet({
-        address: '0x1111111111111111111111111111111111111111',
-        chainId: 8453,
-        connectorType: 'evm:metamask',
-      }),
-    ).toEqual({
+  it('reads the Satellite connection as CAIP identifiers, and keeps it for the chain adapters', () => {
+    const connection = {
+      address: '0x1111111111111111111111111111111111111111',
+      chainId: 8453,
+      connectorType: 'evm:metamask',
+    };
+    expect(connectedWallet(connection)).toEqual({
       address: '0x1111111111111111111111111111111111111111',
       chainId: BASE,
       family: 'eip155',
       connectorType: 'evm:metamask',
       walletId: 'metamask',
       name: 'MetaMask',
+      connection,
     });
     expect(
       connectedWallet({

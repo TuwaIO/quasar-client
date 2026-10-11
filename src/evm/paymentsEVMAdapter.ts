@@ -174,6 +174,34 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       return hash;
     },
 
+    explorerUrl: ({ chainId, txKey }) => {
+      const chain = config.chains.find((item) => item.id === toEvmChainId(chainId));
+      const url = chain?.blockExplorers?.default.url;
+      return url ? `${url}/tx/${txKey}` : undefined;
+    },
+
+    requestPermission: async ({ request, account }) => {
+      // The ERC-7715 request as MetaMask takes it (checked live with the Quasar engine), from the granting account
+      const client = await getConnectorClient(config, { chainId: Number.parseInt(request.chainId, 16) });
+      const response = (await client.request({
+        method: 'wallet_requestExecutionPermissions',
+        params: [{ ...request, from: account }],
+      } as never)) as unknown;
+      const [granted] = (Array.isArray(response) ? response : [response]) as {
+        context?: string;
+        delegationManager?: string;
+        dependencies?: { factory: string; factoryData: string }[];
+      }[];
+      if (!granted?.context || !granted.delegationManager) {
+        throw new PaymentWalletError('failed', 'The wallet did not grant the permission');
+      }
+      return {
+        context: granted.context,
+        delegationManager: granted.delegationManager,
+        dependencies: granted.dependencies ?? [],
+      };
+    },
+
     pulsarTransaction: ({ txKey, instructions, account, connectorType, title, description, payload }) => {
       const evm = evmInstructions(instructions);
       const transaction: EvmTransaction = {

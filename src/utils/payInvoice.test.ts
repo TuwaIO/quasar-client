@@ -14,6 +14,7 @@ const wallet: CheckoutWallet = {
   connectorType: 'evm:metamask',
   walletId: 'metamask',
   name: 'MetaMask',
+  connection: { connectedAccount: 'ui-account' },
 };
 const instructions = {
   family: 'eip155' as const,
@@ -51,7 +52,11 @@ describe('payInvoice', () => {
     await expect(payInvoice({ adapter, store, quote, wallet, path: 'transfer', paymasterUrl: null })).resolves.toBe(
       true,
     );
-    expect(adapter.sendTransfer).toHaveBeenCalledWith({ instructions, account: ACCOUNT });
+    expect(adapter.sendTransfer).toHaveBeenCalledWith({
+      instructions,
+      account: ACCOUNT,
+      connection: wallet.connection,
+    });
     expect(actions.submit).toHaveBeenCalledWith({ txKey: '0xtransfer', connectorType: 'evm:metamask' });
   });
 

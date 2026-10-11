@@ -25,6 +25,11 @@
       "import": "./dist/evm/index.js",
       "require": "./dist/evm/index.cjs"
     },
+    "./solana": {
+      "types": "./dist/solana/index.d.ts",
+      "import": "./dist/solana/index.js",
+      "require": "./dist/solana/index.cjs"
+    },
     "./dist/index.css": "./dist/index.css"
   },
   "publishConfig": {
@@ -72,9 +77,14 @@
   ],
   "peerDependencies": {
     "@heroicons/react": "2.x.x",
+    "@solana-program/system": ">=0.15",
+    "@solana-program/token": ">=0.17",
+    "@solana/kit": ">=8.2",
     "@tuwaio/nova-connect": ">=0.10",
     "@tuwaio/nova-core": ">=0.10",
+    "@tuwaio/nova-transactions": ">=0.9",
     "@tuwaio/orbit-core": ">=0.5",
+    "@tuwaio/orbit-solana": ">=0.5",
     "@tuwaio/pulsar-core": ">=0.10",
     "@tuwaio/quasar-sdk": ">=0.6",
     "@tuwaio/satellite-react": ">=0.9",
@@ -85,6 +95,18 @@
     "zustand": "5.x.x"
   },
   "peerDependenciesMeta": {
+    "@solana-program/system": {
+      "optional": true
+    },
+    "@solana-program/token": {
+      "optional": true
+    },
+    "@solana/kit": {
+      "optional": true
+    },
+    "@tuwaio/orbit-solana": {
+      "optional": true
+    },
     "@wagmi/core": {
       "optional": true
     },
@@ -95,10 +117,15 @@
   "devDependencies": {
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-dialog": "^1.2.0",
+    "@solana-program/system": "^0.15.0",
+    "@solana-program/token": "^0.17.0",
+    "@solana/kit": "^8.4.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tuwaio/nova-connect": "workspace:^",
     "@tuwaio/nova-core": "workspace:^",
+    "@tuwaio/nova-transactions": "workspace:^",
     "@tuwaio/orbit-core": "0.5.1",
+    "@tuwaio/orbit-solana": "0.5.0",
     "@tuwaio/pulsar-core": "0.10.0",
     "@tuwaio/quasar-sdk": "1.0.0-feat-payments-alpha.5.0e5bec2",
     "@tuwaio/satellite-core": "^0.9.0",

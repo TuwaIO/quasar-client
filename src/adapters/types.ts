@@ -1,5 +1,10 @@
 import type { Transaction } from '@tuwaio/pulsar-core';
-import type { PaymentInstructions, TransferAuthorizationTypedData } from '@tuwaio/quasar-sdk/checkout';
+import type {
+  GrantPermissionParams,
+  PaymentInstructions,
+  PermissionRequest,
+  TransferAuthorizationTypedData,
+} from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentFamily } from '../utils/methods';
 
@@ -71,10 +76,15 @@ export interface PaymentsAdapter {
   /**
    * Sends the transfer the quote describes, with the wallet's prompt.
    *
-   * @param params - The quote's instructions and the sender.
+   * @param params - The quote's instructions, the sender, and the Satellite Connect connection of the wallet (the
+   *   Solana adapter signs with its Wallet Standard account).
    * @returns The transaction hash (EVM) or signature (Solana).
    */
-  sendTransfer: (params: { instructions: PaymentInstructions; account: string }) => Promise<string>;
+  sendTransfer: (params: {
+    instructions: PaymentInstructions;
+    account: string;
+    connection?: unknown;
+  }) => Promise<string>;
   /**
    * Signs the EIP-3009 authorization of a gasless quote (`eth_signTypedData_v4`), with the wallet's prompt.
    *
@@ -93,6 +103,23 @@ export interface PaymentsAdapter {
    *   wallet accepted the calls (before they are included).
    * @returns The hash of the transaction (not the batch ID), as Quasar expects it.
    */
+  /**
+   * The link of a transaction on a block explorer of its chain.
+   *
+   * @param params - The chain and the transaction hash or signature.
+   * @returns The link, or `undefined` when the chain has no known explorer.
+   */
+  explorerUrl?: (params: { chainId: string; txKey: string }) => string | undefined;
+  /**
+   * Asks the wallet for the ERC-7715 permission of a subscription's automatic payments, with the wallet's prompt.
+   *
+   * @param params - The request of the checkout's auto-charge offer and the granting account.
+   * @returns What the wallet granted, for `grantPermission` of the checkout store (without the payer).
+   */
+  requestPermission?: (params: {
+    request: PermissionRequest;
+    account: string;
+  }) => Promise<Omit<GrantPermissionParams, 'payer'>>;
   /**
    * Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
    * it (and Nova Transactions shows its toast) once the checkout closes.

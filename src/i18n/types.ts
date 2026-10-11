@@ -97,6 +97,10 @@ export type NovaPaymentsLabels = {
     noMethods: string;
     /** The page can pay the chosen method neither from a wallet nor with a QR code */
     methodUnavailable: string;
+    /** The seller named the paying wallet, and it is another one (`payer_not_expected`) */
+    payerNotExpected: string;
+    /** Too many tries (`rate_limited`) (default: `Too many tries. Wait a minute and try again.`) */
+    rateLimited: string;
   };
   /** The buyer details step. */
   buyer: {
@@ -315,6 +319,169 @@ export type NovaPaymentsLabels = {
     copyLink: string;
     /** Link back to the method step (default: `Back to methods`) */
     back: string;
+  };
+  /** The confirm step: the transaction is on its way. */
+  confirm: {
+    /** Heading (default: `Confirming your payment`) */
+    title: string;
+    /** Under the heading: `{network}` (default: `Usually under a minute on {network}.`) */
+    hint: string;
+    /** First step (default: `Sent`) */
+    sent: string;
+    /** Second step while it runs (default: `Confirming`) */
+    confirming: string;
+    /** Second step once the network confirmed the transaction (default: `Confirmed`) */
+    confirmed: string;
+    /** Last step (default: `Paid`) */
+    paid: string;
+    /** Last step when the transaction failed (default: `Failed`) */
+    failed: string;
+    /** Row of the network (default: `Network`) */
+    network: string;
+    /** Row of the amount (default: `Amount`) */
+    amount: string;
+    /** Row of the transaction (default: `Transaction`) */
+    transaction: string;
+    /** Row of the sender (default: `From`) */
+    from: string;
+    /** That the window may close */
+    canClose: string;
+    /** Accessible name of the explorer link of the transaction (default: `View on the explorer`) */
+    viewOnExplorer: string;
+    /** Accessible name of the copy button of the transaction (default: `Copy the transaction`) */
+    copyHash: string;
+  };
+  /** The paid outcome. */
+  paid: {
+    /** Heading (default: `Payment received`) */
+    title: string;
+    /** Under the amount: `{network}`, `{date}` (default: `on {network} · {date}`) */
+    summary: string;
+    /** The receipt card (default: `Receipt`) */
+    receipt: string;
+    /** Under it (default: `PDF of the payment, also kept by the seller`) */
+    receiptHint: string;
+    /** Download link of the receipt (default: `Download`) */
+    download: string;
+    /** A part refunded later: `{amount}`, `{currency}` (default: `Refunded {amount} {currency}`) */
+    refunded: string;
+    /** Button back to the seller: `{merchant}` (default: `Back to {merchant}`) */
+    back: string;
+    /** Auto-return countdown: `{merchant}`, `{seconds}` (default: `Returning to {merchant} in {seconds} s`) */
+    returning: string;
+    /** Stops the auto-return (default: `Stay here`) */
+    stay: string;
+    /** Button of the automatic payments offer of a subscription (default: `Pay the next periods automatically`) */
+    autoPayOffer: string;
+    /** When automatic payments are on (default: `Automatic payments are on.`) */
+    autoPayActive: string;
+  };
+  /** The automatic payments offer of a subscription (ERC-7715), after a paid period. */
+  autoPay: {
+    /** Heading (default: `Pay next periods automatically?`) */
+    title: string;
+    /** Under it */
+    subtitle: string;
+    /** Above the limit: `{merchant}` (default: `You allow {merchant} to take`) */
+    allow: string;
+    /** The limit: `{amount}` with its symbol (default: `up to {amount}`) */
+    limit: string;
+    /** The period: `{period}` (for example `30 days`) (default: `every {period}`) */
+    every: string;
+    /** Row of the paying wallet (default: `From`) */
+    from: string;
+    /** Row of the account that takes the payments (default: `To`) */
+    to: string;
+    /** Row of the expiry (default: `Valid until`) */
+    validUntil: string;
+    /** Its value: `{date}` (default: `{date}, or until you cancel`) */
+    validUntilValue: string;
+    /** First note (default: `Each charge comes with an invoice and a receipt by email.`) */
+    invoices: string;
+    /** Second note: `{merchant}` (default: `{merchant} can't take more than this limit in a period.`) */
+    cap: string;
+    /** Third note */
+    turnOff: string;
+    /** Main button (default: `Allow automatic payments`) */
+    confirm: string;
+    /** Declines (default: `Not now, I'll pay each invoice`) */
+    skip: string;
+    /** Under the buttons (default: `Your wallet shows this permission (ERC-7715) before you approve it.`) */
+    walletNote: string;
+    /** Heading while the wallet asks: `{wallet}` (default: `Approve in {wallet}`) */
+    approveIn: string;
+    /** The wallet cannot grant it: `{wallet}` (default: `{wallet} can't allow automatic payments.`) */
+    unavailable: string;
+  };
+  /** The outcomes other than paid. */
+  outcome: {
+    /** Heading of an underpaid invoice (default: `Part of the payment arrived`) */
+    underpaidTitle: string;
+    /** What arrived: `{received}`, `{total}` (default: `{received} of {total} received.`) */
+    underpaidText: string;
+    /** What is left: `{rest}`, `{network}` (default: `Send the rest, {rest}, from the same wallet on {network}.`) */
+    underpaidRest: string;
+    /** Until when: `{merchant}`, `{date}` */
+    underpaidNote: string;
+    /** Button that pays the rest (default: `Pay the rest`) */
+    payRest: string;
+    /** Heading of a payment on review: `{merchant}` (default: `Payment received, {merchant} is checking it`) */
+    heldTitle: string;
+    /** Reason `screening`: `{merchant}` (default: `{merchant} checks the payment before confirming the order.`) */
+    heldScreening: string;
+    /** Reason `late`: `{merchant}` */
+    heldLate: string;
+    /** Reason `overpaid`: `{merchant}` */
+    heldOverpaid: string;
+    /** Under it (default: `The seller contacts you if anything is needed.`) */
+    heldNote: string;
+    /** Heading of a refunded invoice (default: `Refunded`) */
+    refundedTitle: string;
+    /** Its text: `{merchant}`, `{amount}`, `{currency}` (default: `{merchant} refunded this invoice: {amount} {currency}.`) */
+    refundedText: string;
+    /** Heading of an expired invoice (default: `This invoice has expired`) */
+    expiredTitle: string;
+    /** Its text: `{date}`, `{merchant}` */
+    expiredText: string;
+    /** Under it */
+    expiredNote: string;
+    /** Heading of a cancelled invoice (default: `This invoice was cancelled`) */
+    cancelledTitle: string;
+    /** Its text: `{merchant}` (default: `{merchant} cancelled it; nothing was charged.`) */
+    cancelledText: string;
+    /** Heading of a corrected invoice: `{merchant}` (default: `{merchant} corrected this invoice`) */
+    replacedTitle: string;
+    /** Its text: `{number}` of the new invoice (default: `{number} replaces it. This invoice can no longer be paid.`) */
+    replacedText: string;
+    /** Under it (default: `Already paid? Your payment moved to the new invoice.`) */
+    replacedPaid: string;
+    /** Opens the new invoice: `{number}` (default: `Open {number}`) */
+    openReplacement: string;
+    /** Heading when the wallet check refused the payer (default: `This wallet can't pay this invoice`) */
+    blockedTitle: string;
+    /** Its text: `{merchant}` */
+    blockedText: string;
+    /** Button that connects another wallet (default: `Use another wallet`) */
+    useAnotherWallet: string;
+    /** Contacts the seller: `{merchant}` (default: `Contact {merchant}`) */
+    contact: string;
+    /** Subject of the email to the seller: `{number}` (default: `Invoice {number}`) */
+    contactSubject: string;
+  };
+  /** The question when the buyer closes the checkout before a transaction is sent. */
+  leave: {
+    /** Heading (default: `Leave the checkout?`) */
+    title: string;
+    /** Its text: `{date}` */
+    text: string;
+    /** Its text without a deadline */
+    textNoDate: string;
+    /** About the locked price (default: `The locked price is released; you get a new one when you come back.`) */
+    price: string;
+    /** Keeps the checkout open (default: `Stay and pay`) */
+    stay: string;
+    /** Closes it (default: `Leave`) */
+    leave: string;
   };
   /** The order panel: the seller, the deadline, the lines and the total. */
   summary: {

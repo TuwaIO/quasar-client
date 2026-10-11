@@ -68,6 +68,24 @@ export interface CheckoutContextValue {
    * @param payment - The transaction and what it pays.
    */
   onPaymentSent: (payment: SentPayment) => void;
+  /** The buyer opened the automatic payments offer after paying a subscription period. */
+  autoPay: boolean;
+  /**
+   * Opens or closes the automatic payments offer.
+   *
+   * @param autoPay - Whether it shows.
+   */
+  setAutoPay: (autoPay: boolean) => void;
+  /**
+   * Opens another invoice in this checkout: the one that replaced a corrected invoice.
+   *
+   * @param token - Its checkout token.
+   */
+  openInvoice: (token: string) => void;
+  /** Replaces the link of "Contact <seller>", when the app handles it. */
+  onContact?: () => void;
+  /** Seconds before the paid outcome sends the buyer back to the seller; `0` for no automatic return. */
+  autoReturnSeconds: number;
 }
 
 const CheckoutContext = createContext<CheckoutContextValue | null>(null);

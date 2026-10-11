@@ -20,6 +20,7 @@ const wallet: CheckoutWallet = {
   connectorType: 'evm:metamask',
   walletId: 'metamask',
   name: 'MetaMask',
+  connection: null,
 };
 const quote = {
   instructions: { family: 'eip155', chainId: 8453, to: '0x2', token: '0x3', amount: '1', decimals: 6, symbol: 'USDC' },

@@ -7,8 +7,11 @@ import { formatLabel } from '../i18n';
 import { mono } from './classes';
 import { DetailRow, FooterAction } from './ScreenParts';
 
-/** What the wallet asks for: a gasless signature, a transaction, a network switch, or Quasar takes the payment. */
-export type WalletPromptKind = 'sign' | 'confirm' | 'switch' | 'submitting';
+/**
+ * What the wallet asks for: a gasless signature, a transaction, a network switch, the permission of automatic
+ * payments, or Quasar takes the payment.
+ */
+export type WalletPromptKind = 'sign' | 'confirm' | 'switch' | 'permission' | 'submitting';
 
 /** Props of {@link WalletPrompt}. */
 export interface WalletPromptProps {
@@ -67,7 +70,9 @@ export function WalletPrompt({
         ? labels.walletPrompt.switchIn
         : kind === 'submitting'
           ? labels.walletPrompt.submitting
-          : labels.walletPrompt.confirmIn;
+          : kind === 'permission'
+            ? labels.autoPay.approveIn
+            : labels.walletPrompt.confirmIn;
 
   return (
     <section
@@ -116,6 +121,11 @@ export function WalletPrompt({
             </p>
           )}
         </>
+      )}
+      {kind === 'permission' && (
+        <p className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+          {labels.autoPay.walletNote}
+        </p>
       )}
       {kind !== 'submitting' && <FooterAction onClick={onCancel}>{labels.walletPrompt.cancel}</FooterAction>}
     </section>

@@ -1,6 +1,6 @@
 import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
-import type { CheckoutApi, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutApi, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
@@ -9,18 +9,25 @@ import { useCheckoutState, useCheckoutStore } from '../hooks/useCheckoutStore';
 import { useConnectedWallet } from '../hooks/useConnectedWallet';
 import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
+import { usePaidCallback } from '../hooks/useOutcomeEffects';
 import { usePaymentHandOver } from '../hooks/usePaymentHandOver';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel } from '../i18n';
 import { checkoutScreen, deadlineAnnouncement } from '../utils/checkout';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
+import { needsLeaveConfirm } from '../utils/outcome';
+import { AutoPayScreen } from './AutoPayScreen';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
 import { focusRing, mono } from './classes';
+import { ConfirmScreen } from './ConfirmScreen';
+import { LeaveDialog } from './LeaveDialog';
 import { MethodScreen } from './MethodScreen';
+import { OutcomeScreen } from './OutcomeScreen';
+import { PaidScreen } from './PaidScreen';
 import { PayScreen } from './PayScreen';
 import { QrScreen } from './QrScreen';
 
@@ -66,6 +73,20 @@ export interface PaymentCheckoutProps {
    * @param family - The family of the chosen method.
    */
   onConnectWallet?: (family: PaymentFamily) => void;
+  /**
+   * Called once when the invoice is paid (Quasar confirmed the payment). Fulfil orders from the `invoice.paid` webhook
+   * on your server: this callback is for the page only.
+   *
+   * @param invoice - The paid invoice.
+   */
+  onPaid?: (invoice: CheckoutView['invoice']) => void;
+  /**
+   * Seconds before the paid outcome sends the buyer back to the invoice's `successUrl`, with a visible countdown and
+   * "Stay here" (default `5`; `0` for no automatic return).
+   */
+  autoReturnSeconds?: number;
+  /** Replaces the link of "Contact <seller>" (the seller's support email, else site) with the app's own handler. */
+  onContact?: () => void;
   /** Classes added to the checkout block. */
   className?: string;
 }
@@ -118,7 +139,7 @@ function ErrorScreen() {
   );
 }
 
-/** The screen of the current step; the steps after loading arrive with the next parts of the package. @internal */
+/** The screen of the current step or outcome. @internal */
 function ScreenBody() {
   const { screen } = useCheckoutContext();
   if (screen === 'loading') return <LoadingScreen />;
@@ -127,12 +148,10 @@ function ScreenBody() {
   if (screen === 'method') return <MethodScreen />;
   if (screen === 'pay') return <PayScreen />;
   if (screen === 'qr') return <QrScreen />;
-  // Placeholder until the outcome screens are added (step 6c.4)
-  return (
-    <div className={cn(mono, 'novapay:flex-1 novapay:p-5 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]')}>
-      {screen}
-    </div>
-  );
+  if (screen === 'confirm') return <ConfirmScreen />;
+  if (screen === 'paid') return <PaidScreen />;
+  if (screen === 'autoPay') return <AutoPayScreen />;
+  return <OutcomeScreen kind={screen} />;
 }
 
 /**
@@ -143,7 +162,15 @@ function ScreenBody() {
  *
  * @internal
  */
-function CheckoutFrame({ className, withDetails }: { className?: string; withDetails?: boolean }) {
+function CheckoutFrame({
+  className,
+  withDetails,
+  leave,
+}: {
+  className?: string;
+  withDetails?: boolean;
+  leave: { onStay: () => void; onLeave: () => void } | null;
+}) {
   const { checkout, locale, labels, now } = useCheckoutContext();
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
@@ -187,6 +214,7 @@ function CheckoutFrame({ className, withDetails }: { className?: string; withDet
       <div role="status" aria-live="polite" className="novapay:sr-only">
         {announcement}
       </div>
+      {leave && <LeaveDialog onStay={leave.onStay} onLeave={leave.onLeave} />}
     </div>
   );
 }
@@ -230,23 +258,47 @@ export function PaymentCheckout({
   pollMs,
   payUrl,
   onConnectWallet,
+  onPaid,
+  autoReturnSeconds = 5,
+  onContact,
   className,
 }: PaymentCheckoutProps) {
   const settings = useNovaPayments();
-  const store = useCheckoutStore({ token, baseUrl: baseUrl ?? settings.baseUrl, api, EventSource, pollMs });
+  // The invoice shown: the token's, or the one that replaced it after the buyer opened it ("Open <number>")
+  const [opened, setOpened] = useState({ from: token, token });
+  const activeToken = opened.from === token ? opened.token : token;
+  const store = useCheckoutStore({
+    token: activeToken,
+    baseUrl: baseUrl ?? settings.baseUrl,
+    api,
+    EventSource,
+    pollMs,
+  });
   const state = useCheckoutState(store, (value) => value);
   const checkout = state.checkout;
   const locale = state.locale ?? checkout?.invoice.locale ?? 'en';
   const labels = usePaymentsLabels(locale);
-  const now = useNow(1000, Boolean(checkout?.invoice.dueAt));
+  // Ticks while the checkout shows: the deadline, the price lock and the return countdown count down
+  const now = useNow(1000, Boolean(checkout));
   const wallet = useConnectedWallet();
   const connection = useWalletConnection(onConnectWallet);
   const adapters = settings.adapters;
   const [payWith, setPayWith] = useState<'wallet' | 'qr'>('wallet');
   const [handoff, setHandoff] = useState(false);
+  const [autoPay, setAutoPay] = useState(false);
+  const [askLeave, setAskLeave] = useState(false);
+  // Another invoice opened: the choices made for the previous one no longer apply
+  const [shownToken, setShownToken] = useState(activeToken);
+  if (shownToken !== activeToken) {
+    setShownToken(activeToken);
+    setHandoff(false);
+    setAutoPay(false);
+    setPayWith('wallet');
+  }
   // The method a wallet is being connected for: its price is locked once the wallet arrives
   const connectingFor = useRef<string | null>(null);
-  const screen = checkoutScreen(state, { payWith, handoff });
+  const screen = checkoutScreen(state, { payWith, handoff, autoPay });
+  usePaidCallback(state.phase, checkout?.invoice, onPaid);
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
   const onPaymentSent = usePaymentHandOver({
     store,
@@ -287,10 +339,22 @@ export function PaymentCheckout({
   const [askedBuyer, setAskedBuyer] = useState(false);
   if (screen === 'buyer' && !askedBuyer) setAskedBuyer(true);
 
-  const close = useMemo(() => {
+  const closeNow = useMemo(() => {
     if (display === 'modal') return () => (onOpenChange ? onOpenChange(false) : onClose?.());
     return onClose;
   }, [display, onOpenChange, onClose]);
+  // Before anything is sent the checkout asks first; once a transaction is on its way it closes at once
+  const close = closeNow && (() => (needsLeaveConfirm(store.getState().phase) ? setAskLeave(true) : closeNow()));
+  const leave = askLeave
+    ? {
+        onStay: () => setAskLeave(false),
+        onLeave: () => {
+          setAskLeave(false);
+          store.getState().releaseQuote();
+          closeNow?.();
+        },
+      }
+    : null;
 
   const context: CheckoutContextValue = {
     store,
@@ -320,11 +384,16 @@ export function PaymentCheckout({
       store.getState().releaseQuote();
     },
     onPaymentSent,
+    autoPay,
+    setAutoPay,
+    openInvoice: (next) => setOpened({ from: token, token: next }),
+    onContact,
+    autoReturnSeconds,
   };
   const frame = (
     <CheckoutContextProvider value={context}>
       <MotionConfig reducedMotion="user">
-        <CheckoutFrame withDetails={askedBuyer} className={display === 'modal' ? className : undefined} />
+        <CheckoutFrame withDetails={askedBuyer} leave={leave} className={display === 'modal' ? className : undefined} />
       </MotionConfig>
     </CheckoutContextProvider>
   );
@@ -334,6 +403,8 @@ export function PaymentCheckout({
       <Dialog
         open={open}
         onOpenChange={(next) => {
+          // Escape and a click outside ask first too, while nothing is sent
+          if (!next && needsLeaveConfirm(store.getState().phase)) return setAskLeave(true);
           onOpenChange?.(next);
           if (!next) onClose?.();
         }}

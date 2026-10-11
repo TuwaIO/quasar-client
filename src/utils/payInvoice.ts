@@ -76,7 +76,11 @@ export async function payInvoice({
     onSent?.(txKey);
     return store.getState().submit({ txKey, connectorType: wallet.connectorType });
   }
-  const txKey = await adapter.sendTransfer({ instructions: quote.instructions, account });
+  const txKey = await adapter.sendTransfer({
+    instructions: quote.instructions,
+    account,
+    connection: wallet.connection,
+  });
   onWalletDone?.();
   onSent?.(txKey);
   return store.getState().submit({ txKey, connectorType: wallet.connectorType });

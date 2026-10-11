@@ -214,6 +214,55 @@ describe('paymentsEVMAdapter', () => {
     vi.restoreAllMocks();
   });
 
+  it("links a transaction to the chain's block explorer", () => {
+    const adapter = paymentsEVMAdapter(config);
+    expect(adapter.explorerUrl!({ chainId: BASE_SEPOLIA, txKey: '0xhash' })).toBe(
+      'https://sepolia.basescan.org/tx/0xhash',
+    );
+    expect(adapter.explorerUrl!({ chainId: 'eip155:1', txKey: '0xhash' })).toBeUndefined();
+  });
+
+  it('asks the wallet for the ERC-7715 permission of automatic payments and returns what Quasar needs', async () => {
+    const request = vi.fn(async () => [
+      { chainId: '0x14a34', context: '0xcontext', delegationManager: '0xmanager', dependencies: [] },
+    ]);
+    wagmi.getConnectorClient.mockResolvedValue({ request });
+    const permission = {
+      chainId: '0x14a34',
+      to: '0x3333333333333333333333333333333333333333',
+      permission: {
+        type: 'erc20-token-periodic' as const,
+        isAdjustmentAllowed: false,
+        data: {
+          tokenAddress: USDC,
+          periodAmount: '0x2ebae40',
+          periodDuration: 2_592_000,
+          startTime: 1,
+          justification: 'Pro',
+        },
+      },
+      rules: [],
+    };
+    await expect(
+      paymentsEVMAdapter(config).requestPermission!({ request: permission, account: ACCOUNT }),
+    ).resolves.toEqual({
+      context: '0xcontext',
+      delegationManager: '0xmanager',
+      dependencies: [],
+    });
+    expect(wagmi.getConnectorClient).toHaveBeenCalledWith(config, { chainId: 84532 });
+    expect(request).toHaveBeenCalledWith({
+      method: 'wallet_requestExecutionPermissions',
+      params: [{ ...permission, from: ACCOUNT }],
+    });
+    request.mockResolvedValueOnce([{} as never]);
+    await expect(
+      paymentsEVMAdapter(config).requestPermission!({ request: permission, account: ACCOUNT }),
+    ).rejects.toMatchObject({
+      kind: 'failed',
+    });
+  });
+
   it('refuses a chain that is not EVM', async () => {
     await expect(
       paymentsEVMAdapter(config).getBalance({
