@@ -35,8 +35,8 @@ export interface CheckoutContextValue {
    * @param payWith - `wallet` or `qr`.
    */
   setPayWith: (payWith: 'wallet' | 'qr') => void;
-  /** The payment page of the invoice (its `payUrl`), for the QR code of an EVM method. */
-  payUrl?: string;
+  /** The payment page of the invoice (its `payUrl`), for the QR code of an EVM method; `null` without one. */
+  payUrl?: string | null;
   /**
    * Asks the buyer to connect a wallet of the method's chain family; the price is locked for it once connected.
    *

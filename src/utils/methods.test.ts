@@ -102,6 +102,9 @@ describe('methods', () => {
     expect(canPayWithQr(method(SOLANA_DEVNET))).toBe(true);
     expect(canPayWithQr(method(BASE))).toBe(false);
     expect(canPayWithQr(method(BASE), 'https://quasar.example/pay/token')).toBe(true);
+    // A node without a dashboard URL issues invoices with `payUrl: null`
+    expect(canPayWithQr(method(BASE), null)).toBe(false);
+    expect(canPayWithQr(method(SOLANA_DEVNET), null)).toBe(true);
   });
 
   it('shows a discount or a markup as a percent', () => {

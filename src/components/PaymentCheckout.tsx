@@ -62,10 +62,11 @@ export interface PaymentCheckoutProps {
   /** How often to read the invoice without an event stream, in milliseconds (default `5000`). */
   pollMs?: number;
   /**
-   * The payment page of the invoice (its `payUrl` from the Quasar API): with it, an EVM method can also be paid by
-   * scanning a QR code that opens the page on a phone.
+   * The payment page of the invoice (its `payUrl` from the Quasar API, passed as it comes): with it, an EVM method can
+   * also be paid by scanning a QR code that opens the page on a phone. `null` (a node without a dashboard URL) or
+   * leaving it out offers the QR code for Solana methods only.
    */
-  payUrl?: string;
+  payUrl?: string | null;
   /**
    * Connects a wallet of a chain family, for apps without Nova Connect. Inside `NovaConnectProvider` the checkout opens
    * its connect modal instead.
