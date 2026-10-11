@@ -1,0 +1,77 @@
+# @tuwaio/nova-payments
+
+[![NPM Version](https://img.shields.io/npm/v/@tuwaio/nova-payments.svg)](https://www.npmjs.com/package/@tuwaio/nova-payments)
+[![License](https://img.shields.io/npm/l/@tuwaio/nova-payments.svg)](https://github.com/TuwaIO/nova-uikit/blob/main/packages/nova-payments/LICENSE)
+
+`@tuwaio/nova-payments` is the payments Layer 7 (L7) package of **Nova UI Kit**, the user interface project of TUWA Stage 4 ("User Interface"). It renders the checkout of a [Quasar Payments](https://docs.tuwa.io/quasar) invoice from its checkout token: the order with its lines, tax and deadline, the steps of the payment and its outcome, in a modal (a sheet from the bottom on a phone), in the page, or on a page of its own. It keeps no payment state of its own: the checkout store of [`@tuwaio/quasar-sdk/checkout`](https://docs.tuwa.io/quasar) reads the invoice and follows it, and no secret key reaches the browser.
+
+> [!NOTE]
+> The package is in development: the method, payment and outcome screens arrive in the next releases.
+
+---
+
+## 💾 Installation
+
+```bash
+pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/orbit-core zustand react framer-motion @heroicons/react @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
+```
+
+Import the stylesheets of `@tuwaio/nova-core` (theme variables) and of this package (Tailwind CSS v4 utilities prefixed with `novapay:`):
+
+```css
+@import '@tuwaio/nova-core/dist/index.css';
+@import '@tuwaio/nova-payments/dist/index.css';
+```
+
+---
+
+## 🚀 Usage
+
+Issue the invoice on your server with `@tuwaio/quasar-sdk` and pass its `checkoutToken` to the checkout:
+
+```tsx
+'use client';
+
+import { PaymentCheckout } from '@tuwaio/nova-payments';
+import { useState } from 'react';
+
+export function Checkout({ token }: { token: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Pay
+      </button>
+      <PaymentCheckout token={token} open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
+```
+
+`display="inline"` renders it in the page and `display="page"` centers it, as the Quasar payment page does. `NovaPaymentsProvider` sets the Quasar API for a Community Edition node (`baseUrl`) and replaces labels.
+
+---
+
+## 🌍 Languages and accessibility
+
+The checkout follows the language of the invoice; the buyer changes it in the menu next to the close button, which also sets the language of the documents still to be issued. The checkout aims at WCAG 2.2 AA: the steps are an ordered list with the current one marked, the deadline is announced 10, 5 and 1 minutes before it ends, focus stays in the modal, and animations follow `prefers-reduced-motion`.
+
+---
+
+## 🗄️ Browser Storage
+
+Nothing is saved to `localStorage` or cookies.
+
+## 🌐 External Services
+
+The checkout routes of the Quasar API (`baseUrl`, Quasar Cloud by default): `GET /v1/payments/checkout/{token}`, its event stream, its logo and `POST /v1/payments/checkout/{token}/locale` when the buyer changes the language.
+
+---
+
+## 🤝 Contributing & Support
+
+Contributions are welcome! Please read our main **[Contribution Guidelines](https://github.com/TuwaIO/workflows/blob/main/CONTRIBUTING.md)**.
+
+## 📄 License
+
+This project is licensed under the **Apache-2.0 License** - see the [LICENSE](https://github.com/TuwaIO/nova-uikit/blob/main/packages/nova-payments/LICENSE) file for details.

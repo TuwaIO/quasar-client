@@ -1,0 +1,100 @@
+{
+  "name": "@tuwaio/nova-payments",
+  "version": "0.0.0",
+  "private": false,
+  "author": "Oleksandr Tkach",
+  "license": "Apache-2.0",
+  "description": "L7 payments package of Nova UI Kit (TUWA): the checkout of Quasar Payments invoices, with crypto payments from a wallet or a QR code, in a modal, inline or on a page.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "import": "./dist/i18n/index.js",
+      "require": "./dist/i18n/index.cjs"
+    },
+    "./dist/index.css": "./dist/index.css"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "socket.json"
+  ],
+  "scripts": {
+    "build": "tsup && pnpm exec postcss ./src/styles/app.css -o ./dist/index.css",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "react",
+    "web3",
+    "payments",
+    "checkout",
+    "crypto-payments",
+    "stablecoins",
+    "invoice",
+    "quasar",
+    "ui",
+    "components",
+    "tailwind",
+    "i18n",
+    "accessibility",
+    "nova",
+    "tuwa"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TuwaIO/nova-uikit.git",
+    "directory": "packages/nova-payments"
+  },
+  "homepage": "https://github.com/TuwaIO/nova-uikit",
+  "bugs": {
+    "url": "https://github.com/TuwaIO/nova-uikit/issues"
+  },
+  "contributors": [
+    {
+      "name": "Oleksandr Tkach",
+      "url": "https://github.com/Argeare5"
+    }
+  ],
+  "peerDependencies": {
+    "@heroicons/react": "2.x.x",
+    "@tuwaio/nova-core": ">=0.10",
+    "@tuwaio/orbit-core": ">=0.5",
+    "@tuwaio/quasar-sdk": ">=0.6",
+    "framer-motion": "12.x.x || 13.x.x || 14.x.x",
+    "react": ">=19.2.3",
+    "zustand": "5.x.x"
+  },
+  "devDependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@radix-ui/react-dialog": "^1.2.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@tuwaio/nova-core": "workspace:^",
+    "@tuwaio/orbit-core": "0.5.1",
+    "@tuwaio/quasar-sdk": "link:../../../sdk/packages/quasar-sdk",
+    "@types/react": "^19.3.0",
+    "@web3icons/common": "^0.11.53",
+    "@web3icons/react": "^4.1.24",
+    "autoprefixer": "^10.6.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "14.0.0",
+    "postcss": "^8.5.29",
+    "postcss-cli": "^12.0.0",
+    "react": "^19.3.0",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
+    "tsup": "^8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "^5.0.3",
+    "zustand": "^5.0.15"
+  }
+}
