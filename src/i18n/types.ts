@@ -95,6 +95,8 @@ export type NovaPaymentsLabels = {
     agreeOne: string;
     /** No method takes the invoice */
     noMethods: string;
+    /** The page can pay the chosen method neither from a wallet nor with a QR code */
+    methodUnavailable: string;
   };
   /** The buyer details step. */
   buyer: {
@@ -136,6 +138,179 @@ export type NovaPaymentsLabels = {
     invalidCountry: string;
     /** Main button (default: `Continue`) */
     continue: string;
+  };
+  /** The pay step: the wallet, the locked price, the network fee and the main action. */
+  pay: {
+    /** Heading, read by screen readers (default: `Pay`) */
+    title: string;
+    /** The connected wallet under its name: `{address}`, `{network}` (default: `{address} · {network}`) */
+    walletLine: string;
+    /** Button that changes the wallet (default: `Change`) */
+    change: string;
+    /** Accessible name of that button (default: `Change wallet`) */
+    changeWallet: string;
+    /** Above the amount (default: `You send`) */
+    youSend: string;
+    /** Accessible name of the copy button (default: `Copy amount`) */
+    copyAmount: string;
+    /** After copying (default: `Copied`) */
+    copied: string;
+    /** Under the amount: `{network}` (default: `on {network}`) */
+    onNetwork: string;
+    /** The invoice value of the amount: `{amount}`, `{currency}` (default: `= {amount} {currency}`) */
+    fiatValue: string;
+    /** The price lock: `{time}` is a countdown (default: `Price locked for {time}`) */
+    priceLocked: string;
+    /** Button that locks a new price (default: `Refresh price`) */
+    refreshPrice: string;
+    /** In the last minute of the price: `{time}` (default: `This price ends in {time}. Keep it?`) */
+    priceEnding: string;
+    /** Button that locks the price again: `{minutes}` (default: `Keep this price · +{minutes} min`) */
+    keepPrice: string;
+    /** The price lock ran out (default: `The price lock ran out.`) */
+    priceExpired: string;
+    /** Button that locks a new price after it ran out (default: `Get a new price`) */
+    newPrice: string;
+    /** Row of the rate (default: `Rate`) */
+    rate: string;
+    /** The rate: `{symbol}`, `{price}`, `{currency}` (default: `1 {symbol} = {price} {currency}`) */
+    rateValue: string;
+    /** Row of the network fee (default: `Network fee`) */
+    networkFee: string;
+    /** The merchant pays the gas: `{merchant}` (default: `{merchant} pays · you only sign`) */
+    merchantPaysGas: string;
+    /** The buyer pays the gas: `{amount}` is the estimate (default: `≈ {amount} · from your wallet`) */
+    gasEstimate: string;
+    /** The buyer pays the gas, estimate unknown (default: `Paid from your wallet`) */
+    gasFromWallet: string;
+    /** Row of the recipient (default: `To`) */
+    to: string;
+    /** Row of the invoice total, with a token transfer fee (default: `Invoice total`) */
+    invoiceTotal: string;
+    /** Row of the token's transfer fee: `{percent}` (default: `Token transfer fee {percent}%`) */
+    transferFee: string;
+    /** Row of what the merchant receives: `{merchant}` (default: `{merchant} receives`) */
+    merchantReceives: string;
+    /** Why the buyer sends more with a transfer fee */
+    transferFeeNote: string;
+    /** Main button of a gasless payment: `{amount}` with its symbol (default: `Sign to pay {amount}`) */
+    signToPay: string;
+    /** Main button when the buyer pays the gas: `{amount}` (default: `Pay {amount}`) */
+    payAmount: string;
+    /** Main button on the wrong network: `{network}` (default: `Switch to {network}`) */
+    switchTo: string;
+    /** Main button without a wallet of the method's family (default: `Connect a wallet`) */
+    connect: string;
+    /** Link back to the method step (default: `Back to methods`) */
+    back: string;
+    /** Pays the gas instead of signing (default: `Pay with gas instead`) */
+    payWithGas: string;
+    /** Goes back to the gasless payment: `{merchant}` (default: `Let {merchant} pay the gas`) */
+    payGasless: string;
+    /** Under the button: `{merchant}` */
+    disclaimer: string;
+    /** Heading of the wrong network banner (default: `Wrong network`) */
+    wrongNetwork: string;
+    /** Text of the banner: `{current}`, `{network}` (default: `Your wallet is on {current}. This payment goes on {network}.`) */
+    wrongNetworkText: string;
+    /** Under the switch button (default: `Your wallet asks you to approve the switch.`) */
+    switchHint: string;
+    /** Heading of a short balance (default: `Not enough`) */
+    notEnough: string;
+    /** The balance: `{amount}`, `{network}` (default: `Your wallet has {amount} on {network}`) */
+    walletHas: string;
+    /** The difference: `{short}`, `{need}` (default: `{short} short of {need}.`) */
+    shortBy: string;
+    /** Above the methods the wallet can pay (default: `Pay from what this wallet has`) */
+    payFromBalance: string;
+    /** Balance under such a method: `{amount}` (default: `You have {amount}`) */
+    youHave: string;
+    /** Before the seller's top-up link: `{symbol}` (default: `Or add {symbol} to this wallet and come back:`) */
+    topUp: string;
+    /** The seller's top-up link: `{symbol}` (default: `Get {symbol}`) */
+    getToken: string;
+    /** Without a way to connect a wallet in this app */
+    connectUnavailable: string;
+    /** The buyer declined in the wallet: `{wallet}` (default: `You declined the request in {wallet}.`) */
+    declined: string;
+    /** Button after a declined request (default: `Try again`) */
+    tryAgain: string;
+    /** The transaction failed: `{network}` */
+    failed: string;
+    /** Button after a failed transaction (default: `Pay again`) */
+    payAgain: string;
+    /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
+    unsupported: string;
+    /** The wallet screening of Quasar is unavailable (default: `The wallet check is unavailable right now.`) */
+    screeningUnavailable: string;
+    /** Button then (default: `Try again in a minute`) */
+    retryLater: string;
+    /** No answer from Quasar */
+    noAnswer: string;
+  };
+  /** The window while the wallet asks the buyer. */
+  walletPrompt: {
+    /** Heading of a gasless signature: `{wallet}` (default: `Sign in {wallet}`) */
+    signIn: string;
+    /** Heading of a transaction: `{wallet}` (default: `Confirm in {wallet}`) */
+    confirmIn: string;
+    /** Heading while switching the network: `{wallet}` (default: `Approve the switch in {wallet}`) */
+    switchIn: string;
+    /** Text of a gasless signature: `{amount}`, `{merchant}`, `{network}` */
+    signText: string;
+    /** Text of a transaction: `{amount}`, `{merchant}`, `{network}` */
+    confirmText: string;
+    /** Above the things to check: `{wallet}` (default: `Check in {wallet} before signing`) */
+    check: string;
+    /** Row of the amount (default: `Amount`) */
+    amount: string;
+    /** Row of the recipient (default: `To`) */
+    to: string;
+    /** Row of the network (default: `Network`) */
+    network: string;
+    /** Row of the price lock (default: `Price locked`) */
+    priceLocked: string;
+    /** Before the retry button (default: `The wallet window didn't open?`) */
+    notOpened: string;
+    /** Retry button (default: `Try again`) */
+    tryAgain: string;
+    /** For a transaction that may still wait in the wallet: `{wallet}` */
+    stillWaiting: string;
+    /** Closes the window (default: `Cancel`) */
+    cancel: string;
+    /** While Quasar takes the payment (default: `Handing the payment to Quasar…`) */
+    submitting: string;
+  };
+  /** The QR code step: Solana Pay, or this checkout on a phone. */
+  qr: {
+    /** Heading of Solana Pay (default: `Scan with a Solana wallet`) */
+    solanaTitle: string;
+    /** Under it (default: `Open Phantom, Solflare or Backpack`) */
+    solanaHint: string;
+    /** First step (default: `Scan the code (Solana Pay)`) */
+    scanStep: string;
+    /** Second step (default: `Approve the amount below`) */
+    approveStep: string;
+    /** Text alternative of the Solana Pay code: `{amount}` (default: `QR code of a Solana Pay request for {amount}`) */
+    solanaCode: string;
+    /** While waiting (default: `Waiting for the payment…`) */
+    waiting: string;
+    /** Why not to pay from an exchange */
+    exchangeWarning: string;
+    /** Link that opens the request in a wallet app (default: `Open in wallet app`) */
+    openInWallet: string;
+    /** Heading of the phone hand-off (default: `Pay on your phone`) */
+    handoffTitle: string;
+    /** Under it */
+    handoffHint: string;
+    /** Text alternative of the hand-off code (default: `QR code that opens this checkout on your phone`) */
+    handoffCode: string;
+    /** That this page follows the payment */
+    handoffNote: string;
+    /** Copies the link of the payment page (default: `Copy link`) */
+    copyLink: string;
+    /** Link back to the method step (default: `Back to methods`) */
+    back: string;
   };
   /** The order panel: the seller, the deadline, the lines and the total. */
   summary: {

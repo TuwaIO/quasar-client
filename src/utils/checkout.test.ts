@@ -20,7 +20,7 @@ const BASE = 'eip155:8453';
 const ETH = 'eip155:1';
 const SOLANA = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 
-const QUOTE = { object: 'checkout_quote' } as CheckoutQuote;
+const QUOTE = { object: 'checkout_quote', payer: 'eip155:8453:0x1' } as CheckoutQuote;
 
 const view = (invoice: Partial<CheckoutView['invoice']> = {}, extra: Partial<CheckoutView> = {}) =>
   ({ invoice: { replacedBy: null, ...invoice }, autoCharge: null, ...extra }) as CheckoutView;
@@ -35,6 +35,20 @@ describe('checkoutScreen', () => {
       expect(checkoutScreen({ phase, checkout: view() }, { payWith: 'qr' })).toBe('qr');
     }
     expect(checkoutScreen({ phase: 'confirming', checkout: view() })).toBe('confirm');
+  });
+
+  it('shows the QR code of the payment page before any price when the buyer continues on a phone', () => {
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view() }, { payWith: 'qr', handoff: true })).toBe('qr');
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view() }, { payWith: 'wallet', handoff: true })).toBe(
+      'method',
+    );
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view() }, { payWith: 'qr' })).toBe('method');
+  });
+
+  it('shows the Solana Pay QR code for a price locked without a payer, also after the page reloads', () => {
+    const qr = { ...QUOTE, payer: null } as CheckoutQuote;
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: qr })).toBe('qr');
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE })).toBe('pay');
   });
 
   it('stays on the method while the first price is locked, and on the payment while a price is renewed', () => {

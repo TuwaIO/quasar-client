@@ -2,7 +2,7 @@ import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outl
 import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
 import type { CheckoutApi, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { useCheckoutState, useCheckoutStore } from '../hooks/useCheckoutStore';
@@ -10,14 +10,18 @@ import { useConnectedWallet } from '../hooks/useConnectedWallet';
 import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
+import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel } from '../i18n';
 import { checkoutScreen, deadlineAnnouncement } from '../utils/checkout';
+import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
 import { focusRing, mono } from './classes';
 import { MethodScreen } from './MethodScreen';
+import { PayScreen } from './PayScreen';
+import { QrScreen } from './QrScreen';
 
 /** Where the checkout is shown. */
 export type PaymentCheckoutDisplay = 'modal' | 'inline' | 'page';
@@ -54,6 +58,13 @@ export interface PaymentCheckoutProps {
    * scanning a QR code that opens the page on a phone.
    */
   payUrl?: string;
+  /**
+   * Connects a wallet of a chain family, for apps without Nova Connect. Inside `NovaConnectProvider` the checkout opens
+   * its connect modal instead.
+   *
+   * @param family - The family of the chosen method.
+   */
+  onConnectWallet?: (family: PaymentFamily) => void;
   /** Classes added to the checkout block. */
   className?: string;
 }
@@ -113,7 +124,9 @@ function ScreenBody() {
   if (screen === 'error') return <ErrorScreen />;
   if (screen === 'buyer') return <BuyerScreen />;
   if (screen === 'method') return <MethodScreen />;
-  // Placeholder until the method, payment and outcome screens are added (step 6c.2–6c.4)
+  if (screen === 'pay') return <PayScreen />;
+  if (screen === 'qr') return <QrScreen />;
+  // Placeholder until the outcome screens are added (step 6c.4)
   return (
     <div className={cn(mono, 'novapay:flex-1 novapay:p-5 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]')}>
       {screen}
@@ -215,6 +228,7 @@ export function PaymentCheckout({
   EventSource,
   pollMs,
   payUrl,
+  onConnectWallet,
   className,
 }: PaymentCheckoutProps) {
   const settings = useNovaPayments();
@@ -225,8 +239,40 @@ export function PaymentCheckout({
   const labels = usePaymentsLabels(locale);
   const now = useNow(1000, Boolean(checkout?.invoice.dueAt));
   const wallet = useConnectedWallet();
+  const connection = useWalletConnection(onConnectWallet);
+  const adapters = settings.adapters;
   const [payWith, setPayWith] = useState<'wallet' | 'qr'>('wallet');
-  const screen = checkoutScreen(state, { payWith });
+  const [handoff, setHandoff] = useState(false);
+  // The method a wallet is being connected for: its price is locked once the wallet arrives
+  const connectingFor = useRef<string | null>(null);
+  const screen = checkoutScreen(state, { payWith, handoff });
+
+  const lockForWallet = useEffectEvent(() => {
+    if (!wallet || !checkout) return;
+    const { quote, phase } = store.getState();
+    if (connectingFor.current) {
+      const method = checkout.methods.find((item) => item.id === connectingFor.current);
+      const payer = method ? payerFor(wallet, method) : null;
+      if (!payer) return;
+      connectingFor.current = null;
+      store.getState().setPayer(payer);
+      void store.getState().requestQuote();
+      return;
+    }
+    // Another wallet became active over a locked price: lock it again for that wallet, or go back to the methods
+    if (phase !== 'awaitingPayment' || !quote?.payer) return;
+    const method = checkout.methods.find((item) => item.id === quote.methodId);
+    const payer = method ? payerFor(wallet, method) : null;
+    if (payer === quote.payer) return;
+    if (!payer) return store.getState().releaseQuote();
+    store.getState().setPayer(payer);
+    void store.getState().requestQuote();
+  });
+  useEffect(() => lockForWallet(), [wallet?.address, wallet?.chainId, wallet?.connectorType]);
+  // The connect modal closed without a wallet of that family
+  useEffect(() => {
+    if (!connection.connecting) connectingFor.current = null;
+  }, [connection.connecting]);
   // The details step stays in the steps once the checkout asked for the buyer
   const [askedBuyer, setAskedBuyer] = useState(false);
   if (screen === 'buyer' && !askedBuyer) setAskedBuyer(true);
@@ -249,8 +295,20 @@ export function PaymentCheckout({
     payWith,
     setPayWith,
     payUrl,
-    // Opens the wallet connection of Nova Connect from step 6c.3
-    connectWallet: () => undefined,
+    connectWallet: (method) => {
+      const family = methodFamily(method);
+      connectingFor.current = method.id;
+      const asked = family !== null && connection.connect(family);
+      if (!asked) connectingFor.current = null;
+      return asked;
+    },
+    adapterFor: (family) => adapters?.find((adapter) => adapter.family === family),
+    handoff,
+    setHandoff,
+    backToMethods: () => {
+      setHandoff(false);
+      store.getState().releaseQuote();
+    },
   };
   const frame = (
     <CheckoutContextProvider value={context}>

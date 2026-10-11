@@ -6,3 +6,6 @@ export * from './CheckoutSummary';
 export * from './LocaleSwitcher';
 export * from './MethodScreen';
 export * from './PaymentCheckout';
+export * from './PayScreen';
+export * from './QrScreen';
+export * from './WalletPrompt';

@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo } from 'react';
 
+import type { PaymentsAdapter } from '../adapters/types';
 import type { CheckoutLocale, NovaPaymentsLabelOverrides, NovaPaymentsLabels } from '../i18n';
 import { NovaPaymentsContext } from './novaPaymentsContext';
 
@@ -33,13 +34,19 @@ export interface NovaPaymentsProviderProps {
   labels?: NovaPaymentsLabelOverrides;
   /** Customization of the labels. */
   customization?: NovaPaymentsProviderCustomization;
+  /**
+   * The chain families the checkouts pay from a connected wallet on: `paymentsEVMAdapter` of
+   * `@tuwaio/nova-payments/evm`, `paymentsSolanaAdapter` of `@tuwaio/nova-payments/solana`. Without the adapter of a
+   * method's family, the buyer pays that method with a QR code.
+   */
+  adapters?: PaymentsAdapter[];
   /** The app. */
   children: ReactNode;
 }
 
 /**
- * Gives the checkouts below it the Quasar API and the labels. A checkout works without it, with Quasar Cloud and the
- * built-in labels.
+ * Gives the checkouts below it the Quasar API, the labels and the chain adapters. A checkout works without it, with
+ * Quasar Cloud, the built-in labels and QR payments only.
  *
  * @param props - See {@link NovaPaymentsProviderProps}.
  * @returns The provider.
@@ -57,7 +64,16 @@ export interface NovaPaymentsProviderProps {
  * }
  * ```
  */
-export function NovaPaymentsProvider({ baseUrl, labels, customization, children }: NovaPaymentsProviderProps) {
-  const value = useMemo(() => ({ baseUrl, labels, customization }), [baseUrl, labels, customization]);
+export function NovaPaymentsProvider({
+  baseUrl,
+  labels,
+  customization,
+  adapters,
+  children,
+}: NovaPaymentsProviderProps) {
+  const value = useMemo(
+    () => ({ baseUrl, labels, customization, adapters }),
+    [baseUrl, labels, customization, adapters],
+  );
   return <NovaPaymentsContext.Provider value={value}>{children}</NovaPaymentsContext.Provider>;
 }

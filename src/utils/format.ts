@@ -55,6 +55,20 @@ export function formatTokenAmount(baseUnits: string, decimals: number, locale: s
 }
 
 /**
+ * A token amount as a wallet takes it when pasted: exact, with a dot, without grouping or trailing zeros.
+ *
+ * @param baseUnits - Base units, as a decimal integer string (not negative).
+ * @param decimals - Decimals of the token.
+ * @returns For example `89.54` for `89540000` with 6 decimals, `5` for `5000000`.
+ */
+export function baseUnitsToDecimal(baseUnits: string, decimals: number): string {
+  const value = BigInt(baseUnits);
+  const scale = 10n ** BigInt(decimals);
+  const fraction = (value % scale).toString().padStart(decimals, '0').replace(/0+$/, '');
+  return fraction ? `${value / scale}.${fraction}` : String(value / scale);
+}
+
+/**
  * An address shortened to its start and end, as wallets show it.
  *
  * @param address - The address (`0x…` or base58).

@@ -6,15 +6,17 @@
 `@tuwaio/nova-payments` is the payments Layer 7 (L7) package of **Nova UI Kit**, the user interface project of TUWA Stage 4 ("User Interface"). It renders the checkout of a [Quasar Payments](https://docs.tuwa.io/quasar) invoice from its checkout token: the order with its lines, tax and deadline, the steps of the payment and its outcome, in a modal (a sheet from the bottom on a phone), in the page, or on a page of its own. It keeps no payment state of its own: the checkout store of [`@tuwaio/quasar-sdk/checkout`](https://docs.tuwa.io/quasar) reads the invoice and follows it, and no secret key reaches the browser.
 
 > [!NOTE]
-> The package is in development: the method, payment and outcome screens arrive in the next releases.
+> The package is in development: the chain adapters (`/evm`, `/solana`) and the outcome screens arrive in the next releases.
 
 ---
 
 ## 💾 Installation
 
 ```bash
-pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/orbit-core zustand react framer-motion @heroicons/react @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
+pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/nova-connect @tuwaio/satellite-react @tuwaio/orbit-core zustand react framer-motion @heroicons/react @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
 ```
+
+The checkout connects wallets through Nova Connect (`NovaConnectProvider` of `@tuwaio/nova-connect`, with its own peers) when the app sets it up; apps that connect wallets differently pass `onConnectWallet`, and without either the buyer pays with a QR code.
 
 Import the stylesheets of `@tuwaio/nova-core` (theme variables) and of this package (Tailwind CSS v4 utilities prefixed with `novapay:`):
 

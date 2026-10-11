@@ -5,6 +5,7 @@ import {
   canPayWithQr,
   connectedWallet,
   methodFamily,
+  methodToken,
   networkName,
   payerFor,
   priceAdjustment,
@@ -77,6 +78,19 @@ describe('methods', () => {
   it('names the network of a CAIP-2 chain, EVM and Solana', () => {
     expect(networkName('eip155:84532')).toBe('Base Sepolia Testnet');
     expect(networkName(SOLANA_DEVNET)).toBe('Solana Devnet');
+  });
+
+  it('names the token of a method as the chain reads its balance: the contract or mint, or the native coin', () => {
+    expect(methodToken(method(BASE, { assetId: 'eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' }))).toBe(
+      '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    );
+    expect(methodToken(method(BASE, { assetId: 'eip155:8453/slip44:60' }))).toBe('native');
+    expect(
+      methodToken(
+        method(SOLANA_DEVNET, { assetId: `${SOLANA_DEVNET}/token:4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU` }),
+      ),
+    ).toBe('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
+    expect(methodToken(method(SOLANA_DEVNET, { assetId: null }))).toBe('native');
   });
 
   it('tells EVM and Solana methods apart by their CAIP-2 chain', () => {

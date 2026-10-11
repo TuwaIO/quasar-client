@@ -2,7 +2,7 @@ import { DevicePhoneMobileIcon, QrCodeIcon, WalletIcon as WalletOutlineIcon } fr
 import { cn, NetworkIcon, TokenIcon, WalletIcon } from '@tuwaio/nova-core';
 import { toEvmChainId } from '@tuwaio/orbit-core';
 import type { CheckoutMethod } from '@tuwaio/quasar-sdk/checkout';
-import { type ReactNode, useEffect, useEffectEvent, useMemo } from 'react';
+import { type ReactNode, useEffect, useEffectEvent, useMemo, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel, formatLabelParts, type NovaPaymentsLabels } from '../i18n';
@@ -103,18 +103,27 @@ function AgreeLine({
 /**
  * The method step: the token first, then its network (left out when the token has one), then how to pay — from a
  * wallet in this browser or with a QR code on a phone. The connected wallet's network comes first and is marked, the
- * merchant's Popular methods next; a discount or markup of a method shows on it. "Continue" locks the price: for the
- * connected wallet, or without a payer for a Solana Pay QR code.
+ * merchant's Popular methods next; a discount or markup of a method shows on it. Paying from a wallet needs the chain
+ * adapter of the method's family (`adapters` of `NovaPaymentsProvider`). "Continue" locks the price for the connected
+ * wallet (or connects one first), locks it without a payer for a Solana Pay QR code, or shows the QR code of the
+ * payment page for an EVM method paid on a phone.
  *
  * @returns The method step.
  */
 export function MethodScreen() {
-  const { checkout, state, store, labels, wallet, payWith, setPayWith, payUrl, connectWallet } = useCheckoutContext();
+  const { checkout, state, store, labels, wallet, payWith, setPayWith, payUrl, connectWallet, adapterFor, setHandoff } =
+    useCheckoutContext();
   const methods = useMemo(() => checkout?.methods ?? [], [checkout]);
   const groups = useMemo(() => groupMethodsByToken(methods, wallet?.chainId), [methods, wallet?.chainId]);
   const selected = methods.find((method) => method.id === state.methodId) ?? null;
   const group = groups.find((item) => item.symbol === selected?.symbol) ?? null;
   const qrAvailable = selected ? canPayWithQr(selected, payUrl) : false;
+  // The wallet pays only where the app gave the adapter of the method's chain family
+  const family = selected ? methodFamily(selected) : null;
+  const walletAvailable = family ? Boolean(adapterFor(family)) : false;
+  const ways = [...(walletAvailable ? ['wallet' as const] : []), ...(qrAvailable ? ['qr' as const] : [])];
+  const way = ways.includes(payWith) ? payWith : (ways[0] ?? null);
+  const [cannotConnect, setCannotConnect] = useState(false);
 
   // A method is chosen from the start: the connected wallet's network, else the first Popular one, else the first
   const selectDefault = useEffectEvent(() => {
@@ -134,16 +143,19 @@ export function MethodScreen() {
 
   const quoting = state.phase === 'quoting';
   const onContinue = async () => {
-    if (!selected) return;
-    if (payWith === 'qr' && qrAvailable) {
-      if (methodFamily(selected) === 'solana') {
-        store.getState().setPayer(null);
-        await store.getState().requestQuote();
-      }
+    if (!selected || !way) return;
+    setCannotConnect(false);
+    if (way === 'qr') {
+      if (payWith !== 'qr') setPayWith('qr');
+      // Solana Pay locks a price without a payer; an EVM method continues on the phone, on the payment page
+      if (family !== 'solana') return setHandoff(true);
+      store.getState().setPayer(null);
+      await store.getState().requestQuote();
       return;
     }
+    if (payWith !== 'wallet') setPayWith('wallet');
     const payer = payerFor(wallet, selected);
-    if (!payer) return connectWallet(selected);
+    if (!payer) return setCannotConnect(!connectWallet(selected));
     store.getState().setPayer(payer);
     await store.getState().requestQuote();
   };
@@ -228,11 +240,14 @@ export function MethodScreen() {
         <GroupLabel>{labels.method.payWith}</GroupLabel>
         <RadioCards
           label={labels.method.payWith}
-          items={qrAvailable ? (['wallet', 'qr'] as const).slice() : (['wallet'] as const).slice()}
-          value={qrAvailable ? payWith : 'wallet'}
+          items={ways}
+          value={way}
           getKey={(item) => item}
-          onChange={(item) => setPayWith(item as 'wallet' | 'qr')}
-          className={cn('novapay:grid novapay:gap-2', qrAvailable && 'novapay:grid-cols-2')}
+          onChange={(item) => {
+            setCannotConnect(false);
+            setPayWith(item as 'wallet' | 'qr');
+          }}
+          className={cn('novapay:grid novapay:gap-2', ways.length > 1 && 'novapay:grid-cols-2')}
           itemClassName={() => 'novapay:flex novapay:items-center novapay:gap-2.5 novapay:px-2.5 novapay:py-2'}
         >
           {(item) =>
@@ -277,10 +292,14 @@ export function MethodScreen() {
             )
           }
         </RadioCards>
+        {selected && !way && <ScreenError>{labels.method.methodUnavailable}</ScreenError>}
+        {cannotConnect && (
+          <ScreenError>{qrAvailable ? labels.pay.connectUnavailable : labels.method.methodUnavailable}</ScreenError>
+        )}
         {state.error && state.phase === 'selectMethod' && <ScreenError>{state.error.message}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
-        <PrimaryButton busy={quoting} disabled={!selected} onClick={() => void onContinue()}>
+        <PrimaryButton busy={quoting} disabled={!selected || !way} onClick={() => void onContinue()}>
           {quoting ? labels.method.quoting : labels.method.continue}
         </PrimaryButton>
         <AgreeLine

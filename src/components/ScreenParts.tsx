@@ -1,8 +1,8 @@
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { type ButtonHTMLAttributes, type ReactNode, useEffect, useState } from 'react';
 
-import { focusRing, mono } from './classes';
+import { focusRing, iconButton, mono } from './classes';
 
 /** The scrolling content of a screen, with its heading. @internal */
 export function ScreenContent({
@@ -87,5 +87,74 @@ export function ScreenError({ children }: { children: ReactNode }) {
     >
       {children}
     </p>
+  );
+}
+
+/** A button that copies a text; "Copied" is announced to screen readers (WCAG 4.1.3). @internal */
+export function CopyButton({
+  text,
+  label,
+  copiedLabel,
+  children,
+}: {
+  text: string;
+  label: string;
+  copiedLabel: string;
+  children?: ReactNode;
+}) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  const Icon = copied ? CheckIcon : DocumentDuplicateIcon;
+  return (
+    <>
+      <button
+        type="button"
+        aria-label={children ? undefined : label}
+        onClick={() => {
+          // Clipboard access can be refused (no permission, insecure page): then nothing is copied and nothing said
+          navigator.clipboard?.writeText(text).then(
+            () => setCopied(true),
+            () => undefined,
+          );
+        }}
+        className={cn(iconButton, 'novapay:min-h-6 novapay:min-w-6 novapay:text-xs')}
+      >
+        <Icon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
+        {children}
+      </button>
+      <span role="status" className="novapay:sr-only">
+        {copied ? copiedLabel : ''}
+      </span>
+    </>
+  );
+}
+
+/** A row of a details list: its name and its value. @internal */
+export function DetailRow({ name, children }: { name: ReactNode; children: ReactNode }) {
+  return (
+    <div className="novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3 novapay:text-xs">
+      <dt className="novapay:shrink-0 novapay:text-[var(--tuwa-text-secondary)]">{name}</dt>
+      <dd className={cn(mono, 'novapay:m-0 novapay:min-w-0 novapay:text-right novapay:break-words')}>{children}</dd>
+    </div>
+  );
+}
+
+/** A link styled as a small secondary action in a screen footer. @internal */
+export function FooterAction({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'novapay:min-h-6 novapay:cursor-pointer novapay:border-0 novapay:bg-transparent novapay:p-0 novapay:text-xs novapay:text-[var(--tuwa-text-accent)] novapay:underline novapay:hover:no-underline',
+        focusRing,
+      )}
+    >
+      {children}
+    </button>
   );
 }

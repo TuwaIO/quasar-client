@@ -33,6 +33,11 @@ export interface CheckoutScreenChoices {
   payWith?: 'wallet' | 'qr';
   /** The buyer opened the automatic payments offer after paying the first period of a subscription. */
   autoPay?: boolean;
+  /**
+   * The buyer continues on a phone: with `payWith` `qr`, the QR code of the payment page shows before any price is
+   * locked (an EVM method, paid from the phone's wallet on that page).
+   */
+  handoff?: boolean;
 }
 
 /**
@@ -44,7 +49,8 @@ export interface CheckoutScreenChoices {
  * @param state.quote - The locked price; while the first one is being locked the method screen stays, with its button
  * busy, so a refused payer or a failed request is shown where the buyer chose.
  * @param choices - What the buyer chose on the page.
- * @returns The screen: `qr` instead of `pay` when the buyer pays with a QR code, `replaced` for an invoice the seller
+ * @returns The screen: `qr` instead of `pay` when the buyer pays with a QR code (or the price was locked without a
+ * payer), `replaced` for an invoice the seller
  * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open.
  */
 export function checkoutScreen(
@@ -53,13 +59,14 @@ export function checkoutScreen(
 ): CheckoutScreen {
   switch (state.phase) {
     case 'selectMethod':
-      return 'method';
+      return choices.handoff && choices.payWith === 'qr' ? 'qr' : 'method';
     case 'quoting':
       if (!state.quote) return 'method';
-      return choices.payWith === 'qr' ? 'qr' : 'pay';
+      return choices.payWith === 'qr' || state.quote.payer === null ? 'qr' : 'pay';
     case 'awaitingPayment':
     case 'submitting':
-      return choices.payWith === 'qr' ? 'qr' : 'pay';
+      // A price locked without a payer is a Solana Pay QR code, also when the page was reloaded
+      return choices.payWith === 'qr' || state.quote?.payer === null ? 'qr' : 'pay';
     case 'confirming':
       return 'confirm';
     case 'paid':

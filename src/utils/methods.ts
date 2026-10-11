@@ -4,7 +4,13 @@
  */
 
 import { getChainName } from '@tuwaio/nova-core';
-import { formatCaip10AccountId, parseCaip2ChainId, toCaip2ChainId, toEvmChainId } from '@tuwaio/orbit-core';
+import {
+  formatCaip10AccountId,
+  parseCaip2ChainId,
+  parseCaip19AssetId,
+  toCaip2ChainId,
+  toEvmChainId,
+} from '@tuwaio/orbit-core';
 import type { CheckoutMethod } from '@tuwaio/quasar-sdk/checkout';
 
 /** The chain family of a payment method or wallet. */
@@ -139,4 +145,15 @@ export function priceAdjustment(method: CheckoutMethod): { kind: 'discount' | 'm
  */
 export function networkName(chainId: string): string {
   return getChainName(toEvmChainId(chainId) ?? chainId).name;
+}
+
+/**
+ * The token of a method as a chain reads its balance, from its CAIP-19 asset.
+ *
+ * @param method - The payment method.
+ * @returns The token contract or mint, or `native` for the coin of the chain (a `slip44` asset, or none).
+ */
+export function methodToken(method: CheckoutMethod): string {
+  const asset = method.assetId ? parseCaip19AssetId(method.assetId) : undefined;
+  return !asset || asset.assetNamespace === 'slip44' ? 'native' : asset.assetReference;
 }

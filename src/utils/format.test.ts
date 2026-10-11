@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatCountdown, formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from './format';
+import {
+  baseUnitsToDecimal,
+  formatCountdown,
+  formatFiat,
+  formatTokenAmount,
+  minorToDecimal,
+  shortAddress,
+} from './format';
 
 describe('amounts', () => {
   it('turns minor units into a decimal without floating point', () => {
@@ -44,5 +51,16 @@ describe('countdown', () => {
     expect(formatCountdown(872_000)).toBe('14:32');
     expect(formatCountdown(2 * 86_400_000 + 3_723_000)).toBe('2d 01:02:03');
     expect(formatCountdown(-5)).toBe('00:00');
+  });
+});
+
+describe('baseUnitsToDecimal', () => {
+  it('writes a token amount as a wallet takes it: exact, a dot, no grouping, no trailing zeros', () => {
+    expect(baseUnitsToDecimal('89540000', 6)).toBe('89.54');
+    expect(baseUnitsToDecimal('1234500000', 6)).toBe('1234.5');
+    expect(baseUnitsToDecimal('584994667', 9)).toBe('0.584994667');
+    expect(baseUnitsToDecimal('5000000', 6)).toBe('5');
+    expect(baseUnitsToDecimal('123456789012345678901', 18)).toBe('123.456789012345678901');
+    expect(baseUnitsToDecimal('42', 0)).toBe('42');
   });
 });
