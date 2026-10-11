@@ -247,6 +247,10 @@ export type NovaPaymentsLabels = {
     retryLater: string;
     /** No answer from Quasar */
     noAnswer: string;
+    /** Title of the payment in the app's transaction history and toasts: `{merchant}` (default: `Payment to {merchant}`) */
+    txTitle: string;
+    /** Its description: `{amount}` with its symbol, `{invoice}` the invoice number (default: `{amount} · {invoice}`) */
+    txDescription: string;
   };
   /** The window while the wallet asks the buyer. */
   walletPrompt: {

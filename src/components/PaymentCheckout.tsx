@@ -9,6 +9,7 @@ import { useCheckoutState, useCheckoutStore } from '../hooks/useCheckoutStore';
 import { useConnectedWallet } from '../hooks/useConnectedWallet';
 import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
+import { usePaymentHandOver } from '../hooks/usePaymentHandOver';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel } from '../i18n';
@@ -246,6 +247,15 @@ export function PaymentCheckout({
   // The method a wallet is being connected for: its price is locked once the wallet arrives
   const connectingFor = useRef<string | null>(null);
   const screen = checkoutScreen(state, { payWith, handoff });
+  const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
+  const onPaymentSent = usePaymentHandOver({
+    store,
+    open: display !== 'modal' || open,
+    adapterFor,
+    pulsar: settings.pulsar,
+    labels,
+    locale,
+  });
 
   const lockForWallet = useEffectEvent(() => {
     if (!wallet || !checkout) return;
@@ -302,13 +312,14 @@ export function PaymentCheckout({
       if (!asked) connectingFor.current = null;
       return asked;
     },
-    adapterFor: (family) => adapters?.find((adapter) => adapter.family === family),
+    adapterFor,
     handoff,
     setHandoff,
     backToMethods: () => {
       setHandoff(false);
       store.getState().releaseQuote();
     },
+    onPaymentSent,
   };
   const frame = (
     <CheckoutContextProvider value={context}>

@@ -1,3 +1,4 @@
+import type { Transaction } from '@tuwaio/pulsar-core';
 import type { PaymentInstructions, TransferAuthorizationTypedData } from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentFamily } from '../utils/methods';
@@ -10,6 +11,24 @@ export interface NativeFee {
   decimals: number;
   /** Symbol of the native coin. */
   symbol: string;
+}
+
+/** A payment the wallet sent, with the texts of its transaction, for {@link PaymentsAdapter.pulsarTransaction}. */
+export interface PulsarTransactionParams {
+  /** The transaction hash (EVM) or signature (Solana). */
+  txKey: string;
+  /** What the wallet sent. */
+  instructions: PaymentInstructions;
+  /** The sender. */
+  account: string;
+  /** The connector of the wallet (`evm:metamask`). */
+  connectorType: string;
+  /** Title of the transaction (at most 100 characters). */
+  title: string;
+  /** Description of the transaction (at most 300 characters). */
+  description: string;
+  /** What the transaction pays: `quasarInvoice` is the invoice ID. */
+  payload: Record<string, string>;
 }
 
 /**
@@ -70,13 +89,23 @@ export interface PaymentsAdapter {
    * Sends the sponsored calls of a gasless quote with `wallet_sendCalls` and the paymaster, with the wallet's prompt,
    * and waits for the transaction that carries them.
    *
-   * @param params - The calls, the paymaster URL of the checkout, the chain and the sender.
+   * @param params - The calls, the paymaster URL of the checkout, the chain, the sender, and `onSent`, called once the
+   *   wallet accepted the calls (before they are included).
    * @returns The hash of the transaction (not the batch ID), as Quasar expects it.
    */
+  /**
+   * Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
+   * it (and Nova Transactions shows its toast) once the checkout closes.
+   *
+   * @param params - The payment and the texts of its transaction.
+   * @returns The pending transaction, for `injectExternalPendingTxs` of the Pulsar store.
+   */
+  pulsarTransaction?: (params: PulsarTransactionParams) => Transaction;
   sendSponsoredCalls?: (params: {
     calls: { to: string; value: string; data: string }[];
     paymasterUrl: string;
     chainId: string;
     account: string;
+    onSent?: () => void;
   }) => Promise<string>;
 }

@@ -100,6 +100,42 @@ describe('payInvoice', () => {
     expect(actions.submit).toHaveBeenCalledWith({ txKey: '0xsponsored', connectorType: 'evm:metamask' });
   });
 
+  it('names the transaction the wallet sent before Quasar takes it, and none for a gasless signature', async () => {
+    const { actions, store, adapter } = fakes();
+    const order: string[] = [];
+    actions.submit.mockImplementation(async () => (order.push('submit'), true));
+    const onSent = vi.fn((txKey: string) => order.push(`sent ${txKey}`));
+    await payInvoice({ adapter, store, quote, wallet, path: 'transfer', paymasterUrl: null, onSent });
+    expect(order).toEqual(['sent 0xtransfer', 'submit']);
+
+    await payInvoice({ adapter, store, quote, wallet, path: 'paymaster', paymasterUrl: 'https://quasar/pm', onSent });
+    expect(onSent).toHaveBeenLastCalledWith('0xsponsored');
+
+    onSent.mockClear();
+    await payInvoice({ adapter, store, quote, wallet, path: 'relay', paymasterUrl: null, onSent });
+    expect(onSent).not.toHaveBeenCalled();
+  });
+
+  it('says the wallet is done as soon as it accepted the sponsored calls, before they are included', async () => {
+    const { store, adapter } = fakes();
+    const order: string[] = [];
+    adapter.sendSponsoredCalls = vi.fn(async ({ onSent }) => {
+      onSent?.();
+      order.push('included');
+      return '0xsponsored';
+    });
+    await payInvoice({
+      adapter,
+      store,
+      quote,
+      wallet,
+      path: 'paymaster',
+      paymasterUrl: 'https://quasar/pm',
+      onWalletDone: () => order.push('wallet done'),
+    });
+    expect(order.slice(0, 2)).toEqual(['wallet done', 'included']);
+  });
+
   it('refuses a path the adapter or the quote cannot take', async () => {
     const { store, adapter } = fakes();
     const bare: PaymentsAdapter = {

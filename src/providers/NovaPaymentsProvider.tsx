@@ -2,6 +2,7 @@ import { type ReactNode, useMemo } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import type { CheckoutLocale, NovaPaymentsLabelOverrides, NovaPaymentsLabels } from '../i18n';
+import type { PaymentsPulsar } from '../utils/handOver';
 import { NovaPaymentsContext } from './novaPaymentsContext';
 
 /** What the labels customization of {@link NovaPaymentsProvider} gets with the labels it transforms. */
@@ -40,6 +41,12 @@ export interface NovaPaymentsProviderProps {
    * method's family, the buyer pays that method with a QR code.
    */
   adapters?: PaymentsAdapter[];
+  /**
+   * The app's Pulsar store (`injectExternalPendingTxs` of `createPulsarStore` from `@tuwaio/pulsar-core`). While a
+   * checkout is open it tracks the payment itself; when it closes before Quasar settled a payment the wallet sent, the
+   * payment goes to this store, which tracks it and keeps it in the history, and Nova Transactions shows its toast.
+   */
+  pulsar?: PaymentsPulsar;
   /** The app. */
   children: ReactNode;
 }
@@ -69,11 +76,12 @@ export function NovaPaymentsProvider({
   labels,
   customization,
   adapters,
+  pulsar,
   children,
 }: NovaPaymentsProviderProps) {
   const value = useMemo(
-    () => ({ baseUrl, labels, customization, adapters }),
-    [baseUrl, labels, customization, adapters],
+    () => ({ baseUrl, labels, customization, adapters, pulsar }),
+    [baseUrl, labels, customization, adapters, pulsar],
   );
   return <NovaPaymentsContext.Provider value={value}>{children}</NovaPaymentsContext.Provider>;
 }

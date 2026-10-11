@@ -6,14 +6,14 @@
 `@tuwaio/nova-payments` is the payments Layer 7 (L7) package of **Nova UI Kit**, the user interface project of TUWA Stage 4 ("User Interface"). It renders the checkout of a [Quasar Payments](https://docs.tuwa.io/quasar) invoice from its checkout token: the order with its lines, tax and deadline, the steps of the payment and its outcome, in a modal (a sheet from the bottom on a phone), in the page, or on a page of its own. It keeps no payment state of its own: the checkout store of [`@tuwaio/quasar-sdk/checkout`](https://docs.tuwa.io/quasar) reads the invoice and follows it, and no secret key reaches the browser.
 
 > [!NOTE]
-> The package is in development: the chain adapters (`/evm`, `/solana`) and the outcome screens arrive in the next releases.
+> The package is in development: the Solana adapter (`/solana`) and the outcome screens arrive in the next releases.
 
 ---
 
 ## 💾 Installation
 
 ```bash
-pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/nova-connect @tuwaio/satellite-react @tuwaio/orbit-core zustand react framer-motion @heroicons/react @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
+pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/nova-connect @tuwaio/satellite-react @tuwaio/pulsar-core @tuwaio/orbit-core zustand react framer-motion @heroicons/react @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
 ```
 
 The checkout connects wallets through Nova Connect (`NovaConnectProvider` of `@tuwaio/nova-connect`, with its own peers) when the app sets it up; apps that connect wallets differently pass `onConnectWallet`, and without either the buyer pays with a QR code.
@@ -52,6 +52,34 @@ export function Checkout({ token }: { token: string }) {
 
 `display="inline"` renders it in the page and `display="page"` centers it, as the Quasar payment page does. `NovaPaymentsProvider` sets the Quasar API for a Community Edition node (`baseUrl`) and replaces labels.
 
+To pay from a wallet in the browser, give the provider the chain adapters of your app (`@tuwaio/nova-payments/evm` needs `@wagmi/core` and `viem`) and, optionally, your Pulsar store: a payment the wallet sends after the buyer closed the checkout goes to it, and Nova Transactions shows its toast.
+
+```tsx
+'use client';
+
+import { NovaPaymentsProvider } from '@tuwaio/nova-payments';
+import { paymentsEVMAdapter } from '@tuwaio/nova-payments/evm';
+import type { Transaction } from '@tuwaio/pulsar-core';
+import type { Config } from '@wagmi/core';
+import type { ReactNode } from 'react';
+
+export function Payments({
+  wagmiConfig,
+  injectExternalPendingTxs,
+  children,
+}: {
+  wagmiConfig: Config;
+  injectExternalPendingTxs: (transactions: Transaction[]) => Promise<void>;
+  children: ReactNode;
+}) {
+  return (
+    <NovaPaymentsProvider adapters={[paymentsEVMAdapter(wagmiConfig)]} pulsar={{ injectExternalPendingTxs }}>
+      {children}
+    </NovaPaymentsProvider>
+  );
+}
+```
+
 ---
 
 ## 🌍 Languages and accessibility
@@ -62,11 +90,11 @@ The checkout follows the language of the invoice; the buyer changes it in the me
 
 ## 🗄️ Browser Storage
 
-Nothing is saved to `localStorage` or cookies.
+The checkout saves nothing to `localStorage` or cookies. A payment it hands over to your Pulsar store is kept by that store (`createPulsarStore` persists its pool under its own name).
 
 ## 🌐 External Services
 
-The checkout routes of the Quasar API (`baseUrl`, Quasar Cloud by default): `GET /v1/payments/checkout/{token}`, its event stream, its logo and `POST /v1/payments/checkout/{token}/locale` when the buyer changes the language.
+The checkout routes of the Quasar API (`baseUrl`, Quasar Cloud by default): `GET /v1/payments/checkout/{token}`, its event stream and logo, and the `POST` routes of the steps (`buyer`, `locale`, `quote`, `submit`, `relay`; the wallet calls the `paymaster` route for sponsored calls). The chain adapters read balances and fee estimates through the RPC transports of your wagmi config, and the wallet asks the buyer before every signature or transaction.
 
 ---
 

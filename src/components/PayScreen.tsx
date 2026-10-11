@@ -81,8 +81,19 @@ function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null,
  * @returns The pay step.
  */
 export function PayScreen() {
-  const { checkout, state, store, labels, locale, now, wallet, adapterFor, connectWallet, backToMethods } =
-    useCheckoutContext();
+  const {
+    checkout,
+    state,
+    store,
+    labels,
+    locale,
+    now,
+    wallet,
+    adapterFor,
+    connectWallet,
+    backToMethods,
+    onPaymentSent,
+  } = useCheckoutContext();
   const quote = state.quote;
   const methods = checkout?.methods ?? [];
   const method = methods.find((item) => item.id === quote?.methodId);
@@ -107,7 +118,15 @@ export function PayScreen() {
       : null,
     () => adapter!.estimateFee!({ instructions: quote!.instructions, account }),
   );
-  const payment = usePayment({ adapter, store, quote, wallet, path, paymasterUrl: state.paymasterUrl });
+  const payment = usePayment({
+    adapter,
+    store,
+    quote,
+    wallet,
+    path,
+    paymasterUrl: state.paymasterUrl,
+    onSent: onPaymentSent,
+  });
   const native = quote?.instructions.token === 'native';
   const shortfall =
     quote && typeof balance === 'bigint' ? balanceShortfall(balance, quote, native && fee ? fee.amount : 0n) : null;

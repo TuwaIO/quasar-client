@@ -26,6 +26,13 @@ export interface PayInvoiceParams {
   paymasterUrl: string | null;
   /** Called when the wallet answered, before the payment is handed to Quasar. */
   onWalletDone?: () => void;
+  /**
+   * Called with the transaction the wallet sent (its hash), before Quasar takes it; not for a gasless signature, whose
+   * transaction Quasar sends.
+   *
+   * @param txKey - The transaction hash (EVM) or signature (Solana).
+   */
+  onSent?: (txKey: string) => void;
 }
 
 const unsupported = (what: string) => new PaymentWalletError('unsupported', `${what} is not available`);
@@ -50,6 +57,7 @@ export async function payInvoice({
   path,
   paymasterUrl,
   onWalletDone,
+  onSent,
 }: PayInvoiceParams): Promise<boolean> {
   const account = wallet.address;
   if (path === 'relay') {
@@ -63,11 +71,13 @@ export async function payInvoice({
     const calls = quote.gasless?.paymaster?.calls;
     if (!calls || !paymasterUrl || !adapter.sendSponsoredCalls) throw unsupported('A sponsored payment');
     const chainId = instructionsChainId(quote.instructions);
-    const txKey = await adapter.sendSponsoredCalls({ calls, paymasterUrl, chainId, account });
+    const txKey = await adapter.sendSponsoredCalls({ calls, paymasterUrl, chainId, account, onSent: onWalletDone });
     onWalletDone?.();
+    onSent?.(txKey);
     return store.getState().submit({ txKey, connectorType: wallet.connectorType });
   }
   const txKey = await adapter.sendTransfer({ instructions: quote.instructions, account });
   onWalletDone?.();
+  onSent?.(txKey);
   return store.getState().submit({ txKey, connectorType: wallet.connectorType });
 }

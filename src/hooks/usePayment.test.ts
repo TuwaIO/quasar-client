@@ -44,9 +44,16 @@ const setup = () => {
     switchChain: vi.fn(async () => undefined),
   };
   const store = { getState: () => ({ submit, relay: vi.fn(async () => true) }) };
-  const props = { adapter, store, quote, wallet, path: 'transfer' as const, paymasterUrl: null };
+  const props: Parameters<typeof usePayment>[0] = {
+    adapter,
+    store,
+    quote,
+    wallet,
+    path: 'transfer',
+    paymasterUrl: null,
+  };
   const renderHook = () => render(usePayment, props) as ReturnType<typeof usePayment>;
-  return { transfer, submit, adapter, renderHook };
+  return { transfer, submit, adapter, renderHook, props };
 };
 
 afterEach(unmount);
@@ -60,6 +67,21 @@ describe('usePayment', () => {
     await paying;
     expect(submit).toHaveBeenCalledWith({ txKey: '0xhash', connectorType: 'evm:metamask' });
     expect(renderHook()).toMatchObject({ status: 'idle', problem: null });
+  });
+
+  it('tells the checkout which transaction the wallet sent', async () => {
+    const { transfer, renderHook, props } = setup();
+    const onSent = vi.fn();
+    props.onSent = onSent;
+    const paying = renderHook().pay();
+    transfer.resolve('0xhash');
+    await paying;
+    expect(onSent).toHaveBeenCalledWith({
+      txKey: '0xhash',
+      instructions: quote.instructions,
+      account: ACCOUNT,
+      connectorType: 'evm:metamask',
+    });
   });
 
   it('says why the wallet did not pay', async () => {

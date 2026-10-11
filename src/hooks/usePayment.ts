@@ -2,6 +2,7 @@ import type { CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 import { useRef, useState } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
+import type { SentPayment } from '../utils/handOver';
 import type { CheckoutWallet } from '../utils/methods';
 import { instructionsChainId, type PayPath } from '../utils/pay';
 import { payInvoice, type PayInvoiceParams } from '../utils/payInvoice';
@@ -24,6 +25,12 @@ export interface UsePaymentParams {
   path: PayPath;
   /** The checkout's ERC-7677 paymaster URL. */
   paymasterUrl: string | null;
+  /**
+   * Called with the payment the wallet sent (not a gasless signature, whose transaction Quasar sends).
+   *
+   * @param payment - The transaction and what it pays.
+   */
+  onSent?: (payment: SentPayment) => void;
 }
 
 /** What {@link usePayment} returns. */
@@ -51,7 +58,7 @@ export interface Payment {
  * @param params - See {@link UsePaymentParams}.
  * @returns See {@link Payment}.
  */
-export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl }: UsePaymentParams): Payment {
+export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, onSent }: UsePaymentParams): Payment {
   const [status, setStatus] = useState<PaymentStatus>('idle');
   const [problem, setProblem] = useState<PaymentWalletErrorKind | null>(null);
   // Each request gets a number; a dismissed or replaced one no longer changes the page
@@ -85,6 +92,14 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl }
           path,
           paymasterUrl,
           onWalletDone: () => isCurrent() && setStatus('submitting'),
+          // Reported even after a cancel: the checkout follows the transaction until Quasar settles it
+          onSent: (txKey) =>
+            onSent?.({
+              txKey,
+              instructions: quote.instructions,
+              account: wallet.address,
+              connectorType: wallet.connectorType,
+            }),
         });
       }),
     switchNetwork: () =>

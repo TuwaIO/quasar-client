@@ -131,6 +131,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'The wallet check is unavailable right now.',
     retryLater: 'Try again in a minute',
     noAnswer: 'The payment server did not answer. Check your connection and try again.',
+    txTitle: 'Payment to {merchant}',
+    txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {
     signIn: 'Sign in {wallet}',

@@ -4,6 +4,7 @@ import { createContext } from 'react';
 import type { PaymentsAdapter } from '../adapters/types';
 import type { NovaPaymentsLabels } from '../i18n';
 import type { CheckoutScreen } from '../utils/checkout';
+import type { SentPayment } from '../utils/handOver';
 import type { CheckoutWallet, PaymentFamily } from '../utils/methods';
 
 /** What the parts of a checkout share: its store and state, the screen, the language and its labels. */
@@ -60,6 +61,13 @@ export interface CheckoutContextValue {
   setHandoff: (handoff: boolean) => void;
   /** Goes back to the method step: forgets the locked price and the phone hand-off. */
   backToMethods: () => void;
+  /**
+   * Remembers the payment the wallet sent: the checkout tracks it while open, and hands it over to the app's Pulsar
+   * store when it closes before Quasar settled it.
+   *
+   * @param payment - The transaction and what it pays.
+   */
+  onPaymentSent: (payment: SentPayment) => void;
 }
 
 const CheckoutContext = createContext<CheckoutContextValue | null>(null);

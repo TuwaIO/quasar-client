@@ -2,6 +2,7 @@ import { createContext } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import type { NovaPaymentsLabelOverrides } from '../i18n';
+import type { PaymentsPulsar } from '../utils/handOver';
 import type { NovaPaymentsProviderCustomization } from './NovaPaymentsProvider';
 
 /** The settings `NovaPaymentsProvider` gives the checkouts below it. */
@@ -14,6 +15,8 @@ export interface NovaPaymentsSettings {
   customization?: NovaPaymentsProviderCustomization;
   /** The chain families the checkouts pay from a connected wallet on. */
   adapters?: PaymentsAdapter[];
+  /** The app's Pulsar store, which takes over the payments a checkout closed on. */
+  pulsar?: PaymentsPulsar;
 }
 
 /** The context of `NovaPaymentsProvider`. @internal */
