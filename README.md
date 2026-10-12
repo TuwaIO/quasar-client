@@ -88,7 +88,7 @@ export function Payments({
 }
 ```
 
-After the payment the checkout shows its outcome: confirming, paid with the receipt and the way back to the invoice's `successUrl` (a visible countdown with "Stay here"; `autoReturnSeconds`, `0` for none), and for a subscription the optional automatic payments (ERC-7715). Underpaid, held, refunded, expired, cancelled and corrected invoices get their own outcome with "Contact <seller>" (`onContact` replaces the link). `onPaid` tells the page once the invoice is paid; fulfil orders from the `invoice.paid` webhook on your server. Closing the checkout before anything is sent asks first.
+After the payment the checkout shows its outcome: confirming, paid with the receipt and the way back to the invoice's `successUrl` (a visible countdown with "Stay here"; `autoReturnSeconds`, `0` for none), and for a subscription the optional automatic payments (ERC-7715). Underpaid, held, refunded, expired, cancelled and corrected invoices get their own outcome with a "Contact" link to the seller (`onContact` replaces it). `onPaid` tells the page once the invoice is paid; fulfil orders from the `invoice.paid` webhook on your server. Closing the checkout before anything is sent asks first.
 
 ---
 
