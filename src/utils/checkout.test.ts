@@ -37,6 +37,13 @@ describe('checkoutScreen', () => {
     expect(checkoutScreen({ phase: 'confirming', checkout: view() })).toBe('confirm');
   });
 
+  it('stays on loading until the labels of the language are loaded, but shows an error at once', () => {
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view() }, { labelsReady: false })).toBe('loading');
+    expect(checkoutScreen({ phase: 'paid', checkout: view() }, { labelsReady: false })).toBe('loading');
+    expect(checkoutScreen({ phase: 'error', checkout: null }, { labelsReady: false })).toBe('error');
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view() }, { labelsReady: true })).toBe('method');
+  });
+
   it('shows the QR code of the payment page before any price when the buyer continues on a phone', () => {
     expect(checkoutScreen({ phase: 'selectMethod', checkout: view() }, { payWith: 'qr', handoff: true })).toBe('qr');
     expect(checkoutScreen({ phase: 'selectMethod', checkout: view() }, { payWith: 'wallet', handoff: true })).toBe(

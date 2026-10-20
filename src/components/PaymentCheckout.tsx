@@ -13,7 +13,7 @@ import { usePaidCallback } from '../hooks/useOutcomeEffects';
 import { usePaymentHandOver } from '../hooks/usePaymentHandOver';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useWalletConnection } from '../hooks/useWalletConnection';
-import { formatLabel } from '../i18n';
+import { formatLabel, hasLabels } from '../i18n';
 import { checkoutScreen, deadlineAnnouncement } from '../utils/checkout';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { needsLeaveConfirm } from '../utils/outcome';
@@ -298,7 +298,11 @@ export function PaymentCheckout({
   }
   // The method a wallet is being connected for: its price is locked once the wallet arrives
   const connectingFor = useRef<string | null>(null);
-  const screen = checkoutScreen(state, { payWith, handoff, autoPay });
+  // The first screen waits for the labels of the invoice's language (a file of their own), so it never flashes in
+  // English; a language switched to later shows once its labels arrive, without leaving the screen
+  const [labelsShown, setLabelsShown] = useState(false);
+  if (!labelsShown && checkout && hasLabels(locale)) setLabelsShown(true);
+  const screen = checkoutScreen(state, { payWith, handoff, autoPay, labelsReady: labelsShown || !checkout });
   usePaidCallback(state.phase, checkout?.invoice, onPaid);
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
   const onPaymentSent = usePaymentHandOver({

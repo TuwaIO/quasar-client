@@ -6,7 +6,7 @@
 `@tuwaio/nova-payments` is the payments Layer 7 (L7) package of **Nova UI Kit**, the user interface project of TUWA Stage 4 ("User Interface"). It renders the checkout of a [Quasar Payments](https://docs.tuwa.io/quasar) invoice from its checkout token: the order with its lines, tax and deadline, the steps of the payment and its outcome, in a modal (a sheet from the bottom on a phone), in the page, or on a page of its own. It keeps no payment state of its own: the checkout store of [`@tuwaio/quasar-sdk/checkout`](https://docs.tuwa.io/quasar) reads the invoice and follows it, and no secret key reaches the browser.
 
 > [!NOTE]
-> The package is in development: the checkout speaks English for now; the other five languages of Quasar invoices arrive in the next release.
+> The package is in development: native speakers review the translations of the checkout before the stable release.
 
 ---
 
@@ -94,7 +94,7 @@ After the payment the checkout shows its outcome: confirming, paid with the rece
 
 ## 🌍 Languages and accessibility
 
-The checkout follows the language of the invoice; the buyer changes it in the menu next to the close button, which also sets the language of the documents still to be issued. The checkout aims at WCAG 2.2 AA: the steps are an ordered list with the current one marked, the deadline is announced 10, 5 and 1 minutes before it ends, focus stays in the modal, and animations follow `prefers-reduced-motion`.
+The checkout speaks the six languages of Quasar invoices: English, Simplified Chinese, Spanish, Russian, Ukrainian and Italian. It follows the language of the invoice; the buyer changes it in the menu next to the close button, which also sets the language of the documents still to be issued. Each language but English is a file of its own that the page downloads the first time it shows that language, so a checkout in one language does not carry the other five; the first screen waits for it, so it never flashes in English. A language the package does not have can be added with `customization.labels.transform` of `NovaPaymentsProvider`. The checkout aims at WCAG 2.2 AA: the steps are an ordered list with the current one marked, the deadline is announced 10, 5 and 1 minutes before it ends, focus stays in the modal, and animations follow `prefers-reduced-motion`.
 
 ---
 

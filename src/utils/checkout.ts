@@ -38,6 +38,11 @@ export interface CheckoutScreenChoices {
    * locked (an EVM method, paid from the phone's wallet on that page).
    */
   handoff?: boolean;
+  /**
+   * The labels of the invoice's language are loaded (default `true`). Until then the checkout stays on `loading`, so
+   * its first screen never shows in English before the buyer's language arrives.
+   */
+  labelsReady?: boolean;
 }
 
 /**
@@ -51,12 +56,14 @@ export interface CheckoutScreenChoices {
  * @param choices - What the buyer chose on the page.
  * @returns The screen: `qr` instead of `pay` when the buyer pays with a QR code (or the price was locked without a
  * payer), `replaced` for an invoice the seller
- * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open.
+ * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open, `loading` until
+ * the labels of the invoice's language are loaded.
  */
 export function checkoutScreen(
   state: { phase: CheckoutPhase; checkout: CheckoutView | null; quote?: CheckoutQuote | null },
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
+  if (choices.labelsReady === false && state.phase !== 'error') return 'loading';
   switch (state.phase) {
     case 'selectMethod':
       return choices.handoff && choices.payWith === 'qr' ? 'qr' : 'method';
