@@ -20,7 +20,17 @@ import { methodFamily, methodToken, networkName, payerFor } from '../utils/metho
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { focusRing, mono } from './classes';
-import { CopyButton, DetailRow, FooterAction, PrimaryButton, ScreenError, ScreenFooter } from './ScreenParts';
+import {
+  CopyButton,
+  DetailRow,
+  DetailsCard,
+  FooterAction,
+  FooterNote,
+  PrimaryButton,
+  ScreenError,
+  ScreenFooter,
+  SecondaryButton,
+} from './ScreenParts';
 import { WalletPrompt } from './WalletPrompt';
 
 /** A price shown with up to two decimals, or more significant digits under one unit of the currency. */
@@ -252,8 +262,8 @@ export function PayScreen() {
           </div>
 
           {amounts.fee && (
-            <div className="novapay:flex novapay:flex-col novapay:gap-1 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:px-3 novapay:py-2">
-              <dl className="novapay:m-0 novapay:flex novapay:flex-col novapay:gap-1">
+            <div className="novapay:flex novapay:flex-col novapay:gap-1.5">
+              <DetailsCard>
                 <DetailRow name={labels.pay.invoiceTotal}>
                   {formatTokenAmount(amounts.receives, quote.decimals, locale)}
                 </DetailRow>
@@ -263,7 +273,7 @@ export function PayScreen() {
                 <DetailRow name={formatLabel(labels.pay.merchantReceives, { merchant })}>
                   {token(amounts.receives)}
                 </DetailRow>
-              </dl>
+              </DetailsCard>
               <p className="novapay:m-0 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
                 {labels.pay.transferFeeNote}
               </p>
@@ -359,7 +369,7 @@ export function PayScreen() {
             </div>
           )}
 
-          <dl className="novapay:m-0 novapay:flex novapay:flex-col novapay:gap-1.5 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:pt-3">
+          <DetailsCard>
             {rate !== null && (
               <DetailRow name={labels.pay.rate}>
                 {formatLabel(labels.pay.rateValue, {
@@ -370,23 +380,31 @@ export function PayScreen() {
               </DetailRow>
             )}
             <DetailRow name={labels.pay.networkFee}>
-              {path !== 'transfer' ? (
-                <span className="novapay:text-[var(--tuwa-success-text)]">
-                  {formatLabel(labels.pay.merchantPaysGas, { merchant })}
-                </span>
-              ) : fee ? (
-                formatLabel(labels.pay.gasEstimate, {
-                  amount: `${formatTokenAmount(String(fee.amount), fee.decimals, locale)} ${fee.symbol}`,
-                })
-              ) : (
-                labels.pay.gasFromWallet
-              )}
+              <span className="novapay:inline-flex novapay:flex-col novapay:items-end novapay:gap-0.5">
+                {path !== 'transfer' ? (
+                  <span className="novapay:text-[var(--tuwa-success-text)]">
+                    {formatLabel(labels.pay.merchantPaysGas, { merchant })}
+                  </span>
+                ) : fee ? (
+                  formatLabel(labels.pay.gasEstimate, {
+                    amount: `${formatTokenAmount(String(fee.amount), fee.decimals, locale)} ${fee.symbol}`,
+                  })
+                ) : (
+                  labels.pay.gasFromWallet
+                )}
+                {/* Who pays the gas is chosen where the fee shows */}
+                {quote.gasless && (
+                  <FooterAction onClick={() => setWithGas(!withGas)}>
+                    {withGas ? formatLabel(labels.pay.payGasless, { merchant }) : labels.pay.payWithGas}
+                  </FooterAction>
+                )}
+              </span>
             </DetailRow>
             <DetailRow name={labels.pay.to}>
               {shortAddress(quote.instructions.to)}{' '}
               <span className="novapay:font-sans novapay:text-[var(--tuwa-text-secondary)]">{merchant}</span>
             </DetailRow>
-          </dl>
+          </DetailsCard>
 
           {problem && <ScreenError>{problem}</ScreenError>}
         </section>
@@ -395,17 +413,8 @@ export function PayScreen() {
           <PrimaryButton busy={busy} disabled={action.disabled} onClick={action.run}>
             {action.label}
           </PrimaryButton>
-          <div className="novapay:flex novapay:items-center novapay:justify-between novapay:gap-3">
-            <FooterAction onClick={backToMethods}>{labels.pay.back}</FooterAction>
-            {quote.gasless && (
-              <FooterAction onClick={() => setWithGas(!withGas)}>
-                {withGas ? formatLabel(labels.pay.payGasless, { merchant }) : labels.pay.payWithGas}
-              </FooterAction>
-            )}
-          </div>
-          <p className="novapay:m-0 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
-            {formatLabel(labels.pay.disclaimer, { merchant })}
-          </p>
+          <SecondaryButton onClick={backToMethods}>{labels.pay.back}</SecondaryButton>
+          <FooterNote>{formatLabel(labels.pay.disclaimer, { merchant })}</FooterNote>
         </ScreenFooter>
       </div>
 

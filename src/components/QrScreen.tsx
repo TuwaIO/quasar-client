@@ -6,9 +6,10 @@ import { formatLabel } from '../i18n';
 import { baseUnitsToDecimal, formatCountdown, formatTokenAmount, shortAddress } from '../utils/format';
 import { networkName } from '../utils/methods';
 import { instructionsChainId } from '../utils/pay';
-import { focusRing, mono } from './classes';
+import { mono, primaryAction } from './classes';
+import { checkoutClassName } from './customization';
 import { QrCode } from './QrCode';
-import { CopyButton, FooterAction, PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
+import { CopyButton, PrimaryButton, ScreenContent, ScreenError, ScreenFooter, SecondaryButton } from './ScreenParts';
 
 /** The phone hand-off of an EVM method: the QR code of the payment page, where the phone's wallet pays. */
 function HandoffQr({ payUrl }: { payUrl: string }) {
@@ -27,7 +28,7 @@ function HandoffQr({ payUrl }: { payUrl: string }) {
         </div>
       </ScreenContent>
       <ScreenFooter>
-        <FooterAction onClick={backToMethods}>{labels.qr.back}</FooterAction>
+        <SecondaryButton onClick={backToMethods}>{labels.qr.back}</SecondaryButton>
       </ScreenFooter>
     </>
   );
@@ -42,7 +43,8 @@ function HandoffQr({ payUrl }: { payUrl: string }) {
  * @returns The QR code step.
  */
 export function QrScreen() {
-  const { checkout, state, store, labels, locale, now, payUrl, backToMethods } = useCheckoutContext();
+  const context = useCheckoutContext();
+  const { checkout, state, store, labels, locale, now, payUrl, backToMethods } = context;
   const quote = state.quote;
   if (!checkout) return null;
   if (!quote || quote.instructions.family !== 'solana') return payUrl ? <HandoffQr payUrl={payUrl} /> : null;
@@ -111,16 +113,12 @@ export function QrScreen() {
         ) : (
           <a
             href={instructions.solanaPayUrl}
-            className={cn(
-              mono,
-              'novapay:inline-flex novapay:h-11 novapay:items-center novapay:justify-center novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-button-primary-bg)] novapay:text-sm novapay:font-bold novapay:text-[var(--tuwa-text-on-accent)] novapay:no-underline novapay:hover:bg-[var(--tuwa-button-primary-bg-hover)]',
-              focusRing,
-            )}
+            className={cn(primaryAction, checkoutClassName(context, 'primaryButton'))}
           >
             {labels.qr.openInWallet}
           </a>
         )}
-        <FooterAction onClick={backToMethods}>{labels.qr.back}</FooterAction>
+        <SecondaryButton onClick={backToMethods}>{labels.qr.back}</SecondaryButton>
       </ScreenFooter>
     </>
   );

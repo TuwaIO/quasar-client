@@ -14,7 +14,8 @@ vi.mock('../hooks/useCheckoutContext', () => ({ useCheckoutContext: () => ctx })
 
 const { render, unmount } = await import('../testing/hookHarness');
 const { defaultLabels } = await import('../i18n');
-const { PrimaryButton, ScreenContent, ScreenError, ScreenFooter, DetailRow } = await import('./ScreenParts');
+const { PrimaryButton, SecondaryButton, ScreenContent, ScreenError, ScreenFooter, DetailRow, DetailsCard } =
+  await import('./ScreenParts');
 const { CheckoutFrame, ScreenBody } = await import('./PaymentCheckout');
 const { CheckoutHeader, MobileSteps } = await import('./CheckoutHeader');
 const { CheckoutStepper } = await import('./CheckoutStepper');
@@ -129,6 +130,19 @@ describe('customization of the checkout parts', () => {
     expect(hasClass(ScreenError({ children: 'No' }), 'brand-error')).toBe(true);
     expect(hasClass(DetailRow({ name: 'Rate', children: '1' }), 'brand-row')).toBe(true);
     expect(hasClass(PrimaryButton({ children: 'Pay' }), 'brand-button-method')).toBe(true);
+  });
+
+  it('adds the classes of the details cards and the second button', () => {
+    const onClick = vi.fn();
+    context({ classNames: { detailsCard: () => 'brand-card', secondaryButton: () => 'brand-secondary' } });
+
+    expect(hasClass(DetailsCard({ children: null }), 'brand-card')).toBe(true);
+    const button = SecondaryButton({ onClick, children: 'Close' }) as ReactElement<Record<string, unknown>>;
+    expect(button.props).toMatchObject({
+      type: 'button',
+      onClick,
+      className: expect.stringContaining('brand-secondary'),
+    });
   });
 
   it('replaces the main button with the props of the default one', () => {

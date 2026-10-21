@@ -51,11 +51,12 @@ export function buyerFields(collect: BuyerCollect, company: boolean): BuyerField
   return [
     ...fields,
     { name: 'name', required: true, autoComplete: company ? 'organization' : 'name', type: 'text' },
+    // The country first: an address is read, and its format chosen, from it
+    { name: 'country', required: true, autoComplete: 'country', type: 'country' },
     { name: 'addressLine1', required: true, autoComplete: 'address-line1', type: 'text' },
     { name: 'addressLine2', required: false, autoComplete: 'address-line2', type: 'text' },
     { name: 'postalCode', required: false, autoComplete: 'postal-code', type: 'text' },
     { name: 'city', required: false, autoComplete: 'address-level2', type: 'text' },
-    { name: 'country', required: true, autoComplete: 'country', type: 'country' },
     ...(company ? companyFields() : []),
   ];
 }

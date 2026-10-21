@@ -5,7 +5,7 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { mono } from './classes';
-import { DetailRow, FooterAction, ScreenFooter } from './ScreenParts';
+import { DetailRow, DetailsCard, ScreenFooter, SecondaryButton } from './ScreenParts';
 import { TxLabels } from './TxLabels';
 
 /**
@@ -32,7 +32,7 @@ export function ConfirmScreen() {
           )}
         </div>
         <TxProgressIndicator isProcessing className="novapay:max-w-sm" />
-        <dl className="novapay:m-0 novapay:flex novapay:w-full novapay:max-w-sm novapay:flex-col novapay:gap-1.5 novapay:text-left">
+        <DetailsCard className="novapay:max-w-sm">
           {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
           {facts.amount && <DetailRow name={labels.confirm.amount}>{facts.amount}</DetailRow>}
           {facts.txKey && (
@@ -41,7 +41,7 @@ export function ConfirmScreen() {
             </DetailRow>
           )}
           {facts.from && <DetailRow name={labels.confirm.from}>{facts.from}</DetailRow>}
-        </dl>
+        </DetailsCard>
         <p
           role="status"
           className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]"
@@ -51,7 +51,7 @@ export function ConfirmScreen() {
       </section>
       {close && (
         <ScreenFooter>
-          <FooterAction onClick={close}>{labels.common.close}</FooterAction>
+          <SecondaryButton onClick={close}>{labels.common.close}</SecondaryButton>
         </ScreenFooter>
       )}
     </TxLabels>

@@ -8,7 +8,16 @@ import { methodFamily, networkName } from '../utils/methods';
 import { autoPayTerms, formatPeriod, methodErrorText } from '../utils/outcome';
 import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
 import { mono } from './classes';
-import { DetailRow, FooterAction, PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
+import {
+  DetailRow,
+  DetailsCard,
+  FooterNote,
+  PrimaryButton,
+  ScreenContent,
+  ScreenError,
+  ScreenFooter,
+  SecondaryButton,
+} from './ScreenParts';
 import { WalletPrompt } from './WalletPrompt';
 
 /**
@@ -83,7 +92,7 @@ export function AutoPayScreen() {
                   </span>
                 </p>
               </div>
-              <dl className="novapay:m-0 novapay:flex novapay:flex-col novapay:gap-1.5">
+              <DetailsCard>
                 {wallet && (
                   <DetailRow name={labels.autoPay.from}>
                     {shortAddress(wallet.address)} · {networkName(terms.chainId)}
@@ -100,7 +109,7 @@ export function AutoPayScreen() {
                     })}
                   </DetailRow>
                 )}
-              </dl>
+              </DetailsCard>
               <ul className="novapay:m-0 novapay:flex novapay:list-disc novapay:flex-col novapay:gap-1 novapay:pl-4 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
                 <li>{labels.autoPay.invoices}</li>
                 <li>{formatLabel(labels.autoPay.cap, { merchant })}</li>
@@ -114,10 +123,8 @@ export function AutoPayScreen() {
           <PrimaryButton busy={asking} disabled={!terms} onClick={() => void allow()}>
             {labels.autoPay.confirm}
           </PrimaryButton>
-          <FooterAction onClick={() => setAutoPay(false)}>{labels.autoPay.skip}</FooterAction>
-          <p className="novapay:m-0 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
-            {labels.autoPay.walletNote}
-          </p>
+          <SecondaryButton onClick={() => setAutoPay(false)}>{labels.autoPay.skip}</SecondaryButton>
+          <FooterNote>{labels.autoPay.walletNote}</FooterNote>
         </ScreenFooter>
       </div>
       {asking && wallet && (

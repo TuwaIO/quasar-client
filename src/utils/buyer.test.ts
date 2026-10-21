@@ -9,13 +9,25 @@ describe('buyer details', () => {
       buyerFields('full', false)
         .filter((field) => field.required)
         .map((field) => field.name),
-    ).toEqual(['email', 'name', 'addressLine1', 'country']);
+    ).toEqual(['email', 'name', 'country', 'addressLine1']);
     expect(
       buyerFields('full', true)
         .filter((field) => field.required)
         .map((field) => field.name),
-    ).toEqual(['email', 'name', 'addressLine1', 'country', 'taxId']);
+    ).toEqual(['email', 'name', 'country', 'addressLine1', 'taxId']);
     expect(buyerFields('email', true).map((field) => field.name)).toContain('taxId');
+  });
+
+  it('asks for the country right after the name, as an address starts with it', () => {
+    expect(buyerFields('full', false).map((field) => field.name)).toEqual([
+      'email',
+      'name',
+      'country',
+      'addressLine1',
+      'addressLine2',
+      'postalCode',
+      'city',
+    ]);
   });
 
   it('names each missing or invalid field, as the engine would refuse it', () => {

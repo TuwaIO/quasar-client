@@ -9,8 +9,17 @@ import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal } from '../utils/format';
 import { methodFamily } from '../utils/methods';
-import { focusRing, mono } from './classes';
-import { FooterAction, PrimaryButton, ScreenFooter } from './ScreenParts';
+import { focusRing, mono, primaryAction, secondaryAction } from './classes';
+import { checkoutClassName } from './customization';
+import {
+  DetailRow,
+  DetailsCard,
+  FooterAction,
+  FooterNote,
+  PrimaryButton,
+  ScreenFooter,
+  SecondaryButton,
+} from './ScreenParts';
 import { TxLabels } from './TxLabels';
 
 /**
@@ -23,8 +32,8 @@ import { TxLabels } from './TxLabels';
  * @returns The paid outcome.
  */
 export function PaidScreen() {
-  const { checkout, state, labels, locale, now, close, wallet, adapterFor, setAutoPay, autoReturnSeconds } =
-    useCheckoutContext();
+  const context = useCheckoutContext();
+  const { checkout, state, labels, locale, now, close, wallet, adapterFor, setAutoPay, autoReturnSeconds } = context;
   const facts = usePaymentFacts();
   // The time the checkout saw the payment settle: the view carries no payment time
   const [paidAt] = useState(now);
@@ -59,10 +68,18 @@ export function PaidScreen() {
             {facts.network ? formatLabel(labels.paid.summary, { network: facts.network, date }) : date}
           </p>
         </div>
-        {facts.txKey && (
-          <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" className="novapay:max-w-sm" />
-        )}
         <TxProgressIndicator isSucceed isConfirmed className="novapay:max-w-sm" />
+        {(facts.network || facts.txKey || facts.from) && (
+          <DetailsCard className="novapay:max-w-sm">
+            {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
+            {facts.txKey && (
+              <DetailRow name={labels.confirm.transaction}>
+                <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" />
+              </DetailRow>
+            )}
+            {facts.from && <DetailRow name={labels.confirm.from}>{facts.from}</DetailRow>}
+          </DetailsCard>
+        )}
         {refunded && (
           <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
             {formatLabel(labels.paid.refunded, { amount: refunded, currency: checkout.invoice.currency })}
@@ -107,28 +124,25 @@ export function PaidScreen() {
           <>
             <a
               href={successUrl}
-              className={cn(
-                mono,
-                'novapay:inline-flex novapay:h-11 novapay:items-center novapay:justify-center novapay:rounded-[var(--tuwa-rounded-corners)] novapay:text-sm novapay:font-bold novapay:no-underline',
+              className={
                 canAutoPay
-                  ? 'novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:text-[var(--tuwa-text-primary)]'
-                  : 'novapay:bg-[var(--tuwa-button-primary-bg)] novapay:text-[var(--tuwa-text-on-accent)]',
-                focusRing,
-              )}
+                  ? cn(secondaryAction, checkoutClassName(context, 'secondaryButton'))
+                  : cn(primaryAction, checkoutClassName(context, 'primaryButton'))
+              }
             >
               {formatLabel(labels.paid.back, { merchant })}
             </a>
             {countdown.left !== null && (
-              <p className="novapay:m-0 novapay:text-center novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+              <FooterNote>
                 <span role="timer" aria-live="off">
                   {formatLabel(labels.paid.returning, { merchant, seconds: countdown.left })}
                 </span>{' '}
                 · <FooterAction onClick={countdown.stay}>{labels.paid.stay}</FooterAction>
-              </p>
+              </FooterNote>
             )}
           </>
         ) : (
-          close && <FooterAction onClick={close}>{labels.common.close}</FooterAction>
+          close && <SecondaryButton onClick={close}>{labels.common.close}</SecondaryButton>
         )}
       </ScreenFooter>
     </TxLabels>

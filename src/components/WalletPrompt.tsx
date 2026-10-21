@@ -5,7 +5,7 @@ import { useEffect, useId, useRef } from 'react';
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
 import { mono } from './classes';
-import { DetailRow, FooterAction } from './ScreenParts';
+import { DetailRow, DetailsCard, FooterAction, SecondaryButton } from './ScreenParts';
 
 /**
  * What the wallet asks for: a gasless signature, a transaction, a network switch, the permission of automatic
@@ -99,16 +99,16 @@ export function WalletPrompt({
           <p className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
             {formatLabel(kind === 'sign' ? labels.walletPrompt.signText : labels.walletPrompt.confirmText, values)}
           </p>
-          <div className="novapay:w-full novapay:max-w-xs novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-left">
+          <div className="novapay:flex novapay:w-full novapay:max-w-xs novapay:flex-col novapay:gap-1.5 novapay:text-left">
             <span className="novapay:text-[11px] novapay:font-semibold">
               {formatLabel(labels.walletPrompt.check, values)}
             </span>
-            <dl className="novapay:m-0 novapay:mt-1.5 novapay:flex novapay:flex-col novapay:gap-1">
+            <DetailsCard>
               <DetailRow name={labels.walletPrompt.amount}>{amount}</DetailRow>
               <DetailRow name={labels.walletPrompt.to}>{to}</DetailRow>
               <DetailRow name={labels.walletPrompt.network}>{network}</DetailRow>
               {priceTime && <DetailRow name={labels.walletPrompt.priceLocked}>{priceTime}</DetailRow>}
-            </dl>
+            </DetailsCard>
           </div>
           {onRetry ? (
             <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
@@ -127,7 +127,11 @@ export function WalletPrompt({
           {labels.autoPay.walletNote}
         </p>
       )}
-      {kind !== 'submitting' && <FooterAction onClick={onCancel}>{labels.walletPrompt.cancel}</FooterAction>}
+      {kind !== 'submitting' && (
+        <SecondaryButton onClick={onCancel} className="novapay:max-w-xs">
+          {labels.walletPrompt.cancel}
+        </SecondaryButton>
+      )}
     </section>
   );
 }

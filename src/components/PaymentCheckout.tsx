@@ -22,7 +22,7 @@ import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
-import { focusRing, mono } from './classes';
+import { mono } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
 import { LeaveDialog } from './LeaveDialog';
@@ -31,6 +31,7 @@ import { OutcomeScreen } from './OutcomeScreen';
 import { PaidScreen } from './PaidScreen';
 import { PayScreen } from './PayScreen';
 import { QrScreen } from './QrScreen';
+import { SecondaryButton } from './ScreenParts';
 
 /** Where the checkout is shown. */
 export type PaymentCheckoutDisplay = 'modal' | 'inline' | 'page';
@@ -131,17 +132,9 @@ function ErrorScreen() {
         {notFound ? labels.error.notFound : labels.error.generic}
       </p>
       {!notFound && (
-        <button
-          type="button"
-          onClick={() => void store.getState().load()}
-          className={cn(
-            mono,
-            'novapay:h-9 novapay:cursor-pointer novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border-0 novapay:bg-[var(--tuwa-standart-button-bg)] novapay:px-4 novapay:text-xs novapay:font-bold novapay:text-[var(--tuwa-text-primary)] novapay:hover:bg-[var(--tuwa-standart-button-hover)]',
-            focusRing,
-          )}
-        >
+        <SecondaryButton onClick={() => void store.getState().load()} className="novapay:w-auto novapay:px-6">
           {labels.common.retry}
-        </button>
+        </SecondaryButton>
       )}
     </div>
   );
@@ -231,7 +224,8 @@ export function CheckoutFrame({
         </div>
         <div
           className={cn(
-            'novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto',
+            // A field moved into view stays clear of the footer, which sticks to the bottom (WCAG 2.4.11)
+            'novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto novapay:scroll-pb-44',
             checkoutClassName(context, 'body'),
           )}
         >

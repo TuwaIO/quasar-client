@@ -1,9 +1,9 @@
 import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ButtonHTMLAttributes, type ReactNode, useEffect, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
-import { focusRing, iconButton, mono } from './classes';
+import { focusRing, iconButton, mono, primaryAction, secondaryAction } from './classes';
 import { checkoutClassName, type CheckoutPrimaryButtonProps } from './customization';
 
 /** The scrolling content of a screen, with its heading. @internal */
@@ -37,13 +37,18 @@ export function ScreenContent({
   );
 }
 
-/** The bottom of a screen: its main button and the text under it. @internal */
+/**
+ * The bottom of a screen: its main button, a second action under it and centered notes. It stays at the bottom of the
+ * checkout while the screen scrolls; the scrolling area keeps a focused field clear of it (WCAG 2.4.11).
+ *
+ * @internal
+ */
 export function ScreenFooter({ children }: { children: ReactNode }) {
   const context = useCheckoutContext();
   return (
     <footer
       className={cn(
-        'novapay:flex novapay:flex-col novapay:gap-1.5 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3',
+        'novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center',
         checkoutClassName(context, 'footer'),
       )}
     >
@@ -84,13 +89,7 @@ export function PrimaryButton({ busy, children, className, ...props }: CheckoutP
       aria-busy={busy || undefined}
       {...props}
       disabled={props.disabled || busy}
-      className={cn(
-        mono,
-        'novapay:inline-flex novapay:h-11 novapay:w-full novapay:cursor-pointer novapay:items-center novapay:justify-center novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border-0 novapay:bg-[var(--tuwa-button-primary-bg)] novapay:text-sm novapay:font-bold novapay:text-[var(--tuwa-text-on-accent)] novapay:transition-colors novapay:hover:bg-[var(--tuwa-button-primary-bg-hover)] novapay:disabled:cursor-not-allowed novapay:disabled:opacity-70',
-        focusRing,
-        className,
-        extra,
-      )}
+      className={cn(primaryAction, className, extra)}
     >
       {busy && (
         <ArrowPathIcon
@@ -100,6 +99,50 @@ export function PrimaryButton({ busy, children, className, ...props }: CheckoutP
       )}
       {children}
     </button>
+  );
+}
+
+/** A second action under the main button (back, close, not now): the same size, with a border. @internal */
+export function SecondaryButton({ children, className, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
+  const context = useCheckoutContext();
+  return (
+    <button
+      type="button"
+      {...props}
+      className={cn(secondaryAction, className, checkoutClassName(context, 'secondaryButton'))}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** A centered note of a screen footer (what the payment means, how the wallet asks). @internal */
+export function FooterNote({ children }: { children: ReactNode }) {
+  return (
+    <p className="novapay:m-0 novapay:text-center novapay:text-[11px] novapay:leading-snug novapay:text-[var(--tuwa-text-secondary)]">
+      {children}
+    </p>
+  );
+}
+
+/**
+ * Rows of facts grouped in a bordered card with a line between rows, as the transaction details of Nova Transactions
+ * show them. Its children are {@link DetailRow}s.
+ *
+ * @internal
+ */
+export function DetailsCard({ children, className }: { children: ReactNode; className?: string }) {
+  const context = useCheckoutContext();
+  return (
+    <dl
+      className={cn(
+        'novapay:m-0 novapay:flex novapay:w-full novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:text-left',
+        className,
+        checkoutClassName(context, 'detailsCard'),
+      )}
+    >
+      {children}
+    </dl>
   );
 }
 
@@ -162,13 +205,13 @@ export function CopyButton({
   );
 }
 
-/** A row of a details list: its name and its value. @internal */
+/** A row of a {@link DetailsCard}: its name and its value. @internal */
 export function DetailRow({ name, children }: { name: ReactNode; children: ReactNode }) {
   const context = useCheckoutContext();
   return (
     <div
       className={cn(
-        'novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3 novapay:text-xs',
+        'novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3 novapay:py-2 novapay:text-xs',
         checkoutClassName(context, 'detailRow'),
       )}
     >

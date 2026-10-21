@@ -4,7 +4,7 @@ import { useEffect, useId, useRef } from 'react';
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
 import { mono } from './classes';
-import { FooterAction, PrimaryButton } from './ScreenParts';
+import { PrimaryButton, SecondaryButton } from './ScreenParts';
 
 /**
  * The question when the buyer closes the checkout before anything is sent: the invoice stays open until its deadline,
@@ -47,7 +47,7 @@ export function LeaveDialog({ onStay, onLeave }: { onStay: () => void; onLeave: 
         </p>
         <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{labels.leave.price}</p>
         <PrimaryButton onClick={onStay}>{labels.leave.stay}</PrimaryButton>
-        <FooterAction onClick={onLeave}>{labels.leave.leave}</FooterAction>
+        <SecondaryButton onClick={onLeave}>{labels.leave.leave}</SecondaryButton>
       </div>
     </section>
   );

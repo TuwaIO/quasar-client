@@ -18,7 +18,7 @@ import { formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from '../
 import { networkName, payerFor } from '../utils/methods';
 import { contactHref, underpaidRest } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
-import { focusRing, mono } from './classes';
+import { mono, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
 import { PrimaryButton, ScreenFooter } from './ScreenParts';
 
@@ -53,20 +53,15 @@ const Text = ({ children, muted }: { children: ReactNode; muted?: boolean }) => 
 
 /** "Contact <seller>": the seller's support email about the invoice, its site, or the app's handler. */
 function ContactLink() {
-  const { checkout, labels, onContact } = useCheckoutContext();
+  const context = useCheckoutContext();
+  const { checkout, labels, onContact } = context;
   if (!checkout) return null;
   const text = formatLabel(labels.outcome.contact, { merchant: checkout.merchant.name });
-  const className = cn(
-    'novapay:inline-flex novapay:min-h-6 novapay:items-center novapay:justify-center novapay:text-xs novapay:font-semibold novapay:text-[var(--tuwa-text-accent)] novapay:underline novapay:hover:no-underline',
-    focusRing,
-  );
+  // The second action of the footer, the same as "Close" or "Back" on the other screens
+  const className = cn(secondaryAction, checkoutClassName(context, 'secondaryButton'));
   if (onContact) {
     return (
-      <button
-        type="button"
-        onClick={onContact}
-        className={cn(className, 'novapay:cursor-pointer novapay:border-0 novapay:bg-transparent')}
-      >
+      <button type="button" onClick={onContact} className={className}>
         {text}
       </button>
     );

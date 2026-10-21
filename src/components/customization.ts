@@ -99,6 +99,13 @@ export interface PaymentCheckoutClassNames {
    */
   primaryButton?: (params: CheckoutPartState) => string | undefined;
   /**
+   * The second action under the main button (back, close, not now, contact).
+   *
+   * @param params - The state of the checkout.
+   * @returns Classes to add.
+   */
+  secondaryButton?: (params: CheckoutPartState) => string | undefined;
+  /**
    * A refusal or error message of a screen.
    *
    * @param params - The state of the checkout.
@@ -133,7 +140,14 @@ export interface PaymentCheckoutClassNames {
    */
   payWithOption?: (params: CheckoutPartState & { payWith: 'wallet' | 'qr'; selected: boolean }) => string | undefined;
   /**
-   * A row of a details list (rate, network fee, recipient…).
+   * A card of grouped facts (the transaction, the rate and fees, the terms of automatic payments).
+   *
+   * @param params - The state of the checkout.
+   * @returns Classes to add.
+   */
+  detailsCard?: (params: CheckoutPartState) => string | undefined;
+  /**
+   * A row of a card of facts (rate, network fee, recipient…).
    *
    * @param params - The state of the checkout.
    * @returns Classes to add.
