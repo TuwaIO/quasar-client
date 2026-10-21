@@ -19,6 +19,7 @@ import { networkName, payerFor } from '../utils/methods';
 import { contactHref, underpaidRest } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { focusRing, mono } from './classes';
+import { checkoutClassName } from './customization';
 import { PrimaryButton, ScreenFooter } from './ScreenParts';
 
 /** The outcomes this screen shows. */
@@ -97,10 +98,13 @@ function ContactLink() {
  * @returns The outcome step.
  */
 export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
-  const { checkout, state, store, labels, locale, wallet, connectWallet, openInvoice } = useCheckoutContext();
+  const context = useCheckoutContext();
+  const { checkout, state, store, labels, locale, wallet, connectWallet, openInvoice } = context;
   if (!checkout) return null;
   const merchant = checkout.merchant.name;
   const { Icon, tone } = LOOK[kind];
+  const StatusIcon = context.customization.components?.StatusIcon;
+  const iconClassName = checkoutClassName(context, 'statusIcon', { kind });
   const quote = state.quote;
   const method = checkout.methods.find((item) => item.id === (state.methodId ?? quote?.methodId));
   const due = checkout.invoice.dueAt
@@ -248,7 +252,11 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         role={kind === 'blocked' ? 'alert' : undefined}
         className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:px-5 novapay:py-6 novapay:text-center"
       >
-        <Icon aria-hidden className={cn('novapay:h-12 novapay:w-12', tone)} />
+        {StatusIcon ? (
+          <StatusIcon kind={kind} className={iconClassName} />
+        ) : (
+          <Icon aria-hidden className={cn('novapay:h-12 novapay:w-12', tone, iconClassName)} />
+        )}
         <h2 className={cn(mono, 'novapay:m-0 novapay:max-w-sm novapay:text-base novapay:font-bold')}>{title}</h2>
         {body}
       </section>

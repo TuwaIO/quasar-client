@@ -5,6 +5,7 @@ export * from './CheckoutHeader';
 export * from './CheckoutStepper';
 export * from './CheckoutSummary';
 export * from './ConfirmScreen';
+export * from './customization';
 export * from './LeaveDialog';
 export * from './LocaleSwitcher';
 export * from './MethodScreen';

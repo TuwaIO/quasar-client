@@ -90,6 +90,43 @@ export function Payments({
 
 After the payment the checkout shows its outcome: confirming, paid with the receipt and the way back to the invoice's `successUrl` (a visible countdown with "Stay here"; `autoReturnSeconds`, `0` for none), and for a subscription the optional automatic payments (ERC-7715). Underpaid, held, refunded, expired, cancelled and corrected invoices get their own outcome with a "Contact" link to the seller (`onContact` replaces it). `onPaid` tells the page once the invoice is paid; fulfil orders from the `invoice.paid` webhook on your server. Closing the checkout before anything is sent asks first.
 
+### Customization
+
+Besides the `--tuwa-*` theme variables of `@tuwaio/nova-core` and the labels, `customization` of `PaymentCheckout` adds classes to its parts from the state of the checkout (`classNames`) and replaces parts (`components`): the header, the order, the steps, the token and network options, the main button, the QR code, the outcome icon, or whole screens by name. A replacement reads the checkout with `useCheckoutContext`. Classes are added after the default ones; change a color a part already sets with the theme variables or by replacing the part.
+
+```tsx
+'use client';
+
+import { type CheckoutPrimaryButtonProps, PaymentCheckout } from '@tuwaio/nova-payments';
+
+function ShopButton({ busy, children, className, ...props }: CheckoutPrimaryButtonProps) {
+  return (
+    <button
+      type="button"
+      {...props}
+      disabled={props.disabled || busy}
+      aria-busy={busy || undefined}
+      className={`shop-button ${className ?? ''}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function BrandedCheckout({ token }: { token: string }) {
+  return (
+    <PaymentCheckout
+      token={token}
+      display="inline"
+      customization={{
+        classNames: { tokenOption: ({ selected }) => (selected ? 'shop-selected' : undefined) },
+        components: { PrimaryButton: ShopButton },
+      }}
+    />
+  );
+}
+```
+
 ---
 
 ## 🌍 Languages and accessibility

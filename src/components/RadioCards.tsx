@@ -19,8 +19,8 @@ export interface RadioCardsProps<T> {
   children: (item: T, selected: boolean) => ReactNode;
   /** Classes of the group (its layout). */
   className?: string;
-  /** Classes of an option. */
-  itemClassName?: (selected: boolean) => string;
+  /** Classes of an option, from whether it is selected and the option. */
+  itemClassName?: (selected: boolean, item: T) => string;
 }
 
 /**
@@ -83,7 +83,7 @@ export function RadioCards<T>({
                 ? 'novapay:border-2 novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)]'
                 : 'novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
               focusRing,
-              itemClassName?.(selected),
+              itemClassName?.(selected, item),
             )}
           >
             {children(item, selected)}

@@ -24,6 +24,7 @@ import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
 import { focusRing, mono } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
+import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
 import { LeaveDialog } from './LeaveDialog';
 import { MethodScreen } from './MethodScreen';
 import { OutcomeScreen } from './OutcomeScreen';
@@ -90,6 +91,12 @@ export interface PaymentCheckoutProps {
   onContact?: () => void;
   /** Classes added to the checkout block. */
   className?: string;
+  /**
+   * Class name functions of the parts, from the state of the checkout, and components that replace parts (the
+   * header, the order, the steps, the options of the method step, the main button, the QR code, the outcome icon or
+   * whole screens).
+   */
+  customization?: PaymentCheckoutCustomization;
 }
 
 /** The checkout while it loads. @internal */
@@ -140,9 +147,11 @@ function ErrorScreen() {
   );
 }
 
-/** The screen of the current step or outcome. @internal */
-function ScreenBody() {
-  const { screen } = useCheckoutContext();
+/** The screen of the current step or outcome, or its replacement (`customization.components.screens`). @internal */
+export function ScreenBody() {
+  const { screen, customization } = useCheckoutContext();
+  const Custom = customization.components?.screens?.[screen];
+  if (Custom) return <Custom screen={screen} />;
   if (screen === 'loading') return <LoadingScreen />;
   if (screen === 'error') return <ErrorScreen />;
   if (screen === 'buyer') return <BuyerScreen />;
@@ -159,11 +168,12 @@ function ScreenBody() {
  * The checkout block: the order on the left (from 640 px; on a phone a compact order above the steps), the header
  * with the steps, language and close, and the current screen. The language follows the invoice, its texts the labels
  * of that language, and `lang` is set on the block (WCAG 3.1.2). Screen readers hear the time left at 10, 5 and 1
- * minutes before the deadline.
+ * minutes before the deadline. `customization` adds classes to the order and the screen area, and can replace the
+ * header and the order.
  *
  * @internal
  */
-function CheckoutFrame({
+export function CheckoutFrame({
   className,
   withDetails,
   leave,
@@ -172,7 +182,13 @@ function CheckoutFrame({
   withDetails?: boolean;
   leave: { onStay: () => void; onLeave: () => void } | null;
 }) {
-  const { checkout, locale, labels, now } = useCheckoutContext();
+  const context = useCheckoutContext();
+  const { checkout, locale, labels, now, customization } = context;
+  const {
+    Header = CheckoutHeader,
+    Summary = CheckoutSummary,
+    CompactSummary: Compact = CompactSummary,
+  } = customization.components ?? {};
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
@@ -198,17 +214,27 @@ function CheckoutFrame({
       )}
     >
       {checkout && (
-        <aside className="novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block">
-          <CheckoutSummary />
+        <aside
+          className={cn(
+            'novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block',
+            checkoutClassName(context, 'summary'),
+          )}
+        >
+          <Summary />
         </aside>
       )}
       <div className="novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col">
-        <CheckoutHeader withDetails={withDetails} />
+        <Header withDetails={withDetails} />
         <div className="novapay:sm:hidden">
-          {checkout && <CompactSummary />}
+          {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
           <MobileSteps withDetails={withDetails} />
         </div>
-        <div className="novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto">
+        <div
+          className={cn(
+            'novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto',
+            checkoutClassName(context, 'body'),
+          )}
+        >
           <ScreenBody />
         </div>
       </div>
@@ -263,6 +289,7 @@ export function PaymentCheckout({
   autoReturnSeconds = 5,
   onContact,
   className,
+  customization,
 }: PaymentCheckoutProps) {
   const settings = useNovaPayments();
   // The invoice shown: the token's, or the one that replaced it after the buyer opened it ("Open <number>")
@@ -361,6 +388,7 @@ export function PaymentCheckout({
       }
     : null;
 
+  const parts = customization ?? {};
   const context: CheckoutContextValue = {
     store,
     state,
@@ -394,11 +422,21 @@ export function PaymentCheckout({
     openInvoice: (next) => setOpened({ from: token, token: next }),
     onContact,
     autoReturnSeconds,
+    customization: parts,
   };
+  // The classes of the block go where it shows: the frame in the dialog, the section in the page
+  const blockClassName = cn(
+    className,
+    checkoutClassName({ customization: parts, screen, state, checkout }, 'container'),
+  );
   const frame = (
     <CheckoutContextProvider value={context}>
       <MotionConfig reducedMotion="user">
-        <CheckoutFrame withDetails={askedBuyer} leave={leave} className={display === 'modal' ? className : undefined} />
+        <CheckoutFrame
+          withDetails={askedBuyer}
+          leave={leave}
+          className={display === 'modal' ? blockClassName : undefined}
+        />
       </MotionConfig>
     </CheckoutContextProvider>
   );
@@ -429,7 +467,7 @@ export function PaymentCheckout({
       className={cn(
         'novapay:w-full novapay:overflow-hidden novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:sm:w-[760px]',
         display === 'page' && 'novapay:mx-auto novapay:my-8',
-        className,
+        blockClassName,
       )}
     >
       {frame}

@@ -8,6 +8,7 @@ import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { formatCountdown, formatFiat, minorToDecimal } from '../utils/format';
 import { invoiceTotals } from '../utils/totals';
 import { focusRing, mono } from './classes';
+import { checkoutClassName } from './customization';
 
 /** States in which the invoice can still be paid, so its deadline counts down. */
 const PAYABLE = new Set(['open', 'processing', 'underpaid']);
@@ -231,10 +232,13 @@ export function OrderLines() {
 
 /** The total of the invoice, which stays in place while the lines scroll. @internal */
 export function OrderTotal() {
-  const { checkout, labels, locale } = useCheckoutContext();
+  const context = useCheckoutContext();
+  const { checkout, labels, locale } = context;
   if (!checkout) return null;
   return (
-    <div className="novapay:flex novapay:items-baseline novapay:justify-between">
+    <div
+      className={cn('novapay:flex novapay:items-baseline novapay:justify-between', checkoutClassName(context, 'total'))}
+    >
       <span className={cn(mono, 'novapay:text-xs novapay:font-bold')}>{labels.summary.total}</span>
       <span className={cn(mono, 'novapay:text-[22px] novapay:font-bold')}>
         {formatFiat(invoiceTotals(checkout.invoice).total, locale)}{' '}
@@ -333,16 +337,23 @@ export function CheckoutSummary() {
  * The order on a phone, above the steps: the total and the countdown, with the lines and the seller details behind a
  * "Details" button.
  *
+ * @param props - The classes.
+ * @param props.className - Classes added to the order (`customization.classNames.compactSummary`).
  * @returns The compact order.
  */
-export function CompactSummary() {
+export function CompactSummary({ className }: { className?: string } = {}) {
   const { checkout, labels, locale, now } = useCheckoutContext();
   if (!checkout) return null;
   const { invoice } = checkout;
   const totals = invoiceTotals(invoice);
   const dueAt = invoice.dueAt && PAYABLE.has(invoice.status) ? Date.parse(invoice.dueAt) : null;
   return (
-    <div className="novapay:mx-4 novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-3">
+    <div
+      className={cn(
+        'novapay:mx-4 novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-3',
+        className,
+      )}
+    >
       <div className="novapay:flex novapay:items-baseline novapay:justify-between">
         <span className={cn(mono, 'novapay:text-[22px] novapay:font-bold')}>
           {formatFiat(totals.total, locale)}{' '}

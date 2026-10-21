@@ -6,6 +6,7 @@ import type { NovaPaymentsLabels } from '../i18n';
 import type { CheckoutScreen } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
 import type { CheckoutWallet, PaymentFamily } from '../utils/methods';
+import type { PaymentCheckoutCustomization } from './customization';
 
 /** What the parts of a checkout share: its store and state, the screen, the language and its labels. */
 export interface CheckoutContextValue {
@@ -86,6 +87,8 @@ export interface CheckoutContextValue {
   onContact?: () => void;
   /** Seconds before the paid outcome sends the buyer back to the seller; `0` for no automatic return. */
   autoReturnSeconds: number;
+  /** Class name functions and replacement components of the parts (`customization` of `PaymentCheckout`). */
+  customization: PaymentCheckoutCustomization;
 }
 
 const CheckoutContext = createContext<CheckoutContextValue | null>(null);

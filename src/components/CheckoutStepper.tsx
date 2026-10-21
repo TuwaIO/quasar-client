@@ -13,6 +13,14 @@ export interface CheckoutStepperProps {
   labels: NovaPaymentsLabels;
   /** Classes added to the list. */
   className?: string;
+  /**
+   * Classes added to a step (`customization.classNames.step` of `PaymentCheckout`).
+   *
+   * @param step - The step.
+   * @param index - Its position, from 0.
+   * @returns The classes, or nothing.
+   */
+  stepClassName?: (step: CheckoutStep, index: number) => string | undefined;
 }
 
 /**
@@ -22,7 +30,7 @@ export interface CheckoutStepperProps {
  * @param props - See {@link CheckoutStepperProps}.
  * @returns The stepper.
  */
-export function CheckoutStepper({ steps, labels, className }: CheckoutStepperProps) {
+export function CheckoutStepper({ steps, labels, className, stepClassName }: CheckoutStepperProps) {
   const currentIndex = steps.findIndex((step) => step.state === 'current');
   return (
     <nav aria-label={labels.steps.label} className={cn('novapay:min-w-0 novapay:flex-1', className)}>
@@ -36,6 +44,7 @@ export function CheckoutStepper({ steps, labels, className }: CheckoutStepperPro
               className={cn(
                 'novapay:flex novapay:min-w-0 novapay:items-center novapay:gap-1.5',
                 i > 0 && 'novapay:flex-auto',
+                stepClassName?.(step, i),
               )}
             >
               {i > 0 && (

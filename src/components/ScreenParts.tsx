@@ -1,8 +1,10 @@
 import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
-import { type ButtonHTMLAttributes, type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
+import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { focusRing, iconButton, mono } from './classes';
+import { checkoutClassName, type CheckoutPrimaryButtonProps } from './customization';
 
 /** The scrolling content of a screen, with its heading. @internal */
 export function ScreenContent({
@@ -14,8 +16,14 @@ export function ScreenContent({
   subtitle?: ReactNode;
   children: ReactNode;
 }) {
+  const context = useCheckoutContext();
   return (
-    <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-2.5 novapay:px-5 novapay:py-4">
+    <section
+      className={cn(
+        'novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-2.5 novapay:px-5 novapay:py-4',
+        checkoutClassName(context, 'screen'),
+      )}
+    >
       <div>
         <h2 className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold')}>{title}</h2>
         {subtitle && (
@@ -31,8 +39,14 @@ export function ScreenContent({
 
 /** The bottom of a screen: its main button and the text under it. @internal */
 export function ScreenFooter({ children }: { children: ReactNode }) {
+  const context = useCheckoutContext();
   return (
-    <footer className="novapay:flex novapay:flex-col novapay:gap-1.5 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3">
+    <footer
+      className={cn(
+        'novapay:flex novapay:flex-col novapay:gap-1.5 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3',
+        checkoutClassName(context, 'footer'),
+      )}
+    >
       {children}
     </footer>
   );
@@ -47,13 +61,23 @@ export function GroupLabel({ children, id }: { children: ReactNode; id?: string 
   );
 }
 
-/** The main button of a screen, in the solid accent of the checkout; `busy` shows a spinner with its text. @internal */
-export function PrimaryButton({
-  busy,
-  children,
-  className,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { busy?: boolean }) {
+/**
+ * The main button of a screen, in the solid accent of the checkout; `busy` shows a spinner with its text. A
+ * `customization.components.PrimaryButton` replaces it with the same props.
+ *
+ * @internal
+ */
+export function PrimaryButton({ busy, children, className, ...props }: CheckoutPrimaryButtonProps) {
+  const context = useCheckoutContext();
+  const extra = checkoutClassName(context, 'primaryButton');
+  const Custom = context.customization.components?.PrimaryButton;
+  if (Custom) {
+    return (
+      <Custom busy={busy} className={cn(className, extra)} {...props}>
+        {children}
+      </Custom>
+    );
+  }
   return (
     <button
       type="button"
@@ -65,6 +89,7 @@ export function PrimaryButton({
         'novapay:inline-flex novapay:h-11 novapay:w-full novapay:cursor-pointer novapay:items-center novapay:justify-center novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border-0 novapay:bg-[var(--tuwa-button-primary-bg)] novapay:text-sm novapay:font-bold novapay:text-[var(--tuwa-text-on-accent)] novapay:transition-colors novapay:hover:bg-[var(--tuwa-button-primary-bg-hover)] novapay:disabled:cursor-not-allowed novapay:disabled:opacity-70',
         focusRing,
         className,
+        extra,
       )}
     >
       {busy && (
@@ -80,10 +105,14 @@ export function PrimaryButton({
 
 /** A refusal of the engine, announced to screen readers. @internal */
 export function ScreenError({ children }: { children: ReactNode }) {
+  const context = useCheckoutContext();
   return (
     <p
       role="alert"
-      className="novapay:m-0 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-error-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-error-text)]"
+      className={cn(
+        'novapay:m-0 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-error-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-error-text)]',
+        checkoutClassName(context, 'error'),
+      )}
     >
       {children}
     </p>
@@ -135,8 +164,14 @@ export function CopyButton({
 
 /** A row of a details list: its name and its value. @internal */
 export function DetailRow({ name, children }: { name: ReactNode; children: ReactNode }) {
+  const context = useCheckoutContext();
   return (
-    <div className="novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3 novapay:text-xs">
+    <div
+      className={cn(
+        'novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3 novapay:text-xs',
+        checkoutClassName(context, 'detailRow'),
+      )}
+    >
       <dt className="novapay:shrink-0 novapay:text-[var(--tuwa-text-secondary)]">{name}</dt>
       <dd className={cn(mono, 'novapay:m-0 novapay:min-w-0 novapay:text-right novapay:break-words')}>{children}</dd>
     </div>
