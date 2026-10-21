@@ -202,7 +202,7 @@ export function CheckoutFrame({
     <div
       lang={locale}
       className={cn(
-        'novapay:relative novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[600px] novapay:sm:w-[760px] novapay:sm:flex-row',
+        'novapay:relative novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:w-[760px] novapay:sm:flex-row',
         className,
       )}
     >
@@ -223,9 +223,9 @@ export function CheckoutFrame({
           <MobileSteps withDetails={withDetails} />
         </div>
         <div
+          data-novapay-scroll=""
           className={cn(
-            // A field moved into view stays clear of the footer, which sticks to the bottom (WCAG 2.4.11)
-            'novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto novapay:scroll-pb-44',
+            'novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto',
             checkoutClassName(context, 'body'),
           )}
         >

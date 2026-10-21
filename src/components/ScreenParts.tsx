@@ -1,6 +1,6 @@
 import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
-import { type ButtonHTMLAttributes, type ReactNode, useEffect, useState } from 'react';
+import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { focusRing, iconButton, mono, primaryAction, secondaryAction } from './classes';
@@ -45,8 +45,25 @@ export function ScreenContent({
  */
 export function ScreenFooter({ children }: { children: ReactNode }) {
   const context = useCheckoutContext();
+  const ref = useRef<HTMLElement>(null);
+  // The scrolling area keeps its bottom padding at the footer's height, so the browser scrolls a focused field above
+  // the footer instead of under it, and not further
+  useEffect(() => {
+    const footer = ref.current;
+    const area = footer?.closest<HTMLElement>('[data-novapay-scroll]');
+    if (!footer || !area || typeof ResizeObserver === 'undefined') return;
+    const update = () => (area.style.scrollPaddingBottom = `${footer.offsetHeight + 8}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(footer);
+    return () => {
+      observer.disconnect();
+      area.style.scrollPaddingBottom = '';
+    };
+  }, []);
   return (
     <footer
+      ref={ref}
       className={cn(
         'novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center',
         checkoutClassName(context, 'footer'),

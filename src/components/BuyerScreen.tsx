@@ -164,10 +164,11 @@ export function BuyerScreen() {
                 {index === 0 && checkout.buyer.companyInvoice && (
                   <label
                     className={cn(
-                      'novapay:flex novapay:cursor-pointer novapay:items-center novapay:gap-2.5 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:px-3 novapay:py-2.5 novapay:text-[13px] novapay:transition-colors novapay:sm:col-span-2',
+                      'novapay:flex novapay:cursor-pointer novapay:items-center novapay:gap-2.5 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:px-3 novapay:py-2.5 novapay:text-[13px] novapay:transition-colors novapay:sm:col-span-2',
+                      // As the option cards: one border width, the choice adds a ring, nothing moves
                       company
-                        ? 'novapay:border-2 novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)]'
-                        : 'novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
+                        ? 'novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)] novapay:ring-1 novapay:ring-[var(--tuwa-text-accent)]'
+                        : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
                     )}
                   >
                     <input

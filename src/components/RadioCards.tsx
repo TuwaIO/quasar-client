@@ -79,9 +79,11 @@ export function RadioCards<T>({
             onKeyDown={(event) => move(event, index)}
             className={cn(
               'novapay:cursor-pointer novapay:rounded-[var(--tuwa-rounded-corners)] novapay:text-left novapay:text-[var(--tuwa-text-primary)] novapay:transition-colors',
+              // One border width in both states, the selection adds a ring: choosing does not move the layout
+              'novapay:border',
               selected
-                ? 'novapay:border-2 novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)]'
-                : 'novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
+                ? 'novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)] novapay:ring-1 novapay:ring-[var(--tuwa-text-accent)]'
+                : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
               focusRing,
               itemClassName?.(selected, item),
             )}
