@@ -94,7 +94,6 @@ export function LocaleSwitcher({ locale, labels, receiptIssued, onSelect, classN
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? `${id}-list` : undefined}
-        aria-label={formatLabel(labels.language.button, { language: current.name })}
         className={cn(iconButton, mono, 'novapay:text-[11px] novapay:font-semibold')}
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={(event) => {
@@ -105,7 +104,9 @@ export function LocaleSwitcher({ locale, labels, receiptIssued, onSelect, classN
         }}
       >
         <GlobeAltIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
-        <span aria-hidden>{current.short}</span>
+        {/* The visible code starts the accessible name, the language follows for screen readers (WCAG 2.5.3) */}
+        <span>{current.short}</span>
+        <span className="novapay:sr-only">, {formatLabel(labels.language.button, { language: current.name })}</span>
         <ChevronDownIcon aria-hidden className="novapay:h-3 novapay:w-3" />
       </button>
       {open && (
