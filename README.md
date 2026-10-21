@@ -92,7 +92,7 @@ After the payment the checkout shows its outcome: confirming, paid with the rece
 
 ### Customization
 
-Besides the `--tuwa-*` theme variables of `@tuwaio/nova-core` and the labels, `customization` of `PaymentCheckout` adds classes to its parts from the state of the checkout (`classNames`) and replaces parts (`components`): the header, the order, the steps, the token and network options, the main button, the QR code, the outcome icon, or whole screens by name. A replacement reads the checkout with `useCheckoutContext`. Classes are added after the default ones; change a color a part already sets with the theme variables or by replacing the part.
+Besides the `--tuwa-*` theme variables of `@tuwaio/nova-core` and the labels, `customization` of `PaymentCheckout` adds classes to its parts from the state of the checkout (`classNames`) and replaces parts (`components`): the header, the order, the steps, the token and network options, the main button, the QR code, the outcome icon, or whole screens by name. A replacement reads the checkout with `useCheckoutContext`. Classes are added after the default ones; change a color a part already sets with the theme variables or by replacing the part. `handlers` wrap the actions of the buyer (`onMethodSelect`, `onQuote`, `onSubmit`, `onLocaleChange`: call `proceed()` to go on, or do something else) and tell what happened (`onStatusChange`, `onError`, `onExpire`); `config` turns off animations, the steps or the balance check and sets the minutes of the deadline announcements; `childCustomizations` styles the Nova Transactions parts of the confirm and paid steps.
 
 ```tsx
 'use client';

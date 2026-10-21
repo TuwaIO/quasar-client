@@ -34,6 +34,7 @@ import { TxLabels } from './TxLabels';
 export function PaidScreen() {
   const context = useCheckoutContext();
   const { checkout, state, labels, locale, now, close, wallet, adapterFor, setAutoPay, autoReturnSeconds } = context;
+  const child = context.customization.childCustomizations;
   const facts = usePaymentFacts();
   // The time the checkout saw the payment settle: the view carries no payment time
   const [paidAt] = useState(now);
@@ -58,7 +59,7 @@ export function PaidScreen() {
   return (
     <TxLabels>
       <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center">
-        <TxStatusVisual isSucceed />
+        <TxStatusVisual isSucceed {...child?.statusVisual} />
         <h2 className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold')}>{labels.paid.title}</h2>
         <div>
           <p className={cn(mono, 'novapay:m-0 novapay:text-2xl novapay:font-bold')}>
@@ -68,13 +69,18 @@ export function PaidScreen() {
             {facts.network ? formatLabel(labels.paid.summary, { network: facts.network, date }) : date}
           </p>
         </div>
-        <TxProgressIndicator isSucceed isConfirmed className="novapay:max-w-sm" />
+        <TxProgressIndicator
+          isSucceed
+          isConfirmed
+          {...child?.progressIndicator}
+          className={cn('novapay:max-w-sm', child?.progressIndicator?.className)}
+        />
         {(facts.network || facts.txKey || facts.from) && (
           <DetailsCard className="novapay:max-w-sm">
             {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
             {facts.txKey && (
               <DetailRow name={labels.confirm.transaction}>
-                <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" />
+                <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" {...child?.hashLink} />
               </DetailRow>
             )}
             {facts.from && <DetailRow name={labels.confirm.from}>{facts.from}</DetailRow>}

@@ -1,6 +1,14 @@
-import type { CheckoutMethod, CheckoutState, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
+import type { HashLinkProps, TxProgressIndicatorProps, TxStatusVisualProps } from '@tuwaio/nova-transactions';
+import type {
+  CheckoutError,
+  CheckoutMethod,
+  CheckoutQuote,
+  CheckoutState,
+  CheckoutView,
+} from '@tuwaio/quasar-sdk/checkout';
 import type { ButtonHTMLAttributes, ComponentType } from 'react';
 
+import type { CheckoutLocale } from '../i18n';
 import type { CheckoutScreen, CheckoutStep, CheckoutTokenGroup } from '../utils/checkout';
 import type { CheckoutContextValue } from './checkoutContext';
 import type { CheckoutHeaderProps } from './CheckoutHeader';
@@ -251,12 +259,128 @@ export interface PaymentCheckoutComponents {
   screens?: Partial<Record<CheckoutScreen, ComponentType<CheckoutScreenProps>>>;
 }
 
-/** Class name functions and replacement components of {@link PaymentCheckout} (`customization`). */
+/**
+ * Handlers of {@link PaymentCheckout}: some wrap an action of the buyer (call `proceed()` or `select()` to run it, or
+ * do something else instead), the others tell the app what happened. `onPaid`, `onClose` and `onContact` are props of
+ * the checkout.
+ */
+export interface PaymentCheckoutHandlers {
+  /**
+   * The buyer picked a token or a network. Without the handler the method is chosen.
+   *
+   * @param params - The pick.
+   * @param params.method - The method picked.
+   * @param params.select - Chooses it.
+   */
+  onMethodSelect?: (params: { method: CheckoutMethod; select: () => void }) => void;
+  /**
+   * The buyer pressed "Continue" on the method step. Without the handler the checkout locks the price for the
+   * connected wallet (or connects one first), or shows the QR code.
+   *
+   * @param params - The step.
+   * @param params.method - The chosen method.
+   * @param params.payWith - `wallet` or `qr`.
+   * @param params.proceed - Goes on as the checkout would.
+   */
+  onQuote?: (params: {
+    method: CheckoutMethod;
+    payWith: 'wallet' | 'qr';
+    proceed: () => Promise<void>;
+  }) => void | Promise<void>;
+  /**
+   * The buyer pressed the pay button ("Pay", "Sign to pay"). Without the handler the wallet prompt opens.
+   *
+   * @param params - The payment.
+   * @param params.quote - The locked price: amount, recipient, network.
+   * @param params.method - The method.
+   * @param params.proceed - Opens the wallet prompt.
+   */
+  onSubmit?: (params: {
+    quote: CheckoutQuote;
+    method: CheckoutMethod;
+    proceed: () => Promise<void>;
+  }) => void | Promise<void>;
+  /**
+   * The buyer picked a language. Without the handler the checkout switches to it and saves it on the invoice.
+   *
+   * @param params - The language.
+   * @param params.locale - The language picked.
+   * @param params.proceed - Switches and saves it.
+   */
+  onLocaleChange?: (params: { locale: CheckoutLocale; proceed: () => Promise<void> }) => void | Promise<void>;
+  /**
+   * The phase of the checkout or the status of the invoice changed; also called once with the first ones.
+   *
+   * @param params - The state.
+   * @param params.phase - The phase of the checkout store.
+   * @param params.status - The invoice status, `null` before the invoice loads.
+   * @param params.screen - The screen shown.
+   */
+  onStatusChange?: (params: {
+    phase: CheckoutState['phase'];
+    status: CheckoutView['invoice']['status'] | null;
+    screen: CheckoutScreen;
+  }) => void;
+  /**
+   * The checkout got a new error (Quasar refused an action, or did not answer); the screen shows it.
+   *
+   * @param params - The error.
+   * @param params.error - Its code and message.
+   * @param params.screen - The screen shown.
+   */
+  onError?: (params: { error: CheckoutError; screen: CheckoutScreen }) => void;
+  /**
+   * The locked price ran out (`quote`), or the invoice expired (`invoice`).
+   *
+   * @param params - What expired.
+   * @param params.kind - `quote` or `invoice`.
+   */
+  onExpire?: (params: { kind: 'quote' | 'invoice' }) => void;
+}
+
+/**
+ * Options of {@link PaymentCheckout}. Every text and accessible name comes from the labels, and amounts and dates
+ * follow the language of the checkout.
+ */
+export interface PaymentCheckoutConfig {
+  /** Animations. They always follow `prefers-reduced-motion`; `disabled: true` turns them off for everyone. */
+  animation?: {
+    /** Turns the animations off. */
+    disabled?: boolean;
+  };
+  /** Whether the header shows the steps of the payment (default `true`). */
+  showSteps?: boolean;
+  /**
+   * Whether the pay step reads the wallet's balance (through the chain adapter) and, when it is short, offers what the
+   * wallet can pay with (default `true`).
+   */
+  balanceCheck?: boolean;
+  /** Minutes before the invoice deadline at which screen readers hear the time left (default `[10, 5, 1]`). */
+  deadlineAnnouncements?: readonly number[];
+}
+
+/** Customization of the Nova Transactions parts the confirm and paid steps show. */
+export interface PaymentCheckoutChildCustomizations {
+  /** The status icon (`TxStatusVisual` of `@tuwaio/nova-transactions`). */
+  statusVisual?: Pick<TxStatusVisualProps, 'className' | 'iconClassNames'>;
+  /** The steps Sent, Confirming, Paid (`TxProgressIndicator` of `@tuwaio/nova-transactions`). */
+  progressIndicator?: Pick<TxProgressIndicatorProps, 'className' | 'stepClassNames' | 'StepComponent'>;
+  /** The transaction with its explorer link (`HashLink` of `@tuwaio/nova-transactions`). */
+  hashLink?: Pick<HashLinkProps, 'className' | 'classNames'>;
+}
+
+/** Customization of {@link PaymentCheckout} (`customization`). */
 export interface PaymentCheckoutCustomization {
   /** Classes added to the parts, from the state of the checkout. */
   classNames?: PaymentCheckoutClassNames;
   /** Components that replace parts. */
   components?: PaymentCheckoutComponents;
+  /** Handlers that wrap the actions of the buyer or tell what happened. */
+  handlers?: PaymentCheckoutHandlers;
+  /** Options: animations, steps, the balance check, the deadline announcements. */
+  config?: PaymentCheckoutConfig;
+  /** Customization of the Nova Transactions parts of the confirm and paid steps. */
+  childCustomizations?: PaymentCheckoutChildCustomizations;
 }
 
 /** What a part adds to {@link CheckoutPartState} for its class name function. */

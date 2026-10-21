@@ -82,8 +82,9 @@ function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null,
  * The pay step: the connected wallet (with "Change"), the exact amount to send with its network and invoice value,
  * the price lock with "Keep this price" in its last minute, the rate, the network fee (the merchant's or an estimate),
  * the recipient, and the main action — "Sign to pay" when the merchant pays the gas, "Pay" otherwise, "Switch to …"
- * on the wrong network. Before the prompt it reads the wallet's balance and, when it is short, offers the methods
- * the wallet can pay and the seller's top-up link.
+ * on the wrong network. Before the prompt it reads the wallet's balance (unless `config.balanceCheck` is `false`)
+ * and, when it is short, offers the methods the wallet can pay and the seller's top-up link. `handlers.onSubmit` wraps
+ * the pay button.
  *
  * Side effects: balance, fee and wallet capability reads from the network through the chain adapter (no request to
  * Quasar); wallet prompts; checkout requests to Quasar.
@@ -103,7 +104,9 @@ export function PayScreen() {
     connectWallet,
     backToMethods,
     onPaymentSent,
+    customization,
   } = useCheckoutContext();
+  const balanceCheck = customization.config?.balanceCheck !== false;
   const quote = state.quote;
   const methods = checkout?.methods ?? [];
   const method = methods.find((item) => item.id === quote?.methodId);
@@ -119,7 +122,7 @@ export function PayScreen() {
   );
   const path = quote ? payPath(quote, { withGas, canSponsorCalls: sponsorable === true }) : 'transfer';
   const balance = useAsyncValue(
-    quote && adapter && wallet ? `${chainId}:${account}:${quote.instructions.token}` : null,
+    balanceCheck && quote && adapter && wallet ? `${chainId}:${account}:${quote.instructions.token}` : null,
     () => adapter!.getBalance({ chainId, account, token: quote!.instructions.token }),
   );
   const fee = useAsyncValue(
@@ -140,7 +143,7 @@ export function PayScreen() {
   const native = quote?.instructions.token === 'native';
   const shortfall =
     quote && typeof balance === 'bigint' ? balanceShortfall(balance, quote, native && fee ? fee.amount : 0n) : null;
-  const alternatives = useAlternatives(methods, quote, Boolean(shortfall));
+  const alternatives = useAlternatives(methods, quote, balanceCheck && Boolean(shortfall));
 
   if (!checkout || !quote || !method) return null;
 
@@ -175,7 +178,11 @@ export function PayScreen() {
       label: formatLabel(path === 'transfer' ? labels.pay.payAmount : labels.pay.signToPay, {
         amount: token(amounts.send),
       }),
-      run: () => void payment.pay(),
+      // `onSubmit` of the app wraps the wallet prompt
+      run: () =>
+        void (customization.handlers?.onSubmit
+          ? customization.handlers.onSubmit({ quote, method, proceed: payment.pay })
+          : payment.pay()),
       disabled: Boolean(shortfall),
     };
   }

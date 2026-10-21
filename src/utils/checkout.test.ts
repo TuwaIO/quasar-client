@@ -154,6 +154,11 @@ describe('groupMethodsByToken', () => {
 });
 
 describe('timers', () => {
+  it('announces the deadline at the minutes the app sets', () => {
+    expect(deadlineAnnouncement(16 * 60_000, 15 * 60_000, [15, 2])).toBe(15);
+    expect(deadlineAnnouncement(11 * 60_000, 10 * 60_000, [15, 2])).toBeNull();
+  });
+
   it('announces the invoice deadline once at 10, 5 and 1 minutes', () => {
     expect(deadlineAnnouncement(null, 3_600_000)).toBeNull();
     expect(deadlineAnnouncement(601_000, 599_000)).toBe(10);

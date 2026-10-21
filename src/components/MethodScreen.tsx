@@ -146,6 +146,13 @@ export function MethodScreen() {
   }
 
   const quoting = state.phase === 'quoting';
+  const handlers = context.customization.handlers;
+  // A pick of the buyer goes through `onMethodSelect` when the app set it (the first choice of the checkout does not)
+  const pick = (method: CheckoutMethod) => {
+    const select = () => store.getState().selectMethod(method.id);
+    if (handlers?.onMethodSelect) handlers.onMethodSelect({ method, select });
+    else select();
+  };
   const onContinue = async () => {
     if (!selected || !way) return;
     setCannotConnect(false);
@@ -178,7 +185,7 @@ export function MethodScreen() {
           getKey={(item) => item.symbol}
           onChange={(symbol) => {
             const next = groups.find((item) => item.symbol === symbol)?.methods[0];
-            if (next) store.getState().selectMethod(next.id);
+            if (next) pick(next);
           }}
           className="novapay:grid novapay:grid-cols-2 novapay:gap-2 novapay:sm:grid-cols-4"
           itemClassName={(isSelected, item) =>
@@ -219,7 +226,10 @@ export function MethodScreen() {
               items={group.methods}
               value={selected?.id ?? null}
               getKey={(method) => method.id}
-              onChange={(id) => store.getState().selectMethod(id)}
+              onChange={(id) => {
+                const next = group.methods.find((method) => method.id === id);
+                if (next) pick(next);
+              }}
               className="novapay:flex novapay:flex-col novapay:gap-1.5"
               itemClassName={(isSelected, method) =>
                 cn(
@@ -326,7 +336,15 @@ export function MethodScreen() {
         )}
       </ScreenContent>
       <ScreenFooter>
-        <PrimaryButton busy={quoting} disabled={!selected || !way} onClick={() => void onContinue()}>
+        <PrimaryButton
+          busy={quoting}
+          disabled={!selected || !way}
+          onClick={() => {
+            if (selected && way && handlers?.onQuote) {
+              void handlers.onQuote({ method: selected, payWith: way, proceed: onContinue });
+            } else void onContinue();
+          }}
+        >
           {quoting ? labels.method.quoting : labels.method.continue}
         </PrimaryButton>
         <AgreeLine

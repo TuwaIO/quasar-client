@@ -1,5 +1,4 @@
-import type { CheckoutMethod, CheckoutState, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { CheckoutContextValue } from './checkoutContext';
@@ -24,92 +23,12 @@ const { OutcomeScreen } = await import('./OutcomeScreen');
 const { QrCode } = await import('./QrCode');
 const { OrderTotal } = await import('./CheckoutSummary');
 const { RadioCards } = await import('./RadioCards');
+const fixture = await import('../testing/checkoutFixture');
 
-/** Every element of the tree (children and element props), depth first. */
-function elements(node: unknown): ReactElement<Record<string, unknown>>[] {
-  if (Array.isArray(node)) return node.flatMap(elements);
-  if (!isValidElement(node)) return [];
-  const element = node as ReactElement<Record<string, unknown>>;
-  return [element, ...Object.values(element.props).flatMap(elements)];
-}
-const ofType = (node: unknown, type: unknown) => elements(node).filter((element) => element.type === type);
-const classesOf = (node: unknown) => elements(node).map((element) => String(element.props.className ?? ''));
-const hasClass = (node: unknown, name: string) => classesOf(node).some((classes) => classes.split(' ').includes(name));
-
-const method = (id: string, symbol: string, chainId: string, featured = false): CheckoutMethod =>
-  ({
-    id,
-    name: `${symbol} on ${chainId}`,
-    symbol,
-    chainId,
-    assetId: null,
-    decimals: 6,
-    gasless: 'off',
-    featured,
-    markupBps: 0,
-    discountBps: 0,
-  }) as CheckoutMethod;
-
-const methods = [method('usdc-base', 'USDC', 'eip155:8453', true), method('usdc-eth', 'USDC', 'eip155:1')];
-const checkout = {
-  invoice: {
-    id: 'inv_1',
-    number: 'INV-1',
-    status: 'open',
-    currency: 'USD',
-    totalMinor: '200',
-    lineItems: [],
-    dueAt: null,
-    environment: 'live',
-    replacedBy: null,
-  },
-  merchant: {
-    name: 'Cosmos',
-    website: null,
-    supportEmail: null,
-    seller: null,
-    fundingUrl: null,
-    links: { terms: null, refundPolicy: null, privacy: null },
-  },
-  methods,
-  quoteTtlSeconds: 900,
-  autoCharge: null,
-} as unknown as CheckoutView;
-
-function context(customization: CheckoutContextValue['customization'], extra: Partial<CheckoutContextValue> = {}) {
-  ctx = {
-    store: { getState: () => ({ selectMethod: vi.fn() }) },
-    state: {
-      phase: 'selectMethod',
-      checkout,
-      methodId: 'usdc-base',
-      quote: null,
-      error: null,
-    } as unknown as CheckoutState,
-    checkout,
-    screen: 'method',
-    locale: 'en',
-    labels: defaultLabels,
-    now: 0,
-    wallet: null,
-    payWith: 'wallet',
-    setPayWith: vi.fn(),
-    payUrl: null,
-    connectWallet: vi.fn(() => true),
-    adapterFor: () => ({ family: 'eip155' }) as never,
-    handoff: false,
-    setHandoff: vi.fn(),
-    backToMethods: vi.fn(),
-    onPaymentSent: vi.fn(),
-    autoPay: false,
-    setAutoPay: vi.fn(),
-    openInvoice: vi.fn(),
-    autoReturnSeconds: 5,
-    customization,
-    ...extra,
-  } as CheckoutContextValue;
-  return ctx;
-}
+const methods = fixture.methods;
+const context = (customization: CheckoutContextValue['customization'], extra: Partial<CheckoutContextValue> = {}) =>
+  (ctx = fixture.checkoutContextValue(customization, extra));
+const { ofType, hasClass } = fixture;
 
 afterEach(() => unmount());
 

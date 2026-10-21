@@ -17,12 +17,13 @@ import { TxLabels } from './TxLabels';
  * @returns The confirm step.
  */
 export function ConfirmScreen() {
-  const { labels, close } = useCheckoutContext();
+  const { labels, close, customization } = useCheckoutContext();
+  const child = customization.childCustomizations;
   const facts = usePaymentFacts();
   return (
     <TxLabels>
       <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center">
-        <TxStatusVisual isProcessing />
+        <TxStatusVisual isProcessing {...child?.statusVisual} />
         <div>
           <h2 className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold')}>{labels.confirm.title}</h2>
           {facts.network && (
@@ -31,13 +32,17 @@ export function ConfirmScreen() {
             </p>
           )}
         </div>
-        <TxProgressIndicator isProcessing className="novapay:max-w-sm" />
+        <TxProgressIndicator
+          isProcessing
+          {...child?.progressIndicator}
+          className={cn('novapay:max-w-sm', child?.progressIndicator?.className)}
+        />
         <DetailsCard className="novapay:max-w-sm">
           {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
           {facts.amount && <DetailRow name={labels.confirm.amount}>{facts.amount}</DetailRow>}
           {facts.txKey && (
             <DetailRow name={labels.confirm.transaction}>
-              <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" />
+              <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" {...child?.hashLink} />
             </DetailRow>
           )}
           {facts.from && <DetailRow name={labels.confirm.from}>{facts.from}</DetailRow>}

@@ -167,16 +167,21 @@ export function groupMethodsByToken(methods: CheckoutMethod[], walletChainId?: s
 export const DEADLINE_ANNOUNCEMENTS = [10, 5, 1] as const;
 
 /**
- * Whether a tick of the invoice countdown crossed one of {@link DEADLINE_ANNOUNCEMENTS}: the checkout announces the
- * time left then (WCAG 2.2.1), not every second.
+ * Whether a tick of the invoice countdown crossed one of the announcement minutes ({@link DEADLINE_ANNOUNCEMENTS} by
+ * default): the checkout announces the time left then (WCAG 2.2.1), not every second.
  *
  * @param previousMs - Time left at the previous tick; `null` on the first one.
  * @param ms - Time left now.
+ * @param announcements - The minutes before the deadline to announce at.
  * @returns The minutes to announce (the nearest when several were crossed at once), or `null`.
  */
-export function deadlineAnnouncement(previousMs: number | null, ms: number): number | null {
+export function deadlineAnnouncement(
+  previousMs: number | null,
+  ms: number,
+  announcements: readonly number[] = DEADLINE_ANNOUNCEMENTS,
+): number | null {
   if (previousMs === null || ms <= 0) return null;
-  const crossed = DEADLINE_ANNOUNCEMENTS.filter((minutes) => previousMs > minutes * 60_000 && ms <= minutes * 60_000);
+  const crossed = announcements.filter((minutes) => previousMs > minutes * 60_000 && ms <= minutes * 60_000);
   return crossed.length ? Math.min(...crossed) : null;
 }
 

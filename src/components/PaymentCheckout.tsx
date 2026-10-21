@@ -5,6 +5,7 @@ import { MotionConfig } from 'framer-motion';
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
+import { useCheckoutEvents } from '../hooks/useCheckoutEvents';
 import { useCheckoutState, useCheckoutStore } from '../hooks/useCheckoutStore';
 import { useConnectedWallet } from '../hooks/useConnectedWallet';
 import { useNovaPayments } from '../hooks/useNovaPayments';
@@ -182,6 +183,7 @@ export function CheckoutFrame({
     Summary = CheckoutSummary,
     CompactSummary: Compact = CompactSummary,
   } = customization.components ?? {};
+  const announcements = customization.config?.deadlineAnnouncements;
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
@@ -189,14 +191,14 @@ export function CheckoutFrame({
   useEffect(() => {
     if (dueAt === null) return;
     const left = dueAt - now;
-    const minutes = deadlineAnnouncement(previous.current, left);
+    const minutes = deadlineAnnouncement(previous.current, left, announcements);
     previous.current = left;
     if (minutes !== null) {
       setAnnouncement(
         minutes === 1 ? labels.summary.oneMinuteLeft : formatLabel(labels.summary.minutesLeft, { minutes }),
       );
     }
-  }, [dueAt, now, labels]);
+  }, [dueAt, now, labels, announcements]);
 
   return (
     <div
@@ -325,6 +327,7 @@ export function PaymentCheckout({
   if (!labelsShown && checkout && hasLabels(locale)) setLabelsShown(true);
   const screen = checkoutScreen(state, { payWith, handoff, autoPay, labelsReady: labelsShown || !checkout });
   usePaidCallback(state.phase, checkout?.invoice, onPaid);
+  useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
   const onPaymentSent = usePaymentHandOver({
     store,
@@ -425,7 +428,7 @@ export function PaymentCheckout({
   );
   const frame = (
     <CheckoutContextProvider value={context}>
-      <MotionConfig reducedMotion="user">
+      <MotionConfig reducedMotion={customization?.config?.animation?.disabled ? 'always' : 'user'}>
         <CheckoutFrame
           withDetails={askedBuyer}
           leave={leave}

@@ -9,6 +9,7 @@ export * from './adapters/types';
 export * from './components';
 export * from './hooks/useAsyncValue';
 export * from './hooks/useCheckoutContext';
+export * from './hooks/useCheckoutEvents';
 export * from './hooks/useCheckoutStore';
 export * from './hooks/useConnectedWallet';
 export * from './hooks/useNovaPayments';
