@@ -1,14 +1,15 @@
 /**
- * @file Why a wallet did not pay: the buyer declined, the wallet cannot do it, or it failed.
+ * @file Why a wallet did not pay: the buyer declined, the wallet cannot do it, it is on another network, or it failed.
  */
 
 /** Why a wallet request did not go through. */
-export type PaymentWalletErrorKind = 'declined' | 'unsupported' | 'failed';
+export type PaymentWalletErrorKind = 'declined' | 'unsupported' | 'wrongNetwork' | 'failed';
 
 /** The error a payments adapter throws when it knows why the wallet did not pay. */
 export class PaymentWalletError extends Error {
   /**
-   * @param kind - Why: `declined` by the buyer, `unsupported` by the wallet, or `failed`.
+   * @param kind - Why: `declined` by the buyer, `unsupported` by the wallet, `wrongNetwork` when the wallet sent it on
+   * another network than the payment's (a Solana wallet, which chooses its network itself), or `failed`.
    * @param message - What to log.
    * @param options - The original error as `cause`.
    */
@@ -36,7 +37,7 @@ const field = (value: unknown, key: string): unknown =>
  * `declined`.
  *
  * @param error - What the wallet library threw.
- * @returns `declined`, `unsupported` or `failed`.
+ * @returns `declined`, `unsupported`, `wrongNetwork` or `failed`.
  */
 export function walletErrorKind(error: unknown): PaymentWalletErrorKind {
   const seen = new Set<unknown>();

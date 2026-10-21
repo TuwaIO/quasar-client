@@ -6,10 +6,12 @@ import {
   createTransactionMessage,
   getBase58Decoder,
   type Instruction,
+  isSolanaError,
   pipe,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
   signAndSendTransactionMessageWithSigners,
+  SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND,
   type TransactionSendingSigner,
 } from '@solana/kit';
 import { getTransferSolInstruction } from '@solana-program/system';
@@ -67,6 +69,25 @@ function clusterOf(chainId: string): SolanaClusterMoniker {
   return getCluster({ cluster: chainId }) as SolanaClusterMoniker;
 }
 
+const BLOCKHASH_NOT_FOUND = /blockhash ?not ?found/i;
+
+/**
+ * Whether the network refused the transaction because it does not know its blockhash: the wallet sent it on another
+ * cluster than the payment's (Solana wallets choose their network themselves), so nothing was paid. Read from the
+ * errors of `@solana/kit` and from the messages of wallets, also as a `cause`.
+ */
+function isUnknownBlockhash(error: unknown): boolean {
+  const seen = new Set<unknown>();
+  for (let current = error; typeof current === 'object' && current !== null && !seen.has(current);) {
+    seen.add(current);
+    if (isSolanaError(current, SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND)) return true;
+    const { message, cause } = current as { message?: unknown; cause?: unknown };
+    if (typeof message === 'string' && BLOCKHASH_NOT_FOUND.test(message)) return true;
+    current = cause;
+  }
+  return false;
+}
+
 /** An instruction with the Solana Pay reference as a read-only key, as wallets add it. */
 const withReference = <T extends Instruction>(instruction: T, reference: string): T => ({
   ...instruction,
@@ -78,7 +99,9 @@ const withReference = <T extends Instruction>(instruction: T, reference: string)
  * Satellite Connect. It reads balances and estimates fees on the network, and sends SOL with a system transfer or a
  * token with `transferChecked` to the merchant's associated token account (created when missing), in the token's own
  * program (Token or Token-2022), always with the Solana Pay reference key of the quote. A Token-2022 mint with a
- * transfer hook is refused: a Solana Pay wallet pays it with the QR code. Pass it in `adapters` of
+ * transfer hook is refused: a Solana Pay wallet pays it with the QR code. A transfer the network refuses for an
+ * unknown blockhash, because the wallet sent it on another cluster (Solana wallets choose their network themselves),
+ * throws `PaymentWalletError` with the kind `wrongNetwork`: nothing was paid. Pass it in `adapters` of
  * `NovaPaymentsProvider`.
  *
  * Side effects: RPC reads (the URLs of `rpcUrls`, else the public endpoints of the clusters); wallet prompts.
@@ -193,7 +216,12 @@ export function paymentsSolanaAdapter({ rpcUrls }: PaymentsSolanaAdapterOptions 
         (draft) => setTransactionMessageLifetimeUsingBlockhash(blockhash, draft),
         (draft) => appendTransactionMessageInstructions(transfer, draft),
       );
-      return getBase58Decoder().decode(await signAndSendTransactionMessageWithSigners(message));
+      try {
+        return getBase58Decoder().decode(await signAndSendTransactionMessageWithSigners(message));
+      } catch (error) {
+        if (!isUnknownBlockhash(error)) throw error;
+        throw new PaymentWalletError('wrongNetwork', `The wallet is not on ${solana.chainId}`, { cause: error });
+      }
     },
 
     explorerUrl: ({ chainId, txKey }) => getSolanaExplorerLink(`/tx/${txKey}`, clusterOf(chainId)),

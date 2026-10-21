@@ -32,6 +32,7 @@ const pay = vi.fn(async () => undefined);
 vi.mock('../hooks/usePayment', () => ({
   usePayment: () => ({ status: 'idle', problem: null, pay, switchNetwork: vi.fn(), dismiss: vi.fn() }),
 }));
+vi.mock('../hooks/useSolanaClusterSync', () => ({ useSolanaClusterSync: vi.fn() }));
 
 const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');

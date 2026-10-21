@@ -219,6 +219,16 @@ export type NovaPaymentsLabels = {
     wrongNetworkText: string;
     /** Under the switch button (default: `Your wallet asks you to approve the switch.`) */
     switchHint: string;
+    /** Heading of the reminder about the network of a Solana payment off mainnet: `{network}` (default: `Pay on {network}`) */
+    solanaNetwork: string;
+    /** Its text: `{network}` (default: `Solana wallets choose their network themselves: switch yours to {network} before you pay.`) */
+    solanaNetworkText: string;
+    /** The steps in Phantom: `{network}` (default: `In Phantom: Settings › Developer Settings › Testnet Mode, then {network}.`) */
+    solanaHintPhantom: string;
+    /** The steps in Solflare: `{cluster}`, the cluster as Solflare names it (default: `In Solflare: Settings › General › Network › {cluster}.`) */
+    solanaHintSolflare: string;
+    /** In other Solana wallets: `{wallet}` (default: `Choose the network in the settings of {wallet}.`) */
+    solanaHintOther: string;
     /** Heading of a short balance (default: `Not enough`) */
     notEnough: string;
     /** The balance: `{amount}`, `{network}` (default: `Your wallet has {amount} on {network}`) */
@@ -245,6 +255,8 @@ export type NovaPaymentsLabels = {
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
     unsupported: string;
+    /** The Solana wallet was on another network, so the payment did not go through: `{wallet}`, `{network}` (default: `{wallet} is on another network, so nothing was paid. Switch it to {network} and pay again.`) */
+    wrongCluster: string;
     /** The wallet screening of Quasar is unavailable (default: `The wallet check is unavailable right now.`) */
     screeningUnavailable: string;
     /** Button then (default: `Try again in a minute`) */

@@ -1,4 +1,4 @@
-import { ClockIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { cn, WalletIcon } from '@tuwaio/nova-core';
 import type { CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 import { useState } from 'react';
@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useAsyncValue } from '../hooks/useAsyncValue';
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePayment } from '../hooks/usePayment';
+import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { isQuoteEnding, QUOTE_WARNING_MS } from '../utils/checkout';
 import {
@@ -18,6 +19,7 @@ import {
 } from '../utils/format';
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
+import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { focusRing, mono, screenHeading } from './classes';
 import {
@@ -48,6 +50,7 @@ function problemText(
 ): string | null {
   if (problem === 'declined') return formatLabel(labels.pay.declined, values);
   if (problem === 'unsupported') return formatLabel(labels.pay.unsupported, values);
+  if (problem === 'wrongNetwork') return formatLabel(labels.pay.wrongCluster, values);
   if (problem === 'failed' || errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;
@@ -84,10 +87,12 @@ function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null,
  * the recipient, and the main action — "Sign to pay" when the merchant pays the gas, "Pay" otherwise, "Switch to …"
  * on the wrong network. Before the prompt it reads the wallet's balance (unless `config.balanceCheck` is `false`)
  * and, when it is short, offers the methods the wallet can pay and the seller's top-up link. `handlers.onSubmit` wraps
- * the pay button.
+ * the pay button. A Solana payment off mainnet reminds the buyer to switch the wallet to its cluster (Solana wallets
+ * choose their network themselves), with the steps of Phantom and Solflare.
  *
  * Side effects: balance, fee and wallet capability reads from the network through the chain adapter (no request to
- * Quasar); wallet prompts; checkout requests to Quasar.
+ * Quasar); wallet prompts; checkout requests to Quasar; on a Solana payment, `switchNetwork` of the Satellite store
+ * moves the app's Solana connection to the payment's cluster (no wallet request).
  *
  * @returns The pay step.
  */
@@ -140,6 +145,7 @@ export function PayScreen() {
     paymasterUrl: state.paymasterUrl,
     onSent: onPaymentSent,
   });
+  useSolanaClusterSync(chainId, wallet);
   const native = quote?.instructions.token === 'native';
   const shortfall =
     quote && typeof balance === 'bigint' ? balanceShortfall(balance, quote, native && fee ? fee.amount : 0n) : null;
@@ -166,6 +172,7 @@ export function PayScreen() {
     payment.problem,
     state.phase === 'awaitingPayment' ? state.error?.code : undefined,
   );
+  const solanaNetwork = solanaNetworkHint(chainId, wallet, labels);
   const renew = () => void store.getState().requestQuote();
 
   let action: { label: string; run: () => void; disabled?: boolean };
@@ -245,6 +252,22 @@ export function PayScreen() {
                 <strong className="novapay:block">{labels.pay.wrongNetwork}</strong>
                 {formatLabel(labels.pay.wrongNetworkText, { current: networkName(wallet!.chainId), network })}{' '}
                 {labels.pay.switchHint}
+              </span>
+            </div>
+          )}
+
+          {solanaNetwork && !expired && (
+            <div className="novapay:flex novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-xs">
+              <InformationCircleIcon
+                aria-hidden
+                className="novapay:h-4 novapay:w-4 novapay:shrink-0 novapay:text-[var(--tuwa-text-secondary)]"
+              />
+              <span className="novapay:flex novapay:flex-col novapay:gap-0.5">
+                <strong>{solanaNetwork.title}</strong>
+                <span>{solanaNetwork.text}</span>
+                {solanaNetwork.hint && (
+                  <span className="novapay:text-[var(--tuwa-text-secondary)]">{solanaNetwork.hint}</span>
+                )}
               </span>
             </div>
           )}

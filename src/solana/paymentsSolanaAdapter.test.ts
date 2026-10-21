@@ -1,4 +1,11 @@
-import { AccountRole, address, getBase58Encoder } from '@solana/kit';
+import {
+  AccountRole,
+  address,
+  getBase58Encoder,
+  SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE,
+  SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND,
+  SolanaError,
+} from '@solana/kit';
 import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS, findAssociatedTokenPda, TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
 import { OrbitAdapter } from '@tuwaio/orbit-core';
 import { TransactionTracker } from '@tuwaio/pulsar-core';
@@ -126,6 +133,34 @@ describe('paymentsSolanaAdapter', () => {
       [REFERENCE, AccountRole.READONLY],
     ]);
     expect(sentInstructions()).toHaveLength(1);
+  });
+
+  it('tells when the wallet sent on another Solana network: the blockhash of the payment is unknown there', async () => {
+    const adapter = paymentsSolanaAdapter();
+    // How wallets report it: the RPC error of their network, directly or as the cause
+    for (const error of [
+      new Error('Transaction simulation failed: Blockhash not found'),
+      Object.assign(new Error('Unexpected error'), { cause: { code: -32002, message: 'BlockhashNotFound' } }),
+      { code: -32603, message: 'failed to send transaction: Transaction simulation failed: Blockhash not found' },
+      // The errors of @solana/kit, whose messages production builds strip
+      new SolanaError(SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE, {
+        accounts: null,
+        cause: new SolanaError(SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND),
+        logs: null,
+        returnData: null,
+        unitsConsumed: undefined,
+      } as never),
+    ]) {
+      solana.signAndSend.mockRejectedValueOnce(error);
+      await expect(adapter.sendTransfer({ instructions: sol, account: PAYER, connection })).rejects.toMatchObject({
+        name: 'PaymentWalletError',
+        kind: 'wrongNetwork',
+      });
+    }
+    // Anything else is the wallet's own error
+    const declined = Object.assign(new Error('User rejected the request.'), { code: 4001 });
+    solana.signAndSend.mockRejectedValueOnce(declined);
+    await expect(adapter.sendTransfer({ instructions: sol, account: PAYER, connection })).rejects.toBe(declined);
   });
 
   it("sends a token to the merchant's associated account, creating it when needed, with the reference", async () => {
