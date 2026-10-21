@@ -4,7 +4,7 @@ import { HashLink, TxProgressIndicator, TxStatusVisual } from '@tuwaio/nova-tran
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
-import { mono } from './classes';
+import { mono, screenHeading } from './classes';
 import { DetailRow, DetailsCard, ScreenFooter, SecondaryButton } from './ScreenParts';
 import { TxLabels } from './TxLabels';
 
@@ -25,7 +25,12 @@ export function ConfirmScreen() {
       <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center">
         <TxStatusVisual isProcessing {...child?.statusVisual} />
         <div>
-          <h2 className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold')}>{labels.confirm.title}</h2>
+          <h2
+            {...screenHeading}
+            className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold novapay:outline-none')}
+          >
+            {labels.confirm.title}
+          </h2>
           {facts.network && (
             <p className="novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
               {formatLabel(labels.confirm.hint, { network: facts.network })}

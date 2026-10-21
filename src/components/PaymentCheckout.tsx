@@ -23,7 +23,7 @@ import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
-import { mono } from './classes';
+import { mono, screenHeading } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
 import { LeaveDialog } from './LeaveDialog';
@@ -128,7 +128,12 @@ function ErrorScreen() {
       className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:p-8 novapay:text-center"
     >
       <ExclamationTriangleIcon aria-hidden className="novapay:h-7 novapay:w-7 novapay:text-[var(--tuwa-error-icon)]" />
-      <h2 className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold')}>{labels.error.title}</h2>
+      <h2
+        {...screenHeading}
+        className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold novapay:outline-none')}
+      >
+        {labels.error.title}
+      </h2>
       <p className="novapay:m-0 novapay:max-w-sm novapay:text-[13px] novapay:text-[var(--tuwa-text-secondary)]">
         {notFound ? labels.error.notFound : labels.error.generic}
       </p>
@@ -184,6 +189,21 @@ export function CheckoutFrame({
     CompactSummary: Compact = CompactSummary,
   } = customization.components ?? {};
   const announcements = customization.config?.deadlineAnnouncements;
+  const { screen } = context;
+  const frame = useRef<HTMLDivElement>(null);
+  // A new step takes the focus on its heading, so a keyboard user does not lose it with the button that led there and a
+  // screen reader reads the step (WCAG 2.4.3). Not for the first screen after loading, and never when the focus is in
+  // another part of the page.
+  const shownScreen = useRef(screen);
+  useEffect(() => {
+    const previous = shownScreen.current;
+    shownScreen.current = screen;
+    const block = frame.current;
+    if (!block || previous === screen || previous === 'loading') return;
+    const active = block.ownerDocument.activeElement;
+    if (active && active !== block.ownerDocument.body && !block.contains(active)) return;
+    block.querySelector<HTMLElement>('[data-novapay-scroll] [data-novapay-heading]')?.focus();
+  }, [screen]);
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
@@ -202,6 +222,7 @@ export function CheckoutFrame({
 
   return (
     <div
+      ref={frame}
       lang={locale}
       className={cn(
         'novapay:relative novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:w-[760px] novapay:sm:flex-row',
@@ -210,6 +231,7 @@ export function CheckoutFrame({
     >
       {checkout && (
         <aside
+          inert={Boolean(leave)}
           className={cn(
             'novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block',
             checkoutClassName(context, 'summary'),
@@ -218,7 +240,11 @@ export function CheckoutFrame({
           <Summary />
         </aside>
       )}
-      <div className="novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col">
+      {/* While the question to leave shows, the rest is out of reach: Tab stays in the question */}
+      <div
+        inert={Boolean(leave)}
+        className="novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col"
+      >
         <Header withDetails={withDetails} />
         <div className="novapay:sm:hidden">
           {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
@@ -444,6 +470,8 @@ export function PaymentCheckout({
         open={open}
         onOpenChange={(next) => {
           // Escape and a click outside ask first too, while nothing is sent
+          // Escape on the question to leave answers "Stay"
+          if (!next && askLeave) return setAskLeave(false);
           if (!next && needsLeaveConfirm(store.getState().phase)) return setAskLeave(true);
           onOpenChange?.(next);
           if (!next) onClose?.();

@@ -8,6 +8,12 @@ export const iconButton = `novapay:inline-flex novapay:h-7 novapay:min-w-7 novap
 /** The mono font of amounts, codes and step names. @internal */
 export const mono = 'novapay:font-mono novapay:tabular-nums';
 
+/**
+ * Props of the heading of a screen: it takes the focus when the screen changes (`tabIndex` -1, out of the Tab order),
+ * so screen readers read the new step (WCAG 2.4.3). @internal
+ */
+export const screenHeading = { tabIndex: -1, 'data-novapay-heading': '' } as const;
+
 /** The main action of a screen: a full-width solid button (or link) in the accent. @internal */
 export const primaryAction = `${mono} novapay:inline-flex novapay:h-11 novapay:w-full novapay:cursor-pointer novapay:items-center novapay:justify-center novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border-0 novapay:bg-[var(--tuwa-button-primary-bg)] novapay:text-sm novapay:font-bold novapay:text-[var(--tuwa-text-on-accent)] novapay:no-underline novapay:transition-colors novapay:hover:bg-[var(--tuwa-button-primary-bg-hover)] novapay:disabled:cursor-not-allowed novapay:disabled:opacity-70 ${focusRing}`;
 

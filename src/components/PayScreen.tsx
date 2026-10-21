@@ -19,7 +19,7 @@ import {
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
-import { focusRing, mono } from './classes';
+import { focusRing, mono, screenHeading } from './classes';
 import {
   CopyButton,
   DetailRow,
@@ -201,7 +201,9 @@ export function PayScreen() {
     <div className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
       <div inert={prompt !== null} className="novapay:flex novapay:flex-1 novapay:flex-col">
         <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-3 novapay:px-5 novapay:py-4">
-          <h2 className="novapay:sr-only">{labels.pay.title}</h2>
+          <h2 {...screenHeading} className="novapay:sr-only">
+            {labels.pay.title}
+          </h2>
 
           {wallet && (
             <div className="novapay:flex novapay:items-center novapay:gap-2.5 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2">

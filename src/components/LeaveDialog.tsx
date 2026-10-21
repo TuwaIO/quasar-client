@@ -8,8 +8,8 @@ import { PrimaryButton, SecondaryButton } from './ScreenParts';
 
 /**
  * The question when the buyer closes the checkout before anything is sent: the invoice stays open until its deadline,
- * reopened from the email or the seller's site, and the locked price is released. "Stay and pay" keeps the checkout,
- * "Leave" closes it. The heading takes the focus.
+ * reopened from the email or the seller's site, and the locked price is released. "Stay and pay" (or Escape) keeps
+ * the checkout and gives the focus back where it was, "Leave" closes it. The heading takes the focus.
  *
  * @param props - The answers.
  * @param props.onStay - Keeps the checkout open.
@@ -20,7 +20,14 @@ export function LeaveDialog({ onStay, onLeave }: { onStay: () => void; onLeave: 
   const { checkout, labels, locale } = useCheckoutContext();
   const headingId = useId();
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => heading.current?.focus(), []);
+  // The heading takes the focus; "Stay" and Escape give it back where it was
+  useEffect(() => {
+    const previous = heading.current?.ownerDocument.activeElement as HTMLElement | null;
+    heading.current?.focus();
+    return () => {
+      if (previous?.isConnected) previous.focus();
+    };
+  }, []);
   const due = checkout?.invoice.dueAt
     ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
         Date.parse(checkout.invoice.dueAt),
@@ -31,6 +38,11 @@ export function LeaveDialog({ onStay, onLeave }: { onStay: () => void; onLeave: 
       role="alertdialog"
       aria-modal="true"
       aria-labelledby={headingId}
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return;
+        event.stopPropagation();
+        onStay();
+      }}
       className="novapay:absolute novapay:inset-0 novapay:z-20 novapay:flex novapay:items-center novapay:justify-center novapay:bg-[var(--tuwa-bg-primary)]/95 novapay:p-6"
     >
       <div className="novapay:flex novapay:max-w-sm novapay:flex-col novapay:gap-3 novapay:text-center">

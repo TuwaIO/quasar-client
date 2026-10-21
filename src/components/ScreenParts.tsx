@@ -3,7 +3,7 @@ import { cn } from '@tuwaio/nova-core';
 import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
-import { focusRing, iconButton, mono, primaryAction, secondaryAction } from './classes';
+import { focusRing, iconButton, mono, primaryAction, screenHeading, secondaryAction } from './classes';
 import { checkoutClassName, type CheckoutPrimaryButtonProps } from './customization';
 
 /** The scrolling content of a screen, with its heading. @internal */
@@ -25,7 +25,12 @@ export function ScreenContent({
       )}
     >
       <div>
-        <h2 className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold')}>{title}</h2>
+        <h2
+          {...screenHeading}
+          className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold novapay:outline-none')}
+        >
+          {title}
+        </h2>
         {subtitle && (
           <p className="novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
             {subtitle}
