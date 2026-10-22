@@ -51,6 +51,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     quoting: 'Getting the price…',
     agreeBoth: "By continuing you agree to the seller's {terms} and {refundPolicy}.",
     agreeOne: "By continuing you agree to the seller's {link}.",
+    consentRequired: 'Required to continue.',
     noMethods: 'This invoice cannot be paid with any method right now. Contact the seller.',
     methodUnavailable: 'This page cannot take this method. Choose another one.',
     payerNotExpected: 'The seller asked for this invoice to be paid from another wallet. Connect that wallet.',

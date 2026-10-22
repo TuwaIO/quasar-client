@@ -2,7 +2,7 @@ import { DevicePhoneMobileIcon, QrCodeIcon, WalletIcon as WalletOutlineIcon } fr
 import { cn, NetworkIcon, TokenIcon, WalletIcon } from '@tuwaio/nova-core';
 import { toEvmChainId } from '@tuwaio/orbit-core';
 import type { CheckoutMethod } from '@tuwaio/quasar-sdk/checkout';
-import { type ReactNode, useEffect, useEffectEvent, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useEffectEvent, useId, useMemo, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel, formatLabelParts, type NovaPaymentsLabels } from '../i18n';
@@ -108,7 +108,8 @@ function AgreeLine({
  * merchant's Popular methods next; a discount or markup of a method shows on it. Paying from a wallet needs the chain
  * adapter of the method's family (`adapters` of `NovaPaymentsProvider`). "Continue" locks the price for the connected
  * wallet (or connects one first), locks it without a payer for a Solana Pay QR code, or shows the QR code of the
- * payment page for an EVM method paid on a phone.
+ * payment page for an EVM method paid on a phone. A consent the seller asks (`checkout.consent`) is a box the buyer
+ * ticks under the ways to pay; a required one keeps "Continue" off until it is ticked, and the quote carries it.
  *
  * @returns The method step.
  */
@@ -128,6 +129,8 @@ export function MethodScreen() {
   const ways = [...(walletAvailable ? ['wallet' as const] : []), ...(qrAvailable ? ['qr' as const] : [])];
   const way = ways.includes(payWith) ? payWith : (ways[0] ?? null);
   const [cannotConnect, setCannotConnect] = useState(false);
+  const consentTextId = useId();
+  const consentHintId = useId();
 
   // A method is chosen from the start: the connected wallet's network, else the first Popular one, else the first
   const selectDefault = useEffectEvent(() => {
@@ -146,6 +149,9 @@ export function MethodScreen() {
   }
 
   const quoting = state.phase === 'quoting';
+  const consent = checkout.consent ?? null;
+  const consentGiven = Boolean(state.consentGiven);
+  const consentMissing = Boolean(consent?.required && !consentGiven);
   const handlers = context.customization.handlers;
   // A pick of the buyer goes through `onMethodSelect` when the app set it (the first choice of the checkout does not)
   const pick = (method: CheckoutMethod) => {
@@ -327,6 +333,45 @@ export function MethodScreen() {
             )
           }
         </RadioCards>
+        {consent && (
+          <label
+            className={cn(
+              'novapay:flex novapay:cursor-pointer novapay:items-start novapay:gap-2.5 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:px-3 novapay:py-2.5 novapay:transition-colors',
+              // As the option cards: one border width, the tick adds a ring, nothing moves
+              consentGiven
+                ? 'novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)] novapay:ring-1 novapay:ring-[var(--tuwa-text-accent)]'
+                : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
+              checkoutClassName(context, 'consentOption', { checked: consentGiven, required: consent.required }),
+            )}
+          >
+            <input
+              type="checkbox"
+              checked={consentGiven}
+              required={consent.required}
+              // Named by the seller's words alone: the hint is its description, not part of its name
+              aria-labelledby={consentTextId}
+              aria-describedby={consent.required ? consentHintId : undefined}
+              onChange={(event) => store.getState().setConsentGiven(event.target.checked)}
+              className={cn(
+                'novapay:mt-0.5 novapay:h-4 novapay:w-4 novapay:shrink-0 novapay:accent-[var(--tuwa-text-accent)]',
+                focusRing,
+              )}
+            />
+            <span className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-1">
+              <span
+                id={consentTextId}
+                className="novapay:whitespace-pre-line novapay:break-words novapay:text-[12px] novapay:leading-snug"
+              >
+                {consent.text}
+              </span>
+              {consent.required && (
+                <span id={consentHintId} className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
+                  {labels.method.consentRequired}
+                </span>
+              )}
+            </span>
+          </label>
+        )}
         {selected && !way && <ScreenError>{labels.method.methodUnavailable}</ScreenError>}
         {cannotConnect && (
           <ScreenError>{qrAvailable ? labels.pay.connectUnavailable : labels.method.methodUnavailable}</ScreenError>
@@ -338,7 +383,7 @@ export function MethodScreen() {
       <ScreenFooter>
         <PrimaryButton
           busy={quoting}
-          disabled={!selected || !way}
+          disabled={!selected || !way || consentMissing}
           onClick={() => {
             if (selected && way && handlers?.onQuote) {
               void handlers.onQuote({ method: selected, payWith: way, proceed: onContinue });

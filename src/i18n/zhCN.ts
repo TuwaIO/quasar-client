@@ -52,6 +52,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     quoting: '正在获取价格…',
     agreeBoth: '继续即表示您同意卖方的{terms}和{refundPolicy}。',
     agreeOne: '继续即表示您同意卖方的{link}。',
+    consentRequired: '勾选后才能继续。',
     noMethods: '此发票目前无法通过任何方式支付。请联系卖方。',
     methodUnavailable: '此页面不支持该方式。请选择其他方式。',
     payerNotExpected: '卖方要求用另一个钱包支付此发票。请连接该钱包。',

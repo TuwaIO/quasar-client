@@ -65,6 +65,8 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.method.payerNotExpected;
     case 'rate_limited':
       return labels.method.rateLimited;
+    case 'consent_required':
+      return labels.method.consentRequired;
     default:
       return labels.error.generic;
   }

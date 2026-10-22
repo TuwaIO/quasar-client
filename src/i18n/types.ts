@@ -93,6 +93,8 @@ export type NovaPaymentsLabels = {
     agreeBoth: string;
     /** Under the button with one policy; `{link}` (default: `By continuing you agree to the seller's {link}.`) */
     agreeOne: string;
+    /** Under a consent of the seller the buyer must tick before continuing (default: `Required to continue.`) */
+    consentRequired: string;
     /** No method takes the invoice */
     noMethods: string;
     /** The page can pay the chosen method neither from a wallet nor with a QR code */

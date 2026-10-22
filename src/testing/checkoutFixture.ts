@@ -63,6 +63,7 @@ export function fakeStore() {
   const actions = {
     selectMethod: vi.fn(),
     setPayer: vi.fn(),
+    setConsentGiven: vi.fn(),
     requestQuote: vi.fn(async () => null),
     releaseQuote: vi.fn(),
     setLocale: vi.fn(async () => true),

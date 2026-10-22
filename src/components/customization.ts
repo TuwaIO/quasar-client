@@ -148,6 +148,16 @@ export interface PaymentCheckoutClassNames {
    */
   payWithOption?: (params: CheckoutPartState & { payWith: 'wallet' | 'qr'; selected: boolean }) => string | undefined;
   /**
+   * The card of the seller's consent on the method step (`checkout.consent`): the box the buyer ticks and the seller's
+   * words.
+   *
+   * @param params - The state of the checkout and the consent.
+   * @param params.checked - Whether the buyer ticked it.
+   * @param params.required - Whether the buyer cannot continue without ticking it.
+   * @returns Classes to add.
+   */
+  consentOption?: (params: CheckoutPartState & { checked: boolean; required: boolean }) => string | undefined;
+  /**
    * A card of grouped facts (the transaction, the rate and fees, the terms of automatic payments).
    *
    * @param params - The state of the checkout.

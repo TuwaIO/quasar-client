@@ -52,6 +52,7 @@ export const esLabels: NovaPaymentsLabels = {
     quoting: 'Obteniendo el precio…',
     agreeBoth: 'Al continuar aceptas los {terms} y la {refundPolicy} del vendedor.',
     agreeOne: 'Al continuar aceptas las condiciones del vendedor: {link}.',
+    consentRequired: 'Obligatorio para continuar.',
     noMethods: 'Ahora mismo esta factura no se puede pagar con ningún método. Contacta con el vendedor.',
     methodUnavailable: 'Esta página no admite este método. Elige otro.',
     payerNotExpected: 'El vendedor pidió que esta factura se pague desde otra billetera. Conecta esa billetera.',
