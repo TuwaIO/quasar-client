@@ -13,3 +13,14 @@ export function useCheckoutContext(): CheckoutContextValue {
   if (!value) throw new Error('useCheckoutContext must be used inside PaymentCheckout');
   return value;
 }
+
+/**
+ * The context of the surrounding `PaymentCheckout`, or `null` outside one: for parts the checkout shares with
+ * `RefundButton`, which take the checkout's customization only inside it.
+ *
+ * @returns The checkout context, or `null`.
+ * @internal
+ */
+export function useOptionalCheckoutContext(): CheckoutContextValue | null {
+  return useContext(CheckoutContext);
+}

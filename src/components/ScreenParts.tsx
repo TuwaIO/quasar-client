@@ -2,9 +2,16 @@ import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon } from '@heroicons/reac
 import { cn } from '@tuwaio/nova-core';
 import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react';
 
-import { useCheckoutContext } from '../hooks/useCheckoutContext';
+import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
+import type { CheckoutContextValue } from './checkoutContext';
 import { focusRing, iconButton, mono, primaryAction, screenHeading, secondaryAction } from './classes';
 import { checkoutClassName, type CheckoutPrimaryButtonProps } from './customization';
+
+// A class of the checkout's customization; none outside a checkout (RefundButton)
+const partClass = (
+  context: CheckoutContextValue | null,
+  part: Parameters<typeof checkoutClassName>[1],
+): string | undefined => (context ? checkoutClassName(context, part) : undefined);
 
 /** The scrolling content of a screen, with its heading. @internal */
 export function ScreenContent({
@@ -16,12 +23,12 @@ export function ScreenContent({
   subtitle?: ReactNode;
   children: ReactNode;
 }) {
-  const context = useCheckoutContext();
+  const context = useOptionalCheckoutContext();
   return (
     <section
       className={cn(
         'novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-2.5 novapay:px-5 novapay:py-4',
-        checkoutClassName(context, 'screen'),
+        partClass(context, 'screen'),
       )}
     >
       <div>
@@ -49,7 +56,7 @@ export function ScreenContent({
  * @internal
  */
 export function ScreenFooter({ children }: { children: ReactNode }) {
-  const context = useCheckoutContext();
+  const context = useOptionalCheckoutContext();
   const ref = useRef<HTMLElement>(null);
   // The scrolling area keeps its bottom padding at the footer's height, so the browser scrolls a focused field above
   // the footer instead of under it, and not further
@@ -71,7 +78,7 @@ export function ScreenFooter({ children }: { children: ReactNode }) {
       ref={ref}
       className={cn(
         'novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center',
-        checkoutClassName(context, 'footer'),
+        partClass(context, 'footer'),
       )}
     >
       {children}
@@ -95,9 +102,9 @@ export function GroupLabel({ children, id }: { children: ReactNode; id?: string 
  * @internal
  */
 export function PrimaryButton({ busy, children, className, ...props }: CheckoutPrimaryButtonProps) {
-  const context = useCheckoutContext();
-  const extra = checkoutClassName(context, 'primaryButton');
-  const Custom = context.customization.components?.PrimaryButton;
+  const context = useOptionalCheckoutContext();
+  const extra = partClass(context, 'primaryButton');
+  const Custom = context?.customization.components?.PrimaryButton;
   if (Custom) {
     return (
       <Custom busy={busy} className={cn(className, extra)} {...props}>
@@ -126,13 +133,9 @@ export function PrimaryButton({ busy, children, className, ...props }: CheckoutP
 
 /** A second action under the main button (back, close, not now): the same size, with a border. @internal */
 export function SecondaryButton({ children, className, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
-  const context = useCheckoutContext();
+  const context = useOptionalCheckoutContext();
   return (
-    <button
-      type="button"
-      {...props}
-      className={cn(secondaryAction, className, checkoutClassName(context, 'secondaryButton'))}
-    >
+    <button type="button" {...props} className={cn(secondaryAction, className, partClass(context, 'secondaryButton'))}>
       {children}
     </button>
   );
@@ -154,13 +157,13 @@ export function FooterNote({ children }: { children: ReactNode }) {
  * @internal
  */
 export function DetailsCard({ children, className }: { children: ReactNode; className?: string }) {
-  const context = useCheckoutContext();
+  const context = useOptionalCheckoutContext();
   return (
     <dl
       className={cn(
         'novapay:m-0 novapay:flex novapay:w-full novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:text-left',
         className,
-        checkoutClassName(context, 'detailsCard'),
+        partClass(context, 'detailsCard'),
       )}
     >
       {children}
@@ -170,13 +173,13 @@ export function DetailsCard({ children, className }: { children: ReactNode; clas
 
 /** A refusal of the engine, announced to screen readers. @internal */
 export function ScreenError({ children }: { children: ReactNode }) {
-  const context = useCheckoutContext();
+  const context = useOptionalCheckoutContext();
   return (
     <p
       role="alert"
       className={cn(
         'novapay:m-0 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-error-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-error-text)]',
-        checkoutClassName(context, 'error'),
+        partClass(context, 'error'),
       )}
     >
       {children}
@@ -229,12 +232,12 @@ export function CopyButton({
 
 /** A row of a {@link DetailsCard}: its name and its value. @internal */
 export function DetailRow({ name, children }: { name: ReactNode; children: ReactNode }) {
-  const context = useCheckoutContext();
+  const context = useOptionalCheckoutContext();
   return (
     <div
       className={cn(
         'novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3 novapay:py-2 novapay:text-xs',
-        checkoutClassName(context, 'detailRow'),
+        partClass(context, 'detailRow'),
       )}
     >
       <dt className="novapay:shrink-0 novapay:text-[var(--tuwa-text-secondary)]">{name}</dt>

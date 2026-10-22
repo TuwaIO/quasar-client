@@ -61,7 +61,7 @@ export function walletLabel(connectorType: string): string {
  * @param chainId - A CAIP-2 chain ID.
  * @returns `eip155` or `solana`; `null` for another namespace.
  */
-const familyOf = (chainId: string): PaymentFamily | null => {
+export const familyOf = (chainId: string): PaymentFamily | null => {
   const namespace = parseCaip2ChainId(chainId)?.namespace;
   return namespace === 'eip155' || namespace === 'solana' ? namespace : null;
 };

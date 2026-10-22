@@ -54,6 +54,8 @@ function problemText(
   if (problem === 'failed' || errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;
+  // A new price was refused: the feed or the network of the method cannot be read now
+  if (errorCode === 'price_unavailable') return labels.method.priceUnavailable;
   return null;
 }
 

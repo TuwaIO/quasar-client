@@ -88,20 +88,23 @@ function isUnknownBlockhash(error: unknown): boolean {
   return false;
 }
 
-/** An instruction with the Solana Pay reference as a read-only key, as wallets add it. */
-const withReference = <T extends Instruction>(instruction: T, reference: string): T => ({
-  ...instruction,
-  accounts: [...(instruction.accounts ?? []), { address: address(reference), role: AccountRole.READONLY }],
-});
+/** An instruction with the Solana Pay reference as a read-only key, as wallets add it; a refund has none. */
+const withReference = <T extends Instruction>(instruction: T, reference: string): T =>
+  reference
+    ? {
+        ...instruction,
+        accounts: [...(instruction.accounts ?? []), { address: address(reference), role: AccountRole.READONLY }],
+      }
+    : instruction;
 
 /**
  * The adapter that pays Solana methods of a Nova Payments checkout from the Wallet Standard wallet connected through
  * Satellite Connect. It reads balances and estimates fees on the network, and sends SOL with a system transfer or a
  * token with `transferChecked` to the merchant's associated token account (created when missing), in the token's own
- * program (Token or Token-2022), always with the Solana Pay reference key of the quote. A Token-2022 mint with a
- * transfer hook is refused: a Solana Pay wallet pays it with the QR code. A transfer the network refuses for an
- * unknown blockhash, because the wallet sent it on another cluster (Solana wallets choose their network themselves),
- * throws `PaymentWalletError` with the kind `wrongNetwork`: nothing was paid. Pass it in `adapters` of
+ * program (Token or Token-2022), with the Solana Pay reference key of the quote (a refund has none). A Token-2022
+ * mint with a transfer hook is refused: a Solana Pay wallet pays it with the QR code. A transfer the network refuses
+ * for an unknown blockhash, because the wallet sent it on another cluster (Solana wallets choose their network
+ * themselves), throws `PaymentWalletError` with the kind `wrongNetwork`: nothing was paid. Pass it in `adapters` of
  * `NovaPaymentsProvider`.
  *
  * Side effects: RPC reads (the URLs of `rpcUrls`, else the public endpoints of the clusters); wallet prompts.

@@ -127,6 +127,24 @@ export function BrandedCheckout({ token }: { token: string }) {
 }
 ```
 
+### Refunds
+
+`RefundButton` refunds a paid invoice from the merchant's connected wallet: what to refund (an amount of the invoice currency or everything received), a wallet of the payment's network, the confirmation with the wallet's balance and the network fee, the wallet's prompt, then Quasar follows the transaction and issues the credit note. It takes a refund store of `@tuwaio/quasar-sdk/checkout` whose three calls run on your server with the secret key (Server Actions calling `quasar.payments.refund`, `submitRefund` and `getRefund`). Put it inside `NovaPaymentsProvider` with the chain adapters and inside `NovaConnectProvider` to connect the wallet. A wallet on another network is asked to switch first; one that holds too little is asked nothing; a refund the wallet sent but Quasar did not take is handed over again, never sent twice. `RefundDialog` is the same window opened by your own button, `params` skips the amount step, and `onRecord` offers your form for a refund sent another way.
+
+```tsx
+'use client';
+
+import { RefundButton } from '@tuwaio/nova-payments';
+import { createRefundStore, type RefundStoreOptions } from '@tuwaio/quasar-sdk/checkout';
+import { useState } from 'react';
+
+export function Refund({ invoiceId, number, calls }: { invoiceId: string; number: string; calls: RefundStoreOptions }) {
+  // One store per invoice: the refund goes on while the window is closed
+  const [store] = useState(() => createRefundStore(calls));
+  return <RefundButton store={store} invoiceId={invoiceId} invoice={number} currency="USD" />;
+}
+```
+
 ---
 
 ## 🌍 Languages and accessibility
@@ -137,11 +155,11 @@ The checkout speaks the six languages of Quasar invoices: English, Simplified Ch
 
 ## 🗄️ Browser Storage
 
-The checkout saves nothing to `localStorage` or cookies. A payment it hands over to your Pulsar store is kept by that store (`createPulsarStore` persists its pool under its own name).
+The checkout and the refund window save nothing to `localStorage` or cookies; a refund transaction the wallet sent is kept in memory until Quasar takes it. A payment it hands over to your Pulsar store is kept by that store (`createPulsarStore` persists its pool under its own name).
 
 ## 🌐 External Services
 
-The checkout routes of the Quasar API (`baseUrl`, Quasar Cloud by default): `GET /v1/payments/checkout/{token}`, its event stream and logo, and the `POST` routes of the steps (`buyer`, `locale`, `quote`, `submit`, `relay`; the wallet calls the `paymaster` route for sponsored calls). The `permission` route takes the automatic payments of a subscription. The EVM adapter reads balances and fee estimates through the RPC transports of your wagmi config, the Solana adapter through its `rpcUrls` (else the public endpoint of the cluster); links to transactions open the chain's block explorer (the explorer of the wagmi chain, the Solana Explorer). The wallet asks the buyer before every signature, transaction or permission.
+The checkout routes of the Quasar API (`baseUrl`, Quasar Cloud by default): `GET /v1/payments/checkout/{token}`, its event stream and logo, and the `POST` routes of the steps (`buyer`, `locale`, `quote`, `submit`, `relay`; the wallet calls the `paymaster` route for sponsored calls). The `permission` route takes the automatic payments of a subscription. The EVM adapter reads balances and fee estimates through the RPC transports of your wagmi config, the Solana adapter through its `rpcUrls` (else the public endpoint of the cluster); links to transactions open the chain's block explorer (the explorer of the wagmi chain, the Solana Explorer). A refund calls only your server (the calls of its store); the adapters read the merchant wallet's balance and the fee the same way. The wallet asks the buyer, or the merchant for a refund, before every signature, transaction or permission.
 
 ---
 

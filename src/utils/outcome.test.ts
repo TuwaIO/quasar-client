@@ -36,6 +36,8 @@ describe('methodErrorText', () => {
     expect(text('method_not_found')).toBe(defaultLabels.method.methodUnavailable);
     expect(text('payer_not_expected')).toBe(defaultLabels.method.payerNotExpected);
     expect(text('rate_limited')).toBe(defaultLabels.method.rateLimited);
+    // Quasar could not read the price of the method (its feed or RPC is down): another method may work
+    expect(text('price_unavailable')).toBe(defaultLabels.method.priceUnavailable);
     expect(text('something_new')).toBe(defaultLabels.error.generic);
   });
 });

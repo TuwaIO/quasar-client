@@ -14,4 +14,5 @@ export * from './PaidScreen';
 export * from './PaymentCheckout';
 export * from './PayScreen';
 export * from './QrScreen';
+export * from './RefundButton';
 export * from './WalletPrompt';

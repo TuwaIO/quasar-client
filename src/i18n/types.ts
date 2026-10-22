@@ -103,6 +103,8 @@ export type NovaPaymentsLabels = {
     payerNotExpected: string;
     /** Too many tries (`rate_limited`) (default: `Too many tries. Wait a minute and try again.`) */
     rateLimited: string;
+    /** Quasar cannot read the price of the method now: its feed or network is down (`price_unavailable`) */
+    priceUnavailable: string;
   };
   /** The buyer details step. */
   buyer: {
@@ -545,5 +547,124 @@ export type NovaPaymentsLabels = {
     compact: string;
     /** On a phone: button that shows the order (default: `Details`) */
     showOrder: string;
+  };
+  /** A refund the merchant sends from a wallet (`RefundButton`). */
+  refund: {
+    /** The button that opens the refund (default: `Refund`) */
+    button: string;
+    /** Title of the window; `{invoice}` is the invoice number (default: `Refund {invoice}`) */
+    title: string;
+    /** Heading of the amount step (default: `What to refund`) */
+    amountTitle: string;
+    /** Option: an amount of the invoice currency (default: `An amount`) */
+    modeFiat: string;
+    /** Under that option; `{currency}` (default: `In {currency}, converted at the rate of now`) */
+    modeFiatText: string;
+    /** Option: the tokens the payment brought (default: `Everything received`) */
+    modeExact: string;
+    /** Under that option (default: `The tokens the payment brought, as they are`) */
+    modeExactText: string;
+    /** Label of the amount; `{currency}` (default: `Amount, {currency}`) */
+    amount: string;
+    /** Under the amount; `{amount}` is what is left to refund (default: `Up to {amount}`) */
+    amountHint: string;
+    /** Label of the reason (default: `Reason (optional)`) */
+    reason: string;
+    /** Button of the amount step (default: `Continue`) */
+    continue: string;
+    /** While Quasar prices the refund (default: `Asking Quasar for the refund…`) */
+    requesting: string;
+    /** Heading of the wallet step (default: `Connect a wallet`) */
+    connectTitle: string;
+    /** Text of the wallet step; `{network}`, `{symbol}` (default: `The refund goes out on {network}, the network of the payment. Any wallet that holds {symbol} there can send it.`) */
+    connectText: string;
+    /** Button of the wallet step (default: `Connect wallet`) */
+    connect: string;
+    /** The page cannot connect a wallet (default: `This page can't connect a wallet. Send the refund from your wallet, then record it.`) */
+    connectUnavailable: string;
+    /** Heading of the confirm step (default: `Confirm the refund`) */
+    confirmTitle: string;
+    /** Row: what is sent (default: `Send`) */
+    send: string;
+    /** Its value; `{amount}`, `{network}` (default: `{amount} on {network}`) */
+    sendValue: string;
+    /** Row: the recipient (default: `To`) */
+    to: string;
+    /** After the recipient (default: `the payer`) */
+    thePayer: string;
+    /** Row: the sending wallet (default: `From`) */
+    from: string;
+    /** Under the sending wallet; `{amount}` (default: `Holds {amount}`) */
+    balance: string;
+    /** Row: the network fee (default: `Network fee`) */
+    networkFee: string;
+    /** Its value; `{amount}` (default: `≈ {amount} · from your wallet`) */
+    feeEstimate: string;
+    /** Button that sends the refund (default: `Send refund`) */
+    sendRefund: string;
+    /** Button when the wallet is on another network; `{network}` (default: `Switch to {network}`) */
+    switchTo: string;
+    /** While the wallet asks; `{wallet}` (default: `Confirm in {wallet}`) */
+    walletTitle: string;
+    /** Under it; `{amount}`, `{network}` (default: `Confirm the transfer of {amount} on {network}.`) */
+    walletText: string;
+    /** While the wallet switches network; `{wallet}` (default: `Approve the switch in {wallet}`) */
+    switchTitle: string;
+    /** While Quasar takes the transaction (default: `Handing the refund to Quasar…`) */
+    submitting: string;
+    /** Heading while the network confirms it (default: `On its way`) */
+    onItsWay: string;
+    /** Row: status (default: `Status`) */
+    status: string;
+    /** Status: pending (default: `Pending`) */
+    pending: string;
+    /** Row: the transaction (default: `Transaction`) */
+    transaction: string;
+    /** Row: the network (default: `Network`) */
+    network: string;
+    /** Its value; `{network}` (default: `{network} · waiting for confirmation`) */
+    waiting: string;
+    /** Note while it is confirmed (default: `You can close this window: the invoice shows how the refund goes.`) */
+    canClose: string;
+    /** Heading once confirmed (default: `Refunded`) */
+    refunded: string;
+    /** Row: the credit note (default: `Credit note`) */
+    creditNote: string;
+    /** Button that closes the window once refunded (default: `Done`) */
+    done: string;
+    /** Heading when the transaction failed (default: `The refund failed`) */
+    failedTitle: string;
+    /** Under it; `{network}` (default: `The transaction failed on {network}; only the network fee was spent. Send the refund again.`) */
+    failedText: string;
+    /** Heading of a refund the wallet did not send (default: `Not sent`) */
+    notSent: string;
+    /** The wallet holds too little; `{symbol}`, `{address}`, `{balance}` (default: `Not enough {symbol} on {address}: it holds {balance}.`) */
+    notEnough: string;
+    /** The merchant declined in the wallet; `{wallet}` (default: `You declined the request in {wallet}.`) */
+    declined: string;
+    /** The wallet cannot send it; `{wallet}` (default: `{wallet} can't send this refund.`) */
+    unsupported: string;
+    /** The wallet sent it on another network; `{wallet}`, `{network}` (default: `{wallet} is on another network, so nothing was sent. Switch it to {network} and send again.`) */
+    wrongNetwork: string;
+    /** The wallet failed (default: `The wallet did not send the refund. Try again.`) */
+    failed: string;
+    /** Quasar does not know the payer (default: `The payer's wallet is not known, so this refund can't be sent from here.`) */
+    noRecipient: string;
+    /** Under a refusal: nothing went out (default: `Nothing was sent: the refund waits for its transaction.`) */
+    nothingSent: string;
+    /** The wallet sent it, Quasar did not take it (default: `The refund was sent, but Quasar hasn't taken its transaction yet. Hand it over again: nothing is sent twice.`) */
+    notHandedOver: string;
+    /** Button that hands the transaction over again (default: `Hand it over again`) */
+    handOver: string;
+    /** Button of the other way: record a refund sent elsewhere (default: `Record refund`) */
+    record: string;
+    /** Note of that button (default: `Sent it another way? Record the refund with its transaction: Quasar checks it on-chain.`) */
+    recordHint: string;
+    /** Button that closes the window (default: `Close`) */
+    close: string;
+    /** Title of the transaction in Pulsar; `{invoice}` (default: `Refund of {invoice}`) */
+    txTitle: string;
+    /** Its description; `{amount}` (default: `{amount} to the payer`) */
+    txDescription: string;
   };
 };

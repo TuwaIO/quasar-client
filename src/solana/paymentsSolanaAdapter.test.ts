@@ -135,6 +135,18 @@ describe('paymentsSolanaAdapter', () => {
     expect(sentInstructions()).toHaveLength(1);
   });
 
+  // A refund (RefundButton) goes to the payer without a Solana Pay reference: Quasar takes its signature
+  it('sends a transfer without a reference key when it has none', async () => {
+    const adapter = paymentsSolanaAdapter();
+    await adapter.sendTransfer({
+      instructions: { ...sol, reference: '', solanaPayUrl: '' },
+      account: PAYER,
+      connection,
+    });
+    const [transfer] = sentInstructions();
+    expect(transfer.accounts.map(({ address: key }) => key)).toEqual([PAYER, MERCHANT]);
+  });
+
   it('tells when the wallet sent on another Solana network: the blockhash of the payment is unknown there', async () => {
     const adapter = paymentsSolanaAdapter();
     // How wallets report it: the RPC error of their network, directly or as the cause

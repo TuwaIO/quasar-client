@@ -9,7 +9,10 @@ vi.mock('react', async () => ({
 }));
 
 let ctx: CheckoutContextValue;
-vi.mock('../hooks/useCheckoutContext', () => ({ useCheckoutContext: () => ctx }));
+vi.mock('../hooks/useCheckoutContext', () => ({
+  useCheckoutContext: () => ctx,
+  useOptionalCheckoutContext: () => ctx,
+}));
 
 const facts = {
   network: 'Base',

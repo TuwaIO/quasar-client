@@ -9,7 +9,10 @@ vi.mock('react', async () => ({
 }));
 
 let ctx: CheckoutContextValue;
-vi.mock('../hooks/useCheckoutContext', () => ({ useCheckoutContext: () => ctx }));
+vi.mock('../hooks/useCheckoutContext', () => ({
+  useCheckoutContext: () => ctx,
+  useOptionalCheckoutContext: () => ctx,
+}));
 
 const { render, unmount } = await import('../testing/hookHarness');
 const { defaultLabels } = await import('../i18n');

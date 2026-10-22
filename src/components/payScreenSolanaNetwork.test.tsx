@@ -9,7 +9,10 @@ vi.mock('react', async () => ({
 }));
 
 let ctx: CheckoutContextValue;
-vi.mock('../hooks/useCheckoutContext', () => ({ useCheckoutContext: () => ctx }));
+vi.mock('../hooks/useCheckoutContext', () => ({
+  useCheckoutContext: () => ctx,
+  useOptionalCheckoutContext: () => ctx,
+}));
 vi.mock('../hooks/useAsyncValue', () => ({ useAsyncValue: () => null }));
 let problem: PaymentWalletErrorKind | null = null;
 vi.mock('../hooks/usePayment', () => ({
@@ -35,7 +38,7 @@ const textOf = (node: unknown): string =>
     .join(' ');
 
 /** The pay step of SOL on a cluster, the price locked for the connected Phantom. */
-function solanaPay(chainId: string, walletChainId: string) {
+function solanaPay(chainId: string, walletChainId: string, error: { code: string; message: string } | null = null) {
   const method = fixture.method('sol-pay', 'SOL', chainId);
   const checkout = { ...fixture.checkout, methods: [method] } as typeof fixture.checkout;
   const quote = {
@@ -71,7 +74,7 @@ function solanaPay(chainId: string, walletChainId: string) {
         checkout,
         methodId: 'sol-pay',
         quote,
-        error: null,
+        error,
         paymasterUrl: null,
       } as never,
       wallet: {
@@ -114,5 +117,10 @@ describe('the pay step of a Solana payment', () => {
     expect(textOf(render(PayScreen, {}))).toContain(
       'Phantom is on another network, so nothing was paid. Switch it to Solana and pay again.',
     );
+  });
+
+  it('says that the price cannot be read now when a new price is refused', () => {
+    solanaPay(MAINNET, MAINNET, { code: 'price_unavailable', message: 'raw' });
+    expect(textOf(render(PayScreen, {}))).toContain("The price of this method can't be read right now.");
   });
 });
