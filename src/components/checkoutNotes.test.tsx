@@ -31,6 +31,18 @@ const PAYER = '0x1111111111111111111111111111111111111111';
 const MERCHANT_WALLET = '0x2222222222222222222222222222222222222222';
 const COLLECTOR = '0x3333333333333333333333333333333333333333';
 
+/** Whether the tree shows the transaction `hash`. */
+const showsHash = (node: unknown, hash: string) =>
+  fixture.elements(node).some((element) => element.props.hash === hash);
+
+/** The texts that send the buyer to the merchant with the transaction hash (N1, N5, N7a). */
+const CONTACT =
+  'Quasar does not check this payment again. If it left your wallet, contact Cosmos with the transaction hash.';
+const NOT_RECEIVED =
+  'Quasar did not receive this payment. If it left your wallet, contact Cosmos with the transaction hash.';
+const CLOSED =
+  'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact Cosmos with the transaction hash.';
+
 /** The text of the rendered tree. */
 const textOf = (node: unknown): string =>
   fixture
@@ -234,9 +246,9 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(text).not.toContain('nothing was charged');
   });
 
-  it('says to check the wallet when Quasar could not confirm the payment', () => {
+  it('says to check the wallet when Quasar could not confirm the payment, and reads it again', () => {
     show('expired', { status: 'expired', amountPaid: null });
-    const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'timeout' };
+    const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'timeout', rechecked: true };
     ctx = {
       ...ctx,
       paymentSent: true,
@@ -247,6 +259,69 @@ describe('an invoice that expired while the payment of this page was confirming'
       'Your payment could not be confirmed yet. Check your wallet: if the payment left it, Quasar checks it again for 24 hours. If it arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
     );
     expect(text).not.toContain('nothing was charged');
+  });
+
+  // N1: Quasar never reads again a payment rejected for another reason (a relay operation lost, transaction_failed)
+  it('promises no re-check for a payment Quasar does not read again: contact the merchant with the hash', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'user_operation_lost' };
+    ctx = {
+      ...ctx,
+      paymentSent: true,
+      state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false, error: unconfirmed } as never,
+    };
+    const tree = OutcomeScreen({ kind: 'expired' });
+    const text = textOf(tree);
+    expect(text).toContain(CONTACT);
+    expect(text).not.toContain('24 hours');
+    expect(text).not.toContain('it is recorded');
+    expect(text).not.toContain('nothing was charged');
+    expect(showsHash(tree, '0xabc')).toBe(true);
+  });
+
+  // N7a: the store gave up handing the transaction over, so Quasar never received it
+  it('says that Quasar did not receive a payment the store gave up handing over', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'submit_failed' };
+    ctx = {
+      ...ctx,
+      paymentSent: true,
+      state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false, error: unconfirmed } as never,
+    };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain(NOT_RECEIVED);
+    expect(text).not.toContain('24 hours');
+    expect(text).not.toContain('nothing was charged');
+  });
+
+  it('asks to keep the page open while the store hands the payment over again', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'submit_retrying' };
+    ctx = {
+      ...ctx,
+      paymentSent: true,
+      state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false, error: unconfirmed } as never,
+    };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('This page keeps handing your payment over to Quasar.');
+    expect(text).not.toContain('24 hours');
+    expect(text).not.toContain('nothing was charged');
+  });
+
+  // N5: Quasar closes a payment with no result on chain within 24 hours (a final reason), which may have left the wallet
+  it('never says that nothing was charged after Quasar closed a payment without a result', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    const closed = { code: 'payment_failed', message: '', reason: 'unresolved_after_24h' };
+    ctx = {
+      ...ctx,
+      paymentSent: false,
+      state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false, error: closed } as never,
+    };
+    const tree = OutcomeScreen({ kind: 'expired' });
+    const text = textOf(tree);
+    expect(text).toContain(CLOSED);
+    expect(text).not.toContain('nothing was charged');
+    expect(showsHash(tree, '0xabc')).toBe(true);
   });
 
   // M3: a page reopened on an invoice that expired while a payment of it is on its way
@@ -313,7 +388,7 @@ describe('a cancelled invoice', () => {
       { paymentSent: true },
       { state: { invoicePaymentUnresolved: true } },
       { state: { paymentOnTheWay: true } },
-      { state: { error: { code: 'payment_unconfirmed', message: '', reason: 'timeout' } } },
+      { state: { error: { code: 'payment_unconfirmed', message: '', reason: 'timeout', rechecked: true } } },
     ]) {
       show('cancelled', { status: 'cancelled', amountPaid: null });
       ctx = {
@@ -326,6 +401,24 @@ describe('a cancelled invoice', () => {
         'Cosmos cancelled it. If your payment arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
       );
       expect(text).not.toContain('nothing was charged');
+    }
+  });
+
+  // N1, N5, N7a: a payment Quasar does not read again is not "recorded if it arrives": the buyer contacts the merchant
+  it('sends the buyer to the merchant with the hash for a payment Quasar does not read again', () => {
+    for (const [error, expected] of [
+      [{ code: 'payment_unconfirmed', message: '', reason: 'transaction_failed' }, CONTACT],
+      [{ code: 'payment_unconfirmed', message: '', reason: 'submit_failed' }, NOT_RECEIVED],
+      [{ code: 'payment_failed', message: '', reason: 'unresolved_after_24h' }, CLOSED],
+    ] as const) {
+      show('cancelled', { status: 'cancelled', amountPaid: null });
+      ctx = { ...ctx, paymentSent: true, state: { ...ctx.state, phase: 'cancelled', txKey: '0xabc', error } as never };
+      const tree = OutcomeScreen({ kind: 'cancelled' });
+      const text = textOf(tree);
+      expect(text).toContain(expected);
+      expect(text).not.toContain('it is recorded');
+      expect(text).not.toContain('nothing was charged');
+      expect(showsHash(tree, '0xabc')).toBe(true);
     }
   });
 
@@ -356,14 +449,45 @@ describe('the pay step after a transaction that does not pay the invoice', () =>
   });
 });
 
+// N5: Quasar closed the payment after 24 hours without a result on chain; it may still have left the wallet
+describe('the pay step after a payment Quasar closed without a result', () => {
+  it('sends the buyer to the merchant with the hash, never that only the fee was spent', () => {
+    show('pay');
+    ctx = {
+      ...ctx,
+      state: {
+        ...ctx.state,
+        error: { code: 'payment_failed', message: '', reason: 'unresolved_after_24h' },
+      } as never,
+    };
+    const text = textOf(render(PayScreen, {}));
+    expect(text).toContain(CLOSED);
+    expect(text).not.toContain('Only the network fee was spent');
+  });
+});
+
 // H1, owner 2026-10-28: a payment Quasar could not confirm (not found, no receipt in time, replaced) may still reach the
 // seller: the buyer checks the wallet before paying again, and the screen offers no payment
 describe('a payment Quasar could not confirm', () => {
   const unconfirmedScreen = (
     payAgain?: () => void,
-    { reason = 'not_found', status = 'open' }: { reason?: string; status?: string } = {},
+    {
+      reason = 'not_found',
+      status = 'open',
+      rechecked = true,
+      code = 'payment_unconfirmed',
+      txKey = null,
+      invoice = {},
+    }: {
+      reason?: string;
+      status?: string;
+      rechecked?: boolean;
+      code?: string;
+      txKey?: string | null;
+      invoice?: Record<string, unknown>;
+    } = {},
   ) => {
-    show('unconfirmed', { status: status as never });
+    show('unconfirmed', { status: status as never, ...invoice });
     ctx = {
       ...ctx,
       store: { getState: () => ({ ...fixture.fakeStore().actions, payAgain }) } as never,
@@ -372,7 +496,8 @@ describe('a payment Quasar could not confirm', () => {
         phase: 'unconfirmed',
         invoiceStatus: status,
         paymentOnTheWay: false,
-        error: { code: 'payment_unconfirmed', message: '', reason },
+        txKey,
+        error: { code, message: '', reason, ...(rechecked ? { rechecked: true } : {}) },
       } as never,
     };
     return OutcomeScreen({ kind: 'unconfirmed' });
@@ -385,9 +510,56 @@ describe('a payment Quasar could not confirm', () => {
     );
   });
 
+  // N1: only a rejection Quasar reads again (not_found, timeout, replaced, still unresolved) carries `rechecked`
+  it('promises no re-check for a payment Quasar does not read again, and shows the hash to contact the merchant', () => {
+    for (const reason of ['user_operation_lost', 'pimlico_key_required', 'transaction_failed', 'not_found']) {
+      const tree = unconfirmedScreen(undefined, { reason, rechecked: false, txKey: '0xabc' });
+      const text = textOf(tree);
+      expect(text).toContain(CONTACT);
+      expect(text).not.toContain('24 hours');
+      expect(text).not.toContain('it is recorded');
+      expect(showsHash(tree, '0xabc')).toBe(true);
+    }
+  });
+
+  it('shows the hash of the newest rejected payment on a reopened page', () => {
+    const tree = unconfirmedScreen(undefined, {
+      reason: 'user_operation_lost',
+      rechecked: false,
+      invoice: { rejectedPayments: [{ txKey: '0xnew', reason: 'user_operation_lost', final: false }] },
+    });
+    expect(showsHash(tree, '0xnew')).toBe(true);
+  });
+
+  // N7a: after an hour of hand-overs without an answer the store gives up; Quasar never received the transaction
+  it('says that Quasar did not receive a payment the store gave up handing over', () => {
+    const tree = unconfirmedScreen(undefined, { reason: 'submit_failed', rechecked: false, txKey: '0xabc' });
+    const text = textOf(tree);
+    expect(text).toContain(NOT_RECEIVED);
+    expect(text).not.toContain('This page keeps handing your payment over');
+    expect(text).not.toContain('24 hours');
+    expect(showsHash(tree, '0xabc')).toBe(true);
+  });
+
+  // N1: a transfer that moved money without paying the invoice, which Quasar has not called final
+  it('says that a transaction that moved money does not pay the invoice, with no re-check promise', () => {
+    const tree = unconfirmedScreen(vi.fn(), {
+      code: 'payment_mismatch',
+      reason: 'payer_mismatch',
+      rechecked: false,
+      txKey: '0xabc',
+    });
+    const text = textOf(tree);
+    expect(text).toContain('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
+    expect(text).not.toContain('24 hours');
+    expect(text).not.toContain('your payment may still be on its way');
+    expect(fixture.ofType(tree, PrimaryButton)).toHaveLength(0);
+    expect(showsHash(tree, '0xabc')).toBe(true);
+  });
+
   // F8: the wallet sent the transaction, and the store keeps handing it over to Quasar, which has not received it yet
   it('asks to keep the page open while the store hands the payment over again', () => {
-    const text = textOf(unconfirmedScreen(undefined, { reason: 'submit_retrying' }));
+    const text = textOf(unconfirmedScreen(undefined, { reason: 'submit_retrying', rechecked: false }));
     expect(text).toContain(
       'This page keeps handing your payment over to Quasar. Keep it open until the payment shows here.',
     );

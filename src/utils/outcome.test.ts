@@ -44,6 +44,17 @@ describe('needsLeaveConfirm', () => {
       needsLeaveConfirm('awaitingPayment', { code: 'payment_failed', message: '', reason: 'reverted' } as never),
     ).toBe(true);
   });
+
+  // N5: Quasar closed the payment after 24 hours without a result on chain; it may still have left the wallet
+  it('does not ask after a payment Quasar closed without a result', () => {
+    expect(
+      needsLeaveConfirm('awaitingPayment', {
+        code: 'payment_failed',
+        message: '',
+        reason: 'unresolved_after_24h',
+      } as never),
+    ).toBe(false);
+  });
 });
 
 describe('methodErrorText', () => {
@@ -59,6 +70,18 @@ describe('methodErrorText', () => {
         'Cosmos',
       ),
     ).toBe('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
+  });
+
+  it('sends the buyer to the merchant with the transaction hash after a payment Quasar closed without a result', () => {
+    expect(
+      methodErrorText(
+        { code: 'payment_failed', message: 'raw', reason: 'unresolved_after_24h' } as never,
+        defaultLabels,
+        'Cosmos',
+      ),
+    ).toBe(
+      'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact Cosmos with the transaction hash.',
+    );
   });
 
   it('says what went wrong and what to do, in the language of the checkout', () => {

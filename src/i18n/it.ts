@@ -273,6 +273,12 @@ export const itLabels: NovaPaymentsLabels = {
     unconfirmedText: 'Controlla il wallet prima di pagare di nuovo: il pagamento potrebbe essere ancora in arrivo.',
     unconfirmedNote:
       'Quasar ricontrolla il tuo pagamento per 24 ore. Se arriva, viene registrato e mostrato a {merchant}.',
+    unconfirmedContact:
+      "Quasar non ricontrolla più questo pagamento. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedNotReceived:
+      "Quasar non ha ricevuto questo pagamento. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedClosed:
+      "Quasar non ha trovato questo pagamento sulla rete entro 24 ore e non lo controlla più. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
     unconfirmedRetrying:
       'Questa pagina continua a consegnare il pagamento a Quasar. Tienila aperta finché il pagamento non compare qui.',
     unconfirmedPayAgain: 'Il pagamento non è partito dal mio wallet',

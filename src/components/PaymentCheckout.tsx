@@ -1,8 +1,8 @@
 import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
-import type { CheckoutApi, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutApi, CheckoutStore, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { useCheckoutEvents } from '../hooks/useCheckoutEvents';
@@ -19,6 +19,7 @@ import { useQrShown } from '../hooks/useQrShown';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel, hasLabels } from '../i18n';
 import { checkoutScreen, deadlineAnnouncement, deadlineState } from '../utils/checkout';
+import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { needsLeaveConfirm } from '../utils/outcome';
 import { AutoPayScreen } from './AutoPayScreen';
@@ -358,11 +359,18 @@ export function PaymentCheckout({
   const screen = checkoutScreen(state, { payWith, handoff, autoPay, labelsReady: labelsShown || !checkout });
   const handedOverAt = useHandOverTime(store);
   const qrShown = useQrShown({ store, screen });
-  const paymentSent = usePaymentSent({ store, state });
+  // The transaction the wallet last returned, by invoice store: a payment counts as sent from then on, before the store
+  // says anything of it (an invoice the seller cancelled meanwhile keeps its outcome while Quasar records the payment)
+  const [walletSent, setWalletSent] = useState<{ store: CheckoutStore; txKey: string } | null>(null);
+  const paymentSent = usePaymentSent({
+    store,
+    state,
+    walletTxKey: walletSent?.store === store ? walletSent.txKey : null,
+  });
   usePaidCallback(state.phase, checkout?.invoice, onPaid);
   useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
-  const onPaymentSent = usePaymentHandOver({
+  const handOverOnClose = usePaymentHandOver({
     store,
     open: display !== 'modal' || open,
     adapterFor,
@@ -370,6 +378,13 @@ export function PaymentCheckout({
     labels,
     locale,
   });
+  const onPaymentSent = useCallback(
+    (payment: SentPayment) => {
+      setWalletSent({ store, txKey: payment.txKey });
+      handOverOnClose(payment);
+    },
+    [store, handOverOnClose],
+  );
 
   const lockForWallet = useEffectEvent(() => {
     if (!wallet || !checkout) return;

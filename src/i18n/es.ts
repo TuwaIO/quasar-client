@@ -268,6 +268,12 @@ export const esLabels: NovaPaymentsLabels = {
     unconfirmedText: 'Revisa tu billetera antes de volver a pagar: es posible que tu pago siga en camino.',
     unconfirmedNote:
       'Quasar vuelve a comprobar tu pago durante 24 horas. Si llega, se registra y se muestra a {merchant}.',
+    unconfirmedContact:
+      'Quasar ya no vuelve a comprobar este pago. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedNotReceived:
+      'Quasar no recibió este pago. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedClosed:
+      'Quasar no encontró este pago en la red en 24 horas y ya no lo comprueba. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
     unconfirmedRetrying:
       'Esta página sigue entregando tu pago a Quasar. Mantenla abierta hasta que el pago aparezca aquí.',
     unconfirmedPayAgain: 'El pago no salió de mi billetera',

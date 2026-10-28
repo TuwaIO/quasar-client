@@ -8,7 +8,13 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePayment } from '../hooks/usePayment';
 import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
-import { isMovedMoneyFailure, isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/checkout';
+import {
+  isMovedMoneyFailure,
+  isQuoteEnding,
+  QUOTE_WARNING_MS,
+  screensPayingWallets,
+  unconfirmedFollowUp,
+} from '../utils/checkout';
 import {
   baseUnitsToDecimal,
   formatCountdown,
@@ -54,6 +60,8 @@ function problemText(
   if (problem === 'wrongNetwork') return formatLabel(labels.pay.wrongCluster, values);
   // The transaction succeeded on chain without paying the invoice: it may have moved money, so never "it failed"
   if (!problem && isMovedMoneyFailure(error)) return formatLabel(labels.pay.mismatch, values);
+  // Quasar closed it after 24 hours without a result on chain: it may have left the wallet, so never "only the fee"
+  if (!problem && unconfirmedFollowUp(error) === 'closed') return formatLabel(labels.outcome.unconfirmedClosed, values);
   if (problem === 'failed' || errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;

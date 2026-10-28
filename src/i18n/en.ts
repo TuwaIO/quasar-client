@@ -264,6 +264,12 @@ export const defaultLabels: NovaPaymentsLabels = {
     unconfirmedText: 'Check your wallet before paying again: your payment may still be on its way.',
     unconfirmedNote:
       'Quasar checks your payment again for 24 hours. If it arrives, it is recorded and shown to {merchant}.',
+    unconfirmedContact:
+      'Quasar does not check this payment again. If it left your wallet, contact {merchant} with the transaction hash.',
+    unconfirmedNotReceived:
+      'Quasar did not receive this payment. If it left your wallet, contact {merchant} with the transaction hash.',
+    unconfirmedClosed:
+      'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact {merchant} with the transaction hash.',
     unconfirmedRetrying:
       'This page keeps handing your payment over to Quasar. Keep it open until the payment shows here.',
     unconfirmedPayAgain: 'The payment did not leave my wallet',

@@ -8,17 +8,21 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
+import { HashLink } from '@tuwaio/nova-transactions';
 import { parseCaip10AccountId } from '@tuwaio/orbit-core';
 import type { ComponentType, ReactNode, SVGProps } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
-import { formatLabel } from '../i18n';
+import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import {
   type CheckoutScreen,
   isInvoicePaymentOnTheWay,
   isInvoicePaymentUnresolved,
   isMovedMoneyFailure,
   isPaymentOnTheWay,
+  type UnconfirmedFollowUp,
+  unconfirmedFollowUp,
+  unconfirmedTxKey,
 } from '../utils/checkout';
 import { formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from '../utils/format';
 import { networkName, payerFor } from '../utils/methods';
@@ -26,7 +30,8 @@ import { contactHref, receivedAmount, underpaidRest } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { mono, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
-import { PrimaryButton, ScreenFooter, SecondaryButton } from './ScreenParts';
+import { DetailRow, DetailsCard, PrimaryButton, ScreenFooter, SecondaryButton } from './ScreenParts';
+import { TxLabels } from './TxLabels';
 
 /** The outcomes this screen shows. */
 export type OutcomeKind = Extract<
@@ -37,6 +42,18 @@ export type OutcomeKind = Extract<
 /** Whether the last error says that Quasar could not confirm a payment, which may still arrive. */
 // `payment_unconfirmed` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
 const isUnconfirmed = (error: { code: string } | null | undefined) => error?.code === 'payment_unconfirmed';
+
+/** The note about a payment Quasar did not confirm, by what Quasar does with it. */
+const FOLLOW_UP_NOTE: Record<UnconfirmedFollowUp, keyof NovaPaymentsLabels['outcome']> = {
+  rechecked: 'unconfirmedNote',
+  retrying: 'unconfirmedRetrying',
+  notReceived: 'unconfirmedNotReceived',
+  contact: 'unconfirmedContact',
+  closed: 'unconfirmedClosed',
+};
+
+/** Follow-ups after which the buyer names the transaction to the seller: Quasar does not record the payment. */
+const FOR_THE_SELLER: ReadonlySet<UnconfirmedFollowUp> = new Set(['notReceived', 'contact', 'closed']);
 
 /** The icon and tone of each outcome. */
 const LOOK: Record<OutcomeKind, { Icon: ComponentType<SVGProps<SVGSVGElement>>; tone: string }> = {
@@ -96,16 +113,21 @@ function ContactLink() {
 
 /**
  * An outcome other than paid: a payment Quasar could not confirm (`unconfirmed`: it may still arrive, so the buyer
- * checks the wallet before paying again; Quasar reads it again for 24 hours and records it for the seller if it
- * arrives, or, while the checkout store hands a transaction the wallet sent over again, the buyer keeps the page open;
- * no payment is offered, only, on a payable invoice, "The payment did not leave my wallet", which goes back to it with
- * `payAgain` of the checkout store), an underpaid invoice ("Pay the rest"), a payment the seller reviews (screening,
+ * checks the wallet before paying again; only while Quasar still reads it again, `error.rechecked` of the checkout
+ * store, the screen says that Quasar checks it for 24 hours and records it for the seller if it arrives; while the
+ * store hands a transaction the wallet sent over again, the buyer keeps the page open; otherwise (a reason Quasar never
+ * reads again, a hand-over the store gave up) the buyer contacts the seller with the transaction hash, which the screen
+ * shows; a transfer that moved money without paying the invoice says so; no payment is offered, only, on a payable
+ * invoice, "The payment did not leave my wallet", which goes back to it with `payAgain` of the checkout store), an
+ * underpaid invoice ("Pay the rest"), a payment the seller reviews (screening,
  * late, overpaid, after the price lock ran out), a refunded invoice, an expired one (with what arrived before the
  * deadline, which the seller can refund; never "nothing was charged" while a payment may still arrive: one this page
- * handed over or saw on its way, also after the checkout stopped following it, which Quasar records and shows to the
- * seller if it arrives, one Quasar could not confirm or reports as unresolved, to check in the wallet, one that does not
- * pay the invoice and may have moved money, and after a QR code showed, a payment made with it, as this page does not
- * see it), a cancelled one (the same: never "nothing was charged" while a payment may still arrive), a corrected one
+ * handed over or saw on its way, or that the wallet sent, also after the checkout stopped following it, which Quasar
+ * records and shows to the seller if it arrives, one Quasar could not confirm or reports as unresolved, to check in the
+ * wallet, one Quasar does not read again or closed after 24 hours without a result, for the seller with its transaction
+ * hash, one that does not pay the invoice and may have moved money, and after a QR code showed, a payment made with it,
+ * as this page does not see it), a cancelled one (the same: never "nothing was charged" while a payment may still
+ * arrive, and "recorded if it arrives" only for a payment Quasar records), a corrected one
  * ("Open <new invoice>" opens it here) and a payer the wallet check refused ("Use another wallet"). Each offers to
  * contact the seller.
  *
@@ -115,7 +137,19 @@ function ContactLink() {
  */
 export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
   const context = useCheckoutContext();
-  const { checkout, state, store, labels, locale, wallet, connectWallet, openInvoice, qrShown, paymentSent } = context;
+  const {
+    checkout,
+    state,
+    store,
+    labels,
+    locale,
+    wallet,
+    connectWallet,
+    openInvoice,
+    qrShown,
+    paymentSent,
+    adapterFor,
+  } = context;
   if (!checkout) return null;
   const merchant = checkout.merchant.name;
   const { Icon, tone } = LOOK[kind];
@@ -130,6 +164,33 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
     : null;
   const token = (amount: string, locked = quote) =>
     locked ? `${formatTokenAmount(amount, locked.decimals, locale)} ${locked.instructions.symbol}` : amount;
+  // What Quasar does with a payment it did not confirm, the note that says it, and the transaction to name to the seller
+  const followUp = unconfirmedFollowUp(state.error);
+  const followUpNote = (next: UnconfirmedFollowUp) => formatLabel(labels.outcome[FOLLOW_UP_NOTE[next]], { merchant });
+  const unconfirmedKey = unconfirmedTxKey(state, checkout);
+  const transaction = (next: UnconfirmedFollowUp | 'mismatch' | null) => {
+    if (!unconfirmedKey || (next !== 'mismatch' && (!next || !FOR_THE_SELLER.has(next)))) return null;
+    const locked = quote ?? checkout.quote;
+    const chainId = locked ? instructionsChainId(locked.instructions) : null;
+    const explorerUrl =
+      locked && chainId
+        ? adapterFor(locked.instructions.family)?.explorerUrl?.({ chainId, txKey: unconfirmedKey })
+        : undefined;
+    return (
+      <TxLabels>
+        <DetailsCard className="novapay:w-full novapay:max-w-sm">
+          <DetailRow name={labels.confirm.transaction}>
+            <HashLink
+              hash={unconfirmedKey}
+              explorerUrl={explorerUrl}
+              variant="compact"
+              {...context.customization.childCustomizations?.hashLink}
+            />
+          </DetailRow>
+        </DetailsCard>
+      </TxLabels>
+    );
+  };
 
   let title: string;
   let body: ReactNode = null;
@@ -138,17 +199,27 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
   switch (kind) {
     case 'unconfirmed': {
       title = labels.outcome.unconfirmedTitle;
-      // The store hands over again a transaction the wallet sent, which Quasar has not received yet: Quasar cannot read
-      // it again before it has it, so the page asks to stay open instead
-      const retrying = (state.error as { reason?: string } | null)?.reason === 'submit_retrying';
-      body = (
-        <>
-          <Text>{labels.outcome.unconfirmedText}</Text>
-          <Text muted>
-            {retrying ? labels.outcome.unconfirmedRetrying : formatLabel(labels.outcome.unconfirmedNote, { merchant })}
-          </Text>
-        </>
-      );
+      if (isMovedMoneyFailure(state.error)) {
+        // A transfer that moved money without paying the invoice, which Quasar has not called final: no re-check, the
+        // seller looks at it
+        body = (
+          <>
+            <Text>{formatLabel(labels.pay.mismatch, { merchant })}</Text>
+            {transaction('mismatch')}
+          </>
+        );
+      } else {
+        // Only a payment Quasar still reads again gets the 24-hour promise; while the store hands a transaction over
+        // again Quasar does not have it yet, so the page asks to stay open; any other is for the seller, with its hash
+        const next = followUp ?? 'contact';
+        body = (
+          <>
+            <Text>{labels.outcome.unconfirmedText}</Text>
+            <Text muted>{followUpNote(next)}</Text>
+            {transaction(next)}
+          </>
+        );
+      }
       // `payAgain` is newer than some `@tuwaio/quasar-sdk` alphas, whose stores never reach this phase
       const { payAgain } = store.getState() as { payAgain?: () => void };
       const status = state.invoiceStatus ?? checkout.invoice.status;
@@ -247,11 +318,16 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       // Quasar could not confirm a payment, or reports one it reads again (unresolved), with none on its way: check
       // the wallet
       const unconfirmed = isUnconfirmed(state.error) || (!onItsWay && isInvoicePaymentUnresolved(state, checkout));
-      const sent = !unconfirmed && (onItsWay || paymentSent);
+      // Quasar closed a payment after 24 hours without a result on chain: it may have left the wallet
+      const closed = !unconfirmed && followUp === 'closed';
+      const sent = !unconfirmed && !closed && (onItsWay || paymentSent);
       // The last transaction does not pay the invoice and may have moved money: never "nothing was charged"
-      const mismatch = !unconfirmed && !sent && isMovedMoneyFailure(state.error);
+      const mismatch = !unconfirmed && !closed && !sent && isMovedMoneyFailure(state.error);
       // A QR code may have been paid from a phone, which this page does not see: never "nothing was charged" either
-      const maybePaid = sent || unconfirmed || mismatch || qrShown;
+      const maybePaid = sent || unconfirmed || closed || mismatch || qrShown;
+      // What Quasar does with the payment it did not confirm: reads it again (also one it reports as unresolved without
+      // an error), waits for the store's hand-over, or nothing (the seller looks at it)
+      const unconfirmedNext: UnconfirmedFollowUp = isUnconfirmed(state.error) ? (followUp ?? 'contact') : 'rechecked';
       body = (
         <>
           {received ? (
@@ -269,7 +345,19 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
             !maybePaid && due && <Text>{formatLabel(labels.outcome.expiredText, { date: due, merchant })}</Text>
           )}
           {unconfirmed ? (
-            <Text>{formatLabel(labels.outcome.expiredUnconfirmed, { merchant })}</Text>
+            <>
+              <Text>
+                {unconfirmedNext === 'rechecked'
+                  ? formatLabel(labels.outcome.expiredUnconfirmed, { merchant })
+                  : followUpNote(unconfirmedNext)}
+              </Text>
+              {transaction(unconfirmedNext)}
+            </>
+          ) : closed ? (
+            <>
+              <Text>{followUpNote('closed')}</Text>
+              {transaction('closed')}
+            </>
           ) : sent ? (
             <Text>{formatLabel(labels.outcome.expiredWhileConfirming, { merchant })}</Text>
           ) : mismatch ? (
@@ -287,6 +375,17 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       title = labels.outcome.cancelledTitle;
       // As for an expired invoice: a payment that may still arrive is recorded and held for the seller, and a
       // transaction that does not pay the invoice may have moved money, so never "nothing was charged"
+      // A payment Quasar does not record (one it never reads again, a hand-over the store gave up, one it closed after
+      // 24 hours without a result) is for the seller to look at, with its transaction
+      if (followUp && FOR_THE_SELLER.has(followUp)) {
+        body = (
+          <>
+            <Text>{followUpNote(followUp)}</Text>
+            {transaction(followUp)}
+          </>
+        );
+        break;
+      }
       const maybePaid =
         isUnconfirmed(state.error) ||
         isPaymentOnTheWay(state) ||
@@ -298,7 +397,13 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         : isMovedMoneyFailure(state.error)
           ? labels.pay.mismatch
           : labels.outcome.cancelledText;
-      body = <Text>{formatLabel(text, { merchant })}</Text>;
+      body = (
+        <>
+          <Text>{formatLabel(text, { merchant })}</Text>
+          {/* Quasar records it once it has it: the store keeps handing it over meanwhile */}
+          {followUp === 'retrying' && <Text muted>{labels.outcome.unconfirmedRetrying}</Text>}
+        </>
+      );
       break;
     }
     case 'replaced': {

@@ -15,6 +15,8 @@ import {
   isQuoteEnding,
   screensPayingWallets,
   sentBeforeDeadline,
+  unconfirmedFollowUp,
+  unconfirmedTxKey,
 } from './checkout';
 
 const method = (id: string, symbol: string, chainId: string, featured = false): CheckoutMethod => ({
@@ -434,5 +436,61 @@ describe('isInvoicePaymentUnresolved', () => {
     expect(isInvoicePaymentUnresolved({}, view({ unresolvedPayments: 0 } as never))).toBe(false);
     expect(isInvoicePaymentUnresolved({}, view())).toBe(false);
     expect(isInvoicePaymentUnresolved({}, null)).toBe(false);
+  });
+});
+
+// N1, N7a (review of 2026-10-28): the page promises the 24-hour re-check only when Quasar still reads the payment again;
+// otherwise the buyer contacts the merchant with the transaction hash
+describe('unconfirmedFollowUp', () => {
+  const unconfirmed = (extra: Record<string, unknown>) =>
+    ({ code: 'payment_unconfirmed', message: '', ...extra }) as never;
+
+  it('promises the re-check only for a payment Quasar reads again', () => {
+    expect(unconfirmedFollowUp(unconfirmed({ reason: 'timeout', rechecked: true }))).toBe('rechecked');
+    // No rejection, and Quasar reports a payment that may still arrive
+    expect(unconfirmedFollowUp(unconfirmed({ rechecked: true }))).toBe('rechecked');
+  });
+
+  it('sends the buyer to the merchant for a reason Quasar never reads again', () => {
+    for (const reason of ['user_operation_lost', 'pimlico_key_required', 'transaction_failed', 'not_found']) {
+      expect(unconfirmedFollowUp(unconfirmed({ reason }))).toBe('contact');
+    }
+    // A store or a Quasar that does not say
+    expect(unconfirmedFollowUp(unconfirmed({}))).toBe('contact');
+  });
+
+  it('keeps the page open while the store hands the payment over, and names a hand-over that gave up', () => {
+    expect(unconfirmedFollowUp(unconfirmed({ reason: 'submit_retrying' }))).toBe('retrying');
+    expect(unconfirmedFollowUp(unconfirmed({ reason: 'submit_failed' }))).toBe('notReceived');
+  });
+
+  // N5: a payment with no result on chain within 24 hours is closed for good, but may have left the wallet
+  it('sends the buyer to the merchant for a payment Quasar closed after 24 hours without a result', () => {
+    expect(unconfirmedFollowUp({ code: 'payment_failed', message: '', reason: 'unresolved_after_24h' } as never)).toBe(
+      'closed',
+    );
+  });
+
+  it('has nothing to say for other errors', () => {
+    expect(unconfirmedFollowUp({ code: 'payment_failed', message: '', reason: 'reverted' } as never)).toBeNull();
+    expect(
+      unconfirmedFollowUp({ code: 'payment_mismatch', message: '', reason: 'payer_mismatch' } as never),
+    ).toBeNull();
+    expect(unconfirmedFollowUp(null)).toBeNull();
+  });
+});
+
+describe('unconfirmedTxKey', () => {
+  it("is the page's transaction, else the newest one Quasar rejected (a reopened page)", () => {
+    expect(unconfirmedTxKey({ txKey: '0xown', txHash: null }, view({ rejectedPayments: [] } as never))).toBe('0xown');
+    const rejected = view({
+      rejectedPayments: [
+        { txKey: '0xnew', reason: 'user_operation_lost', final: false },
+        { txKey: '0xold', reason: 'reverted', final: true },
+      ],
+    } as never);
+    expect(unconfirmedTxKey({ txKey: null, txHash: null }, rejected)).toBe('0xnew');
+    expect(unconfirmedTxKey({ txKey: null, txHash: null }, view())).toBeNull();
+    expect(unconfirmedTxKey({ txKey: null, txHash: null }, null)).toBeNull();
   });
 });

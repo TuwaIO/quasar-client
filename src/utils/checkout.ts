@@ -418,3 +418,54 @@ export function isInvoicePaymentUnresolved(
   const unresolved = (checkout?.invoice as { unresolvedPayments?: number } | undefined)?.unresolvedPayments ?? 0;
   return state.invoicePaymentUnresolved ?? unresolved > 0;
 }
+
+/**
+ * What the checkout tells the buyer about a payment that may have left the wallet and that Quasar did not confirm:
+ * `rechecked` (Quasar still reads it again, for up to 24 hours after it learned of it, and records it for the seller if
+ * it arrives), `retrying` (the checkout store keeps handing over a transaction the wallet sent, which Quasar has not
+ * received yet: keep the page open), `notReceived` (the store gave up handing it over after an hour: Quasar never
+ * received it), `contact` (a reason Quasar never reads again: a relay operation lost, `transaction_failed`, a Quasar
+ * or a store that does not say) and `closed` (Quasar saw no result on chain within 24 hours and closed it). For all but
+ * `rechecked` and `retrying` the buyer contacts the seller with the transaction hash if the payment left the wallet.
+ */
+export type UnconfirmedFollowUp = 'rechecked' | 'retrying' | 'notReceived' | 'contact' | 'closed';
+
+/**
+ * What to tell the buyer about a payment Quasar did not confirm, from the store's error: `payment_unconfirmed` with
+ * `rechecked` (set by a current `@tuwaio/quasar-sdk` only while Quasar reads the payment again) promises the 24-hour
+ * re-check, its `submit_retrying` and `submit_failed` reasons are the store's hand-over, any other is for the seller;
+ * `payment_failed` with the reason `unresolved_after_24h` is a payment Quasar closed without a result.
+ *
+ * @param error - The store's error.
+ * @returns See {@link UnconfirmedFollowUp}; `null` for any other error, or none.
+ */
+export function unconfirmedFollowUp(error: CheckoutError | null | undefined): UnconfirmedFollowUp | null {
+  // `payment_unconfirmed`, `reason` and `rechecked` are newer than some `@tuwaio/quasar-sdk` alphas: read them as such
+  const code: string | undefined = error?.code;
+  const { reason, rechecked } = (error ?? {}) as { reason?: string; rechecked?: boolean };
+  if (code === 'payment_failed' && reason === 'unresolved_after_24h') return 'closed';
+  if (code !== 'payment_unconfirmed') return null;
+  if (reason === 'submit_retrying') return 'retrying';
+  if (reason === 'submit_failed') return 'notReceived';
+  return rechecked === true ? 'rechecked' : 'contact';
+}
+
+/**
+ * The transaction the buyer names to the seller about a payment Quasar did not confirm: the one this page handed over
+ * (`txHash`, else `txKey` of the checkout store), else, on a reopened page, the newest one Quasar rejected.
+ *
+ * @param state - The state of the checkout store.
+ * @param state.txKey - The transaction this page submitted.
+ * @param state.txHash - The transaction of the payment, once known.
+ * @param checkout - What the checkout token opens; `null` until loaded.
+ * @returns The transaction hash (EVM) or signature (Solana), or `null` when the page does not know it.
+ */
+export function unconfirmedTxKey(
+  state: Pick<CheckoutState, 'txKey' | 'txHash'>,
+  checkout: CheckoutView | null,
+): string | null {
+  // `rejectedPayments` is newer than some `@tuwaio/quasar-sdk` alphas and Quasar versions: read it as optional; Quasar
+  // lists the newest first
+  const rejected = (checkout?.invoice as { rejectedPayments?: { txKey: string }[] } | undefined)?.rejectedPayments;
+  return state.txHash ?? state.txKey ?? rejected?.[0]?.txKey ?? null;
+}

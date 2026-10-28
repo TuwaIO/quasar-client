@@ -513,9 +513,10 @@ export type NovaPaymentsLabels = {
      */
     expiredAfterQr: string;
     /**
-     * Instead of `expiredText` and `expiredNote` when the invoice expired after Quasar could not confirm the payment
-     * (not found, no receipt in time, replaced), or while it reports a payment it reads again, which may still arrive:
-     * `{merchant}`. Quasar reads such a payment again for 24 hours (default: `Your payment could not be confirmed yet.
+     * Instead of `expiredText` and `expiredNote` when the invoice expired after Quasar could not confirm a payment it
+     * still reads again (not found, no receipt in time, replaced: the checkout store's `error.rechecked`), or while it
+     * reports a payment it reads again, which may still arrive: `{merchant}`. Quasar reads such a payment again for up
+     * to 24 hours after it learned of it (default: `Your payment could not be confirmed yet.
      * Check your wallet: if the payment left it, Quasar checks it again for 24 hours. If it arrives, it is recorded and
      * shown to {merchant}, who accepts it or returns it.`)
      */
@@ -528,10 +529,31 @@ export type NovaPaymentsLabels = {
     /** Its text (default: `Check your wallet before paying again: your payment may still be on its way.`) */
     unconfirmedText: string;
     /**
-     * Under it: `{merchant}`. Quasar reads such a payment again for 24 hours (default: `Quasar checks your payment again
-     * for 24 hours. If it arrives, it is recorded and shown to {merchant}.`)
+     * Under it while Quasar still reads the payment again (the checkout store's `error.rechecked`): `{merchant}`.
+     * Quasar reads such a payment again for up to 24 hours after it learned of it (default: `Quasar checks your payment
+     * again for 24 hours. If it arrives, it is recorded and shown to {merchant}.`)
      */
     unconfirmedNote: string;
+    /**
+     * Under it instead of `unconfirmedNote` when Quasar does not read the payment again (a relay operation lost,
+     * `transaction_failed`, a Quasar that does not say), and on the expired and cancelled outcomes after such a
+     * payment, next to its transaction: `{merchant}` (default: `Quasar does not check this payment again. If it left
+     * your wallet, contact {merchant} with the transaction hash.`)
+     */
+    unconfirmedContact: string;
+    /**
+     * Instead of `unconfirmedContact` when the checkout gave up handing over a transaction the wallet sent (an hour
+     * without an answer): `{merchant}` (default: `Quasar did not receive this payment. If it left your wallet, contact
+     * {merchant} with the transaction hash.`)
+     */
+    unconfirmedNotReceived: string;
+    /**
+     * Instead of `unconfirmedContact` when Quasar closed the payment with no result on chain within 24 hours
+     * (`unresolved_after_24h`), also on the pay and method steps: `{merchant}` (default: `Quasar did not find this
+     * payment on the network within 24 hours and no longer checks it. If it left your wallet, contact {merchant} with
+     * the transaction hash.`)
+     */
+    unconfirmedClosed: string;
     /**
      * Under it instead of `unconfirmedNote` while the checkout hands over again a transaction the wallet sent, which
      * Quasar has not received yet (default: `This page keeps handing your payment over to Quasar. Keep it open until the

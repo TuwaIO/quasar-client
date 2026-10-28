@@ -258,6 +258,10 @@ export const zhCNLabels: NovaPaymentsLabels = {
     unconfirmedTitle: '无法确认您的付款',
     unconfirmedText: '重新付款前请检查您的钱包：您的付款可能仍在途中。',
     unconfirmedNote: 'Quasar 会在 24 小时内再次核查您的付款。如果付款到账，将被记录并显示给 {merchant}。',
+    unconfirmedContact: 'Quasar 不会再核查这笔付款。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
+    unconfirmedNotReceived: 'Quasar 未收到这笔付款。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
+    unconfirmedClosed:
+      'Quasar 在 24 小时内未在网络上找到这笔付款，且不再核查。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
     unconfirmedRetrying: '此页面会继续将您的付款提交给 Quasar。请保持页面打开，直到付款显示在此处。',
     unconfirmedPayAgain: '款项未从我的钱包转出',
     cancelledTitle: '此发票已取消',

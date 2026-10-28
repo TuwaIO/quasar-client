@@ -16,7 +16,8 @@ const second = {} as CheckoutStore;
 const stateOf = (phase: string, extra: Record<string, unknown> = {}) =>
   ({ phase, checkout: null, txKey: null, txHash: null, error: null, ...extra }) as unknown as CheckoutState;
 
-const sentOn = (store: CheckoutStore, state: CheckoutState) => render(usePaymentSent, { store, state });
+const sentOn = (store: CheckoutStore, state: CheckoutState, walletTxKey: string | null = null) =>
+  render(usePaymentSent, { store, state, walletTxKey });
 
 afterEach(() => unmount());
 
@@ -67,6 +68,31 @@ describe('usePaymentSent', () => {
     sentOn(first, stateOf('confirming', { paymentOnTheWay: true }));
     const mismatch = { code: 'payment_mismatch', message: '', reason: 'no_matching_transfer' };
     expect(sentOn(first, stateOf('awaitingPayment', { paymentOnTheWay: false, error: mismatch }))).toBe(false);
+  });
+
+  // N3: the wallet sent the transaction, but the store says nothing of it yet (an invoice the seller cancelled meanwhile
+  // keeps its outcome while Quasar takes the payment): it may arrive, so never "nothing was charged"
+  it('counts a payment once the wallet returned its hash, before the store says anything', () => {
+    expect(sentOn(first, stateOf('cancelled', { paymentOnTheWay: false }))).toBe(false);
+    expect(sentOn(first, stateOf('cancelled', { paymentOnTheWay: false }), '0xsent')).toBe(true);
+    expect(sentOn(first, stateOf('cancelled', { paymentOnTheWay: false }), '0xsent')).toBe(true);
+  });
+
+  it('counts the same hash once: a final failure of it ends it, the next hash counts again', () => {
+    sentOn(first, stateOf('awaitingPayment', { paymentOnTheWay: false }), '0xsent');
+    const failed = { code: 'payment_failed', message: '', reason: 'reverted' };
+    expect(sentOn(first, stateOf('selectMethod', { paymentOnTheWay: false, error: failed }), '0xsent')).toBe(false);
+    expect(sentOn(first, stateOf('selectMethod', { paymentOnTheWay: false, error: failed }), '0xsent')).toBe(false);
+    expect(sentOn(first, stateOf('awaitingPayment', { paymentOnTheWay: false, error: failed }), '0xnext')).toBe(true);
+  });
+
+  // React renders again at once after the hook's updates: a failure of an earlier payment still shown (the store keeps
+  // the outcome of a cancelled invoice) must not end the payment the wallet just sent
+  it('keeps a new hash counted while the failure of an earlier payment is still shown', () => {
+    const failed = { code: 'payment_failed', message: '', reason: 'reverted' };
+    const cancelled = stateOf('cancelled', { paymentOnTheWay: false, error: failed });
+    expect(sentOn(first, cancelled, '0xsent')).toBe(true);
+    expect(sentOn(first, cancelled, '0xsent')).toBe(true);
   });
 
   it('starts again for another invoice', () => {
