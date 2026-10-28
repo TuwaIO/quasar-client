@@ -68,12 +68,14 @@ function withRememberWalletHidden(props: NovaConnectProps): NovaConnectProps {
  * Nova's own wallet connection, for an app without a Satellite store: a Satellite store, the app's watchers and a
  * `NovaConnectProvider` without SIWX.
  *
- * It creates the store itself instead of rendering `SatelliteConnectProvider`, so no start-up disconnect runs:
- * Satellite's `disconnectAll` would withdraw the wallet's permission for the whole site, dropping the wallets of other
- * tabs or of the host page. Instead, the store lives as long as the page, one per Satellite adapter: mounted again (a
- * checkout closed and opened again, another page), or under a second provider on the same adapters, it is the same
- * store, which knows the wallets wagmi and the Solana wallets still hold. Its start-up runs once: with `autoConnect`,
- * Satellite's (`initializeAutoConnect(true)`, which disconnects first and reconnects the last wallet); otherwise none.
+ * It creates the store itself instead of rendering `SatelliteConnectProvider`, so its start-up runs only when asked:
+ * before Satellite Connect 0.11.1 that start-up disconnected every wallet of its adapters first, which withdrew the
+ * wallet's permission for the whole site and dropped the wallets of other tabs or of the host page. The store lives as
+ * long as the page, one per Satellite adapter: mounted again (a checkout closed and opened again, another page), or
+ * under a second provider on the same adapters, it is the same store, which knows the wallets wagmi and the Solana
+ * wallets still hold. Its start-up runs once: with `autoConnect`, Satellite's (`initializeAutoConnect(true)`: from
+ * 0.11.1 it reconnects only the last wallet, without a permission prompt, and disconnects only connections this page
+ * opened); otherwise none.
  * Without `autoConnect`, the connect modal hides "Remember this wallet", since nothing would reconnect the wallet after
  * a load (unless `novaConnect` sets `hidden` of that checkbox).
  *

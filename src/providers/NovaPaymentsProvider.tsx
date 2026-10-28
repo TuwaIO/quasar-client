@@ -66,8 +66,9 @@ export interface NovaPaymentsOwnConnection {
   novaConnect: Omit<NovaConnectProviderPropsWithCustomization, 'children' | 'siwx'>;
   /**
    * Whether to reconnect the last wallet after a page load (default `false`). With `true`, Satellite's start-up runs
-   * once per page load (`initializeAutoConnect` of the store), which first disconnects the wallets of its adapters.
-   * Without it, Nova's connect modal hides "Remember this wallet", since nothing would reconnect the wallet, unless
+   * once per page load (`initializeAutoConnect` of the store): with `@tuwaio/satellite-core` 0.11.1 or later it
+   * reconnects only the last wallet, without a permission prompt, and disconnects only connections this page opened;
+   * earlier versions first disconnect every wallet of its adapters, which can drop the wallets of other tabs. Without it, Nova's connect modal hides "Remember this wallet", since nothing would reconnect the wallet, unless
    * `novaConnect.customization` sets `hidden` of `modals.connectModal.childComponents.rememberWallet`.
    */
   autoConnect?: boolean;
@@ -137,7 +138,7 @@ const isDevelopment = () => process.env.NODE_ENV === 'development';
  * - Inside the app's Satellite store without Nova Connect: the app's wallet; "Connect wallet" calls `onConnectWallet`.
  *   Nova never adds a second store.
  * - Without a Satellite store, with `ownConnection`: Nova's own store, watchers and connect modal (never SIWX), with
- *   the adapters of `ownConnection`. It runs no start-up disconnect unless `autoConnect` is set. That part loads on
+ *   the adapters of `ownConnection`. It runs Satellite's start-up only when `autoConnect` is set. That part loads on
  *   demand: until it is loaded, nothing below the provider is rendered.
  * - Without either: QR payments, and `onConnectWallet`.
  *
