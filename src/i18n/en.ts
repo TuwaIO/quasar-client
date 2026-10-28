@@ -194,6 +194,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     from: 'From',
     canClose: 'You can close this window: the payment keeps going, and the seller sends the receipt.',
     afterDeadline: 'Your payment was sent before the deadline and is being confirmed.',
+    pastDeadline:
+      'Your payment is being confirmed. If it arrives after the invoice closes, {merchant} accepts it or returns it.',
     viewOnExplorer: 'View on the explorer',
     copyHash: 'Copy the transaction',
   },
@@ -253,6 +255,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     expiredNote: 'A payment sent after the deadline is held for the seller to refund or accept.',
     expiredWhileConfirming:
       'The invoice closed while your payment was confirming. If it arrives, {merchant} accepts it or returns it.',
+    expiredAfterQr: 'If you paid with the QR code, {merchant} accepts the payment when it arrives or returns it.',
     cancelledTitle: 'This invoice was cancelled',
     cancelledText: '{merchant} cancelled it; nothing was charged.',
     replacedTitle: '{merchant} corrected this invoice',

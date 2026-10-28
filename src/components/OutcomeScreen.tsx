@@ -13,7 +13,7 @@ import type { ComponentType, ReactNode, SVGProps } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
-import type { CheckoutScreen } from '../utils/checkout';
+import { type CheckoutScreen, isPaymentOnTheWay } from '../utils/checkout';
 import { formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from '../utils/format';
 import { networkName, payerFor } from '../utils/methods';
 import { contactHref, receivedAmount, underpaidRest } from '../utils/outcome';
@@ -86,8 +86,9 @@ function ContactLink() {
 /**
  * An outcome other than paid: an underpaid invoice ("Pay the rest"), a payment the seller reviews (screening, late,
  * overpaid, after the price lock ran out), a refunded invoice, an expired one (with what arrived before the deadline,
- * which the seller can refund, and, when this page sent a payment that was still confirming, that the seller accepts or
- * returns it if it arrives), a cancelled one, a corrected one ("Open <new invoice>" opens it here) and a payer the
+ * which the seller can refund, and, when a payment this page handed over is still on its way, that the seller accepts or
+ * returns it if it arrives; after a QR code showed, the same for a payment made with it, as this page does not see it),
+ * a cancelled one, a corrected one ("Open <new invoice>" opens it here) and a payer the
  * wallet check refused ("Use another wallet"). Each offers to contact the seller.
  *
  * @param props - The outcome.
@@ -96,7 +97,7 @@ function ContactLink() {
  */
 export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
   const context = useCheckoutContext();
-  const { checkout, state, store, labels, locale, wallet, connectWallet, openInvoice } = context;
+  const { checkout, state, store, labels, locale, wallet, connectWallet, openInvoice, qrShown } = context;
   if (!checkout) return null;
   const merchant = checkout.merchant.name;
   const { Icon, tone } = LOOK[kind];
@@ -197,9 +198,11 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const received = receivedAmount(checkout.invoice.amountPaid);
       // It is in base units of the invoice's locked quote: the buyer's, else the one the checkout reports
       const locked = quote ?? checkout.quote;
-      // A payment this page sent may still arrive: the seller accepts or returns it, so never "nothing was charged".
-      // A `held` or `paid` invoice the store hears of later replaces this outcome
-      const sent = Boolean(state.txKey);
+      // A payment this page handed over may still arrive: the seller accepts or returns it, so never "nothing was
+      // charged". A `held` or `paid` invoice the store hears of later replaces this outcome
+      const sent = isPaymentOnTheWay(state);
+      // A QR code may have been paid from a phone, which this page does not see: never "nothing was charged" either
+      const maybePaid = sent || qrShown;
       body = (
         <>
           {received ? (
@@ -214,10 +217,12 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
               <Text>{formatLabel(labels.outcome.expiredPartRefund, { merchant })}</Text>
             </>
           ) : (
-            !sent && due && <Text>{formatLabel(labels.outcome.expiredText, { date: due, merchant })}</Text>
+            !maybePaid && due && <Text>{formatLabel(labels.outcome.expiredText, { date: due, merchant })}</Text>
           )}
           {sent ? (
             <Text>{formatLabel(labels.outcome.expiredWhileConfirming, { merchant })}</Text>
+          ) : qrShown ? (
+            <Text>{formatLabel(labels.outcome.expiredAfterQr, { merchant })}</Text>
           ) : (
             <Text muted>{labels.outcome.expiredNote}</Text>
           )}

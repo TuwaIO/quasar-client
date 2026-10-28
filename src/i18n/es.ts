@@ -196,7 +196,9 @@ export const esLabels: NovaPaymentsLabels = {
     transaction: 'Transacción',
     from: 'Desde',
     canClose: 'Puedes cerrar esta ventana: el pago sigue su curso y el vendedor envía el recibo.',
-    afterDeadline: 'Tu pago se envió antes del plazo y se está confirmando.',
+    afterDeadline: 'Tu pago se envió antes de que venciera el plazo y se está confirmando.',
+    pastDeadline:
+      'Tu pago se está confirmando. Si llega después de que se cierre la factura, {merchant} lo acepta o lo devuelve.',
     viewOnExplorer: 'Ver en el explorador',
     copyHash: 'Copiar la transacción',
   },
@@ -257,6 +259,7 @@ export const esLabels: NovaPaymentsLabels = {
     expiredNote: 'Un pago enviado después del plazo queda retenido hasta que el vendedor lo reembolse o lo acepte.',
     expiredWhileConfirming:
       'La factura se cerró mientras se confirmaba tu pago. Si llega, {merchant} lo acepta o lo devuelve.',
+    expiredAfterQr: 'Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
     cancelledTitle: 'Esta factura se canceló',
     cancelledText: '{merchant} la canceló; no se te cobró nada.',
     replacedTitle: '{merchant} corrigió esta factura',

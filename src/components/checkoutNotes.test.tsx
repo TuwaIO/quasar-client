@@ -198,6 +198,42 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(text).toContain('The invoice closed while your payment was confirming.');
     expect(text).not.toContain('nothing was charged');
   });
+
+  it('follows the store: a relay answered `sending` has no transaction key but is on its way', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', txKey: null, paymentOnTheWay: true } as never };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('The invoice closed while your payment was confirming.');
+    expect(text).not.toContain('nothing was charged');
+  });
+
+  it('says that nothing was charged once the store says that the payment failed', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false } as never };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('Ask Cosmos for a new one; nothing was charged.');
+    expect(text).not.toContain('The invoice closed while your payment was confirming.');
+  });
+});
+
+// Owner, 2026-10-28: a QR code the page showed may have been paid from a phone, which this page does not see
+describe('an invoice that expired after the page showed a QR code', () => {
+  it('never says that nothing was charged, and says what happens to a payment made with it', () => {
+    show('expired', { status: 'expired', amountPaid: null }, {}, null);
+    ctx = { ...ctx, qrShown: true, state: { ...ctx.state, phase: 'expired' } as never };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('If you paid with the QR code, Cosmos accepts the payment when it arrives or returns it.');
+    expect(text).not.toContain('nothing was charged');
+    expect(text).not.toContain('A payment sent after the deadline is held');
+  });
+
+  it('still says what arrived before', () => {
+    show('expired', { status: 'expired', amountPaid: '80000000' });
+    ctx = { ...ctx, qrShown: true, state: { ...ctx.state, phase: 'expired' } as never };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('Part of the payment arrived: 80.00 USDC.');
+    expect(text).toContain('If you paid with the QR code, Cosmos accepts the payment when it arrives or returns it.');
+  });
 });
 
 describe('the automatic payments offer', () => {

@@ -57,6 +57,26 @@ describe('useCheckoutEvents', () => {
       handlers,
     });
 
-    expect(onExpire.mock.calls.map(([params]) => params)).toEqual([{ kind: 'quote' }, { kind: 'invoice' }]);
+    expect(onExpire.mock.calls.map(([params]) => params)).toEqual([
+      { kind: 'quote', paymentOnTheWay: false },
+      { kind: 'invoice', paymentOnTheWay: false },
+    ]);
+  });
+
+  // Owner, 2026-10-28: Quasar keeps an invoice open while a payment sent before the deadline confirms, and the invoice
+  // may still close meanwhile: the app hears that a payment is on its way, so it does not offer a new invoice at once
+  it('tells that the invoice expired while a payment of this page is on its way', () => {
+    const onExpire = vi.fn();
+    const handlers = { onExpire };
+    const sending = { txKey: null, paymentOnTheWay: true } as unknown as Partial<CheckoutState>;
+    renderEvents({ state: state('confirming', sending), screen: 'confirm', now: 0, handlers });
+    renderEvents({
+      state: state('expired', { ...sending, checkout: view('expired') }),
+      screen: 'expired',
+      now: 1000,
+      handlers,
+    });
+
+    expect(onExpire).toHaveBeenCalledExactlyOnceWith({ kind: 'invoice', paymentOnTheWay: true });
   });
 });

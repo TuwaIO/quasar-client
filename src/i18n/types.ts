@@ -365,11 +365,18 @@ export type NovaPaymentsLabels = {
     /** That the window may close */
     canClose: string;
     /**
-     * Instead of `canClose` once the deadline passed while the payment this page sent confirms and the invoice is still
-     * `open` or `underpaid` (Quasar waits for a payment it learned of before the deadline); `{merchant}` may be used
-     * (default: `Your payment was sent before the deadline and is being confirmed.`)
+     * Instead of `canClose` once the deadline passed while the payment this page handed over before the deadline is on
+     * its way and the invoice is still `open` or `underpaid` (Quasar waits for a payment it learned of before the
+     * deadline); `{merchant}` may be used (default: `Your payment was sent before the deadline and is being confirmed.`)
      */
     afterDeadline: string;
+    /**
+     * Instead of `canClose` once the deadline passed while a payment this page handed over at or after the deadline, or
+     * at a time it does not know (it was reloaded), is on its way and the invoice is still `open` or `underpaid`:
+     * `{merchant}` (default: `Your payment is being confirmed. If it arrives after the invoice closes, {merchant}
+     * accepts it or returns it.`)
+     */
+    pastDeadline: string;
     /** Accessible name of the explorer link of the transaction (default: `View on the explorer`) */
     viewOnExplorer: string;
     /** Accessible name of the copy button of the transaction (default: `Copy the transaction`) */
@@ -485,6 +492,12 @@ export type NovaPaymentsLabels = {
      * {merchant} accepts it or returns it.`)
      */
     expiredWhileConfirming: string;
+    /**
+     * Instead of `expiredText` and `expiredNote` when the invoice expired after the checkout showed a QR code, which
+     * the buyer may have paid with from a phone: `{merchant}` (default: `If you paid with the QR code, {merchant}
+     * accepts the payment when it arrives or returns it.`)
+     */
+    expiredAfterQr: string;
     /** Heading of a cancelled invoice (default: `This invoice was cancelled`) */
     cancelledTitle: string;
     /** Its text: `{merchant}` (default: `{merchant} cancelled it; nothing was charged.`) */

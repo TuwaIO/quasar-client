@@ -7,6 +7,7 @@ import {
   deadlineAnnouncement,
   deadlineState,
   groupMethodsByToken,
+  isPaymentOnTheWay,
   isQuoteEnding,
   screensPayingWallets,
 } from './checkout';
@@ -212,5 +213,22 @@ describe('screensPayingWallets', () => {
     expect(screensPayingWallets({ ...view(), amlScreening: false } as CheckoutView)).toBe(false);
     // A Quasar version before the field always said that it screens
     expect(screensPayingWallets(view())).toBe(true);
+  });
+});
+
+// Owner, 2026-10-28: the notes about the deadline follow the payment's real state. The store of a current
+// `@tuwaio/quasar-sdk` says whether a payment of this page is on its way (also a relay answered `sending`, which has no
+// transaction key, and no longer once it failed or settled); an older store only has the transaction it was given
+describe('isPaymentOnTheWay', () => {
+  it("follows the store's paymentOnTheWay when it has one", () => {
+    expect(isPaymentOnTheWay({ paymentOnTheWay: true, txKey: null, txHash: null })).toBe(true);
+    // Failed or settled: the transaction key stays, the payment is no longer on its way
+    expect(isPaymentOnTheWay({ paymentOnTheWay: false, txKey: '0xabc', txHash: '0xabc' })).toBe(false);
+  });
+
+  it('falls back to the transaction this page handed over with a store without the field', () => {
+    expect(isPaymentOnTheWay({ txKey: '0xabc', txHash: null })).toBe(true);
+    expect(isPaymentOnTheWay({ txKey: null, txHash: '0xdef' })).toBe(true);
+    expect(isPaymentOnTheWay({ txKey: null, txHash: null })).toBe(false);
   });
 });

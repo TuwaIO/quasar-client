@@ -25,6 +25,13 @@ export interface CheckoutContextValue {
   labels: NovaPaymentsLabels;
   /** `Date.now()` of the latest second tick. */
   now: number;
+  /**
+   * When this page handed its current payment over (the phase became `confirming`), by the clock of the page; `null`
+   * while no payment of it is confirming, or when it was already confirming as the checkout opened.
+   */
+  handedOverAt: number | null;
+  /** The checkout showed a QR code for the invoice, which the buyer may have paid with from a phone. */
+  qrShown: boolean;
   /** Closes the checkout; `undefined` when it cannot be closed (inline without `onClose`). */
   close?: () => void;
   /** The wallet connected through Satellite Connect, if any. */

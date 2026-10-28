@@ -199,6 +199,8 @@ export const itLabels: NovaPaymentsLabels = {
     from: 'Da',
     canClose: 'Puoi chiudere questa finestra: il pagamento prosegue e il venditore invia la ricevuta.',
     afterDeadline: 'Il pagamento è stato inviato prima del termine ed è in fase di conferma.',
+    pastDeadline:
+      'Il pagamento è in fase di conferma. Se arriva dopo la chiusura della fattura, {merchant} lo accetta o lo restituisce.',
     viewOnExplorer: "Vedi nell'explorer",
     copyHash: 'Copia la transazione',
   },
@@ -261,6 +263,7 @@ export const itLabels: NovaPaymentsLabels = {
       'Un pagamento inviato dopo la scadenza resta in sospeso finché il venditore non lo rimborsa o lo accetta.',
     expiredWhileConfirming:
       'La fattura si è chiusa mentre il pagamento veniva confermato. Se arriva, {merchant} lo accetta o lo restituisce.',
+    expiredAfterQr: 'Se hai pagato con il codice QR, {merchant} accetta il pagamento quando arriva o lo restituisce.',
     cancelledTitle: 'Questa fattura è stata annullata',
     cancelledText: "{merchant} l'ha annullata; non ti è stato addebitato nulla.",
     replacedTitle: '{merchant} ha corretto questa fattura',

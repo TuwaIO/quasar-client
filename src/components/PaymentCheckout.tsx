@@ -8,11 +8,13 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { useCheckoutEvents } from '../hooks/useCheckoutEvents';
 import { useCheckoutState, useCheckoutStore } from '../hooks/useCheckoutStore';
 import { useConnectedWallet } from '../hooks/useConnectedWallet';
+import { useHandOverTime } from '../hooks/useHandOverTime';
 import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
 import { usePaidCallback } from '../hooks/useOutcomeEffects';
 import { usePaymentHandOver } from '../hooks/usePaymentHandOver';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
+import { useQrShown } from '../hooks/useQrShown';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel, hasLabels } from '../i18n';
 import { checkoutScreen, deadlineAnnouncement, deadlineState } from '../utils/checkout';
@@ -353,6 +355,8 @@ export function PaymentCheckout({
   const [labelsShown, setLabelsShown] = useState(false);
   if (!labelsShown && checkout && hasLabels(locale)) setLabelsShown(true);
   const screen = checkoutScreen(state, { payWith, handoff, autoPay, labelsReady: labelsShown || !checkout });
+  const handedOverAt = useHandOverTime(store);
+  const qrShown = useQrShown({ store, screen });
   usePaidCallback(state.phase, checkout?.invoice, onPaid);
   useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
@@ -421,6 +425,8 @@ export function PaymentCheckout({
     locale,
     labels,
     now,
+    handedOverAt,
+    qrShown,
     close,
     wallet,
     payWith,

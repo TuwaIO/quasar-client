@@ -97,6 +97,8 @@ export function checkoutContextValue(
     locale: 'en',
     labels: defaultLabels,
     now: 0,
+    handedOverAt: null,
+    qrShown: false,
     wallet: null,
     payWith: 'wallet',
     setPayWith: vi.fn(),

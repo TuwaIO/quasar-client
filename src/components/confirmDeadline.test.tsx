@@ -21,9 +21,13 @@ const { CheckoutFrame } = await import('./PaymentCheckout');
 
 const DUE = '2026-10-29T08:28:00Z';
 
+/** When the payment of most tests was handed over: before {@link DUE}. */
+const HANDED_OVER = '2026-10-29T08:25:00Z';
+
 /**
- * The confirm step of an invoice in `status` due at {@link DUE}, at `now`; `txKey` is the payment this page sent and
- * `invoiceStatus` the newest status the store heard of.
+ * The confirm step of an invoice in `status` due at {@link DUE}, at `now`; `txKey` is the payment this page sent,
+ * `paymentOnTheWay` what a current store says of it (absent in an older one), `handedOverAt` when the page handed it
+ * over and `invoiceStatus` the newest status the store heard of.
  */
 function confirmingAt(
   now: string,
@@ -31,16 +35,46 @@ function confirmingAt(
   {
     status = 'open',
     txKey = '0xabc',
+    paymentOnTheWay,
+    handedOverAt = HANDED_OVER,
     invoiceStatus = null,
-  }: { status?: string; txKey?: string | null; invoiceStatus?: string | null } = {},
+  }: {
+    status?: string;
+    txKey?: string | null;
+    paymentOnTheWay?: boolean;
+    handedOverAt?: string | null;
+    invoiceStatus?: string | null;
+  } = {},
 ) {
   const checkout = {
     ...fixture.checkout,
     invoice: { ...fixture.checkout.invoice, status, dueAt },
   } as typeof fixture.checkout;
-  const state = { phase: 'confirming', checkout, quote: null, error: null, txKey, invoiceStatus } as never;
-  ctx = fixture.checkoutContextValue({}, { checkout, state, screen: 'confirm', now: Date.parse(now) });
+  const state = {
+    phase: 'confirming',
+    checkout,
+    quote: null,
+    error: null,
+    txKey,
+    txHash: null,
+    invoiceStatus,
+    ...(paymentOnTheWay === undefined ? {} : { paymentOnTheWay }),
+  } as never;
+  ctx = fixture.checkoutContextValue(
+    {},
+    {
+      checkout,
+      state,
+      screen: 'confirm',
+      now: Date.parse(now),
+      handedOverAt: handedOverAt === null ? null : Date.parse(handedOverAt),
+    },
+  );
 }
+
+/** The neutral note of a payment not known to be handed over before the deadline, for Cosmos. */
+const NEUTRAL =
+  'Your payment is being confirmed. If it arrives after the invoice closes, Cosmos accepts it or returns it.';
 
 /** The text of the status note under the payment. */
 const noteOf = (tree: unknown) =>
@@ -90,6 +124,37 @@ describe('the confirm step at the deadline', () => {
 
   it('keeps the usual note on an invoice without a deadline', () => {
     confirmingAt('2026-10-29T08:28:00Z', null);
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
+  });
+});
+
+// Owner, 2026-10-28: the deadline notes follow the payment's real state — handed over in time, failed, or after the
+// deadline
+describe("the confirm step follows the payment's real state", () => {
+  it('says "sent before the deadline" for a relay answered `sending`, which has no transaction key yet', () => {
+    confirmingAt('2026-10-29T08:28:00Z', DUE, { txKey: null, paymentOnTheWay: true });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.afterDeadline);
+  });
+
+  it('keeps the usual note once the store says that the payment is no longer on its way', () => {
+    confirmingAt('2026-10-29T08:28:00Z', DUE, { paymentOnTheWay: false });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
+  });
+
+  it('gives the neutral note for a payment handed over at or after the deadline', () => {
+    confirmingAt('2026-10-29T08:29:00Z', DUE, { handedOverAt: DUE });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(NEUTRAL);
+    confirmingAt('2026-10-29T08:35:00Z', DUE, { handedOverAt: '2026-10-29T08:30:00Z' });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(NEUTRAL);
+  });
+
+  it('gives the neutral note when the page does not know when the payment was handed over (a reload)', () => {
+    confirmingAt('2026-10-29T08:29:00Z', DUE, { handedOverAt: null });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(NEUTRAL);
+  });
+
+  it('keeps the usual note before the deadline, whenever the payment was handed over', () => {
+    confirmingAt('2026-10-29T08:27:00Z', DUE, { handedOverAt: null });
     expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
   });
 });

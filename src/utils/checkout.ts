@@ -3,7 +3,13 @@
  * token, and when to count down and warn about time.
  */
 
-import type { CheckoutMethod, CheckoutPhase, CheckoutQuote, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
+import type {
+  CheckoutMethod,
+  CheckoutPhase,
+  CheckoutQuote,
+  CheckoutState,
+  CheckoutView,
+} from '@tuwaio/quasar-sdk/checkout';
 
 /**
  * A screen of the checkout: the steps of a payment (`buyer`, `method`, `pay` or `qr`, `confirm`, `autoPay`) or its
@@ -245,4 +251,22 @@ export function isQuoteEnding(ms: number): boolean {
 export function screensPayingWallets(checkout: CheckoutView): boolean {
   // `amlScreening` is newer than some Quasar versions and `@tuwaio/quasar-sdk` alphas: read it as optional
   return (checkout as CheckoutView & { amlScreening?: boolean }).amlScreening !== false;
+}
+
+/**
+ * Whether a payment this page handed over is on its way: `paymentOnTheWay` of the checkout store of a current
+ * `@tuwaio/quasar-sdk` (`true` from a successful submit or relay, also a relay answered `sending`, which has no
+ * transaction key, until the payment settles or fails), else, with an older store without the field, whether the page
+ * handed over a transaction (`txKey` or `txHash`).
+ *
+ * @param state - The state of the checkout store.
+ * @param state.paymentOnTheWay - What the store says, when it has the field.
+ * @param state.txKey - The transaction this page submitted.
+ * @param state.txHash - The transaction of the payment, once known.
+ * @returns Whether a payment of this page may still arrive.
+ */
+export function isPaymentOnTheWay(
+  state: Pick<CheckoutState, 'txKey' | 'txHash'> & { readonly paymentOnTheWay?: boolean },
+): boolean {
+  return state.paymentOnTheWay ?? Boolean(state.txKey || state.txHash);
 }
