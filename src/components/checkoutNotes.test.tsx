@@ -171,6 +171,35 @@ describe('an expired invoice', () => {
   });
 });
 
+// Owner, 2026-10-28: a payment sent before the deadline counts, but the invoice can still close while it confirms (the
+// grace ran out, or Quasar never heard of it in time): the buyer whose payment is on its way never reads "nothing was
+// charged"
+describe('an invoice that expired while the payment of this page was confirming', () => {
+  /** The expired outcome after this page sent `txKey`. */
+  const expiredAfterSending = (amountPaid: string | null) => {
+    show('expired', { status: 'expired', amountPaid });
+    ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', txKey: '0xabc' } as never };
+  };
+
+  it('says that the payment, if it arrives, is accepted or returned by the seller', () => {
+    expiredAfterSending(null);
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain(
+      'The invoice closed while your payment was confirming. If it arrives, Cosmos accepts it or returns it.',
+    );
+    expect(text).not.toContain('nothing was charged');
+    expect(text).not.toContain('Ask Cosmos for a new one');
+  });
+
+  it('still says what arrived before', () => {
+    expiredAfterSending('80000000');
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('Part of the payment arrived: 80.00 USDC.');
+    expect(text).toContain('The invoice closed while your payment was confirming.');
+    expect(text).not.toContain('nothing was charged');
+  });
+});
+
 describe('the automatic payments offer', () => {
   it('says that Quasar sends each charge for the merchant, and shows the merchant’s wallet as the recipient', () => {
     show(

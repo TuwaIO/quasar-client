@@ -193,8 +193,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     transaction: 'Transaction',
     from: 'From',
     canClose: 'You can close this window: the payment keeps going, and the seller sends the receipt.',
-    afterDeadline:
-      'The deadline has passed while your payment confirms. If it arrives after the invoice closes, {merchant} accepts it or returns it.',
+    afterDeadline: 'Your payment was sent before the deadline and is being confirmed.',
     viewOnExplorer: 'View on the explorer',
     copyHash: 'Copy the transaction',
   },
@@ -252,6 +251,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     expiredPartNoAmount: 'It was payable until {date}. Part of the payment arrived.',
     expiredPartRefund: '{merchant} can refund it to the wallet that paid; contact {merchant}.',
     expiredNote: 'A payment sent after the deadline is held for the seller to refund or accept.',
+    expiredWhileConfirming:
+      'The invoice closed while your payment was confirming. If it arrives, {merchant} accepts it or returns it.',
     cancelledTitle: 'This invoice was cancelled',
     cancelledText: '{merchant} cancelled it; nothing was charged.',
     replacedTitle: '{merchant} corrected this invoice',
@@ -284,7 +285,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     privacy: 'Privacy',
     sellerRole:
       '{seller} is the seller. Quasar is the payment software: it never holds your funds and is not a party to this purchase.',
-    payWithin: 'Pay within',
+    payWithin: 'Payment deadline',
     until: 'until {date}',
     minutesLeft: '{minutes} minutes left to pay',
     oneMinuteLeft: '1 minute left to pay',

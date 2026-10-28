@@ -8,22 +8,28 @@ import { screenHeading, screenTitle } from './classes';
 import { DetailRow, DetailsCard, ScreenFooter, SecondaryButton } from './ScreenParts';
 import { TxLabels } from './TxLabels';
 
+/** Invoice states in which Quasar waits for a payment sent before the deadline (not `processing`: it has arrived). */
+const WAITING_STATUSES: ReadonlySet<string> = new Set(['open', 'underpaid']);
+
 /**
  * The confirm step: the transaction is on its way and Quasar follows it until it is final. It reuses the status and
  * progress of Nova Transactions (Sent → Confirming → Paid, in the language of the checkout) and shows the network, the
  * amount, the transaction with its explorer link and the sender. The buyer may close the window: the payment keeps
- * going. When the invoice deadline passes while the payment confirms (the countdown of the order stays at 00:00), the
- * note says that a payment arriving after the invoice closes waits for the seller to accept or return it, as Quasar
- * holds it then.
+ * going. When the invoice deadline passes while the payment this page sent confirms (the countdown of the order stays at
+ * 00:00), and the invoice is still `open` or `underpaid`, the note says that the payment was sent in time and is being
+ * confirmed: Quasar keeps the invoice open for a payment it learned of before the deadline while it confirms.
  *
  * @returns The confirm step.
  */
 export function ConfirmScreen() {
-  const { checkout, labels, close, customization, now } = useCheckoutContext();
+  const { checkout, state, labels, close, customization, now } = useCheckoutContext();
   const child = customization.childCustomizations;
   const facts = usePaymentFacts();
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
-  const pastDeadline = checkout !== null && dueAt !== null && now >= dueAt;
+  // The newest status the store heard of; the loaded invoice is not reloaded while the events stream runs
+  const status = state.invoiceStatus ?? checkout?.invoice.status;
+  const sentInTime =
+    checkout !== null && Boolean(state.txKey) && WAITING_STATUSES.has(status ?? '') && dueAt !== null && now >= dueAt;
   return (
     <TxLabels>
       <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center">
@@ -57,7 +63,7 @@ export function ConfirmScreen() {
           role="status"
           className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]"
         >
-          {pastDeadline
+          {sentInTime
             ? formatLabel(labels.confirm.afterDeadline, { merchant: checkout.merchant.name })
             : labels.confirm.canClose}
         </p>

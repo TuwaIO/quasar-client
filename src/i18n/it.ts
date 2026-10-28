@@ -198,8 +198,7 @@ export const itLabels: NovaPaymentsLabels = {
     transaction: 'Transazione',
     from: 'Da',
     canClose: 'Puoi chiudere questa finestra: il pagamento prosegue e il venditore invia la ricevuta.',
-    afterDeadline:
-      'Il termine è scaduto mentre il pagamento viene confermato. Se arriva dopo la chiusura della fattura, {merchant} lo accetta o lo restituisce.',
+    afterDeadline: 'Il pagamento è stato inviato prima del termine ed è in fase di conferma.',
     viewOnExplorer: "Vedi nell'explorer",
     copyHash: 'Copia la transazione',
   },
@@ -260,6 +259,8 @@ export const itLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} può rimborsarla al wallet che ha pagato; contatta {merchant}.',
     expiredNote:
       'Un pagamento inviato dopo la scadenza resta in sospeso finché il venditore non lo rimborsa o lo accetta.',
+    expiredWhileConfirming:
+      'La fattura si è chiusa mentre il pagamento veniva confermato. Se arriva, {merchant} lo accetta o lo restituisce.',
     cancelledTitle: 'Questa fattura è stata annullata',
     cancelledText: "{merchant} l'ha annullata; non ti è stato addebitato nulla.",
     replacedTitle: '{merchant} ha corretto questa fattura',

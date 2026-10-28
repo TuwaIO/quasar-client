@@ -73,4 +73,12 @@ describe('the countdown to the deadline', () => {
     const timer = fixture.elements(render(DeadlineTimer, {})).find((element) => element.props.role === 'timer');
     expect(timer?.props.children).toBe('00:00');
   });
+
+  // "Pay within" above a countdown that stays while the payment confirms would tell a buyer who paid to pay again
+  it('is named with a neutral word in English, as in the other languages', () => {
+    at('open', 'confirm');
+    const texts = fixture.elements(render(DeadlineTimer, {})).map((element) => element.props.children);
+    expect(texts).toContain('Payment deadline');
+    expect(texts).not.toContain('Pay within');
+  });
 });

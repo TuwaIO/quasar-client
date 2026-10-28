@@ -86,7 +86,8 @@ function ContactLink() {
 /**
  * An outcome other than paid: an underpaid invoice ("Pay the rest"), a payment the seller reviews (screening, late,
  * overpaid, after the price lock ran out), a refunded invoice, an expired one (with what arrived before the deadline,
- * which the seller can refund), a cancelled one, a corrected one ("Open <new invoice>" opens it here) and a payer the
+ * which the seller can refund, and, when this page sent a payment that was still confirming, that the seller accepts or
+ * returns it if it arrives), a cancelled one, a corrected one ("Open <new invoice>" opens it here) and a payer the
  * wallet check refused ("Use another wallet"). Each offers to contact the seller.
  *
  * @param props - The outcome.
@@ -196,6 +197,9 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const received = receivedAmount(checkout.invoice.amountPaid);
       // It is in base units of the invoice's locked quote: the buyer's, else the one the checkout reports
       const locked = quote ?? checkout.quote;
+      // A payment this page sent may still arrive: the seller accepts or returns it, so never "nothing was charged".
+      // A `held` or `paid` invoice the store hears of later replaces this outcome
+      const sent = Boolean(state.txKey);
       body = (
         <>
           {received ? (
@@ -210,9 +214,13 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
               <Text>{formatLabel(labels.outcome.expiredPartRefund, { merchant })}</Text>
             </>
           ) : (
-            due && <Text>{formatLabel(labels.outcome.expiredText, { date: due, merchant })}</Text>
+            !sent && due && <Text>{formatLabel(labels.outcome.expiredText, { date: due, merchant })}</Text>
           )}
-          <Text muted>{labels.outcome.expiredNote}</Text>
+          {sent ? (
+            <Text>{formatLabel(labels.outcome.expiredWhileConfirming, { merchant })}</Text>
+          ) : (
+            <Text muted>{labels.outcome.expiredNote}</Text>
+          )}
         </>
       );
       break;

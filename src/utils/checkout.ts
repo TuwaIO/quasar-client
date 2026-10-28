@@ -179,15 +179,17 @@ const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
 
 /**
  * Where the invoice deadline stands for the checkout: the countdown shows through every step of the payment, also while
- * the wallet signs, the payment is handed to Quasar and it confirms, and ends only with the outcome. Quasar closes an
- * `open` or `underpaid` invoice at its deadline even while a payment confirms (the invoice stays `open` until the
- * transaction is final), and a payment that lands after that is held for the seller to accept or return.
+ * the wallet signs, the payment is handed to Quasar and it confirms, and on a payer the wallet check refused
+ * (`blocked`, where the buyer can pay with another wallet); it ends with the paid outcome and with the outcomes in which
+ * a deadline means nothing. A payment sent before the deadline counts: Quasar keeps an `open` or `underpaid` invoice
+ * while a payment it learned of before the deadline confirms (for a limited time), and holds a payment that lands after
+ * the invoice closed for the seller to accept or return.
  *
  * @param status - The invoice state (`checkout.invoice.status`).
  * @param screen - The screen shown.
  * @returns `paying` while the buyer can still pay (the countdown shows and screen readers hear the minutes left),
- * `confirming` while the payment is on its way (the countdown shows; at zero the confirm step says what happens to a
- * payment that lands after the deadline), or `null` once the payment succeeded (`paid`, `autoPay`), on the outcomes in
+ * `confirming` while the payment is on its way (the countdown shows; at zero the confirm step says that the payment
+ * sent in time is being confirmed), or `null` once the payment succeeded (`paid`, `autoPay`), on the outcomes in
  * which a deadline means nothing (`held`, `refunded`, `expired`, `cancelled`, `replaced`) and for an invoice that can
  * no longer be paid.
  */

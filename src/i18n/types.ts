@@ -365,9 +365,9 @@ export type NovaPaymentsLabels = {
     /** That the window may close */
     canClose: string;
     /**
-     * Instead of `canClose` once the deadline passed while the payment confirms; `{merchant}` (default: `The deadline
-     * has passed while your payment confirms. If it arrives after the invoice closes, {merchant} accepts it or returns
-     * it.`)
+     * Instead of `canClose` once the deadline passed while the payment this page sent confirms and the invoice is still
+     * `open` or `underpaid` (Quasar waits for a payment it learned of before the deadline); `{merchant}` may be used
+     * (default: `Your payment was sent before the deadline and is being confirmed.`)
      */
     afterDeadline: string;
     /** Accessible name of the explorer link of the transaction (default: `View on the explorer`) */
@@ -479,6 +479,12 @@ export type NovaPaymentsLabels = {
     expiredPartRefund: string;
     /** Under it */
     expiredNote: string;
+    /**
+     * Instead of `expiredText` and `expiredNote` when the invoice expired while the payment this page sent was still
+     * confirming: `{merchant}` (default: `The invoice closed while your payment was confirming. If it arrives,
+     * {merchant} accepts it or returns it.`)
+     */
+    expiredWhileConfirming: string;
     /** Heading of a cancelled invoice (default: `This invoice was cancelled`) */
     cancelledTitle: string;
     /** Its text: `{merchant}` (default: `{merchant} cancelled it; nothing was charged.`) */
@@ -537,7 +543,7 @@ export type NovaPaymentsLabels = {
     privacy: string;
     /** What Quasar is and is not; `{seller}` is the seller's name */
     sellerRole: string;
-    /** Above the countdown (default: `Pay within`) */
+    /** Above the countdown, which also shows while the payment confirms (default: `Payment deadline`) */
     payWithin: string;
     /** Under the countdown; `{date}` is the deadline (default: `until {date}`) */
     until: string;

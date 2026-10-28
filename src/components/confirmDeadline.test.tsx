@@ -21,13 +21,25 @@ const { CheckoutFrame } = await import('./PaymentCheckout');
 
 const DUE = '2026-10-29T08:28:00Z';
 
-/** The confirm step of an open invoice due at {@link DUE}, at `now`. */
-function confirmingAt(now: string, dueAt: string | null = DUE) {
+/**
+ * The confirm step of an invoice in `status` due at {@link DUE}, at `now`; `txKey` is the payment this page sent and
+ * `invoiceStatus` the newest status the store heard of.
+ */
+function confirmingAt(
+  now: string,
+  dueAt: string | null = DUE,
+  {
+    status = 'open',
+    txKey = '0xabc',
+    invoiceStatus = null,
+  }: { status?: string; txKey?: string | null; invoiceStatus?: string | null } = {},
+) {
   const checkout = {
     ...fixture.checkout,
-    invoice: { ...fixture.checkout.invoice, status: 'open', dueAt },
+    invoice: { ...fixture.checkout.invoice, status, dueAt },
   } as typeof fixture.checkout;
-  ctx = fixture.checkoutContextValue({}, { checkout, screen: 'confirm', now: Date.parse(now) });
+  const state = { phase: 'confirming', checkout, quote: null, error: null, txKey, invoiceStatus } as never;
+  ctx = fixture.checkoutContextValue({}, { checkout, state, screen: 'confirm', now: Date.parse(now) });
 }
 
 /** The text of the status note under the payment. */
@@ -36,20 +48,44 @@ const noteOf = (tree: unknown) =>
 
 afterEach(() => unmount());
 
-// Owner, 2026-10-28: the countdown stays while the payment confirms. When it reaches zero then, the checkout says what is
-// true instead of leaving the payer to think the payment failed: Quasar closes an open invoice at its deadline, and a
-// payment that lands after that waits for the seller to accept or return it
+// Owner, 2026-10-28: "a payment sent before the deadline counts". Quasar keeps an open invoice for a payment it learned
+// of before the deadline while that payment confirms, so the confirm step past the deadline says so instead of leaving
+// the payer to think the payment failed
 describe('the confirm step at the deadline', () => {
   it('says the window may close while there is time', () => {
     confirmingAt('2026-10-29T08:20:00Z');
     expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
   });
 
-  it('says what happens to the payment once the deadline passed while it confirms', () => {
+  it('says that the payment sent in time is being confirmed once the deadline passed', () => {
     confirmingAt('2026-10-29T08:28:00Z');
-    expect(noteOf(render(ConfirmScreen, {}))).toBe(
-      defaultLabels.confirm.afterDeadline.replaceAll('{merchant}', fixture.checkout.merchant.name),
-    );
+    expect(noteOf(render(ConfirmScreen, {}))).toBe('Your payment was sent before the deadline and is being confirmed.');
+  });
+
+  it('says the same on an underpaid invoice whose rest this page sent', () => {
+    confirmingAt('2026-10-29T08:40:00Z', DUE, { status: 'underpaid' });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.afterDeadline);
+  });
+
+  it('fills {merchant} in a custom text', () => {
+    confirmingAt('2026-10-29T08:28:00Z');
+    ctx = { ...ctx, labels: { ...ctx.labels, confirm: { ...ctx.labels.confirm, afterDeadline: '{merchant} waits.' } } };
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(`${fixture.checkout.merchant.name} waits.`);
+  });
+
+  it('keeps the usual note when this page sent no payment', () => {
+    confirmingAt('2026-10-29T08:28:00Z', DUE, { txKey: null });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
+  });
+
+  it('keeps the usual note once the payment arrived and the invoice is processing', () => {
+    confirmingAt('2026-10-29T08:28:00Z', DUE, { status: 'processing' });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
+  });
+
+  it('reads the newest status the store heard of, not only the loaded invoice', () => {
+    confirmingAt('2026-10-29T08:28:00Z', DUE, { invoiceStatus: 'processing' });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
   });
 
   it('keeps the usual note on an invoice without a deadline', () => {

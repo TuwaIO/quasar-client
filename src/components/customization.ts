@@ -365,7 +365,10 @@ export interface PaymentCheckoutConfig {
    * wallet can pay with (default `true`).
    */
   balanceCheck?: boolean;
-  /** Minutes before the invoice deadline at which screen readers hear the time left (default `[10, 5, 1]`). */
+  /**
+   * Minutes before the invoice deadline at which screen readers hear the time left, while the buyer can still pay (not
+   * once the payment is on its way) (default `[10, 5, 1]`).
+   */
   deadlineAnnouncements?: readonly number[];
 }
 
