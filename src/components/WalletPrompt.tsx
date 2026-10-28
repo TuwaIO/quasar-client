@@ -1,10 +1,10 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
-import { cn, WalletIcon } from '@tuwaio/nova-core';
+import { WalletIcon } from '@tuwaio/nova-core';
 import { useEffect, useId, useRef } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
-import { mono } from './classes';
+import { screenTitle } from './classes';
 import { DetailRow, DetailsCard, FooterAction, SecondaryButton } from './ScreenParts';
 
 /**
@@ -86,12 +86,7 @@ export function WalletPrompt({
           className="novapay:absolute novapay:-bottom-1 novapay:-right-1 novapay:h-5 novapay:w-5 novapay:animate-spin novapay:rounded-full novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-accent)] novapay:motion-reduce:animate-none"
         />
       </span>
-      <h2
-        id={headingId}
-        ref={heading}
-        tabIndex={-1}
-        className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold novapay:outline-none')}
-      >
+      <h2 id={headingId} ref={heading} tabIndex={-1} className={screenTitle}>
         {formatLabel(title, values)}
       </h2>
       {(kind === 'sign' || kind === 'confirm') && (

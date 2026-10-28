@@ -12,7 +12,6 @@ import { RadioCards } from './RadioCards';
 import {
   DetailRow,
   DetailsCard,
-  FooterAction,
   FooterNote,
   PrimaryButton,
   ScreenContent,
@@ -470,7 +469,7 @@ export function ConfirmStep({
             <DetailRow name={text.from}>
               <span className="novapay:block">{shortAddress(flow.wallet.address)}</span>
               {balance && (
-                <span className="novapay:block novapay:text-[var(--tuwa-text-secondary)]">
+                <span className="novapay:mt-1 novapay:block novapay:text-[var(--tuwa-text-secondary)]">
                   {formatLabel(text.balance, { amount: balance })}
                 </span>
               )}
@@ -494,7 +493,7 @@ export function ConfirmStep({
           ))}
         {(notSent || handOver) && recordAction}
         {!notSent && !handOver && flow.wallet && (
-          <FooterAction onClick={flow.connect}>{labels.pay.changeWallet}</FooterAction>
+          <SecondaryButton onClick={flow.connect}>{labels.pay.changeWallet}</SecondaryButton>
         )}
       </ScreenFooter>
     </>

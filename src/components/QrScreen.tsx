@@ -65,7 +65,8 @@ export function QrScreen() {
             label={formatLabel(labels.qr.solanaCode, { amount })}
             className={cn('novapay:h-44 novapay:w-44 novapay:shrink-0', expired && 'novapay:opacity-30')}
           />
-          <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-2 novapay:text-xs">
+          {/* On a phone the facts take the width of the screen under the code, aligned with the rest of it */}
+          <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-2 novapay:self-stretch novapay:text-xs novapay:sm:self-auto">
             <ol className="novapay:m-0 novapay:flex novapay:list-decimal novapay:flex-col novapay:gap-1 novapay:pl-4">
               <li>{labels.qr.scanStep}</li>
               <li>{labels.qr.approveStep}</li>

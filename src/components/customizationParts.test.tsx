@@ -119,7 +119,7 @@ describe('customization of the checkout parts', () => {
     const step = vi.fn(({ step: current, index }: { step: { state: string }; index: number }) =>
       current.state === 'current' ? `brand-current-${index}` : undefined,
     );
-    const steps = CheckoutStepper({
+    const steps = render(CheckoutStepper, {
       steps: [
         { key: 'method', state: 'done' },
         { key: 'pay', state: 'current' },

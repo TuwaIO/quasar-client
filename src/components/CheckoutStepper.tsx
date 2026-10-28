@@ -1,5 +1,6 @@
 import { CheckIcon } from '@heroicons/react/24/solid';
 import { cn } from '@tuwaio/nova-core';
+import { useEffect, useRef, useState } from 'react';
 
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import type { CheckoutStep } from '../utils/checkout';
@@ -25,16 +26,41 @@ export interface CheckoutStepperProps {
 
 /**
  * The steps of the payment, as an ordered list: done steps show a check, the current one is marked
- * `aria-current="step"` and named "Step 2 of 3: Pay" to screen readers (WCAG 1.3.1).
+ * `aria-current="step"` and named "Step 2 of 3: Pay" to screen readers (WCAG 1.3.1). When the names of all steps do not
+ * fit (a phone, a long language), only the current step shows its name; screen readers still read every name.
  *
  * @param props - See {@link CheckoutStepperProps}.
  * @returns The stepper.
  */
 export function CheckoutStepper({ steps, labels, className, stepClassName }: CheckoutStepperProps) {
   const currentIndex = steps.findIndex((step) => step.state === 'current');
+  const names = steps.map((step) => labels.steps[step.key]).join('');
+  const nav = useRef<HTMLElement>(null);
+  const measure = useRef<HTMLSpanElement>(null);
+  const [compact, setCompact] = useState(false);
+  // Every name in one line, plus a circle, two gaps and the shortest line that still reads as one per step
+  useEffect(() => {
+    const box = nav.current;
+    const text = measure.current;
+    if (!box || !text || typeof ResizeObserver === 'undefined') return;
+    const update = () => setCompact(text.offsetWidth + steps.length * 32 + (steps.length - 1) * 24 > box.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [names, steps.length]);
   return (
-    <nav aria-label={labels.steps.label} className={cn('novapay:min-w-0 novapay:flex-1', className)}>
-      <ol className="novapay:flex novapay:items-center novapay:gap-1.5">
+    <nav
+      ref={nav}
+      aria-label={labels.steps.label}
+      className={cn('novapay:relative novapay:min-w-0 novapay:flex-1', className)}
+    >
+      <span aria-hidden className="novapay:invisible novapay:absolute novapay:h-0 novapay:w-0 novapay:overflow-hidden">
+        <span ref={measure} className={cn(mono, 'novapay:whitespace-nowrap novapay:text-[11px] novapay:font-bold')}>
+          {names}
+        </span>
+      </span>
+      <ol className="novapay:m-0 novapay:flex novapay:list-none novapay:items-center novapay:gap-1.5 novapay:p-0">
         {steps.map((step, i) => {
           const name = labels.steps[step.key];
           return (
@@ -79,6 +105,7 @@ export function CheckoutStepper({ steps, labels, className, stepClassName }: Che
                   step.state === 'current'
                     ? 'novapay:font-bold novapay:text-[var(--tuwa-text-primary)]'
                     : 'novapay:text-[var(--tuwa-text-secondary)]',
+                  compact && step.state !== 'current' && 'novapay:sr-only',
                 )}
               >
                 {step.state === 'current' ? (

@@ -193,10 +193,11 @@ export function MethodScreen() {
             const next = groups.find((item) => item.symbol === symbol)?.methods[0];
             if (next) pick(next);
           }}
-          className="novapay:grid novapay:grid-cols-2 novapay:gap-2 novapay:sm:grid-cols-4"
+          // Equal cards across the row, however many tokens and however wide the checkout
+          className="novapay:grid novapay:grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] novapay:gap-2"
           itemClassName={(isSelected, item) =>
             cn(
-              'novapay:flex novapay:flex-col novapay:items-center novapay:gap-1 novapay:px-1 novapay:py-2',
+              'novapay:flex novapay:min-w-0 novapay:flex-col novapay:items-center novapay:gap-1 novapay:px-2 novapay:py-2',
               checkoutClassName(context, 'tokenOption', { group: item, selected: isSelected }),
             )
           }
@@ -210,7 +211,7 @@ export function MethodScreen() {
                   <TokenIcon symbol={item.symbol} />
                 </span>
                 <span className="novapay:text-[13px] novapay:font-semibold">{item.symbol}</span>
-                <span className="novapay:text-[10px] novapay:text-[var(--tuwa-text-secondary)]">
+                <span className="novapay:max-w-full novapay:truncate novapay:text-[10px] novapay:text-[var(--tuwa-text-secondary)]">
                   {item.methods.length > 1 ? (
                     formatLabel(labels.method.networks, { count: item.methods.length })
                   ) : priceAdjustment(item.methods[0]) ? (
@@ -239,7 +240,7 @@ export function MethodScreen() {
               className="novapay:flex novapay:flex-col novapay:gap-1.5"
               itemClassName={(isSelected, method) =>
                 cn(
-                  'novapay:flex novapay:items-center novapay:gap-2.5 novapay:px-3 novapay:py-2',
+                  'novapay:flex novapay:items-center novapay:gap-2.5 novapay:px-3 novapay:py-2.5',
                   checkoutClassName(context, 'networkOption', { method, selected: isSelected }),
                 )
               }
@@ -252,18 +253,22 @@ export function MethodScreen() {
                     <span className="novapay:h-5 novapay:w-5 novapay:shrink-0">
                       <NetworkIcon chainId={toEvmChainId(method.chainId) ?? method.chainId} />
                     </span>
-                    <span className="novapay:text-[13px] novapay:font-semibold">{networkName(method.chainId)}</span>
-                    <span className="novapay:ml-auto novapay:flex novapay:flex-wrap novapay:justify-end novapay:gap-1.5">
-                      {wallet?.chainId === method.chainId && <Badge tone="neutral">{labels.method.yourWallet}</Badge>}
-                      {method.featured && <Badge tone="accent">{labels.method.popular}</Badge>}
-                      <Adjustment method={method} labels={labels} />
-                      {method.gasless === 'auto' ? (
-                        <Badge tone="success">{labels.method.noGasFee}</Badge>
-                      ) : (
-                        <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
-                          {labels.method.buyerPaysGas}
-                        </span>
-                      )}
+                    {/* The name, and under it what the network costs and why it stands out: one layout at every width
+                        and in every language */}
+                    <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col novapay:gap-1">
+                      <span className="novapay:text-[13px] novapay:font-semibold">{networkName(method.chainId)}</span>
+                      <span className="novapay:flex novapay:flex-wrap novapay:items-center novapay:gap-1.5">
+                        {wallet?.chainId === method.chainId && <Badge tone="neutral">{labels.method.yourWallet}</Badge>}
+                        {method.featured && <Badge tone="accent">{labels.method.popular}</Badge>}
+                        <Adjustment method={method} labels={labels} />
+                        {method.gasless === 'auto' ? (
+                          <Badge tone="success">{labels.method.noGasFee}</Badge>
+                        ) : (
+                          <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
+                            {labels.method.buyerPaysGas}
+                          </span>
+                        )}
+                      </span>
                     </span>
                     <RadioDot selected={isSelected} />
                   </>

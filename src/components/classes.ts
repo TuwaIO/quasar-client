@@ -9,6 +9,13 @@ export const iconButton = `novapay:inline-flex novapay:h-7 novapay:min-w-7 novap
 export const mono = 'novapay:font-mono novapay:tabular-nums';
 
 /**
+ * The heading of a screen or a question: bold mono, its lines balanced when it wraps. `novapay-title` gives a wrapped
+ * heading room between its lines (`styles/app.css`): the `font-mono` rule of `@tuwaio/nova-core` sets a line height of
+ * 1. @internal
+ */
+export const screenTitle = `novapay-title ${mono} novapay:m-0 novapay:text-base novapay:font-bold novapay:text-balance novapay:outline-none`;
+
+/**
  * Props of the heading of a screen: it takes the focus when the screen changes (`tabIndex` -1, out of the Tab order),
  * so screen readers read the new step (WCAG 2.4.3). @internal
  */

@@ -23,7 +23,7 @@ import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
-import { mono, screenHeading } from './classes';
+import { screenHeading, screenTitle } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
 import { LeaveDialog } from './LeaveDialog';
@@ -128,10 +128,7 @@ function ErrorScreen() {
       className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:p-8 novapay:text-center"
     >
       <ExclamationTriangleIcon aria-hidden className="novapay:h-7 novapay:w-7 novapay:text-[var(--tuwa-error-icon)]" />
-      <h2
-        {...screenHeading}
-        className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold novapay:outline-none')}
-      >
+      <h2 {...screenHeading} className={screenTitle}>
         {labels.error.title}
       </h2>
       <p className="novapay:m-0 novapay:max-w-sm novapay:text-[13px] novapay:text-[var(--tuwa-text-secondary)]">

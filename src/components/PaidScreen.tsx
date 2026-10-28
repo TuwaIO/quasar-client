@@ -9,7 +9,7 @@ import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal } from '../utils/format';
 import { methodFamily } from '../utils/methods';
-import { focusRing, mono, primaryAction, screenHeading, secondaryAction } from './classes';
+import { focusRing, mono, primaryAction, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
 import {
   DetailRow,
@@ -60,10 +60,7 @@ export function PaidScreen() {
     <TxLabels>
       <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center">
         <TxStatusVisual isSucceed {...child?.statusVisual} />
-        <h2
-          {...screenHeading}
-          className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold novapay:outline-none')}
-        >
+        <h2 {...screenHeading} className={screenTitle}>
           {labels.paid.title}
         </h2>
         <div>

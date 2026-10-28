@@ -4,7 +4,7 @@ import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState 
 
 import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
 import type { CheckoutContextValue } from './checkoutContext';
-import { focusRing, iconButton, mono, primaryAction, screenHeading, secondaryAction } from './classes';
+import { focusRing, iconButton, mono, primaryAction, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName, type CheckoutPrimaryButtonProps } from './customization';
 
 // A class of the checkout's customization; none outside a checkout (RefundButton)
@@ -32,10 +32,7 @@ export function ScreenContent({
       )}
     >
       <div>
-        <h2
-          {...screenHeading}
-          className={cn(mono, 'novapay:m-0 novapay:text-base novapay:font-bold novapay:outline-none')}
-        >
+        <h2 {...screenHeading} className={screenTitle}>
           {title}
         </h2>
         {subtitle && (

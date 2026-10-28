@@ -18,7 +18,7 @@ import { formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from '../
 import { networkName, payerFor } from '../utils/methods';
 import { contactHref, underpaidRest } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
-import { mono, screenHeading, secondaryAction } from './classes';
+import { mono, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
 import { PrimaryButton, ScreenFooter } from './ScreenParts';
 
@@ -252,10 +252,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         ) : (
           <Icon aria-hidden className={cn('novapay:h-12 novapay:w-12', tone, iconClassName)} />
         )}
-        <h2
-          {...screenHeading}
-          className={cn(mono, 'novapay:m-0 novapay:max-w-sm novapay:text-base novapay:font-bold novapay:outline-none')}
-        >
+        <h2 {...screenHeading} className={cn(screenTitle, 'novapay:max-w-sm')}>
           {title}
         </h2>
         {body}

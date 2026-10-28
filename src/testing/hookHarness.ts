@@ -82,7 +82,8 @@ export function render<P>(component: (props: P, ref?: null) => unknown, props: P
 
 /** Runs the effect cleanups and forgets the state. */
 export function unmount(): void {
-  for (const slot of slots) if (typeof slot.cleanup === 'function') slot.cleanup();
+  for (const slot of slots) if (typeof slot?.cleanup === 'function') slot.cleanup();
   slots.length = 0;
+  index = 0;
   pendingEffects.length = 0;
 }
