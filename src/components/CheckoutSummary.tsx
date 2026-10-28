@@ -12,6 +12,11 @@ import { checkoutClassName } from './customization';
 
 /** States in which the invoice can still be paid, so its deadline counts down. */
 const PAYABLE = new Set(['open', 'processing', 'underpaid']);
+/** Steps at which the buyer can still pay; once the payment is sent (confirm) or settled, the deadline is past concern. */
+const PAYING_SCREENS = new Set(['loading', 'error', 'buyer', 'method', 'pay', 'qr', 'underpaid']);
+
+/** Whether the deadline counts: the invoice can be paid and the buyer has not sent the payment yet. */
+const countsDown = (status: string, screen: string) => PAYABLE.has(status) && PAYING_SCREENS.has(screen);
 
 /** The host name of a website link, for display. */
 const hostOf = (url: string) => {
@@ -143,11 +148,11 @@ export function SellerDetailsContent({ checkout, labels }: { checkout: CheckoutV
   );
 }
 
-/** The countdown to the invoice deadline, while the invoice can be paid. @internal */
+/** The countdown to the invoice deadline, while the buyer can still pay the invoice. @internal */
 export function DeadlineTimer() {
-  const { checkout, labels, locale, now } = useCheckoutContext();
+  const { checkout, labels, locale, now, screen } = useCheckoutContext();
   const dueAt = checkout?.invoice.dueAt;
-  if (!checkout || !dueAt || !PAYABLE.has(checkout.invoice.status)) return null;
+  if (!checkout || !dueAt || !countsDown(checkout.invoice.status, screen)) return null;
   const date = new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
@@ -342,11 +347,11 @@ export function CheckoutSummary() {
  * @returns The compact order.
  */
 export function CompactSummary({ className }: { className?: string } = {}) {
-  const { checkout, labels, locale, now } = useCheckoutContext();
+  const { checkout, labels, locale, now, screen } = useCheckoutContext();
   if (!checkout) return null;
   const { invoice } = checkout;
   const totals = invoiceTotals(invoice);
-  const dueAt = invoice.dueAt && PAYABLE.has(invoice.status) ? Date.parse(invoice.dueAt) : null;
+  const dueAt = invoice.dueAt && countsDown(invoice.status, screen) ? Date.parse(invoice.dueAt) : null;
   return (
     <div
       className={cn(

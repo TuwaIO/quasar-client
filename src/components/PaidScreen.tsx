@@ -25,7 +25,8 @@ import { TxLabels } from './TxLabels';
 /**
  * The paid outcome: the amount, network, time and transaction, the steps done, a refund made later, the receipt to
  * download, the automatic payments offer of a subscription, and the way back to the seller (`successUrl`) with a
- * visible countdown and "Stay here" (WCAG 2.2.1).
+ * visible countdown and "Stay here" (WCAG 2.2.1). In a modal it offers Close instead: the page under it is the
+ * seller's, and loading it again would close everything at once.
  *
  * Side effects: navigates to the seller's `successUrl` when the countdown ends.
  *
@@ -33,13 +34,16 @@ import { TxLabels } from './TxLabels';
  */
 export function PaidScreen() {
   const context = useCheckoutContext();
-  const { checkout, state, labels, locale, now, close, wallet, adapterFor, setAutoPay, autoReturnSeconds } = context;
+  const { checkout, state, labels, locale, now, close, wallet, adapterFor, setAutoPay, autoReturnSeconds, display } =
+    context;
   const child = context.customization.childCustomizations;
   const facts = usePaymentFacts();
   // The time the checkout saw the payment settle: the view carries no payment time
   const [paidAt] = useState(now);
   const merchant = checkout?.merchant.name ?? '';
-  const successUrl = checkout?.invoice.successUrl ?? null;
+  // A modal belongs to the page under it, the seller's: it closes rather than loads that page again, unless the app
+  // asks for the return (autoReturnSeconds)
+  const successUrl = display === 'modal' && autoReturnSeconds === 0 ? null : (checkout?.invoice.successUrl ?? null);
   const offer = checkout?.autoCharge ?? null;
   const offerMethod =
     offer?.status === 'available' ? checkout?.methods.find((item) => item.id === offer.methodId) : undefined;
@@ -150,7 +154,12 @@ export function PaidScreen() {
             )}
           </>
         ) : (
-          close && <SecondaryButton onClick={close}>{labels.common.close}</SecondaryButton>
+          close &&
+          (canAutoPay ? (
+            <SecondaryButton onClick={close}>{labels.common.close}</SecondaryButton>
+          ) : (
+            <PrimaryButton onClick={close}>{labels.common.close}</PrimaryButton>
+          ))
         )}
       </ScreenFooter>
     </TxLabels>

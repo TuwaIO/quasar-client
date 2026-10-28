@@ -111,6 +111,7 @@ export function checkoutContextValue(
     setAutoPay: vi.fn(),
     openInvoice: vi.fn(),
     autoReturnSeconds: 5,
+    display: 'inline',
     customization,
     ...extra,
   } as CheckoutContextValue;

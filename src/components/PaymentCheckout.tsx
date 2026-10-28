@@ -86,7 +86,8 @@ export interface PaymentCheckoutProps {
   onPaid?: (invoice: CheckoutView['invoice']) => void;
   /**
    * Seconds before the paid outcome sends the buyer back to the invoice's `successUrl`, with a visible countdown and
-   * "Stay here" (default `5`; `0` for no automatic return).
+   * "Stay here" (`0` for no automatic return). Default `5` on a page; `0` in a modal, whose paid outcome offers Close
+   * instead, since the page under it is the seller's (handle the payment there with `onPaid`).
    */
   autoReturnSeconds?: number;
   /** Replaces the link of "Contact <seller>" (the seller's support email, else site) with the app's own handler. */
@@ -305,7 +306,7 @@ export function PaymentCheckout({
   payUrl,
   onConnectWallet,
   onPaid,
-  autoReturnSeconds = 5,
+  autoReturnSeconds,
   onContact,
   className,
   customization,
@@ -441,7 +442,8 @@ export function PaymentCheckout({
     setAutoPay,
     openInvoice: (next) => setOpened({ from: token, token: next }),
     onContact,
-    autoReturnSeconds,
+    autoReturnSeconds: autoReturnSeconds ?? (display === 'modal' ? 0 : 5),
+    display,
     customization: parts,
   };
   // The classes of the block go where it shows: the frame in the dialog, the section in the page

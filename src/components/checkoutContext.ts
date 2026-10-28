@@ -7,6 +7,7 @@ import type { CheckoutScreen } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
 import type { CheckoutWallet, PaymentFamily } from '../utils/methods';
 import type { PaymentCheckoutCustomization } from './customization';
+import type { PaymentCheckoutDisplay } from './PaymentCheckout';
 
 /** What the parts of a checkout share: its store and state, the screen, the language and its labels. */
 export interface CheckoutContextValue {
@@ -87,6 +88,11 @@ export interface CheckoutContextValue {
   onContact?: () => void;
   /** Seconds before the paid outcome sends the buyer back to the seller; `0` for no automatic return. */
   autoReturnSeconds: number;
+  /**
+   * How the checkout shows (`display` of `PaymentCheckout`): a modal belongs to the page under it, so its paid outcome
+   * closes it instead of sending the buyer back to the seller's page.
+   */
+  display: PaymentCheckoutDisplay;
   /** Class name functions and replacement components of the parts (`customization` of `PaymentCheckout`). */
   customization: PaymentCheckoutCustomization;
 }
