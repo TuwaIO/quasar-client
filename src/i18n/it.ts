@@ -140,6 +140,7 @@ export const itLabels: NovaPaymentsLabels = {
     tryAgain: 'Riprova',
     failed:
       'Il pagamento non è riuscito su {network}. È stata spesa solo la commissione di rete; la fattura è ancora aperta.',
+    mismatch: 'Questa transazione non paga la fattura. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
     wrongCluster: "{wallet} è su un'altra rete, quindi non è stato pagato nulla. Passalo a {network} e paga di nuovo.",
@@ -264,16 +265,21 @@ export const itLabels: NovaPaymentsLabels = {
     expiredNote:
       'Un pagamento inviato dopo la scadenza resta in sospeso finché il venditore non lo rimborsa o lo accetta.',
     expiredWhileConfirming:
-      'La fattura si è chiusa mentre il pagamento veniva confermato. Se arriva, {merchant} lo accetta o lo restituisce.',
+      'La fattura si è chiusa mentre il pagamento veniva confermato. Se arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.',
     expiredAfterQr: 'Se hai pagato con il codice QR, {merchant} accetta il pagamento quando arriva o lo restituisce.',
     expiredUnconfirmed:
-      'Non è stato possibile confermare il pagamento. Controlla il wallet: se il pagamento è partito, {merchant} lo accetta o lo restituisce.',
+      'Non è stato ancora possibile confermare il pagamento. Controlla il wallet: se il pagamento è partito, Quasar lo ricontrolla per 24 ore. Se arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.',
     unconfirmedTitle: 'Non è stato possibile confermare il pagamento',
     unconfirmedText: 'Controlla il wallet prima di pagare di nuovo: il pagamento potrebbe essere ancora in arrivo.',
-    unconfirmedNote: 'Questa pagina continua a seguire la fattura: se il pagamento arriva, risulterà pagata.',
+    unconfirmedNote:
+      'Quasar ricontrolla il tuo pagamento per 24 ore. Se arriva, viene registrato e mostrato a {merchant}.',
+    unconfirmedRetrying:
+      'Questa pagina continua a consegnare il pagamento a Quasar. Tienila aperta finché il pagamento non compare qui.',
     unconfirmedPayAgain: 'Il pagamento non è partito dal mio wallet',
     cancelledTitle: 'Questa fattura è stata annullata',
     cancelledText: "{merchant} l'ha annullata; non ti è stato addebitato nulla.",
+    cancelledWhilePaying:
+      "{merchant} l'ha annullata. Se il tuo pagamento arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.",
     replacedTitle: '{merchant} ha corretto questa fattura',
     replacedText: 'La sostituisce {number}. Questa fattura non si può più pagare.',
     replacedPaid: 'Hai già pagato? Il tuo pagamento è passato alla nuova fattura.',

@@ -9,6 +9,8 @@ import {
   groupMethodsByToken,
   isFinalPaymentFailure,
   isInvoicePaymentOnTheWay,
+  isInvoicePaymentUnresolved,
+  isMovedMoneyFailure,
   isPaymentOnTheWay,
   isQuoteEnding,
   screensPayingWallets,
@@ -338,6 +340,40 @@ describe('sentBeforeDeadline', () => {
     expect(sentBeforeDeadline({ state: {}, checkout: reporting(), handedOverAt: AFTER, dueAt: DUE })).toBe(false);
     expect(sentBeforeDeadline({ state: {}, checkout: reporting(), handedOverAt: null, dueAt: DUE })).toBe(false);
   });
+
+  // F7: Quasar says per payment whether it counts as sent in time (`onTimeTxKeys`, matched by the store as
+  // `paymentSentInTime`); its word on this page's payment decides over the clock of the page
+  it("takes Quasar's word on this page's payment over the clock of the page", () => {
+    const own = (paymentSentInTime: boolean | null) => ({
+      paymentOnTheWay: true,
+      paymentSentInTime,
+      paymentCountsUntil: UNTIL,
+    });
+    expect(sentBeforeDeadline({ state: own(true), checkout: reporting(UNTIL), handedOverAt: AFTER, dueAt: DUE })).toBe(
+      true,
+    );
+    expect(
+      sentBeforeDeadline({ state: own(false), checkout: reporting(UNTIL), handedOverAt: BEFORE, dueAt: DUE }),
+    ).toBe(false);
+    // Not reported yet: the rules above
+    expect(sentBeforeDeadline({ state: own(null), checkout: reporting(UNTIL), handedOverAt: AFTER, dueAt: DUE })).toBe(
+      false,
+    );
+    expect(sentBeforeDeadline({ state: own(null), checkout: reporting(UNTIL), handedOverAt: BEFORE, dueAt: DUE })).toBe(
+      true,
+    );
+  });
+
+  it('reads the flag only while a payment of this page is on its way, not for one the store found', () => {
+    expect(
+      sentBeforeDeadline({
+        state: { paymentOnTheWay: false, paymentSentInTime: true, paymentCountsUntil: null },
+        checkout: reporting(null),
+        handedOverAt: null,
+        dueAt: DUE,
+      }),
+    ).toBe(false);
+  });
 });
 
 // M4: only a rejection Quasar calls final (it carries its reason) means that the payment can never arrive
@@ -352,5 +388,51 @@ describe('isFinalPaymentFailure', () => {
       false,
     );
     expect(isFinalPaymentFailure(null)).toBe(false);
+  });
+
+  // F9: a transaction that does not pay the invoice can never pay it either
+  it('is true for a transaction that does not pay the invoice', () => {
+    expect(
+      isFinalPaymentFailure({ code: 'payment_mismatch', message: '', reason: 'no_matching_transfer' } as never),
+    ).toBe(true);
+  });
+});
+
+// F9: a transaction that succeeded on chain without paying the invoice may have moved money
+describe('isMovedMoneyFailure', () => {
+  it('is true for payment_mismatch, and for a moved-money reason an older store reports as payment_failed', () => {
+    expect(isMovedMoneyFailure({ code: 'payment_mismatch', message: '' } as never)).toBe(true);
+    for (const reason of [
+      'no_matching_transfer',
+      'reference_missing',
+      'too_early',
+      'tx_already_used',
+      'payer_mismatch',
+      'native_from_contract_unverifiable',
+      'invoice_not_payable',
+    ]) {
+      expect(isMovedMoneyFailure({ code: 'payment_failed', message: '', reason } as never)).toBe(true);
+    }
+  });
+
+  it('is false for a transaction that did not go through, and for any other error', () => {
+    expect(isMovedMoneyFailure({ code: 'payment_failed', message: '', reason: 'reverted' } as never)).toBe(false);
+    expect(isMovedMoneyFailure({ code: 'payment_failed', message: '' })).toBe(false);
+    expect(isMovedMoneyFailure({ code: 'payment_unconfirmed', message: '', reason: 'timeout' } as never)).toBe(false);
+    expect(isMovedMoneyFailure(null)).toBe(false);
+  });
+});
+
+// F3: Quasar reports payments that may still arrive with no time limit (`unresolvedPayments`)
+describe('isInvoicePaymentUnresolved', () => {
+  it("takes the store's field, else the checkout's unresolvedPayments", () => {
+    expect(isInvoicePaymentUnresolved({ invoicePaymentUnresolved: true }, view())).toBe(true);
+    expect(
+      isInvoicePaymentUnresolved({ invoicePaymentUnresolved: false }, view({ unresolvedPayments: 1 } as never)),
+    ).toBe(false);
+    expect(isInvoicePaymentUnresolved({}, view({ unresolvedPayments: 2 } as never))).toBe(true);
+    expect(isInvoicePaymentUnresolved({}, view({ unresolvedPayments: 0 } as never))).toBe(false);
+    expect(isInvoicePaymentUnresolved({}, view())).toBe(false);
+    expect(isInvoicePaymentUnresolved({}, null)).toBe(false);
   });
 });

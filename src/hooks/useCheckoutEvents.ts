@@ -2,7 +2,12 @@ import type { CheckoutState } from '@tuwaio/quasar-sdk/checkout';
 import { useEffect, useEffectEvent, useRef } from 'react';
 
 import type { PaymentCheckoutHandlers } from '../components/customization';
-import { type CheckoutScreen, isInvoicePaymentOnTheWay, isPaymentOnTheWay } from '../utils/checkout';
+import {
+  type CheckoutScreen,
+  isInvoicePaymentOnTheWay,
+  isInvoicePaymentUnresolved,
+  isPaymentOnTheWay,
+} from '../utils/checkout';
 
 /** Parameters of {@link useCheckoutEvents}. */
 export interface UseCheckoutEventsParams {
@@ -20,7 +25,7 @@ export interface UseCheckoutEventsParams {
  * Tells the app what happened in a checkout through its handlers: `onStatusChange` with the first phase and invoice
  * status and on every change, `onError` once per new error, and `onExpire` when the locked price runs out (at the
  * tick that crosses its end) and when the invoice expires, with whether a payment is on its way (one this page handed
- * over, or one of the invoice Quasar reports, as on a reopened page).
+ * over, one of the invoice Quasar reports, as on a reopened page, or one Quasar could not confirm yet and reads again).
  * Handlers that change between renders are called in their latest version.
  *
  * @param params - See {@link UseCheckoutEventsParams}.
@@ -44,7 +49,10 @@ export function useCheckoutEvents({ state, screen, now, handlers }: UseCheckoutE
   const expire = useEffectEvent((kind: 'quote' | 'invoice') =>
     handlers?.onExpire?.({
       kind,
-      paymentOnTheWay: isPaymentOnTheWay(state) || isInvoicePaymentOnTheWay(state, state.checkout),
+      paymentOnTheWay:
+        isPaymentOnTheWay(state) ||
+        isInvoicePaymentOnTheWay(state, state.checkout) ||
+        isInvoicePaymentUnresolved(state, state.checkout),
     }),
   );
   useEffect(() => {

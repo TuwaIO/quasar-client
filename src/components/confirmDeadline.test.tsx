@@ -41,6 +41,7 @@ function confirmingAt(
     invoicePaymentOnTheWay,
     paymentCountsUntil,
     reportedCountsUntil,
+    paymentSentInTime,
   }: {
     status?: string;
     txKey?: string | null;
@@ -53,6 +54,8 @@ function confirmingAt(
     paymentCountsUntil?: string | null;
     /** `paymentCountsUntil` of the loaded invoice (`undefined`: a Quasar that does not report it). */
     reportedCountsUntil?: string | null;
+    /** `paymentSentInTime` of a current store: Quasar's word on this page's payment. */
+    paymentSentInTime?: boolean | null;
   } = {},
 ) {
   const checkout = {
@@ -75,6 +78,7 @@ function confirmingAt(
     ...(paymentOnTheWay === undefined ? {} : { paymentOnTheWay }),
     ...(invoicePaymentOnTheWay === undefined ? {} : { invoicePaymentOnTheWay }),
     ...(paymentCountsUntil === undefined ? {} : { paymentCountsUntil }),
+    ...(paymentSentInTime === undefined ? {} : { paymentSentInTime }),
   } as never;
   ctx = fixture.checkoutContextValue(
     {},
@@ -195,6 +199,32 @@ describe("the confirm step takes Quasar's word on time", () => {
       paymentOnTheWay: true,
       paymentCountsUntil: null,
       reportedCountsUntil: null,
+    });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(NEUTRAL);
+  });
+});
+
+// F7: Quasar says per payment whether it counts as sent in time (`onTimeTxKeys`); the page clock never overrides it
+describe("the confirm step takes Quasar's word on this page's payment", () => {
+  const UNTIL = '2026-10-29T08:58:00Z';
+
+  it('says "sent before the deadline" when Quasar lists the payment, although the page clock says it was late', () => {
+    confirmingAt('2026-10-29T08:40:00Z', DUE, {
+      handedOverAt: '2026-10-29T08:28:30Z',
+      paymentOnTheWay: true,
+      paymentCountsUntil: UNTIL,
+      reportedCountsUntil: UNTIL,
+      paymentSentInTime: true,
+    });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.afterDeadline);
+  });
+
+  it('gives the neutral note when Quasar lists the payments sent in time without it', () => {
+    confirmingAt('2026-10-29T08:40:00Z', DUE, {
+      paymentOnTheWay: true,
+      paymentCountsUntil: UNTIL,
+      reportedCountsUntil: UNTIL,
+      paymentSentInTime: false,
     });
     expect(noteOf(render(ConfirmScreen, {}))).toBe(NEUTRAL);
   });

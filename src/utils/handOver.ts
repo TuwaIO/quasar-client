@@ -46,15 +46,18 @@ const SETTLED: CheckoutPhase[] = ['paid', 'underpaid', 'held', 'refunded', 'expi
 
 /**
  * Whether a sent payment still needs tracking when the checkout closes: Quasar has not settled it, and it did not
- * fail on-chain.
+ * fail on-chain or turn out not to pay the invoice.
  *
  * @param state - The `phase` and `error` of the checkout store.
  * @param state.phase - Where the payment stands.
- * @param state.error - The last failure; `payment_failed` means the transaction failed on-chain.
+ * @param state.error - The last failure; `payment_failed` means the transaction failed on-chain, `payment_mismatch`
+ * that it succeeded without paying the invoice: Quasar already has the final word on both.
  * @returns `true` to hand it over.
  */
 export function shouldHandOver(state: { phase: CheckoutPhase; error: CheckoutError | null }): boolean {
-  return !SETTLED.includes(state.phase) && state.error?.code !== 'payment_failed';
+  // `payment_mismatch` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
+  const code: string | undefined = state.error?.code;
+  return !SETTLED.includes(state.phase) && code !== 'payment_failed' && code !== 'payment_mismatch';
 }
 
 /** What {@link handOverPayment} needs. */

@@ -185,8 +185,9 @@ describe('an invoice that expired while the payment of this page was confirming'
   it('says that the payment, if it arrives, is accepted or returned by the seller', () => {
     expiredAfterSending(null);
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    // F2: Quasar records a payment that lands late, and the merchant sees it
     expect(text).toContain(
-      'The invoice closed while your payment was confirming. If it arrives, Cosmos accepts it or returns it.',
+      'The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
     );
     expect(text).not.toContain('nothing was charged');
     expect(text).not.toContain('Ask Cosmos for a new one');
@@ -243,7 +244,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     };
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
     expect(text).toContain(
-      'Your payment could not be confirmed. Check your wallet: if the payment left it, Cosmos accepts it or returns it.',
+      'Your payment could not be confirmed yet. Check your wallet: if the payment left it, Quasar checks it again for 24 hours. If it arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
     );
     expect(text).not.toContain('nothing was charged');
   });
@@ -262,25 +263,142 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(text).toContain('The invoice closed while your payment was confirming.');
     expect(text).not.toContain('nothing was charged');
   });
+
+  // F3: a payment Quasar reports as unresolved (stuck past the tracking ceiling, or read again for 24 hours) with none
+  // on its way, also on a reopened page that never handed it over
+  it('never says that nothing was charged while Quasar reports an unresolved payment', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', invoicePaymentUnresolved: true } as never };
+    let text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('Your payment could not be confirmed yet. Check your wallet');
+    expect(text).not.toContain('nothing was charged');
+    // An older store: the unresolved payments of the checkout it read
+    show('expired', { status: 'expired', amountPaid: null, unresolvedPayments: 1 } as never);
+    ctx = { ...ctx, state: { ...ctx.state, phase: 'expired' } as never };
+    text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('Your payment could not be confirmed yet. Check your wallet');
+    expect(text).not.toContain('nothing was charged');
+  });
+
+  // F9: the transaction succeeded on chain without paying the invoice, and may have moved money
+  it('says that the transaction does not pay the invoice, never that nothing was charged', () => {
+    for (const error of [
+      { code: 'payment_mismatch', message: '', reason: 'no_matching_transfer' },
+      // An older store reports it as payment_failed with the reason
+      { code: 'payment_failed', message: '', reason: 'reference_missing' },
+    ]) {
+      show('expired', { status: 'expired', amountPaid: null });
+      ctx = {
+        ...ctx,
+        paymentSent: false,
+        state: { ...ctx.state, phase: 'expired', paymentOnTheWay: false, error } as never,
+      };
+      const text = textOf(OutcomeScreen({ kind: 'expired' }));
+      expect(text).toContain('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
+      expect(text).not.toContain('nothing was charged');
+      expect(text).not.toContain('did not go through');
+    }
+  });
+});
+
+// F3: a cancelled invoice never says that nothing was charged while a payment may still arrive
+describe('a cancelled invoice', () => {
+  it('says that nothing was charged when no payment was made', () => {
+    show('cancelled', { status: 'cancelled', amountPaid: null });
+    expect(textOf(OutcomeScreen({ kind: 'cancelled' }))).toContain('Cosmos cancelled it; nothing was charged.');
+  });
+
+  it('says what happens to a payment that may still arrive', () => {
+    for (const extra of [
+      { paymentSent: true },
+      { state: { invoicePaymentUnresolved: true } },
+      { state: { paymentOnTheWay: true } },
+      { state: { error: { code: 'payment_unconfirmed', message: '', reason: 'timeout' } } },
+    ]) {
+      show('cancelled', { status: 'cancelled', amountPaid: null });
+      ctx = {
+        ...ctx,
+        paymentSent: extra.paymentSent ?? false,
+        state: { ...ctx.state, phase: 'cancelled', ...extra.state } as never,
+      };
+      const text = textOf(OutcomeScreen({ kind: 'cancelled' }));
+      expect(text).toContain(
+        'Cosmos cancelled it. If your payment arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
+      );
+      expect(text).not.toContain('nothing was charged');
+    }
+  });
+
+  it('says that the transaction does not pay the invoice after a mismatch', () => {
+    show('cancelled', { status: 'cancelled', amountPaid: null });
+    const error = { code: 'payment_mismatch', message: '', reason: 'no_matching_transfer' };
+    ctx = { ...ctx, state: { ...ctx.state, phase: 'cancelled', error } as never };
+    const text = textOf(OutcomeScreen({ kind: 'cancelled' }));
+    expect(text).toContain('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
+    expect(text).not.toContain('nothing was charged');
+  });
+});
+
+// F9: the pay step after a transaction that does not pay the invoice
+describe('the pay step after a transaction that does not pay the invoice', () => {
+  it('says so and whom to contact, never that it failed or that only the fee was spent', () => {
+    show('pay');
+    ctx = {
+      ...ctx,
+      state: {
+        ...ctx.state,
+        error: { code: 'payment_mismatch', message: '', reason: 'no_matching_transfer' },
+      } as never,
+    };
+    const text = textOf(render(PayScreen, {}));
+    expect(text).toContain('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
+    expect(text).not.toContain('Only the network fee was spent');
+  });
 });
 
 // H1, owner 2026-10-28: a payment Quasar could not confirm (not found, no receipt in time, replaced) may still reach the
 // seller: the buyer checks the wallet before paying again, and the screen offers no payment
 describe('a payment Quasar could not confirm', () => {
-  const unconfirmedScreen = (payAgain?: () => void) => {
-    show('unconfirmed');
+  const unconfirmedScreen = (
+    payAgain?: () => void,
+    { reason = 'not_found', status = 'open' }: { reason?: string; status?: string } = {},
+  ) => {
+    show('unconfirmed', { status: status as never });
     ctx = {
       ...ctx,
       store: { getState: () => ({ ...fixture.fakeStore().actions, payAgain }) } as never,
       state: {
         ...ctx.state,
         phase: 'unconfirmed',
+        invoiceStatus: status,
         paymentOnTheWay: false,
-        error: { code: 'payment_unconfirmed', message: '', reason: 'not_found' },
+        error: { code: 'payment_unconfirmed', message: '', reason },
       } as never,
     };
     return OutcomeScreen({ kind: 'unconfirmed' });
   };
+
+  // F2: Quasar reads such a payment again for 24 hours and records it if it arrives; the page promises no more
+  it('says that Quasar checks the payment again and records it for the merchant if it arrives', () => {
+    expect(textOf(unconfirmedScreen())).toContain(
+      'Quasar checks your payment again for 24 hours. If it arrives, it is recorded and shown to Cosmos.',
+    );
+  });
+
+  // F8: the wallet sent the transaction, and the store keeps handing it over to Quasar, which has not received it yet
+  it('asks to keep the page open while the store hands the payment over again', () => {
+    const text = textOf(unconfirmedScreen(undefined, { reason: 'submit_retrying' }));
+    expect(text).toContain(
+      'This page keeps handing your payment over to Quasar. Keep it open until the payment shows here.',
+    );
+    expect(text).not.toContain('Quasar checks your payment again for 24 hours');
+  });
+
+  it('offers no payment on an invoice that can no longer be paid', () => {
+    const tree = unconfirmedScreen(vi.fn(), { reason: 'submit_retrying', status: 'expired' });
+    expect(fixture.ofType(tree, PrimaryButton)).toHaveLength(0);
+    expect(fixture.ofType(tree, SecondaryButton)).toHaveLength(0);
+  });
 
   it('asks the buyer to check the wallet before paying again', () => {
     const text = textOf(unconfirmedScreen());

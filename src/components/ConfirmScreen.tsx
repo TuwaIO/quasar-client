@@ -21,9 +21,10 @@ const WAITING_STATUSES: ReadonlySet<string> = new Set(['open', 'underpaid']);
  * again: its note asks the buyer to wait for it. When the invoice deadline passes while a payment is on its way (the
  * countdown of the order stays at 00:00), and the invoice is still `open` or `underpaid`, the note follows the payment:
  * sent before the deadline, it says that the payment was sent in time and is being confirmed (Quasar keeps the invoice
- * open for a payment it learned of before the deadline while it confirms, and says so with `paymentCountsUntil`; with a
- * Quasar that does not, a payment this page handed over before the deadline by its clock); otherwise it says that the
- * seller accepts or returns a payment that arrives after the invoice closes. A payment that failed or settled is no
+ * open for a payment it learned of before the deadline while it confirms: for this page's payment Quasar's word on it
+ * decides, `paymentSentInTime` of the checkout store, whatever the clock of the page says; else `paymentCountsUntil`;
+ * with a Quasar that reports neither, a payment this page handed over before the deadline by its clock); otherwise it
+ * says that the seller accepts or returns a payment that arrives after the invoice closes. A payment that failed or settled is no
  * longer on its way, and the usual note comes back.
  *
  * @returns The confirm step.

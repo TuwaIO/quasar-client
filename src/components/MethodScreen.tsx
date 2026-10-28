@@ -382,7 +382,7 @@ export function MethodScreen() {
           <ScreenError>{qrAvailable ? labels.pay.connectUnavailable : labels.method.methodUnavailable}</ScreenError>
         )}
         {state.error && state.phase === 'selectMethod' && (
-          <ScreenError>{methodErrorText(state.error, labels)}</ScreenError>
+          <ScreenError>{methodErrorText(state.error, labels, checkout.merchant.name)}</ScreenError>
         )}
       </ScreenContent>
       <ScreenFooter>

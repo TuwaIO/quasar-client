@@ -257,6 +257,13 @@ export type NovaPaymentsLabels = {
     tryAgain: string;
     /** The transaction failed: `{network}` */
     failed: string;
+    /**
+     * The transaction succeeded on chain but does not pay the invoice (a wrong amount, asset or recipient, no Solana Pay
+     * reference, sent before the price was locked…): it may have moved money, so never say that it failed or that
+     * nothing was charged. Also on the method step and on an expired or cancelled invoice: `{merchant}` (default: `This
+     * transaction does not pay the invoice. If money left your wallet, contact {merchant}.`)
+     */
+    mismatch: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
@@ -494,8 +501,9 @@ export type NovaPaymentsLabels = {
     expiredNote: string;
     /**
      * Instead of `expiredText` and `expiredNote` when the invoice expired while the payment this page sent was still
-     * confirming: `{merchant}` (default: `The invoice closed while your payment was confirming. If it arrives,
-     * {merchant} accepts it or returns it.`)
+     * confirming: `{merchant}`. Quasar records a payment that arrives after the invoice closed and holds it for the
+     * seller (default: `The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to
+     * {merchant}, who accepts it or returns it.`)
      */
     expiredWhileConfirming: string;
     /**
@@ -506,8 +514,10 @@ export type NovaPaymentsLabels = {
     expiredAfterQr: string;
     /**
      * Instead of `expiredText` and `expiredNote` when the invoice expired after Quasar could not confirm the payment
-     * (not found, no receipt in time, replaced), which may still arrive: `{merchant}` (default: `Your payment could not
-     * be confirmed. Check your wallet: if the payment left it, {merchant} accepts it or returns it.`)
+     * (not found, no receipt in time, replaced), or while it reports a payment it reads again, which may still arrive:
+     * `{merchant}`. Quasar reads such a payment again for 24 hours (default: `Your payment could not be confirmed yet.
+     * Check your wallet: if the payment left it, Quasar checks it again for 24 hours. If it arrives, it is recorded and
+     * shown to {merchant}, who accepts it or returns it.`)
      */
     expiredUnconfirmed: string;
     /**
@@ -517,8 +527,17 @@ export type NovaPaymentsLabels = {
     unconfirmedTitle: string;
     /** Its text (default: `Check your wallet before paying again: your payment may still be on its way.`) */
     unconfirmedText: string;
-    /** Under it (default: `This page keeps following the invoice: if the payment arrives, it shows as paid.`) */
+    /**
+     * Under it: `{merchant}`. Quasar reads such a payment again for 24 hours (default: `Quasar checks your payment again
+     * for 24 hours. If it arrives, it is recorded and shown to {merchant}.`)
+     */
     unconfirmedNote: string;
+    /**
+     * Under it instead of `unconfirmedNote` while the checkout hands over again a transaction the wallet sent, which
+     * Quasar has not received yet (default: `This page keeps handing your payment over to Quasar. Keep it open until the
+     * payment shows here.`)
+     */
+    unconfirmedRetrying: string;
     /**
      * The button that goes back to the payment once the buyer checked the wallet (default: `The payment did not leave
      * my wallet`)
@@ -528,6 +547,12 @@ export type NovaPaymentsLabels = {
     cancelledTitle: string;
     /** Its text: `{merchant}` (default: `{merchant} cancelled it; nothing was charged.`) */
     cancelledText: string;
+    /**
+     * Instead of `cancelledText` while a payment may still arrive (on its way, not confirmed yet, read again by Quasar),
+     * which Quasar records and holds for the seller: `{merchant}` (default: `{merchant} cancelled it. If your payment
+     * arrives, it is recorded and shown to {merchant}, who accepts it or returns it.`)
+     */
+    cancelledWhilePaying: string;
     /** Heading of a corrected invoice: `{merchant}` (default: `{merchant} corrected this invoice`) */
     replacedTitle: string;
     /** Its text: `{number}` of the new invoice (default: `{number} replaces it. This invoice can no longer be paid.`) */

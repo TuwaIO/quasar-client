@@ -406,7 +406,9 @@ export function PaymentCheckout({
     return onClose;
   }, [display, onOpenChange, onClose]);
   // Before anything is sent the checkout asks first; once a transaction is on its way it closes at once
-  const close = closeNow && (() => (needsLeaveConfirm(store.getState().phase) ? setAskLeave(true) : closeNow()));
+  const close =
+    closeNow &&
+    (() => (needsLeaveConfirm(store.getState().phase, store.getState().error) ? setAskLeave(true) : closeNow()));
   const leave = askLeave
     ? {
         onStay: () => setAskLeave(false),
@@ -483,7 +485,7 @@ export function PaymentCheckout({
           // Escape and a click outside ask first too, while nothing is sent
           // Escape on the question to leave answers "Stay"
           if (!next && askLeave) return setAskLeave(false);
-          if (!next && needsLeaveConfirm(store.getState().phase)) return setAskLeave(true);
+          if (!next && needsLeaveConfirm(store.getState().phase, store.getState().error)) return setAskLeave(true);
           onOpenChange?.(next);
           if (!next) onClose?.();
         }}

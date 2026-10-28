@@ -56,6 +56,19 @@ describe('usePaymentSent', () => {
     expect(sentOn(first, stateOf('awaitingPayment', { paymentOnTheWay: false, error: failed }))).toBe(true);
   });
 
+  // F3: a payment Quasar reports as unresolved (stuck, or read again for 24 hours) may still arrive
+  it('counts a payment Quasar reports as unresolved, also after it stops reporting it', () => {
+    expect(sentOn(first, stateOf('expired', { paymentOnTheWay: false, invoicePaymentUnresolved: true }))).toBe(true);
+    expect(sentOn(first, stateOf('expired', { paymentOnTheWay: false, invoicePaymentUnresolved: false }))).toBe(true);
+  });
+
+  // F9: a transaction that does not pay the invoice never will
+  it('is false again once Quasar says that the transaction does not pay the invoice', () => {
+    sentOn(first, stateOf('confirming', { paymentOnTheWay: true }));
+    const mismatch = { code: 'payment_mismatch', message: '', reason: 'no_matching_transfer' };
+    expect(sentOn(first, stateOf('awaitingPayment', { paymentOnTheWay: false, error: mismatch }))).toBe(false);
+  });
+
   it('starts again for another invoice', () => {
     sentOn(first, stateOf('confirming', { paymentOnTheWay: true }));
     expect(sentOn(second, stateOf('selectMethod', { paymentOnTheWay: false }))).toBe(false);

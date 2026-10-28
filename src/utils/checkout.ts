@@ -301,8 +301,17 @@ export function isInvoicePaymentOnTheWay(
 
 /** What {@link sentBeforeDeadline} decides with. */
 export interface SentBeforeDeadlineParams {
-  /** The state of the checkout store: `paymentCountsUntil` of a current `@tuwaio/quasar-sdk`. */
-  state: object & { readonly paymentCountsUntil?: string | null };
+  /**
+   * The state of the checkout store: `paymentCountsUntil`, `paymentSentInTime` and `paymentOnTheWay` of a current
+   * `@tuwaio/quasar-sdk` (`txKey`/`txHash` with an older one).
+   */
+  state: object & {
+    readonly paymentCountsUntil?: string | null;
+    readonly paymentSentInTime?: boolean | null;
+    readonly paymentOnTheWay?: boolean;
+    readonly txKey?: string | null;
+    readonly txHash?: string | null;
+  };
   /** The checkout: its invoice's `paymentCountsUntil` tells whether Quasar reports it, and is read with an older store. */
   checkout: CheckoutView;
   /** When this page handed its payment over, by its clock; `null` when it does not know (a reload, another tab). */
@@ -312,15 +321,26 @@ export interface SentBeforeDeadlineParams {
 }
 
 /**
- * Whether the payment on its way counts as sent before the invoice deadline. Quasar says it with `paymentCountsUntil`
- * (it learned of a payment of the invoice before `dueAt` and waits for it): its word decides, except for a payment this
- * page handed over at or after the deadline, which Quasar holds even while it waits for another one. A Quasar that does
- * not report the field leaves the clock of the page: a payment this page handed over before the deadline.
+ * Whether the payment on its way counts as sent before the invoice deadline. For a payment this page handed over that
+ * Quasar already reported on, Quasar's word on that payment decides (`paymentSentInTime` of the checkout store: its keys
+ * are among the `onTimeTxKeys` Quasar learned of before `dueAt`), whatever the clock of the page says. Otherwise Quasar
+ * says it for the invoice with `paymentCountsUntil` (it learned of a payment of the invoice before `dueAt` and waits for
+ * it): its word decides, except for a payment this page handed over at or after the deadline by its clock, which Quasar
+ * holds even while it waits for another one. A Quasar that does not report the field leaves the clock of the page: a
+ * payment this page handed over before the deadline.
  *
  * @param params - See {@link SentBeforeDeadlineParams}.
  * @returns `true` to say that the payment was sent in time and is being confirmed.
  */
 export function sentBeforeDeadline({ state, checkout, handedOverAt, dueAt }: SentBeforeDeadlineParams): boolean {
+  // `paymentSentInTime` is newer than some `@tuwaio/quasar-sdk` alphas; it speaks of this page's payment only
+  const own = state.paymentSentInTime;
+  const ownOnItsWay = isPaymentOnTheWay({
+    paymentOnTheWay: state.paymentOnTheWay,
+    txKey: state.txKey ?? null,
+    txHash: state.txHash ?? null,
+  });
+  if (typeof own === 'boolean' && ownOnItsWay) return own;
   // `paymentCountsUntil` is newer than some `@tuwaio/quasar-sdk` alphas and Quasar versions: read it as optional
   const reported = (checkout.invoice as { paymentCountsUntil?: string | null }).paymentCountsUntil;
   if (reported === undefined) return handedOverAt !== null && handedOverAt < dueAt;
@@ -330,14 +350,71 @@ export function sentBeforeDeadline({ state, checkout, handedOverAt, dueAt }: Sen
 }
 
 /**
- * Whether the last error says that the payment can never pay the invoice: `payment_failed` with the reason Quasar gave
- * (reverted, a wrong amount or recipient…). A failure without a reason comes from a Quasar or a `@tuwaio/quasar-sdk`
- * that cannot tell a final failure from a payment that may still arrive, so it does not count.
+ * Whether the last error says that the payment can never pay the invoice: `payment_failed` (reverted, cancelled…) or
+ * `payment_mismatch` (it does not pay the invoice: a wrong amount or recipient…), with the reason Quasar gave. A failure
+ * without a reason comes from a Quasar or a `@tuwaio/quasar-sdk` that cannot tell a final failure from a payment that
+ * may still arrive, so it does not count.
  *
  * @param error - The store's error.
  * @returns `true` when the payment failed for good.
  */
 export function isFinalPaymentFailure(error: CheckoutError | null | undefined): boolean {
-  // `reason` is newer than some `@tuwaio/quasar-sdk` alphas: read it as optional
-  return error?.code === 'payment_failed' && Boolean((error as CheckoutError & { reason?: string }).reason);
+  // `reason` and `payment_mismatch` are newer than some `@tuwaio/quasar-sdk` alphas: read them as strings
+  const code: string | undefined = error?.code;
+  return (
+    (code === 'payment_failed' || code === 'payment_mismatch') &&
+    Boolean((error as CheckoutError & { reason?: string }).reason)
+  );
+}
+
+/**
+ * Rejection reasons of a transaction that succeeded on chain without paying the invoice, which Quasar marks
+ * `movedMoney`: an older `@tuwaio/quasar-sdk` reports them as `payment_failed`.
+ */
+const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
+  'no_matching_transfer',
+  'reference_missing',
+  'too_early',
+  'tx_already_used',
+  'payer_mismatch',
+  'native_from_contract_unverifiable',
+  'invoice_not_payable',
+]);
+
+/**
+ * Whether the last error says that the transaction succeeded on chain but does not pay the invoice (a wrong amount,
+ * asset or recipient, no Solana Pay reference, sent before the price was locked…): `payment_mismatch` of a current
+ * `@tuwaio/quasar-sdk`, or `payment_failed` with such a reason from an older one. It may have moved money, so the
+ * checkout never says that it did not go through or that nothing was charged: it says that the transaction does not pay
+ * the invoice, and to contact the seller if money left the wallet.
+ *
+ * @param error - The store's error.
+ * @returns `true` for a transaction that does not pay the invoice.
+ */
+export function isMovedMoneyFailure(error: CheckoutError | null | undefined): boolean {
+  // `payment_mismatch` and `reason` are newer than some `@tuwaio/quasar-sdk` alphas: read them as strings
+  const code: string | undefined = error?.code;
+  if (code === 'payment_mismatch') return true;
+  const reason = (error as (CheckoutError & { reason?: string }) | null | undefined)?.reason;
+  return code === 'payment_failed' && reason !== undefined && MOVED_MONEY_REASONS.has(reason);
+}
+
+/**
+ * Whether Quasar reports a payment of the invoice that may still arrive, with no time limit (one stuck past the minutes
+ * `pendingPayments` counts, or one whose result Quasar did not see and reads again for 24 hours):
+ * `invoicePaymentUnresolved` of the checkout store of a current `@tuwaio/quasar-sdk`, else the `unresolvedPayments` of
+ * the checkout it read. While it is `true` the checkout never says that nothing was charged.
+ *
+ * @param state - The state of the checkout store.
+ * @param state.invoicePaymentUnresolved - What the store says, when it has the field.
+ * @param checkout - What the checkout token opens; `null` until loaded.
+ * @returns Whether a payment of the invoice may still arrive.
+ */
+export function isInvoicePaymentUnresolved(
+  state: object & { readonly invoicePaymentUnresolved?: boolean },
+  checkout: CheckoutView | null,
+): boolean {
+  // `unresolvedPayments` is newer than some `@tuwaio/quasar-sdk` alphas and Quasar versions: read it as optional
+  const unresolved = (checkout?.invoice as { unresolvedPayments?: number } | undefined)?.unresolvedPayments ?? 0;
+  return state.invoicePaymentUnresolved ?? unresolved > 0;
 }

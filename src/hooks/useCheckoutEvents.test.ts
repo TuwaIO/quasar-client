@@ -99,4 +99,25 @@ describe('useCheckoutEvents', () => {
 
     expect(onExpire).toHaveBeenCalledExactlyOnceWith({ kind: 'invoice', paymentOnTheWay: true });
   });
+
+  // F3: a payment Quasar reports as unresolved may still arrive: the app should not offer a new invoice at once either
+  it('tells that a payment Quasar reports as unresolved may still arrive', () => {
+    const onExpire = vi.fn();
+    const handlers = { onExpire };
+    const unresolved = {
+      txKey: null,
+      paymentOnTheWay: false,
+      invoicePaymentOnTheWay: false,
+      invoicePaymentUnresolved: true,
+    } as unknown as Partial<CheckoutState>;
+    renderEvents({ state: state('unconfirmed' as never, unresolved), screen: 'unconfirmed', now: 0, handlers });
+    renderEvents({
+      state: state('expired', { ...unresolved, checkout: view('expired') }),
+      screen: 'expired',
+      now: 0,
+      handlers,
+    });
+
+    expect(onExpire).toHaveBeenCalledExactlyOnceWith({ kind: 'invoice', paymentOnTheWay: true });
+  });
 });

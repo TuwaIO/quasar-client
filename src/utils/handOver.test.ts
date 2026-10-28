@@ -92,4 +92,11 @@ describe('shouldHandOver', () => {
       shouldHandOver({ phase: 'awaitingPayment', error: { code: 'payment_failed', message: 'The payment failed' } }),
     ).toBe(false);
   });
+
+  // F9: Quasar already has the final word on a transaction that does not pay the invoice
+  it('keeps a transaction that does not pay the invoice', () => {
+    expect(
+      shouldHandOver({ phase: 'awaitingPayment', error: { code: 'payment_mismatch', message: '' } as never }),
+    ).toBe(false);
+  });
 });

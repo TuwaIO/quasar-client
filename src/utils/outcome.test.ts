@@ -33,9 +33,34 @@ describe('needsLeaveConfirm', () => {
       expect(needsLeaveConfirm(phase)).toBe(false);
     }
   });
+
+  // F9: the question says "Nothing is sent yet", which is not true after a transaction that may have moved money
+  it('does not ask after a transaction that does not pay the invoice', () => {
+    expect(needsLeaveConfirm('awaitingPayment', { code: 'payment_mismatch', message: '' } as never)).toBe(false);
+    expect(
+      needsLeaveConfirm('selectMethod', { code: 'payment_failed', message: '', reason: 'too_early' } as never),
+    ).toBe(false);
+    expect(
+      needsLeaveConfirm('awaitingPayment', { code: 'payment_failed', message: '', reason: 'reverted' } as never),
+    ).toBe(true);
+  });
 });
 
 describe('methodErrorText', () => {
+  // F9: back at the methods after a transaction that does not pay the invoice, the buyer learns what to do if money left
+  it('says that a transaction does not pay the invoice, never that it did not go through', () => {
+    const text = methodErrorText({ code: 'payment_mismatch', message: 'raw' } as never, defaultLabels, 'Cosmos');
+    expect(text).toBe('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
+    // An older store reports it as payment_failed with the reason
+    expect(
+      methodErrorText(
+        { code: 'payment_failed', message: 'raw', reason: 'too_early' } as never,
+        defaultLabels,
+        'Cosmos',
+      ),
+    ).toBe('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
+  });
+
   it('says what went wrong and what to do, in the language of the checkout', () => {
     const text = (code: string) => methodErrorText({ code, message: 'raw' }, defaultLabels);
     expect(text('screening_unavailable')).toBe(defaultLabels.pay.screeningUnavailable);

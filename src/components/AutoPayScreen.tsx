@@ -70,7 +70,7 @@ export function AutoPayScreen() {
         : problem
           ? labels.error.generic
           : state.error
-            ? methodErrorText(state.error, labels)
+            ? methodErrorText(state.error, labels, merchant)
             : null;
 
   return (

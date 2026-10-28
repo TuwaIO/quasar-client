@@ -139,6 +139,7 @@ export const esLabels: NovaPaymentsLabels = {
     declined: 'Rechazaste la solicitud en {wallet}.',
     tryAgain: 'Reintentar',
     failed: 'El pago falló en {network}. Solo se gastó la comisión de red; la factura sigue abierta.',
+    mismatch: 'Esta transacción no paga la factura. Si salió dinero de tu billetera, contacta con {merchant}.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',
@@ -259,16 +260,21 @@ export const esLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} puede reembolsarla a la billetera que pagó; contacta con {merchant}.',
     expiredNote: 'Un pago enviado después del plazo queda retenido hasta que el vendedor lo reembolse o lo acepte.',
     expiredWhileConfirming:
-      'La factura se cerró mientras se confirmaba tu pago. Si llega, {merchant} lo acepta o lo devuelve.',
+      'La factura se cerró mientras se confirmaba tu pago. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
     expiredAfterQr: 'Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
     expiredUnconfirmed:
-      'No se pudo confirmar tu pago. Revisa tu billetera: si el pago salió de ella, {merchant} lo acepta o lo devuelve.',
+      'Aún no se pudo confirmar tu pago. Revisa tu billetera: si el pago salió de ella, Quasar lo vuelve a comprobar durante 24 horas. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
     unconfirmedTitle: 'No pudimos confirmar tu pago',
     unconfirmedText: 'Revisa tu billetera antes de volver a pagar: es posible que tu pago siga en camino.',
-    unconfirmedNote: 'Esta página sigue la factura: si el pago llega, aparecerá como pagada.',
+    unconfirmedNote:
+      'Quasar vuelve a comprobar tu pago durante 24 horas. Si llega, se registra y se muestra a {merchant}.',
+    unconfirmedRetrying:
+      'Esta página sigue entregando tu pago a Quasar. Mantenla abierta hasta que el pago aparezca aquí.',
     unconfirmedPayAgain: 'El pago no salió de mi billetera',
     cancelledTitle: 'Esta factura se canceló',
     cancelledText: '{merchant} la canceló; no se te cobró nada.',
+    cancelledWhilePaying:
+      '{merchant} la canceló. Si tu pago llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
     replacedTitle: '{merchant} corrigió esta factura',
     replacedText: 'La sustituye {number}. Esta factura ya no se puede pagar.',
     replacedPaid: '¿Ya pagaste? Tu pago pasó a la nueva factura.',

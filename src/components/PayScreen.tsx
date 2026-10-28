@@ -1,6 +1,6 @@
 import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { cn, WalletIcon } from '@tuwaio/nova-core';
-import type { CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutError, CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 import { useState } from 'react';
 
 import { useAsyncValue } from '../hooks/useAsyncValue';
@@ -8,7 +8,7 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePayment } from '../hooks/usePayment';
 import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
-import { isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/checkout';
+import { isMovedMoneyFailure, isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/checkout';
 import {
   baseUnitsToDecimal,
   formatCountdown,
@@ -44,13 +44,16 @@ function formatRate(rate: number, locale: string): string {
 /** The text of a refusal of the wallet or of Quasar, with the action that follows it. */
 function problemText(
   labels: NovaPaymentsLabels,
-  values: { wallet: string; network: string },
+  values: { wallet: string; network: string; merchant: string },
   problem: PaymentWalletErrorKind | null,
-  errorCode: string | undefined,
+  error: CheckoutError | null | undefined,
 ): string | null {
+  const errorCode = error?.code;
   if (problem === 'declined') return formatLabel(labels.pay.declined, values);
   if (problem === 'unsupported') return formatLabel(labels.pay.unsupported, values);
   if (problem === 'wrongNetwork') return formatLabel(labels.pay.wrongCluster, values);
+  // The transaction succeeded on chain without paying the invoice: it may have moved money, so never "it failed"
+  if (!problem && isMovedMoneyFailure(error)) return formatLabel(labels.pay.mismatch, values);
   if (problem === 'failed' || errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;
@@ -177,9 +180,9 @@ export function PayScreen() {
   const busy = payment.status !== 'idle' || state.phase === 'submitting' || quoting;
   const problem = problemText(
     labels,
-    { wallet: wallet?.name ?? '', network },
+    { wallet: wallet?.name ?? '', network, merchant },
     payment.problem,
-    state.phase === 'awaitingPayment' ? state.error?.code : undefined,
+    state.phase === 'awaitingPayment' ? state.error : undefined,
   );
   const solanaNetwork = solanaNetworkHint(chainId, wallet, labels);
   const renew = () => void store.getState().requestQuote();

@@ -349,8 +349,9 @@ export interface PaymentCheckoutHandlers {
    * @param params - What expired.
    * @param params.kind - `quote` or `invoice`.
    * @param params.paymentOnTheWay - A payment is on its way: one this page handed over (`paymentOnTheWay` of the
-   * checkout store, or, with an older `@tuwaio/quasar-sdk`, a transaction handed over), or one of the invoice Quasar
-   * reports (`invoicePaymentOnTheWay`: the page was reopened while it was on its way, another tab paid).
+   * checkout store, or, with an older `@tuwaio/quasar-sdk`, a transaction handed over), one of the invoice Quasar
+   * reports (`invoicePaymentOnTheWay`: the page was reopened while it was on its way, another tab paid), or one Quasar
+   * could not confirm yet and reads again (`invoicePaymentUnresolved`).
    */
   onExpire?: (params: { kind: 'quote' | 'invoice'; paymentOnTheWay: boolean }) => void;
 }

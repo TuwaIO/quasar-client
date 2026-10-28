@@ -137,6 +137,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     declined: 'You declined the request in {wallet}.',
     tryAgain: 'Try again',
     failed: 'The payment failed on {network}. Only the network fee was spent; the invoice is still open.',
+    mismatch: 'This transaction does not pay the invoice. If money left your wallet, contact {merchant}.',
     payAgain: 'Pay again',
     unsupported: "{wallet} can't make this payment.",
     wrongCluster: '{wallet} is on another network, so nothing was paid. Switch it to {network} and pay again.',
@@ -255,16 +256,21 @@ export const defaultLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} can refund it to the wallet that paid; contact {merchant}.',
     expiredNote: 'A payment sent after the deadline is held for the seller to refund or accept.',
     expiredWhileConfirming:
-      'The invoice closed while your payment was confirming. If it arrives, {merchant} accepts it or returns it.',
+      'The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
     expiredAfterQr: 'If you paid with the QR code, {merchant} accepts the payment when it arrives or returns it.',
     expiredUnconfirmed:
-      'Your payment could not be confirmed. Check your wallet: if the payment left it, {merchant} accepts it or returns it.',
+      'Your payment could not be confirmed yet. Check your wallet: if the payment left it, Quasar checks it again for 24 hours. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
     unconfirmedTitle: 'We could not confirm your payment',
     unconfirmedText: 'Check your wallet before paying again: your payment may still be on its way.',
-    unconfirmedNote: 'This page keeps following the invoice: if the payment arrives, it shows as paid.',
+    unconfirmedNote:
+      'Quasar checks your payment again for 24 hours. If it arrives, it is recorded and shown to {merchant}.',
+    unconfirmedRetrying:
+      'This page keeps handing your payment over to Quasar. Keep it open until the payment shows here.',
     unconfirmedPayAgain: 'The payment did not leave my wallet',
     cancelledTitle: 'This invoice was cancelled',
     cancelledText: '{merchant} cancelled it; nothing was charged.',
+    cancelledWhilePaying:
+      '{merchant} cancelled it. If your payment arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
     replacedTitle: '{merchant} corrected this invoice',
     replacedText: '{number} replaces it. This invoice can no longer be paid.',
     replacedPaid: 'Already paid? Your payment moved to the new invoice.',
