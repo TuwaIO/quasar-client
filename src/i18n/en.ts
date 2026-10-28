@@ -196,6 +196,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     afterDeadline: 'Your payment was sent before the deadline and is being confirmed.',
     pastDeadline:
       'Your payment is being confirmed. If it arrives after the invoice closes, {merchant} accepts it or returns it.',
+    invoicePayment: 'A payment for this invoice is on its way. Wait until it is confirmed before paying again.',
     viewOnExplorer: 'View on the explorer',
     copyHash: 'Copy the transaction',
   },
@@ -256,6 +257,12 @@ export const defaultLabels: NovaPaymentsLabels = {
     expiredWhileConfirming:
       'The invoice closed while your payment was confirming. If it arrives, {merchant} accepts it or returns it.',
     expiredAfterQr: 'If you paid with the QR code, {merchant} accepts the payment when it arrives or returns it.',
+    expiredUnconfirmed:
+      'Your payment could not be confirmed. Check your wallet: if the payment left it, {merchant} accepts it or returns it.',
+    unconfirmedTitle: 'We could not confirm your payment',
+    unconfirmedText: 'Check your wallet before paying again: your payment may still be on its way.',
+    unconfirmedNote: 'This page keeps following the invoice: if the payment arrives, it shows as paid.',
+    unconfirmedPayAgain: 'The payment did not leave my wallet',
     cancelledTitle: 'This invoice was cancelled',
     cancelledText: '{merchant} cancelled it; nothing was charged.',
     replacedTitle: '{merchant} corrected this invoice',

@@ -32,6 +32,11 @@ export interface CheckoutContextValue {
   handedOverAt: number | null;
   /** The checkout showed a QR code for the invoice, which the buyer may have paid with from a phone. */
   qrShown: boolean;
+  /**
+   * This page handed a payment of the invoice over, or saw one on its way, and Quasar did not say that it failed for
+   * good: it may still arrive, also after the store stopped following it.
+   */
+  paymentSent: boolean;
   /** Closes the checkout; `undefined` when it cannot be closed (inline without `onClose`). */
   close?: () => void;
   /** The wallet connected through Satellite Connect, if any. */

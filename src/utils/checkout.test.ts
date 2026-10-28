@@ -7,9 +7,12 @@ import {
   deadlineAnnouncement,
   deadlineState,
   groupMethodsByToken,
+  isFinalPaymentFailure,
+  isInvoicePaymentOnTheWay,
   isPaymentOnTheWay,
   isQuoteEnding,
   screensPayingWallets,
+  sentBeforeDeadline,
 } from './checkout';
 
 const method = (id: string, symbol: string, chainId: string, featured = false): CheckoutMethod => ({
@@ -97,6 +100,15 @@ describe('checkoutScreen', () => {
   });
 });
 
+// Owner, 2026-10-28: the buyer is never invited to pay twice. A store of a current `@tuwaio/quasar-sdk` has the phase
+// `unconfirmed` when Quasar could not confirm the payment (not found, no receipt in time…) but it may still arrive
+describe('checkoutScreen of a payment that may still arrive', () => {
+  it('shows the unconfirmed screen, not the payment', () => {
+    expect(checkoutScreen({ phase: 'unconfirmed' as never, checkout: view(), quote: QUOTE })).toBe('unconfirmed');
+    expect(checkoutScreen({ phase: 'unconfirmed' as never, checkout: view() }, { payWith: 'qr' })).toBe('unconfirmed');
+  });
+});
+
 describe('checkoutSteps', () => {
   it('marks the steps before the current one done, and adds the details and automatic payments when they apply', () => {
     expect(checkoutSteps('method')).toEqual([
@@ -117,6 +129,15 @@ describe('checkoutSteps', () => {
       'pay:done',
       'confirm:done',
       'autoPay:current',
+    ]);
+  });
+
+  // H1: a payment Quasar could not confirm stands at the confirm step, not at an outcome
+  it('keeps the confirm step current while the payment could not be confirmed', () => {
+    expect(checkoutSteps('unconfirmed')?.map((step) => `${step.key}:${step.state}`)).toEqual([
+      'method:done',
+      'pay:done',
+      'confirm:current',
     ]);
   });
 
@@ -197,6 +218,12 @@ describe('deadlineState', () => {
     expect(deadlineState('processing', 'confirm')).toBe('confirming');
   });
 
+  it('keeps counting, without the minutes left to pay, while a payment could not be confirmed', () => {
+    expect(deadlineState('open', 'unconfirmed')).toBe('confirming');
+    expect(deadlineState('underpaid', 'unconfirmed')).toBe('confirming');
+    expect(deadlineState('expired', 'unconfirmed')).toBeNull();
+  });
+
   it('is over once paid, and on an outcome in which a deadline means nothing', () => {
     for (const screen of ['paid', 'autoPay', 'held', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
       expect(deadlineState('open', screen), screen).toBeNull();
@@ -230,5 +257,100 @@ describe('isPaymentOnTheWay', () => {
     expect(isPaymentOnTheWay({ txKey: '0xabc', txHash: null })).toBe(true);
     expect(isPaymentOnTheWay({ txKey: null, txHash: '0xdef' })).toBe(true);
     expect(isPaymentOnTheWay({ txKey: null, txHash: null })).toBe(false);
+  });
+});
+
+// Owner, 2026-10-28: a reopened page with a payment on its way shows it, never the payment screen or "nothing was
+// charged". A current store says so (`invoicePaymentOnTheWay`); an older one only has the checkout it read
+describe('isInvoicePaymentOnTheWay', () => {
+  it("follows the store's invoicePaymentOnTheWay when it has one", () => {
+    expect(isInvoicePaymentOnTheWay({ invoicePaymentOnTheWay: true }, view())).toBe(true);
+    expect(isInvoicePaymentOnTheWay({ invoicePaymentOnTheWay: false }, view({ pendingPayments: 1 } as never))).toBe(
+      false,
+    );
+  });
+
+  it('falls back to the pending payments of the checkout with a store without the field', () => {
+    expect(isInvoicePaymentOnTheWay({}, view({ pendingPayments: 2 } as never))).toBe(true);
+    expect(isInvoicePaymentOnTheWay({}, view({ pendingPayments: 0 } as never))).toBe(false);
+    expect(isInvoicePaymentOnTheWay({}, view())).toBe(false);
+    expect(isInvoicePaymentOnTheWay({}, null)).toBe(false);
+  });
+});
+
+// L3: "sent before the deadline" comes from Quasar (`paymentCountsUntil`: it learned of a payment before `dueAt` and
+// waits for it), not from the page's clock; a Quasar without the field keeps the clock rule
+describe('sentBeforeDeadline', () => {
+  const DUE = Date.parse('2026-10-29T08:28:00Z');
+  const BEFORE = Date.parse('2026-10-29T08:25:00Z');
+  const AFTER = Date.parse('2026-10-29T08:30:00Z');
+  const UNTIL = '2026-10-29T08:58:00Z';
+  /** A checkout whose Quasar reports `paymentCountsUntil` (`undefined`: an older Quasar). */
+  const reporting = (paymentCountsUntil?: string | null) =>
+    view(paymentCountsUntil === undefined ? {} : ({ paymentCountsUntil } as never));
+
+  it("takes Quasar's word, also for a payment whose hand-over this page does not know (a reload)", () => {
+    expect(sentBeforeDeadline({ state: {}, checkout: reporting(UNTIL), handedOverAt: null, dueAt: DUE })).toBe(true);
+    expect(
+      sentBeforeDeadline({
+        state: { paymentCountsUntil: UNTIL },
+        checkout: reporting(null),
+        handedOverAt: null,
+        dueAt: DUE,
+      }),
+    ).toBe(true);
+  });
+
+  it('says no when Quasar waits for no payment, whatever the clock of the page says', () => {
+    expect(
+      sentBeforeDeadline({
+        state: { paymentCountsUntil: null },
+        checkout: reporting(UNTIL),
+        handedOverAt: BEFORE,
+        dueAt: DUE,
+      }),
+    ).toBe(false);
+    expect(sentBeforeDeadline({ state: {}, checkout: reporting(null), handedOverAt: BEFORE, dueAt: DUE })).toBe(false);
+  });
+
+  // M1: Quasar may wait for another payment learned of in time while this page's own payment, handed over after the
+  // deadline, will be held
+  it('says no for a payment this page handed over at or after the deadline', () => {
+    expect(
+      sentBeforeDeadline({
+        state: { paymentCountsUntil: UNTIL },
+        checkout: reporting(UNTIL),
+        handedOverAt: AFTER,
+        dueAt: DUE,
+      }),
+    ).toBe(false);
+  });
+
+  it('keeps the clock rule with a Quasar that does not report it', () => {
+    expect(
+      sentBeforeDeadline({
+        state: { paymentCountsUntil: null },
+        checkout: reporting(),
+        handedOverAt: BEFORE,
+        dueAt: DUE,
+      }),
+    ).toBe(true);
+    expect(sentBeforeDeadline({ state: {}, checkout: reporting(), handedOverAt: AFTER, dueAt: DUE })).toBe(false);
+    expect(sentBeforeDeadline({ state: {}, checkout: reporting(), handedOverAt: null, dueAt: DUE })).toBe(false);
+  });
+});
+
+// M4: only a rejection Quasar calls final (it carries its reason) means that the payment can never arrive
+describe('isFinalPaymentFailure', () => {
+  it('is true for a failed payment with the reason Quasar gave', () => {
+    expect(isFinalPaymentFailure({ code: 'payment_failed', message: '', reason: 'reverted' } as never)).toBe(true);
+  });
+
+  it('is false when Quasar did not say why (an older Quasar or store), and for any other error', () => {
+    expect(isFinalPaymentFailure({ code: 'payment_failed', message: '' })).toBe(false);
+    expect(isFinalPaymentFailure({ code: 'payment_unconfirmed', message: '', reason: 'not_found' } as never)).toBe(
+      false,
+    );
+    expect(isFinalPaymentFailure(null)).toBe(false);
   });
 });

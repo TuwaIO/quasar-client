@@ -99,6 +99,7 @@ export function checkoutContextValue(
     now: 0,
     handedOverAt: null,
     qrShown: false,
+    paymentSent: false,
     wallet: null,
     payWith: 'wallet',
     setPayWith: vi.fn(),

@@ -13,6 +13,7 @@ import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
 import { usePaidCallback } from '../hooks/useOutcomeEffects';
 import { usePaymentHandOver } from '../hooks/usePaymentHandOver';
+import { usePaymentSent } from '../hooks/usePaymentSent';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useQrShown } from '../hooks/useQrShown';
 import { useWalletConnection } from '../hooks/useWalletConnection';
@@ -357,6 +358,7 @@ export function PaymentCheckout({
   const screen = checkoutScreen(state, { payWith, handoff, autoPay, labelsReady: labelsShown || !checkout });
   const handedOverAt = useHandOverTime(store);
   const qrShown = useQrShown({ store, screen });
+  const paymentSent = usePaymentSent({ store, state });
   usePaidCallback(state.phase, checkout?.invoice, onPaid);
   useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
@@ -427,6 +429,7 @@ export function PaymentCheckout({
     now,
     handedOverAt,
     qrShown,
+    paymentSent,
     close,
     wallet,
     payWith,

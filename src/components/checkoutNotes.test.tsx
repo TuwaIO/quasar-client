@@ -23,6 +23,7 @@ const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { PayScreen } = await import('./PayScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
+const { PrimaryButton, SecondaryButton } = await import('./ScreenParts');
 const { AutoPayScreen } = await import('./AutoPayScreen');
 
 const BASE = 'eip155:8453';
@@ -207,12 +208,100 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(text).not.toContain('nothing was charged');
   });
 
-  it('says that nothing was charged once the store says that the payment failed', () => {
+  it('says that nothing was charged once Quasar says that the payment failed for good', () => {
     show('expired', { status: 'expired', amountPaid: null });
-    ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false } as never };
+    const failed = { code: 'payment_failed', message: '', reason: 'reverted' };
+    ctx = {
+      ...ctx,
+      state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false, error: failed } as never,
+    };
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
     expect(text).toContain('Ask Cosmos for a new one; nothing was charged.');
     expect(text).not.toContain('The invoice closed while your payment was confirming.');
+  });
+
+  // M4: the store stops following an expired invoice 35 minutes past the deadline; Quasar may still settle the payment
+  it('never says that nothing was charged after the store stopped following the payment', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    ctx = {
+      ...ctx,
+      paymentSent: true,
+      state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false } as never,
+    };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('The invoice closed while your payment was confirming.');
+    expect(text).not.toContain('nothing was charged');
+  });
+
+  it('says to check the wallet when Quasar could not confirm the payment', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'timeout' };
+    ctx = {
+      ...ctx,
+      paymentSent: true,
+      state: { ...ctx.state, phase: 'expired', paymentOnTheWay: false, error: unconfirmed } as never,
+    };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain(
+      'Your payment could not be confirmed. Check your wallet: if the payment left it, Cosmos accepts it or returns it.',
+    );
+    expect(text).not.toContain('nothing was charged');
+  });
+
+  // M3: a page reopened on an invoice that expired while a payment of it is on its way
+  it('never says that nothing was charged while Quasar reports a payment of the invoice on its way', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', invoicePaymentOnTheWay: true } as never };
+    expect(textOf(OutcomeScreen({ kind: 'expired' }))).toContain(
+      'The invoice closed while your payment was confirming.',
+    );
+    // An older store: the pending payments of the checkout it read
+    show('expired', { status: 'expired', amountPaid: null, pendingPayments: 1 } as never);
+    ctx = { ...ctx, state: { ...ctx.state, phase: 'expired' } as never };
+    const text = textOf(OutcomeScreen({ kind: 'expired' }));
+    expect(text).toContain('The invoice closed while your payment was confirming.');
+    expect(text).not.toContain('nothing was charged');
+  });
+});
+
+// H1, owner 2026-10-28: a payment Quasar could not confirm (not found, no receipt in time, replaced) may still reach the
+// seller: the buyer checks the wallet before paying again, and the screen offers no payment
+describe('a payment Quasar could not confirm', () => {
+  const unconfirmedScreen = (payAgain?: () => void) => {
+    show('unconfirmed');
+    ctx = {
+      ...ctx,
+      store: { getState: () => ({ ...fixture.fakeStore().actions, payAgain }) } as never,
+      state: {
+        ...ctx.state,
+        phase: 'unconfirmed',
+        paymentOnTheWay: false,
+        error: { code: 'payment_unconfirmed', message: '', reason: 'not_found' },
+      } as never,
+    };
+    return OutcomeScreen({ kind: 'unconfirmed' });
+  };
+
+  it('asks the buyer to check the wallet before paying again', () => {
+    const text = textOf(unconfirmedScreen());
+    expect(text).toContain('We could not confirm your payment');
+    expect(text).toContain('Check your wallet before paying again: your payment may still be on its way.');
+    expect(text).not.toContain('nothing was charged');
+  });
+
+  it('offers no payment: no main button, and paying again only once the buyer checked the wallet', () => {
+    const payAgain = vi.fn();
+    const tree = unconfirmedScreen(payAgain);
+    expect(fixture.ofType(tree, PrimaryButton)).toHaveLength(0);
+    const checked = fixture.ofType(tree, SecondaryButton);
+    expect(checked).toHaveLength(1);
+    expect(checked[0].props.children).toBe('The payment did not leave my wallet');
+    (checked[0].props.onClick as () => void)();
+    expect(payAgain).toHaveBeenCalledOnce();
+  });
+
+  it('offers nothing to pay with a store that cannot go back to the payment', () => {
+    expect(fixture.ofType(unconfirmedScreen(), SecondaryButton)).toHaveLength(0);
   });
 });
 

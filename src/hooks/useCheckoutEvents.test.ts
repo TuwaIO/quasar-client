@@ -79,4 +79,24 @@ describe('useCheckoutEvents', () => {
 
     expect(onExpire).toHaveBeenCalledExactlyOnceWith({ kind: 'invoice', paymentOnTheWay: true });
   });
+
+  // M3: a reopened page whose invoice expires while a payment of it, handed over before the reload, is on its way
+  it('tells that a payment of the invoice that the store found on its way may still arrive', () => {
+    const onExpire = vi.fn();
+    const handlers = { onExpire };
+    const found = {
+      txKey: null,
+      paymentOnTheWay: false,
+      invoicePaymentOnTheWay: true,
+    } as unknown as Partial<CheckoutState>;
+    renderEvents({ state: state('confirming', found), screen: 'confirm', now: 0, handlers });
+    renderEvents({
+      state: state('expired', { ...found, checkout: view('expired') }),
+      screen: 'expired',
+      now: 0,
+      handlers,
+    });
+
+    expect(onExpire).toHaveBeenCalledExactlyOnceWith({ kind: 'invoice', paymentOnTheWay: true });
+  });
 });

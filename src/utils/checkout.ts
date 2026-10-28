@@ -4,6 +4,7 @@
  */
 
 import type {
+  CheckoutError,
   CheckoutMethod,
   CheckoutPhase,
   CheckoutQuote,
@@ -12,8 +13,9 @@ import type {
 } from '@tuwaio/quasar-sdk/checkout';
 
 /**
- * A screen of the checkout: the steps of a payment (`buyer`, `method`, `pay` or `qr`, `confirm`, `autoPay`) or its
- * outcome.
+ * A screen of the checkout: the steps of a payment (`buyer`, `method`, `pay` or `qr`, `confirm`, `autoPay`), a payment
+ * Quasar could not confirm (`unconfirmed`: it may still arrive, so the buyer checks the wallet before paying again) or
+ * its outcome.
  */
 export type CheckoutScreen =
   | 'loading'
@@ -23,6 +25,7 @@ export type CheckoutScreen =
   | 'pay'
   | 'qr'
   | 'confirm'
+  | 'unconfirmed'
   | 'paid'
   | 'autoPay'
   | 'underpaid'
@@ -63,13 +66,16 @@ export interface CheckoutScreenChoices {
  * @returns The screen: `qr` instead of `pay` when the buyer pays with a QR code (or the price was locked without a
  * payer), `replaced` for an invoice the seller
  * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open, `loading` until
- * the labels of the invoice's language are loaded.
+ * the labels of the invoice's language are loaded, `unconfirmed` in the phase of that name of a current
+ * `@tuwaio/quasar-sdk` (Quasar could not confirm the payment, which may still arrive).
  */
 export function checkoutScreen(
   state: { phase: CheckoutPhase; checkout: CheckoutView | null; quote?: CheckoutQuote | null },
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
   if (choices.labelsReady === false && state.phase !== 'error') return 'loading';
+  // `unconfirmed` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
+  if ((state.phase as string) === 'unconfirmed') return 'unconfirmed';
   switch (state.phase) {
     case 'selectMethod':
       return choices.handoff && choices.payWith === 'qr' ? 'qr' : 'method';
@@ -106,6 +112,7 @@ const STEP_OF_SCREEN: Partial<Record<CheckoutScreen, CheckoutStep['key']>> = {
   qr: 'pay',
   underpaid: 'pay',
   confirm: 'confirm',
+  unconfirmed: 'confirm',
   autoPay: 'autoPay',
 };
 
@@ -195,13 +202,15 @@ const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
  * @param screen - The screen shown.
  * @returns `paying` while the buyer can still pay (the countdown shows and screen readers hear the minutes left),
  * `confirming` while the payment is on its way (the countdown shows; at zero the confirm step says that the payment
- * sent in time is being confirmed), or `null` once the payment succeeded (`paid`, `autoPay`), on the outcomes in
+ * sent in time is being confirmed) and while Quasar could not confirm it (`unconfirmed`: the buyer checks the wallet
+ * before paying again, so no minutes left to pay are announced), or `null` once the payment succeeded (`paid`,
+ * `autoPay`), on the outcomes in
  * which a deadline means nothing (`held`, `refunded`, `expired`, `cancelled`, `replaced`) and for an invoice that can
  * no longer be paid.
  */
 export function deadlineState(status: string, screen: CheckoutScreen): 'paying' | 'confirming' | null {
   if (!PAYABLE_STATUSES.has(status)) return null;
-  if (screen === 'confirm') return 'confirming';
+  if (screen === 'confirm' || screen === 'unconfirmed') return 'confirming';
   return PAYING_SCREENS.has(screen) ? 'paying' : null;
 }
 
@@ -269,4 +278,66 @@ export function isPaymentOnTheWay(
   state: Pick<CheckoutState, 'txKey' | 'txHash'> & { readonly paymentOnTheWay?: boolean },
 ): boolean {
   return state.paymentOnTheWay ?? Boolean(state.txKey || state.txHash);
+}
+
+/**
+ * Whether Quasar reports a payment of the invoice on its way, whoever handed it over (another tab, the page before it
+ * was reloaded, a Solana Pay transfer Quasar found): `invoicePaymentOnTheWay` of the checkout store of a current
+ * `@tuwaio/quasar-sdk`, else, with an older store without the field, the `pendingPayments` of the checkout it read.
+ *
+ * @param state - The state of the checkout store.
+ * @param state.invoicePaymentOnTheWay - What the store says, when it has the field.
+ * @param checkout - What the checkout token opens; `null` until loaded.
+ * @returns Whether a payment of the invoice may still arrive.
+ */
+export function isInvoicePaymentOnTheWay(
+  state: object & { readonly invoicePaymentOnTheWay?: boolean },
+  checkout: CheckoutView | null,
+): boolean {
+  // `pendingPayments` is newer than some `@tuwaio/quasar-sdk` alphas: read it as optional
+  const pending = (checkout?.invoice as { pendingPayments?: number } | undefined)?.pendingPayments ?? 0;
+  return state.invoicePaymentOnTheWay ?? pending > 0;
+}
+
+/** What {@link sentBeforeDeadline} decides with. */
+export interface SentBeforeDeadlineParams {
+  /** The state of the checkout store: `paymentCountsUntil` of a current `@tuwaio/quasar-sdk`. */
+  state: object & { readonly paymentCountsUntil?: string | null };
+  /** The checkout: its invoice's `paymentCountsUntil` tells whether Quasar reports it, and is read with an older store. */
+  checkout: CheckoutView;
+  /** When this page handed its payment over, by its clock; `null` when it does not know (a reload, another tab). */
+  handedOverAt: number | null;
+  /** The invoice deadline (`dueAt`) in milliseconds. */
+  dueAt: number;
+}
+
+/**
+ * Whether the payment on its way counts as sent before the invoice deadline. Quasar says it with `paymentCountsUntil`
+ * (it learned of a payment of the invoice before `dueAt` and waits for it): its word decides, except for a payment this
+ * page handed over at or after the deadline, which Quasar holds even while it waits for another one. A Quasar that does
+ * not report the field leaves the clock of the page: a payment this page handed over before the deadline.
+ *
+ * @param params - See {@link SentBeforeDeadlineParams}.
+ * @returns `true` to say that the payment was sent in time and is being confirmed.
+ */
+export function sentBeforeDeadline({ state, checkout, handedOverAt, dueAt }: SentBeforeDeadlineParams): boolean {
+  // `paymentCountsUntil` is newer than some `@tuwaio/quasar-sdk` alphas and Quasar versions: read it as optional
+  const reported = (checkout.invoice as { paymentCountsUntil?: string | null }).paymentCountsUntil;
+  if (reported === undefined) return handedOverAt !== null && handedOverAt < dueAt;
+  if (handedOverAt !== null && handedOverAt >= dueAt) return false;
+  const countsUntil = state.paymentCountsUntil === undefined ? reported : state.paymentCountsUntil;
+  return countsUntil !== null;
+}
+
+/**
+ * Whether the last error says that the payment can never pay the invoice: `payment_failed` with the reason Quasar gave
+ * (reverted, a wrong amount or recipient…). A failure without a reason comes from a Quasar or a `@tuwaio/quasar-sdk`
+ * that cannot tell a final failure from a payment that may still arrive, so it does not count.
+ *
+ * @param error - The store's error.
+ * @returns `true` when the payment failed for good.
+ */
+export function isFinalPaymentFailure(error: CheckoutError | null | undefined): boolean {
+  // `reason` is newer than some `@tuwaio/quasar-sdk` alphas: read it as optional
+  return error?.code === 'payment_failed' && Boolean((error as CheckoutError & { reason?: string }).reason);
 }

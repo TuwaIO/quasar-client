@@ -201,6 +201,8 @@ export const itLabels: NovaPaymentsLabels = {
     afterDeadline: 'Il pagamento è stato inviato prima del termine ed è in fase di conferma.',
     pastDeadline:
       'Il pagamento è in fase di conferma. Se arriva dopo la chiusura della fattura, {merchant} lo accetta o lo restituisce.',
+    invoicePayment:
+      'Un pagamento di questa fattura è già in arrivo. Attendi che venga confermato prima di pagare di nuovo.',
     viewOnExplorer: "Vedi nell'explorer",
     copyHash: 'Copia la transazione',
   },
@@ -264,6 +266,12 @@ export const itLabels: NovaPaymentsLabels = {
     expiredWhileConfirming:
       'La fattura si è chiusa mentre il pagamento veniva confermato. Se arriva, {merchant} lo accetta o lo restituisce.',
     expiredAfterQr: 'Se hai pagato con il codice QR, {merchant} accetta il pagamento quando arriva o lo restituisce.',
+    expiredUnconfirmed:
+      'Non è stato possibile confermare il pagamento. Controlla il wallet: se il pagamento è partito, {merchant} lo accetta o lo restituisce.',
+    unconfirmedTitle: 'Non è stato possibile confermare il pagamento',
+    unconfirmedText: 'Controlla il wallet prima di pagare di nuovo: il pagamento potrebbe essere ancora in arrivo.',
+    unconfirmedNote: 'Questa pagina continua a seguire la fattura: se il pagamento arriva, risulterà pagata.',
+    unconfirmedPayAgain: 'Il pagamento non è partito dal mio wallet',
     cancelledTitle: 'Questa fattura è stata annullata',
     cancelledText: "{merchant} l'ha annullata; non ti è stato addebitato nulla.",
     replacedTitle: '{merchant} ha corretto questa fattura',

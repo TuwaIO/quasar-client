@@ -377,6 +377,12 @@ export type NovaPaymentsLabels = {
      * accepts it or returns it.`)
      */
     pastDeadline: string;
+    /**
+     * Instead of `canClose` while a payment of the invoice that this page did not hand over is on its way (the page was
+     * reopened or reloaded, another tab paid, Quasar found a Solana Pay transfer), before the deadline (default: `A
+     * payment for this invoice is on its way. Wait until it is confirmed before paying again.`)
+     */
+    invoicePayment: string;
     /** Accessible name of the explorer link of the transaction (default: `View on the explorer`) */
     viewOnExplorer: string;
     /** Accessible name of the copy button of the transaction (default: `Copy the transaction`) */
@@ -498,6 +504,26 @@ export type NovaPaymentsLabels = {
      * accepts the payment when it arrives or returns it.`)
      */
     expiredAfterQr: string;
+    /**
+     * Instead of `expiredText` and `expiredNote` when the invoice expired after Quasar could not confirm the payment
+     * (not found, no receipt in time, replaced), which may still arrive: `{merchant}` (default: `Your payment could not
+     * be confirmed. Check your wallet: if the payment left it, {merchant} accepts it or returns it.`)
+     */
+    expiredUnconfirmed: string;
+    /**
+     * Heading when Quasar could not confirm the payment on a payable invoice: it may still arrive, so the checkout offers
+     * no payment (default: `We could not confirm your payment`)
+     */
+    unconfirmedTitle: string;
+    /** Its text (default: `Check your wallet before paying again: your payment may still be on its way.`) */
+    unconfirmedText: string;
+    /** Under it (default: `This page keeps following the invoice: if the payment arrives, it shows as paid.`) */
+    unconfirmedNote: string;
+    /**
+     * The button that goes back to the payment once the buyer checked the wallet (default: `The payment did not leave
+     * my wallet`)
+     */
+    unconfirmedPayAgain: string;
     /** Heading of a cancelled invoice (default: `This invoice was cancelled`) */
     cancelledTitle: string;
     /** Its text: `{merchant}` (default: `{merchant} cancelled it; nothing was charged.`) */

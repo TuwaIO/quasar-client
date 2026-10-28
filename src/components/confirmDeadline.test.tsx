@@ -38,17 +38,31 @@ function confirmingAt(
     paymentOnTheWay,
     handedOverAt = HANDED_OVER,
     invoiceStatus = null,
+    invoicePaymentOnTheWay,
+    paymentCountsUntil,
+    reportedCountsUntil,
   }: {
     status?: string;
     txKey?: string | null;
     paymentOnTheWay?: boolean;
     handedOverAt?: string | null;
     invoiceStatus?: string | null;
+    /** What a current store says of a payment of the invoice on its way, whoever handed it over. */
+    invoicePaymentOnTheWay?: boolean;
+    /** `paymentCountsUntil` of a current store. */
+    paymentCountsUntil?: string | null;
+    /** `paymentCountsUntil` of the loaded invoice (`undefined`: a Quasar that does not report it). */
+    reportedCountsUntil?: string | null;
   } = {},
 ) {
   const checkout = {
     ...fixture.checkout,
-    invoice: { ...fixture.checkout.invoice, status, dueAt },
+    invoice: {
+      ...fixture.checkout.invoice,
+      status,
+      dueAt,
+      ...(reportedCountsUntil === undefined ? {} : { paymentCountsUntil: reportedCountsUntil }),
+    },
   } as typeof fixture.checkout;
   const state = {
     phase: 'confirming',
@@ -59,6 +73,8 @@ function confirmingAt(
     txHash: null,
     invoiceStatus,
     ...(paymentOnTheWay === undefined ? {} : { paymentOnTheWay }),
+    ...(invoicePaymentOnTheWay === undefined ? {} : { invoicePaymentOnTheWay }),
+    ...(paymentCountsUntil === undefined ? {} : { paymentCountsUntil }),
   } as never;
   ctx = fixture.checkoutContextValue(
     {},
@@ -156,6 +172,59 @@ describe("the confirm step follows the payment's real state", () => {
   it('keeps the usual note before the deadline, whenever the payment was handed over', () => {
     confirmingAt('2026-10-29T08:27:00Z', DUE, { handedOverAt: null });
     expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
+  });
+});
+
+// L3: Quasar says whether it waits for a payment it learned of before the deadline (`paymentCountsUntil`); the page's
+// clock decides only with a Quasar that does not say it
+describe("the confirm step takes Quasar's word on time", () => {
+  const UNTIL = '2026-10-29T08:58:00Z';
+
+  it('says "sent before the deadline" when Quasar waits for the payment, also after a reload', () => {
+    confirmingAt('2026-10-29T08:40:00Z', DUE, {
+      handedOverAt: null,
+      paymentOnTheWay: true,
+      paymentCountsUntil: UNTIL,
+      reportedCountsUntil: UNTIL,
+    });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.afterDeadline);
+  });
+
+  it('gives the neutral note when Quasar waits for no payment, whatever the clock of the page says', () => {
+    confirmingAt('2026-10-29T08:29:00Z', DUE, {
+      paymentOnTheWay: true,
+      paymentCountsUntil: null,
+      reportedCountsUntil: null,
+    });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(NEUTRAL);
+  });
+});
+
+// M3, owner 2026-10-28: a page reopened while a payment of the invoice is on its way shows that payment being
+// confirmed instead of the payment screen
+describe('the confirm step of a payment this page did not hand over', () => {
+  /** The note for a payment the store found on its way when it loaded. */
+  const foundOnItsWay = (now: string, extra: Parameters<typeof confirmingAt>[2] = {}) =>
+    confirmingAt(now, DUE, {
+      txKey: null,
+      paymentOnTheWay: false,
+      invoicePaymentOnTheWay: true,
+      handedOverAt: null,
+      ...extra,
+    });
+
+  it('says that a payment for the invoice is being confirmed', () => {
+    foundOnItsWay('2026-10-29T08:20:00Z');
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(
+      'A payment for this invoice is on its way. Wait until it is confirmed before paying again.',
+    );
+  });
+
+  it('gives the deadline notes past the deadline', () => {
+    foundOnItsWay('2026-10-29T08:29:00Z');
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(NEUTRAL);
+    foundOnItsWay('2026-10-29T08:40:00Z', { paymentCountsUntil: '2026-10-29T08:58:00Z', reportedCountsUntil: null });
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.afterDeadline);
   });
 });
 

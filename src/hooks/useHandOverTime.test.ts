@@ -39,6 +39,7 @@ describe('useHandOverTime', () => {
     setPhase(store, 'awaitingPayment');
     expect(render(useHandOverTime, store)).toBeNull();
     vi.setSystemTime(Date.parse('2026-10-29T08:31:00Z'));
+    setPhase(store, 'submitting');
     setPhase(store, 'confirming');
     expect(render(useHandOverTime, store)).toBe(Date.parse('2026-10-29T08:31:00Z'));
   });
@@ -47,6 +48,18 @@ describe('useHandOverTime', () => {
     const store = storeIn('confirming');
     render(useHandOverTime, store);
     expect(render(useHandOverTime, store)).toBeNull();
+  });
+
+  // M3: a payment of the invoice the store found on its way (a reopened page, another tab) was not handed over here
+  it('knows no time for a payment the store found on its way when it loaded or while the page offered to pay', () => {
+    const reopened = storeIn('loading');
+    render(useHandOverTime, reopened);
+    setPhase(reopened, 'confirming');
+    expect(render(useHandOverTime, reopened)).toBeNull();
+    const otherTab = storeIn('selectMethod');
+    render(useHandOverTime, otherTab);
+    setPhase(otherTab, 'confirming');
+    expect(render(useHandOverTime, otherTab)).toBeNull();
   });
 
   it('starts again for another invoice', () => {

@@ -13,23 +13,24 @@ import type { ComponentType, ReactNode, SVGProps } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
-import { type CheckoutScreen, isPaymentOnTheWay } from '../utils/checkout';
+import { type CheckoutScreen, isInvoicePaymentOnTheWay, isPaymentOnTheWay } from '../utils/checkout';
 import { formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from '../utils/format';
 import { networkName, payerFor } from '../utils/methods';
 import { contactHref, receivedAmount, underpaidRest } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { mono, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
-import { PrimaryButton, ScreenFooter } from './ScreenParts';
+import { PrimaryButton, ScreenFooter, SecondaryButton } from './ScreenParts';
 
 /** The outcomes this screen shows. */
 export type OutcomeKind = Extract<
   CheckoutScreen,
-  'underpaid' | 'held' | 'refunded' | 'expired' | 'cancelled' | 'replaced' | 'blocked'
+  'unconfirmed' | 'underpaid' | 'held' | 'refunded' | 'expired' | 'cancelled' | 'replaced' | 'blocked'
 >;
 
 /** The icon and tone of each outcome. */
 const LOOK: Record<OutcomeKind, { Icon: ComponentType<SVGProps<SVGSVGElement>>; tone: string }> = {
+  unconfirmed: { Icon: ExclamationTriangleIcon, tone: 'novapay:text-[var(--tuwa-pending-icon)]' },
   underpaid: { Icon: ExclamationTriangleIcon, tone: 'novapay:text-[var(--tuwa-pending-icon)]' },
   held: { Icon: MagnifyingGlassIcon, tone: 'novapay:text-[var(--tuwa-info-icon)]' },
   refunded: { Icon: ArrowUturnLeftIcon, tone: 'novapay:text-[var(--tuwa-info-icon)]' },
@@ -84,12 +85,15 @@ function ContactLink() {
 }
 
 /**
- * An outcome other than paid: an underpaid invoice ("Pay the rest"), a payment the seller reviews (screening, late,
- * overpaid, after the price lock ran out), a refunded invoice, an expired one (with what arrived before the deadline,
- * which the seller can refund, and, when a payment this page handed over is still on its way, that the seller accepts or
- * returns it if it arrives; after a QR code showed, the same for a payment made with it, as this page does not see it),
- * a cancelled one, a corrected one ("Open <new invoice>" opens it here) and a payer the
- * wallet check refused ("Use another wallet"). Each offers to contact the seller.
+ * An outcome other than paid: a payment Quasar could not confirm on a payable invoice (`unconfirmed`: it may still
+ * arrive, so the buyer checks the wallet before paying again; no payment is offered, only "The payment did not leave my
+ * wallet", which goes back to it with `payAgain` of the checkout store), an underpaid invoice ("Pay the rest"), a payment
+ * the seller reviews (screening, late, overpaid, after the price lock ran out), a refunded invoice, an expired one (with
+ * what arrived before the deadline, which the seller can refund; never "nothing was charged" while a payment may still
+ * arrive: one this page handed over or saw on its way, also after the checkout stopped following it, that the seller
+ * accepts or returns if it arrives, one Quasar could not confirm, to check in the wallet, and after a QR code showed, a
+ * payment made with it, as this page does not see it), a cancelled one, a corrected one ("Open <new invoice>" opens it
+ * here) and a payer the wallet check refused ("Use another wallet"). Each offers to contact the seller.
  *
  * @param props - The outcome.
  * @param props.kind - Which outcome.
@@ -97,7 +101,7 @@ function ContactLink() {
  */
 export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
   const context = useCheckoutContext();
-  const { checkout, state, store, labels, locale, wallet, connectWallet, openInvoice, qrShown } = context;
+  const { checkout, state, store, labels, locale, wallet, connectWallet, openInvoice, qrShown, paymentSent } = context;
   if (!checkout) return null;
   const merchant = checkout.merchant.name;
   const { Icon, tone } = LOOK[kind];
@@ -118,6 +122,22 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
   let action: ReactNode = null;
 
   switch (kind) {
+    case 'unconfirmed': {
+      title = labels.outcome.unconfirmedTitle;
+      body = (
+        <>
+          <Text>{labels.outcome.unconfirmedText}</Text>
+          <Text muted>{labels.outcome.unconfirmedNote}</Text>
+        </>
+      );
+      // `payAgain` is newer than some `@tuwaio/quasar-sdk` alphas, whose stores never reach this phase
+      const { payAgain } = store.getState() as { payAgain?: () => void };
+      // Not the main button: the buyer pays again only after checking that the payment did not leave the wallet
+      if (payAgain) {
+        action = <SecondaryButton onClick={() => payAgain()}>{labels.outcome.unconfirmedPayAgain}</SecondaryButton>;
+      }
+      break;
+    }
     case 'underpaid': {
       const paid = checkout.invoice.amountPaid;
       const rest = underpaidRest(quote, paid);
@@ -198,11 +218,16 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const received = receivedAmount(checkout.invoice.amountPaid);
       // It is in base units of the invoice's locked quote: the buyer's, else the one the checkout reports
       const locked = quote ?? checkout.quote;
-      // A payment this page handed over may still arrive: the seller accepts or returns it, so never "nothing was
-      // charged". A `held` or `paid` invoice the store hears of later replaces this outcome
-      const sent = isPaymentOnTheWay(state);
+      // `payment_unconfirmed` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
+      const unconfirmed = (state.error?.code as string | undefined) === 'payment_unconfirmed';
+      // A payment of the invoice may still arrive: on its way (this page's, or one Quasar reports, as on a reopened
+      // page), or one this page handed over that the store no longer follows (its time ran out) and that Quasar did not
+      // reject for good. The seller accepts or returns it, so never "nothing was charged". A `held` or `paid` invoice
+      // the store hears of later replaces this outcome
+      const sent =
+        !unconfirmed && (isPaymentOnTheWay(state) || isInvoicePaymentOnTheWay(state, checkout) || paymentSent);
       // A QR code may have been paid from a phone, which this page does not see: never "nothing was charged" either
-      const maybePaid = sent || qrShown;
+      const maybePaid = sent || unconfirmed || qrShown;
       body = (
         <>
           {received ? (
@@ -219,7 +244,9 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
           ) : (
             !maybePaid && due && <Text>{formatLabel(labels.outcome.expiredText, { date: due, merchant })}</Text>
           )}
-          {sent ? (
+          {unconfirmed ? (
+            <Text>{formatLabel(labels.outcome.expiredUnconfirmed, { merchant })}</Text>
+          ) : sent ? (
             <Text>{formatLabel(labels.outcome.expiredWhileConfirming, { merchant })}</Text>
           ) : qrShown ? (
             <Text>{formatLabel(labels.outcome.expiredAfterQr, { merchant })}</Text>

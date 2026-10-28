@@ -199,6 +199,7 @@ export const esLabels: NovaPaymentsLabels = {
     afterDeadline: 'Tu pago se envió antes de que venciera el plazo y se está confirmando.',
     pastDeadline:
       'Tu pago se está confirmando. Si llega después de que se cierre la factura, {merchant} lo acepta o lo devuelve.',
+    invoicePayment: 'Ya hay un pago de esta factura en camino. Espera a que se confirme antes de volver a pagar.',
     viewOnExplorer: 'Ver en el explorador',
     copyHash: 'Copiar la transacción',
   },
@@ -260,6 +261,12 @@ export const esLabels: NovaPaymentsLabels = {
     expiredWhileConfirming:
       'La factura se cerró mientras se confirmaba tu pago. Si llega, {merchant} lo acepta o lo devuelve.',
     expiredAfterQr: 'Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
+    expiredUnconfirmed:
+      'No se pudo confirmar tu pago. Revisa tu billetera: si el pago salió de ella, {merchant} lo acepta o lo devuelve.',
+    unconfirmedTitle: 'No pudimos confirmar tu pago',
+    unconfirmedText: 'Revisa tu billetera antes de volver a pagar: es posible que tu pago siga en camino.',
+    unconfirmedNote: 'Esta página sigue la factura: si el pago llega, aparecerá como pagada.',
+    unconfirmedPayAgain: 'El pago no salió de mi billetera',
     cancelledTitle: 'Esta factura se canceló',
     cancelledText: '{merchant} la canceló; no se te cobró nada.',
     replacedTitle: '{merchant} corrigió esta factura',
