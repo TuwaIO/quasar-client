@@ -71,8 +71,9 @@ export interface PaymentCheckoutProps {
    */
   payUrl?: string | null;
   /**
-   * Connects a wallet of a chain family, for apps without Nova Connect. Inside `NovaConnectProvider` the checkout opens
-   * its connect modal instead.
+   * Connects a wallet of a chain family, for apps without Nova Connect; overrides the `onConnectWallet` of
+   * `NovaPaymentsProvider`. Inside `NovaConnectProvider` (the app's, or Nova's own connection of `NovaPaymentsProvider`)
+   * the checkout opens its connect modal instead.
    *
    * @param family - The family of the chosen method.
    */

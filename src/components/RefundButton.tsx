@@ -7,6 +7,7 @@ import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { type RefundFlow, type RefundRequest, useRefund } from '../hooks/useRefund';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { formatTokenAmount, shortAddress } from '../utils/format';
+import type { PaymentFamily } from '../utils/methods';
 import { iconButton, mono, primaryAction } from './classes';
 import { RadioCards } from './RadioCards';
 import {
@@ -55,6 +56,14 @@ export interface RefundDialogProps {
   /** "Record refund": the app's form for a refund sent another way; offered when the wallet does not send it. */
   onRecord?: () => void;
   /**
+   * Connects a wallet of the payment's chain family, for apps without Nova Connect; overrides the `onConnectWallet` of
+   * `NovaPaymentsProvider`. Inside `NovaConnectProvider` (the app's, or Nova's own connection) the window opens its
+   * connect modal instead.
+   *
+   * @param family - The chain family of the payment.
+   */
+  onConnectWallet?: (family: PaymentFamily) => void;
+  /**
    * Called once Quasar confirmed the refund and issued its credit note.
    *
    * @param refund - The confirmed refund (`Refund` of `@tuwaio/quasar-sdk`).
@@ -74,8 +83,9 @@ export interface RefundButtonProps extends Omit<RefundDialogProps, 'open' | 'onO
 
 /**
  * A button that refunds a paid invoice from the merchant's connected wallet: it opens {@link RefundDialog}. Put it
- * inside `NovaPaymentsProvider` with the adapters of the chain families, and inside `NovaConnectProvider` to connect
- * the wallet.
+ * inside {@link NovaPaymentsProvider}: it uses the provider's wallet connection (the app's Satellite store and Nova
+ * Connect when the app has them, else Nova's own `ownConnection`) and its adapters. In an app whose wallets connect
+ * without Nova Connect, pass `onConnectWallet` here or to the provider.
  *
  * @param props - See {@link RefundButtonProps}.
  * @returns The button and its window.
@@ -130,6 +140,7 @@ export function RefundDialog({ open, onOpenChange, locale = 'en', onRefunded, ..
     params: open ? props.params : undefined,
     labels,
     locale,
+    onConnectWallet: props.onConnectWallet,
   });
   const refunded = useEffectEvent((refund: Refund) => onRefunded?.(refund));
   // The store stops following a confirmed refund: this object changes once

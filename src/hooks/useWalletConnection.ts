@@ -3,6 +3,7 @@ import { OrbitAdapter } from '@tuwaio/orbit-core';
 import { useContext } from 'react';
 
 import type { PaymentFamily } from '../utils/methods';
+import { useNovaPayments } from './useNovaPayments';
 
 /** What {@link useWalletConnection} returns. */
 export interface WalletConnection {
@@ -21,15 +22,19 @@ export interface WalletConnection {
 
 /**
  * Connects a wallet for a payment: opens the connect modal of Nova Connect on the wallets of the method's chain family
- * when the checkout is inside `NovaConnectProvider` of `@tuwaio/nova-connect`, else calls the app's handler.
+ * when the checkout is inside `NovaConnectProvider` of `@tuwaio/nova-connect` (the app's, or Nova's own connection of
+ * {@link NovaPaymentsProvider}), else calls the app's handler: `onConnectWallet`, or that of `NovaPaymentsProvider`.
  *
- * @param onConnectWallet - The app's handler, for apps that connect wallets without Nova Connect.
+ * @param onConnectWallet - The app's handler, for apps that connect wallets without Nova Connect; overrides the
+ * `onConnectWallet` of `NovaPaymentsProvider`.
  * @returns See {@link WalletConnection}.
  */
 export function useWalletConnection(onConnectWallet?: (family: PaymentFamily) => void): WalletConnection {
   const novaConnect = useContext(NovaConnectProviderContext);
+  const settings = useNovaPayments();
+  const handler = onConnectWallet ?? settings.onConnectWallet;
   return {
-    canConnect: Boolean(novaConnect || onConnectWallet),
+    canConnect: Boolean(novaConnect || handler),
     connecting: novaConnect?.isConnectModalOpen ?? false,
     connect: (family) => {
       if (novaConnect) {
@@ -38,8 +43,8 @@ export function useWalletConnection(onConnectWallet?: (family: PaymentFamily) =>
         });
         return true;
       }
-      if (!onConnectWallet) return false;
-      onConnectWallet(family);
+      if (!handler) return false;
+      handler(family);
       return true;
     },
   };

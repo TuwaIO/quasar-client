@@ -7,20 +7,34 @@ import type { CheckoutWallet } from '../utils/methods';
 vi.mock('react', async () => ({
   ...(await vi.importActual<object>('react')),
   ...(await import('../testing/hookHarness')).hooks,
+  // No NovaConnectProvider above
+  useContext: () => undefined,
 }));
 // The store is read as it is now; the harness renders again on demand
 vi.mock('zustand', () => ({
   useStore: (store: { getState: () => unknown }, select?: (state: unknown) => unknown) =>
     select ? select(store.getState()) : store.getState(),
 }));
-const settings: { adapters?: PaymentsAdapter[]; pulsar?: { injectExternalPendingTxs: ReturnType<typeof vi.fn> } } = {};
+const settings: {
+  adapters?: PaymentsAdapter[];
+  pulsar?: { injectExternalPendingTxs: ReturnType<typeof vi.fn> };
+  onConnectWallet?: (family: 'eip155' | 'solana') => void;
+} = {};
 vi.mock('./useNovaPayments', () => ({ useNovaPayments: () => settings }));
 let wallet: CheckoutWallet | null = null;
 vi.mock('./useConnectedWallet', () => ({ useConnectedWallet: () => wallet }));
 const connect = vi.fn(() => true);
-vi.mock('./useWalletConnection', () => ({
-  useWalletConnection: () => ({ canConnect: true, connecting: false, connect }),
-}));
+// The real hook when a test asks for it, else a Nova Connect that connects
+const realConnection = vi.hoisted(() => ({ on: false }));
+vi.mock('./useWalletConnection', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./useWalletConnection')>();
+  return {
+    useWalletConnection: (onConnectWallet?: (family: 'eip155' | 'solana') => void) =>
+      realConnection.on
+        ? actual.useWalletConnection(onConnectWallet)
+        : { canConnect: true, connecting: false, connect },
+  };
+});
 
 const { render, unmount } = await import('../testing/hookHarness');
 const { defaultLabels } = await import('../i18n');
@@ -74,6 +88,8 @@ function setup(options: { balance?: bigint; to?: string | null; submit?: RefundS
 afterEach(() => {
   unmount();
   wallet = null;
+  realConnection.on = false;
+  settings.onConnectWallet = undefined;
   vi.clearAllMocks();
 });
 
@@ -89,6 +105,26 @@ describe('useRefund', () => {
 
     flow().connect();
     expect(connect).toHaveBeenCalledWith('eip155');
+  });
+
+  it("connects through the app's handler without Nova Connect, and can't connect without one", async () => {
+    realConnection.on = true;
+    const { flow } = setup();
+    await flow().start({ mode: 'exact_received' });
+    expect(flow().canConnect).toBe(false);
+    unmount();
+
+    const onConnectWallet = vi.fn();
+    expect(flow({ onConnectWallet }).canConnect).toBe(true);
+    flow({ onConnectWallet }).connect();
+    expect(onConnectWallet).toHaveBeenCalledWith('eip155');
+    unmount();
+
+    // The handler of NovaPaymentsProvider
+    settings.onConnectWallet = vi.fn();
+    expect(flow().canConnect).toBe(true);
+    flow().connect();
+    expect(settings.onConnectWallet).toHaveBeenCalledWith('eip155');
   });
 
   it('starts at once with the refund the app worked out', async () => {

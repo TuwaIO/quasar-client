@@ -13,10 +13,10 @@
 ## 💾 Installation
 
 ```bash
-pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/nova-connect @tuwaio/nova-transactions @tuwaio/satellite-react @tuwaio/pulsar-core @tuwaio/orbit-core zustand react framer-motion @heroicons/react @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
+pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/nova-connect @tuwaio/nova-transactions @tuwaio/satellite-react @tuwaio/satellite-core @tuwaio/pulsar-core @tuwaio/orbit-core zustand react framer-motion @heroicons/react @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
 ```
 
-The checkout connects wallets through Nova Connect (`NovaConnectProvider` of `@tuwaio/nova-connect`, with its own peers) when the app sets it up; apps that connect wallets differently pass `onConnectWallet`, and without either the buyer pays with a QR code.
+The checkout connects wallets through Nova Connect (`NovaConnectProvider` of `@tuwaio/nova-connect`, with its own peers): the app's, or Nova's own when the app has no wallet connection (see "Wallet connection" below). Apps that connect wallets differently pass `onConnectWallet`, and without either the buyer pays with a QR code.
 
 Import the stylesheets of `@tuwaio/nova-core` (theme variables), of `@tuwaio/nova-transactions` (the confirm and paid steps reuse its progress) and of this package (Tailwind CSS v4 utilities prefixed with `novapay:`):
 
@@ -25,6 +25,8 @@ Import the stylesheets of `@tuwaio/nova-core` (theme variables), of `@tuwaio/nov
 @import '@tuwaio/nova-transactions/dist/index.css';
 @import '@tuwaio/nova-payments/dist/index.css';
 ```
+
+With Nova's own connection, also import `@tuwaio/nova-connect/dist/index.css` for its connect modal.
 
 ---
 
@@ -88,6 +90,67 @@ export function Payments({
 }
 ```
 
+### Wallet connection: the app's or Nova's own
+
+Nova Payments brings its own wallet connection only when the app has none. `NovaPaymentsProvider` decides once, on its first render, and `usePaymentsConnection` tells which:
+
+| Above `NovaPaymentsProvider`                                   | Wallet, network and connect modal                                                             | Payment adapters         |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------ |
+| The app's `SatelliteConnectProvider` and `NovaConnectProvider` | The app's (`app`), with its SIWX; Nova mounts nothing of its own                              | `adapters`               |
+| The app's `SatelliteConnectProvider` only                      | The app's wallet (`appStore`); "Connect wallet" calls `onConnectWallet`; never a second store | `adapters`               |
+| Nothing, and `ownConnection` is given                          | Nova's own (`own`): a Satellite store, the watchers and a Nova Connect modal, never with SIWX | `ownConnection.adapters` |
+| Nothing                                                        | None (`none`): QR codes, and `onConnectWallet`                                                | `adapters`               |
+
+Inside an app with Satellite Connect and Nova Connect, add only `NovaPaymentsProvider` with `adapters` on the wagmi config of the app's Satellite EVM adapter (as above): the checkout and the refunds show the app's wallet, "Connect wallet" opens the app's modal, and a payment on another network switches that wallet. If the app signs in with SIWX through Nova Connect, set `siwx.sessionScope: 'account'` there when its server binds a session to the address only, so a network switch made by the checkout does not ask the wallet to sign in again (see [`@tuwaio/nova-connect`](https://stories.tuwa.io/?path=/docs/packages-nova-connect-overview--docs)). A `NovaPaymentsProvider` inside another one's own connection uses that connection, so two stores never stack, and without `adapters` it pays with those of the provider above.
+
+A page without a wallet connection (a payment page, an admin page) gives `ownConnection`, created once at module level. Nova's store runs no start-up disconnect, so it never drops the wallet of another tab or of the host page. It lives as long as the page, one per Satellite adapter, as the wagmi config does: a checkout closed and opened again, another page or a second provider on the same adapters shows the wallet still connected. `autoConnect: true` reconnects the last wallet once per page load, with Satellite's start-up, which disconnects first; without it, the connect modal hides "Remember this wallet", since nothing would reconnect the wallet. Nova's own connection and its Nova Connect modal load on demand, so an app that does not use them does not download them.
+
+```tsx
+'use client';
+
+import { EVMConnectorsWatcher } from '@tuwaio/nova-connect/evm';
+import { SolanaConnectorsWatcher } from '@tuwaio/nova-connect/solana';
+import { type NovaPaymentsOwnConnection, NovaPaymentsProvider, PaymentCheckout } from '@tuwaio/nova-payments';
+import { paymentsEVMAdapter } from '@tuwaio/nova-payments/evm';
+import { paymentsSolanaAdapter } from '@tuwaio/nova-payments/solana';
+import { createDefaultTransports, satelliteEVMAdapter } from '@tuwaio/satellite-evm';
+import { satelliteSolanaAdapter } from '@tuwaio/satellite-solana';
+import { createConfig, createStorage, injected, noopStorage } from '@wagmi/core';
+import { base, type Chain, mainnet } from 'viem/chains';
+
+const chains = [mainnet, base] as readonly [Chain, ...Chain[]];
+const solanaRPCUrls = { mainnet: 'https://api.mainnet-beta.solana.com' };
+const wagmiConfig = createConfig({
+  chains,
+  connectors: [injected()],
+  transports: createDefaultTransports(chains),
+  ssr: true,
+  storage: createStorage({ storage: noopStorage }),
+});
+
+const ownConnection: NovaPaymentsOwnConnection = {
+  adapter: [satelliteEVMAdapter(wagmiConfig, chains), satelliteSolanaAdapter({ rpcUrls: solanaRPCUrls })],
+  watchers: (
+    <>
+      <EVMConnectorsWatcher wagmiConfig={wagmiConfig} />
+      <SolanaConnectorsWatcher />
+    </>
+  ),
+  adapters: [paymentsEVMAdapter(wagmiConfig), paymentsSolanaAdapter({ rpcUrls: solanaRPCUrls })],
+  novaConnect: { appChains: chains, solanaRPCUrls, withBalance: true, withChain: true },
+};
+
+export function PayPage({ token }: { token: string }) {
+  return (
+    <NovaPaymentsProvider ownConnection={ownConnection}>
+      <PaymentCheckout token={token} display="page" />
+    </NovaPaymentsProvider>
+  );
+}
+```
+
+The full integration with Satellite Connect, SIWX and Pulsar is in the **[Full-Stack React guide](https://docs.tuwa.io/guides/full-stack-react)**.
+
 After the payment the checkout shows its outcome: confirming, paid with the receipt and the way back to the invoice's `successUrl` (a visible countdown with "Stay here"; `autoReturnSeconds`, `0` for none), and for a subscription the optional automatic payments (ERC-7715). Underpaid, held, refunded, expired, cancelled and corrected invoices get their own outcome with a "Contact" link to the seller (`onContact` replaces it). `onPaid` tells the page once the invoice is paid; fulfil orders from the `invoice.paid` webhook on your server. Closing the checkout before anything is sent asks first.
 
 ### Customization
@@ -129,7 +192,7 @@ export function BrandedCheckout({ token }: { token: string }) {
 
 ### Refunds
 
-`RefundButton` refunds a paid invoice from the merchant's connected wallet: what to refund (an amount of the invoice currency or everything received), a wallet of the payment's network, the confirmation with the wallet's balance and the network fee, the wallet's prompt, then Quasar follows the transaction and issues the credit note. It takes a refund store of `@tuwaio/quasar-sdk/checkout` whose three calls run on your server with the secret key (Server Actions calling `quasar.payments.refund`, `submitRefund` and `getRefund`). Put it inside `NovaPaymentsProvider` with the chain adapters and inside `NovaConnectProvider` to connect the wallet. A wallet on another network is asked to switch first; one that holds too little is asked nothing; a refund the wallet sent but Quasar did not take is handed over again, never sent twice. `RefundDialog` is the same window opened by your own button, `params` skips the amount step, and `onRecord` offers your form for a refund sent another way.
+`RefundButton` refunds a paid invoice from the merchant's connected wallet: what to refund (an amount of the invoice currency or everything received), a wallet of the payment's network, the confirmation with the wallet's balance and the network fee, the wallet's prompt, then Quasar follows the transaction and issues the credit note. It takes a refund store of `@tuwaio/quasar-sdk/checkout` whose three calls run on your server with the secret key (Server Actions calling `quasar.payments.refund`, `submitRefund` and `getRefund`). Put it inside `NovaPaymentsProvider`: it uses the provider's wallet connection (the app's, or Nova's own) and its adapters; without Nova Connect, `onConnectWallet` connects the wallet. A wallet on another network is asked to switch first; one that holds too little is asked nothing; a refund the wallet sent but Quasar did not take is handed over again, never sent twice. `RefundDialog` is the same window opened by your own button, `params` skips the amount step, and `onRecord` offers your form for a refund sent another way.
 
 ```tsx
 'use client';
@@ -157,9 +220,11 @@ The checkout speaks the six languages of Quasar invoices: English, Simplified Ch
 
 The checkout and the refund window save nothing to `localStorage` or cookies; a refund transaction the wallet sent is kept in memory until Quasar takes it. A payment it hands over to your Pulsar store is kept by that store (`createPulsarStore` persists its pool under its own name).
 
+Nova's own connection (`ownConnection`) keeps the connected wallet in `sessionStorage` until the tab closes (`orbit-core:lastConnectedConnector` and `orbit-core:recentlyConnectedConnectorsListHelpers`, see [`@tuwaio/satellite-core`](https://satellite.docs.tuwa.io/packages/satellite-core)), and in `localStorage` with `rememberWallet: true` or, with `autoConnect`, when the buyer ticks "Remember this wallet" in its connect modal. Every Satellite store of the site shares these keys: connecting a wallet there that is not remembered moves `orbit-core:lastConnectedConnector` and that wallet's entry of the list out of `localStorage`, and disconnecting removes the last connection, so another Satellite app on the same origin forgets the wallet it remembered. wagmi keeps its own `wagmi.*` keys in `localStorage` unless the wagmi config uses `createStorage({ storage: noopStorage })`, as in the example above. Inside the app's connection, the app's stores keep them.
+
 ## 🌐 External Services
 
-The checkout routes of the Quasar API (`baseUrl`, Quasar Cloud by default): `GET /v1/payments/checkout/{token}`, its event stream and logo, and the `POST` routes of the steps (`buyer`, `locale`, `quote`, `submit`, `relay`; the wallet calls the `paymaster` route for sponsored calls). The `permission` route takes the automatic payments of a subscription. The EVM adapter reads balances and fee estimates through the RPC transports of your wagmi config, the Solana adapter through its `rpcUrls` (else the public endpoint of the cluster); links to transactions open the chain's block explorer (the explorer of the wagmi chain, the Solana Explorer). A refund calls only your server (the calls of its store); the adapters read the merchant wallet's balance and the fee the same way. The wallet asks the buyer, or the merchant for a refund, before every signature, transaction or permission.
+The checkout routes of the Quasar API (`baseUrl`, Quasar Cloud by default): `GET /v1/payments/checkout/{token}`, its event stream and logo, and the `POST` routes of the steps (`buyer`, `locale`, `quote`, `submit`, `relay`; the wallet calls the `paymaster` route for sponsored calls). The `permission` route takes the automatic payments of a subscription. The EVM adapter reads balances and fee estimates through the RPC transports of your wagmi config, the Solana adapter through its `rpcUrls` (else the public endpoint of the cluster); links to transactions open the chain's block explorer (the explorer of the wagmi chain, the Solana Explorer). A refund calls only your server (the calls of its store); the adapters read the merchant wallet's balance and the fee the same way. Nova's own connection loads what its Satellite adapters and its Nova Connect modal load (see [`@tuwaio/nova-connect`](https://stories.tuwa.io/?path=/docs/packages-nova-connect-overview--docs)) through the RPC of its wagmi config and `rpcUrls`. The wallet asks the buyer, or the merchant for a refund, before every signature, transaction or permission.
 
 ---
 

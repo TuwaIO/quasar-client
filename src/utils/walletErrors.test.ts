@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PaymentWalletError, walletErrorKind } from './walletErrors';
 
@@ -19,6 +19,37 @@ describe('walletErrorKind', () => {
     expect(walletErrorKind(new Error('execution reverted'))).toBe('failed');
     expect(walletErrorKind('boom')).toBe('failed');
     expect(walletErrorKind(undefined)).toBe('failed');
+  });
+
+  // wagmi's errors, by name: the chain is not in the wagmi config, or the config has no connection of the wallet
+  const wagmiError = (name: string, message: string) => Object.assign(new Error(message), { name });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("calls a chain the app's wagmi config lacks unsupported", () => {
+    expect(walletErrorKind(wagmiError('ChainNotConfiguredError', 'Chain not configured.'))).toBe('unsupported');
+    // viem wraps it in its own error
+    const wrapped = Object.assign(new Error('Switch failed'), {
+      cause: wagmiError('ChainNotConfiguredError', 'Chain not configured.'),
+    });
+    expect(walletErrorKind(wrapped)).toBe('unsupported');
+  });
+
+  it('calls a wallet the wagmi config of the adapter has no connection of unsupported, and says why in development', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.stubEnv('NODE_ENV', 'development');
+    expect(walletErrorKind(wagmiError('ConnectorNotConnectedError', 'Connector not connected.'))).toBe('unsupported');
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(String(error.mock.calls[0][0])).toContain(
+      'paymentsEVMAdapter is built on a wagmi config the connected wallet is not in',
+    );
+
+    vi.stubEnv('NODE_ENV', 'production');
+    expect(walletErrorKind(wagmiError('ConnectorNotConnectedError', 'Connector not connected.'))).toBe('unsupported');
+    expect(error).toHaveBeenCalledTimes(1);
   });
 
   it('does not loop on a cause that points back to itself', () => {

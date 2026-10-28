@@ -64,6 +64,13 @@ export interface UseRefundParams {
   labels: NovaPaymentsLabels;
   /** The language, for amounts. */
   locale: string;
+  /**
+   * Connects a wallet of the payment's chain family, for apps without Nova Connect (the `onConnectWallet` of
+   * `NovaPaymentsProvider` otherwise). Inside `NovaConnectProvider` the refund opens its connect modal instead.
+   *
+   * @param family - The chain family of the payment.
+   */
+  onConnectWallet?: (family: PaymentFamily) => void;
 }
 
 /** What {@link useRefund} returns. */
@@ -128,11 +135,19 @@ export interface RefundFlow {
  * @param params - See {@link UseRefundParams}.
  * @returns See {@link RefundFlow}.
  */
-export function useRefund({ store, invoiceId, invoice, params, labels, locale }: UseRefundParams): RefundFlow {
+export function useRefund({
+  store,
+  invoiceId,
+  invoice,
+  params,
+  labels,
+  locale,
+  onConnectWallet,
+}: UseRefundParams): RefundFlow {
   const state = useStore(store);
   const { adapters, pulsar } = useNovaPayments();
   const connected = useConnectedWallet();
-  const connection = useWalletConnection();
+  const connection = useWalletConnection(onConnectWallet);
   const [status, setStatus] = useState<'idle' | 'switching' | 'wallet'>('idle');
   const [problem, setProblem] = useState<RefundProblem | null>(null);
   const [, rerender] = useState(0);

@@ -18,6 +18,7 @@ export * from './hooks/useOutcomeEffects';
 export * from './hooks/usePayment';
 export * from './hooks/usePaymentFacts';
 export * from './hooks/usePaymentHandOver';
+export * from './hooks/usePaymentsConnection';
 export * from './hooks/usePaymentsLabels';
 export * from './hooks/useRefund';
 export * from './hooks/useWalletConnection';

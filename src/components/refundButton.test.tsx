@@ -11,13 +11,25 @@ vi.mock('../hooks/useCheckoutContext', () => ({
   useCheckoutContext: () => null,
   useOptionalCheckoutContext: () => null,
 }));
+// The window's hooks: the labels of the language, and the flow it asks `useRefund` for (the steps take a flow)
+vi.mock('../hooks/usePaymentsLabels', async () => {
+  const { defaultLabels } = await import('../i18n');
+  return { usePaymentsLabels: () => defaultLabels };
+});
+const refundHook = vi.hoisted(() => ({ params: [] as unknown[] }));
+vi.mock('../hooks/useRefund', () => ({
+  useRefund: (params: unknown) => {
+    refundHook.params.push(params);
+    return { step: 'connect', phase: 'awaitingTransfer', refund: null };
+  },
+}));
 
 const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { defaultLabels } = await import('../i18n');
 const { PrimaryButton, SecondaryButton, ScreenContent, ScreenError } = await import('./ScreenParts');
 const { RadioCards } = await import('./RadioCards');
-const { AmountStep, ConfirmStep, RefundSteps } = await import('./RefundButton');
+const { AmountStep, ConfirmStep, RefundButton, RefundDialog, RefundSteps } = await import('./RefundButton');
 
 type Props = Record<string, unknown>;
 const PAYER = '0x9c1e000000000000000000000000000000004f02';
@@ -89,7 +101,10 @@ const confirm = (flow: RefundFlow, extra: Props = {}) =>
     ...extra,
   });
 
-afterEach(unmount);
+afterEach(() => {
+  unmount();
+  refundHook.params.length = 0;
+});
 
 // Board RefundSendStates of the dashboard sketch: the steps of a refund from the merchant's wallet
 describe('RefundButton', () => {
@@ -106,6 +121,18 @@ describe('RefundButton', () => {
     tree = render(AmountStep, { flow, labels: defaultLabels, currency: 'USD' });
     (button(tree, PrimaryButton).props.onClick as () => void)();
     expect(flow.start).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '12.5' });
+  });
+
+  it("connects the wallet through the app's handler, for apps without Nova Connect", () => {
+    const onConnectWallet = vi.fn();
+    const store = {} as never;
+    const tree = render(RefundButton, { store, invoiceId: 'inv_1', onConnectWallet });
+    const dialog = fixture.ofType(tree, RefundDialog)[0] as ReactElement<Props>;
+    expect(dialog.props.onConnectWallet).toBe(onConnectWallet);
+    unmount();
+
+    render(RefundDialog, { ...dialog.props, open: true, onOpenChange: vi.fn() } as never);
+    expect(refundHook.params.at(-1)).toMatchObject({ store, invoiceId: 'inv_1', onConnectWallet });
   });
 
   it('has the merchant connect a wallet of the network of the payment', () => {
