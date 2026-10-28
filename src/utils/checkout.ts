@@ -197,3 +197,16 @@ export const QUOTE_WARNING_MS = 60_000;
 export function isQuoteEnding(ms: number): boolean {
   return ms > 0 && ms <= QUOTE_WARNING_MS;
 }
+
+/**
+ * Whether the merchant checks paying wallets before payment: `amlScreening` of the checkout, `true` when its AML mode
+ * is `block` or `flag`. The pay step says so only then. A checkout of a Quasar version without the field counts as
+ * checking, as the pay step always said before.
+ *
+ * @param checkout - What the checkout token opens.
+ * @returns `false` only when the checkout says that the merchant does not check paying wallets.
+ */
+export function screensPayingWallets(checkout: CheckoutView): boolean {
+  // `amlScreening` is newer than some Quasar versions and `@tuwaio/quasar-sdk` alphas: read it as optional
+  return (checkout as CheckoutView & { amlScreening?: boolean }).amlScreening !== false;
+}

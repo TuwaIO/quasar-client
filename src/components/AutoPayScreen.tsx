@@ -22,9 +22,9 @@ import { WalletPrompt } from './WalletPrompt';
 
 /**
  * The automatic payments offer of a subscription, after a paid period: the limit the seller may take each period, the
- * period, the paying wallet and the account that takes the charges, until when, and how to turn it off. "Allow" asks
- * the wallet for the ERC-7715 permission and hands it to Quasar (then the paid outcome says automatic payments are
- * on); "Not now" keeps paying each invoice.
+ * period, the paying wallet and the seller's wallet the charges are paid to, until when, that Quasar sends each charge
+ * for the seller, and how to turn it off. "Allow" asks the wallet for the ERC-7715 permission and hands it to Quasar
+ * (then the paid outcome says automatic payments are on); "Not now" keeps paying each invoice.
  *
  * Side effects: a wallet prompt; `POST permission` of the checkout.
  *
@@ -111,6 +111,7 @@ export function AutoPayScreen() {
                 )}
               </DetailsCard>
               <ul className="novapay:m-0 novapay:flex novapay:list-disc novapay:flex-col novapay:gap-1 novapay:pl-4 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+                <li>{formatLabel(labels.autoPay.collector, { merchant })}</li>
                 <li>{labels.autoPay.invoices}</li>
                 <li>{formatLabel(labels.autoPay.cap, { merchant })}</li>
                 <li>{labels.autoPay.turnOff}</li>

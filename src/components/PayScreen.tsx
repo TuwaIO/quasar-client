@@ -8,7 +8,7 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePayment } from '../hooks/usePayment';
 import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
-import { isQuoteEnding, QUOTE_WARNING_MS } from '../utils/checkout';
+import { isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/checkout';
 import {
   baseUnitsToDecimal,
   formatCountdown,
@@ -54,10 +54,15 @@ function problemText(
   if (problem === 'failed' || errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;
-  // A new price was refused: the feed or the network of the method cannot be read now
-  if (errorCode === 'price_unavailable') return labels.method.priceUnavailable;
+  // A new price was refused: the feed or the network of the method cannot be read now, or the seller set up no RPC
+  // for that network
+  if (errorCode === 'price_unavailable' || errorCode === 'price_no_rpc') return labels.method.priceUnavailable;
   return null;
 }
+
+/** The sentences of one note: a space between them, none after a full-width stop (Chinese). */
+const sentences = (...parts: string[]) =>
+  parts.reduce((text, part) => (text && !/[。！？]$/.test(text) ? `${text} ${part}` : `${text}${part}`), '');
 
 /** The methods of the wallet's family it holds a balance of, for "Pay from what this wallet has". */
 function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null, short: boolean) {
@@ -90,7 +95,9 @@ function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null,
  * on the wrong network. Before the prompt it reads the wallet's balance (unless `config.balanceCheck` is `false`)
  * and, when it is short, offers the methods the wallet can pay and the seller's top-up link. `handlers.onSubmit` wraps
  * the pay button. A Solana payment off mainnet reminds the buyer to switch the wallet to its cluster (Solana wallets
- * choose their network themselves), with the steps of Phantom and Solflare.
+ * choose their network themselves), with the steps of Phantom and Solflare. The note under the buttons says that the
+ * payment goes straight to the merchant and, when the merchant checks paying wallets (`amlScreening` of the
+ * checkout), that it does.
  *
  * Side effects: balance, fee and wallet capability reads from the network through the chain adapter (no request to
  * Quasar); wallet prompts; checkout requests to Quasar; on a Solana payment, `switchNetwork` of the Satellite store
@@ -448,7 +455,13 @@ export function PayScreen() {
             {action.label}
           </PrimaryButton>
           <SecondaryButton onClick={backToMethods}>{labels.pay.back}</SecondaryButton>
-          <FooterNote>{formatLabel(labels.pay.disclaimer, { merchant })}</FooterNote>
+          <FooterNote>
+            {sentences(
+              formatLabel(labels.pay.disclaimer, { merchant }),
+              // Only a merchant that checks paying wallets says so (an older Quasar always did)
+              ...(screensPayingWallets(checkout) ? [formatLabel(labels.pay.disclaimerScreening, { merchant })] : []),
+            )}
+          </FooterNote>
         </ScreenFooter>
       </div>
 

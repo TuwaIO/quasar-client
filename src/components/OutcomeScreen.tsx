@@ -16,7 +16,7 @@ import { formatLabel } from '../i18n';
 import type { CheckoutScreen } from '../utils/checkout';
 import { formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from '../utils/format';
 import { networkName, payerFor } from '../utils/methods';
-import { contactHref, underpaidRest } from '../utils/outcome';
+import { contactHref, receivedAmount, underpaidRest } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { mono, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
@@ -85,8 +85,9 @@ function ContactLink() {
 
 /**
  * An outcome other than paid: an underpaid invoice ("Pay the rest"), a payment the seller reviews (screening, late,
- * overpaid), a refunded, expired or cancelled invoice, a corrected one ("Open <new invoice>" opens it here) and a payer
- * the wallet check refused ("Use another wallet"). Each offers to contact the seller.
+ * overpaid, after the price lock ran out), a refunded invoice, an expired one (with what arrived before the deadline,
+ * which the seller can refund), a cancelled one, a corrected one ("Open <new invoice>" opens it here) and a payer the
+ * wallet check refused ("Use another wallet"). Each offers to contact the seller.
  *
  * @param props - The outcome.
  * @param props.kind - Which outcome.
@@ -107,8 +108,8 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         Date.parse(checkout.invoice.dueAt),
       )
     : null;
-  const token = (amount: string) =>
-    quote ? `${formatTokenAmount(amount, quote.decimals, locale)} ${quote.instructions.symbol}` : amount;
+  const token = (amount: string, locked = quote) =>
+    locked ? `${formatTokenAmount(amount, locked.decimals, locale)} ${locked.instructions.symbol}` : amount;
 
   let title: string;
   let body: ReactNode = null;
@@ -157,13 +158,16 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
     }
     case 'held': {
       title = formatLabel(labels.outcome.heldTitle, { merchant });
-      const reason = checkout.invoice.review?.reason;
+      // `quote_expired` is newer than some `@tuwaio/quasar-sdk` alphas; an unknown reason reads as a check
+      const reason: string | undefined = checkout.invoice.review?.reason;
       const text =
         reason === 'late'
           ? labels.outcome.heldLate
           : reason === 'overpaid'
             ? labels.outcome.heldOverpaid
-            : labels.outcome.heldScreening;
+            : reason === 'quote_expired'
+              ? labels.outcome.heldQuoteExpired
+              : labels.outcome.heldScreening;
       body = (
         <>
           <Text>{formatLabel(text, { merchant })}</Text>
@@ -186,15 +190,33 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       );
       break;
     }
-    case 'expired':
+    case 'expired': {
       title = labels.outcome.expiredTitle;
+      // What arrived before the deadline stays with the seller, who can refund it: never "nothing was charged"
+      const received = receivedAmount(checkout.invoice.amountPaid);
+      // It is in base units of the invoice's locked quote: the buyer's, else the one the checkout reports
+      const locked = quote ?? checkout.quote;
       body = (
         <>
-          {due && <Text>{formatLabel(labels.outcome.expiredText, { date: due, merchant })}</Text>}
+          {received ? (
+            <>
+              {due && (
+                <Text>
+                  {locked
+                    ? formatLabel(labels.outcome.expiredPartText, { date: due, amount: token(received, locked) })
+                    : formatLabel(labels.outcome.expiredPartNoAmount, { date: due })}
+                </Text>
+              )}
+              <Text>{formatLabel(labels.outcome.expiredPartRefund, { merchant })}</Text>
+            </>
+          ) : (
+            due && <Text>{formatLabel(labels.outcome.expiredText, { date: due, merchant })}</Text>
+          )}
           <Text muted>{labels.outcome.expiredNote}</Text>
         </>
       );
       break;
+    }
     case 'cancelled':
       title = labels.outcome.cancelledTitle;
       body = <Text>{formatLabel(labels.outcome.cancelledText, { merchant })}</Text>;

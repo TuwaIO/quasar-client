@@ -215,8 +215,10 @@ export type NovaPaymentsLabels = {
     payWithGas: string;
     /** Goes back to the gasless payment: `{merchant}` (default: `Let {merchant} pay the gas`) */
     payGasless: string;
-    /** Under the button: `{merchant}` */
+    /** Under the button: `{merchant}` (default: `Payments go straight to {merchant} and can't be reversed; refunds come from the seller.`) */
     disclaimer: string;
+    /** After it, only when the merchant checks paying wallets (`amlScreening` of the checkout): `{merchant}` (default: `{merchant} checks paying wallets against sanctions lists and, where available, other risk signals.`) */
+    disclaimerScreening: string;
     /** Heading of the wrong network banner (default: `Wrong network`) */
     wrongNetwork: string;
     /** Text of the banner: `{current}`, `{network}` (default: `Your wallet is on {current}. This payment goes on {network}.`) */
@@ -406,17 +408,19 @@ export type NovaPaymentsLabels = {
     every: string;
     /** Row of the paying wallet (default: `From`) */
     from: string;
-    /** Row of the account that takes the payments (default: `To`) */
+    /** Row of the merchant's wallet the charges are paid to (default: `To`) */
     to: string;
     /** Row of the expiry (default: `Valid until`) */
     validUntil: string;
     /** Its value: `{date}` (default: `{date}, or until you cancel`) */
     validUntilValue: string;
-    /** First note (default: `Each charge comes with an invoice and a receipt by email.`) */
+    /** First note, on who sends the charges: `{merchant}` (default: `Quasar sends each charge for {merchant}, only to {merchant}'s wallet and within this limit.`) */
+    collector: string;
+    /** Second note (default: `Each charge comes with an invoice and a receipt by email.`) */
     invoices: string;
-    /** Second note: `{merchant}` (default: `{merchant} can't take more than this limit in a period.`) */
+    /** Third note: `{merchant}` (default: `{merchant} can't take more than this limit in a period.`) */
     cap: string;
-    /** Third note */
+    /** Fourth note */
     turnOff: string;
     /** Main button (default: `Allow automatic payments`) */
     confirm: string;
@@ -443,12 +447,14 @@ export type NovaPaymentsLabels = {
     payRest: string;
     /** Heading of a payment on review: `{merchant}` (default: `Payment received, {merchant} is checking it`) */
     heldTitle: string;
-    /** Reason `screening`: `{merchant}` (default: `{merchant} checks the payment before confirming the order.`) */
+    /** Reason `screening`, also while the reason is unknown or not read yet: `{merchant}` (default: `{merchant} checks the payment before confirming the order.`) */
     heldScreening: string;
     /** Reason `late`: `{merchant}` */
     heldLate: string;
     /** Reason `overpaid`: `{merchant}` */
     heldOverpaid: string;
+    /** Reason `quote_expired`: `{merchant}` (default: `The payment arrived after the price lock ran out. {merchant} accepts it or returns it.`) */
+    heldQuoteExpired: string;
     /** Under it (default: `The seller contacts you if anything is needed.`) */
     heldNote: string;
     /** Heading of a refunded invoice (default: `Refunded`) */
@@ -457,8 +463,14 @@ export type NovaPaymentsLabels = {
     refundedText: string;
     /** Heading of an expired invoice (default: `This invoice has expired`) */
     expiredTitle: string;
-    /** Its text: `{date}`, `{merchant}` */
+    /** Its text when nothing arrived: `{date}`, `{merchant}` */
     expiredText: string;
+    /** Its text when part of the payment arrived before it expired: `{date}`, `{amount}` with its symbol (default: `It was payable until {date}. Part of the payment arrived: {amount}.`) */
+    expiredPartText: string;
+    /** The same without the amount, when no locked quote tells its token: `{date}` (default: `It was payable until {date}. Part of the payment arrived.`) */
+    expiredPartNoAmount: string;
+    /** Under it: `{merchant}` (default: `{merchant} can refund it to the wallet that paid; contact {merchant}.`) */
+    expiredPartRefund: string;
     /** Under it */
     expiredNote: string;
     /** Heading of a cancelled invoice (default: `This invoice was cancelled`) */

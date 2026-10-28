@@ -2,7 +2,15 @@ import type { AutoChargeOffer, CheckoutMethod, CheckoutQuote } from '@tuwaio/qua
 import { describe, expect, it } from 'vitest';
 
 import { defaultLabels } from '../i18n/en';
-import { autoPayTerms, contactHref, formatPeriod, methodErrorText, needsLeaveConfirm, underpaidRest } from './outcome';
+import {
+  autoPayTerms,
+  contactHref,
+  formatPeriod,
+  methodErrorText,
+  needsLeaveConfirm,
+  receivedAmount,
+  underpaidRest,
+} from './outcome';
 
 describe('contactHref', () => {
   it("writes to the seller's support email about the invoice, else opens the seller's site", () => {
@@ -34,10 +42,14 @@ describe('methodErrorText', () => {
     expect(text('request_failed')).toBe(defaultLabels.pay.noAnswer);
     expect(text('amount_out_of_range')).toBe(defaultLabels.method.methodUnavailable);
     expect(text('method_not_found')).toBe(defaultLabels.method.methodUnavailable);
+    // A test invoice is paid on a test network only
+    expect(text('testnet_required')).toBe(defaultLabels.method.methodUnavailable);
     expect(text('payer_not_expected')).toBe(defaultLabels.method.payerNotExpected);
     expect(text('rate_limited')).toBe(defaultLabels.method.rateLimited);
-    // Quasar could not read the price of the method (its feed or RPC is down): another method may work
+    // Quasar could not read the price of the method (its feed or RPC is down, or the seller set up no RPC for its
+    // network): another method may work
     expect(text('price_unavailable')).toBe(defaultLabels.method.priceUnavailable);
+    expect(text('price_no_rpc')).toBe(defaultLabels.method.priceUnavailable);
     expect(text('something_new')).toBe(defaultLabels.error.generic);
   });
 });
@@ -89,6 +101,17 @@ describe('autoPayTerms', () => {
     });
     expect(autoPayTerms({ status: 'unavailable', reason: 'no_collector' }, [method()])).toBeNull();
     expect(autoPayTerms(offer, [])).toBeNull();
+
+    // The charges go to the merchant's wallet the payee rule names, not to the collector that sends them
+    const payee = '0x4444444444444444444444444444444444444444';
+    const withPayee: AutoChargeOffer = {
+      ...offer,
+      request: {
+        ...offer.request,
+        rules: [...offer.request.rules, { type: 'payee', data: { addresses: [payee] } }],
+      },
+    };
+    expect(autoPayTerms(withPayee, [method()])?.to).toBe(payee);
   });
 });
 
@@ -108,5 +131,14 @@ describe('underpaidRest', () => {
     expect(underpaidRest(quote, '89540000')).toBeNull();
     expect(underpaidRest(null, '1')).toBeNull();
     expect(underpaidRest(quote, null)).toBeNull();
+  });
+});
+
+describe('receivedAmount', () => {
+  it('is what arrived on the invoice, when anything did', () => {
+    expect(receivedAmount('80000000')).toBe('80000000');
+    expect(receivedAmount('0')).toBeNull();
+    expect(receivedAmount(null)).toBeNull();
+    expect(receivedAmount('')).toBeNull();
   });
 });

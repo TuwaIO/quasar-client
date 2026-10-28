@@ -123,4 +123,9 @@ describe('the pay step of a Solana payment', () => {
     solanaPay(MAINNET, MAINNET, { code: 'price_unavailable', message: 'raw' });
     expect(textOf(render(PayScreen, {}))).toContain("The price of this method can't be read right now.");
   });
+
+  it('says that the price cannot be read when the seller set up no RPC for its network', () => {
+    solanaPay(MAINNET, MAINNET, { code: 'price_no_rpc', message: 'raw' });
+    expect(textOf(render(PayScreen, {}))).toContain("The price of this method can't be read right now.");
+  });
 });

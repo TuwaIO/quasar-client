@@ -1,7 +1,14 @@
 import type { CheckoutMethod, CheckoutQuote, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
 import { describe, expect, it } from 'vitest';
 
-import { checkoutScreen, checkoutSteps, deadlineAnnouncement, groupMethodsByToken, isQuoteEnding } from './checkout';
+import {
+  checkoutScreen,
+  checkoutSteps,
+  deadlineAnnouncement,
+  groupMethodsByToken,
+  isQuoteEnding,
+  screensPayingWallets,
+} from './checkout';
 
 const method = (id: string, symbol: string, chainId: string, featured = false): CheckoutMethod => ({
   id,
@@ -175,5 +182,14 @@ describe('timers', () => {
     expect(isQuoteEnding(60_000)).toBe(true);
     expect(isQuoteEnding(1)).toBe(true);
     expect(isQuoteEnding(0)).toBe(false);
+  });
+});
+
+describe('screensPayingWallets', () => {
+  it("follows the merchant's AML screening, and counts a checkout without the field as screening", () => {
+    expect(screensPayingWallets({ ...view(), amlScreening: true } as CheckoutView)).toBe(true);
+    expect(screensPayingWallets({ ...view(), amlScreening: false } as CheckoutView)).toBe(false);
+    // A Quasar version before the field always said that it screens
+    expect(screensPayingWallets(view())).toBe(true);
   });
 });

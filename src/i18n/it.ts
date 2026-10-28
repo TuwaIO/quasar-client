@@ -117,7 +117,9 @@ export const itLabels: NovaPaymentsLabels = {
     payWithGas: 'Paga tu il gas',
     payGasless: 'Lascia che il gas lo paghi {merchant}',
     disclaimer:
-      'I pagamenti vanno direttamente a {merchant} e non sono reversibili; i rimborsi li effettua il venditore. I wallet che pagano vengono controllati nelle liste delle sanzioni.',
+      'I pagamenti vanno direttamente a {merchant} e non sono reversibili; i rimborsi li effettua il venditore.',
+    disclaimerScreening:
+      '{merchant} controlla i wallet che pagano nelle liste delle sanzioni e, dove disponibili, in base ad altri segnali di rischio.',
     wrongNetwork: 'Rete sbagliata',
     wrongNetworkText: 'Il tuo wallet è su {current}. Questo pagamento avviene su {network}.',
     switchHint: 'Il tuo wallet ti chiederà di approvare il cambio.',
@@ -222,6 +224,7 @@ export const itLabels: NovaPaymentsLabels = {
     to: 'A',
     validUntil: 'Valido fino al',
     validUntilValue: '{date}, o finché non annulli',
+    collector: 'Quasar esegue ogni addebito per {merchant}, solo verso il wallet di {merchant} ed entro questo limite.',
     invoices: 'Ogni addebito arriva con fattura e ricevuta via email.',
     cap: '{merchant} non può addebitare più di questo limite in un periodo.',
     turnOff: "Disattivalo quando vuoi: annulla l'abbonamento o revoca il permesso nel tuo wallet.",
@@ -243,11 +246,16 @@ export const itLabels: NovaPaymentsLabels = {
     heldLate: 'Il pagamento è arrivato dopo la chiusura della fattura. {merchant} lo accetta o lo restituisce.',
     heldOverpaid:
       "Hai inviato più dell'importo della fattura. {merchant} conferma l'ordine o restituisce la differenza al tuo wallet.",
+    heldQuoteExpired:
+      'Il pagamento è arrivato dopo la scadenza del blocco del prezzo. {merchant} lo accetta o lo restituisce.',
     heldNote: 'Il venditore ti contatterà se serve qualcosa.',
     refundedTitle: 'Rimborsato',
     refundedText: '{merchant} ha rimborsato questa fattura: {amount} {currency}.',
     expiredTitle: 'Questa fattura è scaduta',
     expiredText: 'Si poteva pagare fino al {date}. Chiedine una nuova a {merchant}; non ti è stato addebitato nulla.',
+    expiredPartText: 'Si poteva pagare fino al {date}. È arrivata una parte del pagamento: {amount}.',
+    expiredPartNoAmount: 'Si poteva pagare fino al {date}. È arrivata una parte del pagamento.',
+    expiredPartRefund: '{merchant} può rimborsarla al wallet che ha pagato; contatta {merchant}.',
     expiredNote:
       'Un pagamento inviato dopo la scadenza resta in sospeso finché il venditore non lo rimborsa o lo accetta.',
     cancelledTitle: 'Questa fattura è stata annullata',

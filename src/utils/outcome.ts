@@ -1,6 +1,6 @@
 /**
  * @file What the outcome steps show: how to reach the seller, when to ask before leaving, what a refusal means, the
- * terms of automatic payments, and what an underpaid invoice still needs.
+ * terms of automatic payments, what an underpaid invoice still needs, and what arrived on an invoice.
  */
 
 import type {
@@ -58,14 +58,18 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.pay.screeningUnavailable;
     case 'request_failed':
       return labels.pay.noAnswer;
+    // `testnet_required`: a test invoice is paid on a test network only
     case 'amount_out_of_range':
     case 'method_not_found':
+    case 'testnet_required':
       return labels.method.methodUnavailable;
     case 'payer_not_expected':
       return labels.method.payerNotExpected;
     case 'rate_limited':
       return labels.method.rateLimited;
+    // `price_no_rpc`: the seller set up no RPC for a network the price is read on, so another method may work
     case 'price_unavailable':
+    case 'price_no_rpc':
       return labels.method.priceUnavailable;
     case 'consent_required':
       return labels.method.consentRequired;
@@ -78,7 +82,10 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
 export interface AutoPayTerms {
   /** The CAIP-2 chain of the charges. */
   chainId: string;
-  /** The account that takes the payments (the merchant's collector). */
+  /**
+   * The wallet the charges are paid to: the merchant's, as the `payee` rule of the request names it (the app's
+   * collector, which sends the charges, when the request names no payee).
+   */
   to: string;
   /** The most it takes in a period, in base units of the token. */
   limit: string;
@@ -94,7 +101,7 @@ export interface AutoPayTerms {
 
 /**
  * The terms of an ERC-7715 automatic payments offer: the periodic limit in the token of the method, the period, the
- * expiry and the accounts.
+ * expiry and the merchant's wallet the charges are paid to.
  *
  * @param offer - The view's `autoCharge`.
  * @param methods - The view's methods (for the token of the offer).
@@ -106,9 +113,11 @@ export function autoPayTerms(offer: AutoChargeOffer | null, methods: CheckoutMet
   if (!method) return null;
   const { request } = offer;
   const expiry = request.rules.find((rule) => rule.type === 'expiry')?.data as { timestamp?: number } | undefined;
+  // The permission pays only the merchant's wallet; `request.to` is the collector that sends each charge
+  const payee = request.rules.find((rule) => rule.type === 'payee')?.data as { addresses?: string[] } | undefined;
   return {
     chainId: `eip155:${Number.parseInt(request.chainId, 16)}`,
-    to: request.to,
+    to: payee?.addresses?.[0] ?? request.to,
     limit: BigInt(request.permission.data.periodAmount).toString(),
     decimals: method.decimals,
     symbol: method.symbol,
@@ -145,4 +154,14 @@ export function underpaidRest(
   if (!quote || amountPaid === null) return null;
   const rest = BigInt(quote.cryptoAmountExpected) - BigInt(amountPaid);
   return rest > 0n ? rest.toString() : null;
+}
+
+/**
+ * What arrived on an invoice, when anything did: an expired invoice says so instead of "nothing was charged".
+ *
+ * @param amountPaid - What arrived, in base units of the locked token (`amountPaid` of the invoice).
+ * @returns The amount, or `null` when nothing arrived.
+ */
+export function receivedAmount(amountPaid: string | null): string | null {
+  return amountPaid && /^\d+$/.test(amountPaid) && BigInt(amountPaid) > 0n ? amountPaid : null;
 }
