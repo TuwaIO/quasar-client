@@ -190,6 +190,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     transaction: '交易',
     from: '发送方',
     canClose: '您可以关闭此窗口：付款会继续进行，卖方会发送收据。',
+    afterDeadline: '付款确认期间已过截止时间。如果付款在发票关闭后才到账，{merchant} 会接受或退回这笔款项。',
     viewOnExplorer: '在区块浏览器中查看',
     copyHash: '复制交易',
   },

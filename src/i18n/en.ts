@@ -193,6 +193,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     transaction: 'Transaction',
     from: 'From',
     canClose: 'You can close this window: the payment keeps going, and the seller sends the receipt.',
+    afterDeadline:
+      'The deadline has passed while your payment confirms. If it arrives after the invoice closes, {merchant} accepts it or returns it.',
     viewOnExplorer: 'View on the explorer',
     copyHash: 'Copy the transaction',
   },

@@ -31,29 +31,46 @@ const hasTimer = (tree: unknown) => fixture.elements(tree).some((element) => ele
 
 afterEach(() => unmount());
 
-// Owner, 2026-10-28: after paying, the "Pay within" countdown stayed in the checkout. It counts only while the buyer
-// can still pay: not once the payment is sent and being confirmed, nor after it
+// Owner, 2026-10-28: the countdown stays through every step of the payment (signing, handing it over, confirming) and
+// goes only once the payment succeeded (paid), or with an outcome in which a deadline means nothing (held, refunded,
+// expired, cancelled, replaced)
 describe('the countdown to the deadline', () => {
   it.each([
+    ['open', 'loading'],
+    ['open', 'buyer'],
     ['open', 'method'],
     ['open', 'pay'],
     ['open', 'qr'],
+    ['open', 'confirm'],
+    ['processing', 'confirm'],
+    ['open', 'blocked'],
     ['underpaid', 'underpaid'],
   ] as const)('counts on an invoice %s at the %s step', (status, screen) => {
     at(status, screen);
     expect(hasTimer(render(DeadlineTimer, {}))).toBe(true);
+    expect(hasTimer(render(CompactSummary, {}))).toBe(true);
   });
 
   it.each([
-    ['processing', 'confirm'],
-    ['open', 'confirm'],
     ['open', 'paid'],
     ['processing', 'paid'],
     ['paid', 'paid'],
+    ['paid', 'autoPay'],
     ['held', 'held'],
+    ['refunded', 'refunded'],
+    ['expired', 'expired'],
+    ['cancelled', 'cancelled'],
+    ['cancelled', 'replaced'],
   ] as const)('is gone on an invoice %s at the %s step', (status, screen) => {
     at(status, screen);
     expect(render(DeadlineTimer, {})).toBeNull();
     expect(hasTimer(render(CompactSummary, {}))).toBe(false);
+  });
+
+  it('stays at 00:00 when the deadline passes while the payment is confirming', () => {
+    at('open', 'confirm');
+    ctx = { ...ctx, now: Date.parse('2026-10-29T08:29:00Z') };
+    const timer = fixture.elements(render(DeadlineTimer, {})).find((element) => element.props.role === 'timer');
+    expect(timer?.props.children).toBe('00:00');
   });
 });

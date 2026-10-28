@@ -12,14 +12,18 @@ import { TxLabels } from './TxLabels';
  * The confirm step: the transaction is on its way and Quasar follows it until it is final. It reuses the status and
  * progress of Nova Transactions (Sent → Confirming → Paid, in the language of the checkout) and shows the network, the
  * amount, the transaction with its explorer link and the sender. The buyer may close the window: the payment keeps
- * going.
+ * going. When the invoice deadline passes while the payment confirms (the countdown of the order stays at 00:00), the
+ * note says that a payment arriving after the invoice closes waits for the seller to accept or return it, as Quasar
+ * holds it then.
  *
  * @returns The confirm step.
  */
 export function ConfirmScreen() {
-  const { labels, close, customization } = useCheckoutContext();
+  const { checkout, labels, close, customization, now } = useCheckoutContext();
   const child = customization.childCustomizations;
   const facts = usePaymentFacts();
+  const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
+  const pastDeadline = checkout !== null && dueAt !== null && now >= dueAt;
   return (
     <TxLabels>
       <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center">
@@ -53,7 +57,9 @@ export function ConfirmScreen() {
           role="status"
           className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]"
         >
-          {labels.confirm.canClose}
+          {pastDeadline
+            ? formatLabel(labels.confirm.afterDeadline, { merchant: checkout.merchant.name })
+            : labels.confirm.canClose}
         </p>
       </section>
       {close && (

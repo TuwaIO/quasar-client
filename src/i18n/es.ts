@@ -196,6 +196,8 @@ export const esLabels: NovaPaymentsLabels = {
     transaction: 'Transacción',
     from: 'Desde',
     canClose: 'Puedes cerrar esta ventana: el pago sigue su curso y el vendedor envía el recibo.',
+    afterDeadline:
+      'El plazo terminó mientras se confirma tu pago. Si llega después de que se cierre la factura, {merchant} lo acepta o lo devuelve.',
     viewOnExplorer: 'Ver en el explorador',
     copyHash: 'Copiar la transacción',
   },

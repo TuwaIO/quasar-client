@@ -5,6 +5,7 @@ import {
   checkoutScreen,
   checkoutSteps,
   deadlineAnnouncement,
+  deadlineState,
   groupMethodsByToken,
   isQuoteEnding,
   screensPayingWallets,
@@ -182,6 +183,26 @@ describe('timers', () => {
     expect(isQuoteEnding(60_000)).toBe(true);
     expect(isQuoteEnding(1)).toBe(true);
     expect(isQuoteEnding(0)).toBe(false);
+  });
+});
+
+describe('deadlineState', () => {
+  it('counts while the buyer can pay, and while the payment confirms, until it succeeded', () => {
+    for (const screen of ['loading', 'error', 'buyer', 'method', 'pay', 'qr', 'blocked'] as const) {
+      expect(deadlineState('open', screen), screen).toBe('paying');
+    }
+    expect(deadlineState('underpaid', 'underpaid')).toBe('paying');
+    expect(deadlineState('open', 'confirm')).toBe('confirming');
+    expect(deadlineState('processing', 'confirm')).toBe('confirming');
+  });
+
+  it('is over once paid, and on an outcome in which a deadline means nothing', () => {
+    for (const screen of ['paid', 'autoPay', 'held', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
+      expect(deadlineState('open', screen), screen).toBeNull();
+    }
+    for (const status of ['paid', 'held', 'expired', 'cancelled', 'refunded', 'partially_refunded']) {
+      expect(deadlineState(status, 'method'), status).toBeNull();
+    }
   });
 });
 

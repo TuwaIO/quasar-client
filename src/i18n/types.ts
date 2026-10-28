@@ -364,6 +364,12 @@ export type NovaPaymentsLabels = {
     from: string;
     /** That the window may close */
     canClose: string;
+    /**
+     * Instead of `canClose` once the deadline passed while the payment confirms; `{merchant}` (default: `The deadline
+     * has passed while your payment confirms. If it arrives after the invoice closes, {merchant} accepts it or returns
+     * it.`)
+     */
+    afterDeadline: string;
     /** Accessible name of the explorer link of the transaction (default: `View on the explorer`) */
     viewOnExplorer: string;
     /** Accessible name of the copy button of the transaction (default: `Copy the transaction`) */

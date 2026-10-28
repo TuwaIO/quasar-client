@@ -15,7 +15,7 @@ import { usePaymentHandOver } from '../hooks/usePaymentHandOver';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel, hasLabels } from '../i18n';
-import { checkoutScreen, deadlineAnnouncement } from '../utils/checkout';
+import { checkoutScreen, deadlineAnnouncement, deadlineState } from '../utils/checkout';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { needsLeaveConfirm } from '../utils/outcome';
 import { AutoPayScreen } from './AutoPayScreen';
@@ -166,7 +166,7 @@ export function ScreenBody() {
  * The checkout block: the order on the left (from 640 px; on a phone a compact order above the steps), the header
  * with the steps, language and close, and the current screen. The language follows the invoice, its texts the labels
  * of that language, and `lang` is set on the block (WCAG 3.1.2). Screen readers hear the time left at 10, 5 and 1
- * minutes before the deadline. `customization` adds classes to the order and the screen area, and can replace the
+ * minutes before the deadline while the buyer can still pay. `customization` adds classes to the order and the screen area, and can replace the
  * header and the order.
  *
  * @internal
@@ -206,18 +206,20 @@ export function CheckoutFrame({
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
+  // The minutes left to pay are heard only while the buyer can still pay: not once the payment is on its way or done
+  const paying = checkout ? deadlineState(checkout.invoice.status, screen) === 'paying' : false;
 
   useEffect(() => {
     if (dueAt === null) return;
     const left = dueAt - now;
     const minutes = deadlineAnnouncement(previous.current, left, announcements);
     previous.current = left;
-    if (minutes !== null) {
+    if (minutes !== null && paying) {
       setAnnouncement(
         minutes === 1 ? labels.summary.oneMinuteLeft : formatLabel(labels.summary.minutesLeft, { minutes }),
       );
     }
-  }, [dueAt, now, labels, announcements]);
+  }, [dueAt, now, labels, announcements, paying]);
 
   return (
     <div

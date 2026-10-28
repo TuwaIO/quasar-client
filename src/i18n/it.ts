@@ -198,6 +198,8 @@ export const itLabels: NovaPaymentsLabels = {
     transaction: 'Transazione',
     from: 'Da',
     canClose: 'Puoi chiudere questa finestra: il pagamento prosegue e il venditore invia la ricevuta.',
+    afterDeadline:
+      'Il termine è scaduto mentre il pagamento viene confermato. Se arriva dopo la chiusura della fattura, {merchant} lo accetta o lo restituisce.',
     viewOnExplorer: "Vedi nell'explorer",
     copyHash: 'Copia la transazione',
   },

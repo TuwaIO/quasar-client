@@ -1,6 +1,6 @@
 /**
  * @file What the checkout shows for the state of a checkout store: the screen, the steps, the payment methods by
- * token, and when to warn about time.
+ * token, and when to count down and warn about time.
  */
 
 import type { CheckoutMethod, CheckoutPhase, CheckoutQuote, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
@@ -161,6 +161,40 @@ export function groupMethodsByToken(methods: CheckoutMethod[], walletChainId?: s
   });
   const groupRank = (group: CheckoutTokenGroup) => (group.inWallet ? 0 : group.featured ? 1 : 2);
   return list.sort((a, b) => groupRank(a) - groupRank(b));
+}
+
+/** Invoice states in which the invoice can still be paid, so its deadline counts. */
+const PAYABLE_STATUSES: ReadonlySet<string> = new Set(['open', 'processing', 'underpaid']);
+/** Screens on which the buyer can still pay; `confirm` comes after them, and the outcomes end the countdown. */
+const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
+  'loading',
+  'error',
+  'buyer',
+  'method',
+  'pay',
+  'qr',
+  'underpaid',
+  'blocked',
+]);
+
+/**
+ * Where the invoice deadline stands for the checkout: the countdown shows through every step of the payment, also while
+ * the wallet signs, the payment is handed to Quasar and it confirms, and ends only with the outcome. Quasar closes an
+ * `open` or `underpaid` invoice at its deadline even while a payment confirms (the invoice stays `open` until the
+ * transaction is final), and a payment that lands after that is held for the seller to accept or return.
+ *
+ * @param status - The invoice state (`checkout.invoice.status`).
+ * @param screen - The screen shown.
+ * @returns `paying` while the buyer can still pay (the countdown shows and screen readers hear the minutes left),
+ * `confirming` while the payment is on its way (the countdown shows; at zero the confirm step says what happens to a
+ * payment that lands after the deadline), or `null` once the payment succeeded (`paid`, `autoPay`), on the outcomes in
+ * which a deadline means nothing (`held`, `refunded`, `expired`, `cancelled`, `replaced`) and for an invoice that can
+ * no longer be paid.
+ */
+export function deadlineState(status: string, screen: CheckoutScreen): 'paying' | 'confirming' | null {
+  if (!PAYABLE_STATUSES.has(status)) return null;
+  if (screen === 'confirm') return 'confirming';
+  return PAYING_SCREENS.has(screen) ? 'paying' : null;
 }
 
 /** Minutes before the invoice deadline at which screen readers hear how much time is left. */
