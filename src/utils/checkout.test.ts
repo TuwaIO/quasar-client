@@ -392,6 +392,13 @@ describe('isFinalPaymentFailure', () => {
     expect(isFinalPaymentFailure(null)).toBe(false);
   });
 
+  // M1 (review of 2026-10-29): Quasar settles a confirmed payment again daily; an older store calls it a mismatch
+  it('is false for a confirmed payment Quasar has not recorded yet', () => {
+    expect(isFinalPaymentFailure({ code: 'payment_mismatch', message: '', reason: 'settlement_failed' } as never)).toBe(
+      false,
+    );
+  });
+
   // F9: a transaction that does not pay the invoice can never pay it either
   it('is true for a transaction that does not pay the invoice', () => {
     expect(
@@ -414,6 +421,13 @@ describe('isMovedMoneyFailure', () => {
       'invoice_not_payable',
     ]) {
       expect(isMovedMoneyFailure({ code: 'payment_failed', message: '', reason } as never)).toBe(true);
+    }
+  });
+
+  // M1 (review of 2026-10-29): a confirmed payment Quasar has not recorded yet pays the invoice once it is recorded
+  it('is false for a confirmed payment Quasar has not recorded yet, whatever the store calls it', () => {
+    for (const code of ['payment_mismatch', 'payment_failed', 'payment_unconfirmed']) {
+      expect(isMovedMoneyFailure({ code, message: '', reason: 'settlement_failed' } as never)).toBe(false);
     }
   });
 
@@ -468,6 +482,19 @@ describe('unconfirmedFollowUp', () => {
   it('sends the buyer to the merchant for a payment Quasar closed after 24 hours without a result', () => {
     expect(unconfirmedFollowUp({ code: 'payment_failed', message: '', reason: 'unresolved_after_24h' } as never)).toBe(
       'closed',
+    );
+  });
+
+  // M3 (review of 2026-10-29): another invoice's page handed the transaction over first; Quasar decides whose it is
+  it('says that another invoice took the transaction while Quasar decides', () => {
+    expect(unconfirmedFollowUp(unconfirmed({ reason: 'tx_already_used', status: 409 }))).toBe('takenElsewhere');
+  });
+
+  // M1 (review of 2026-10-29): confirmed on chain, Quasar has not recorded it yet and settles it again daily
+  it('says that a confirmed payment is not recorded yet, also when an older store calls it a mismatch', () => {
+    expect(unconfirmedFollowUp(unconfirmed({ reason: 'settlement_failed' }))).toBe('settlementFailed');
+    expect(unconfirmedFollowUp({ code: 'payment_mismatch', message: '', reason: 'settlement_failed' } as never)).toBe(
+      'settlementFailed',
     );
   });
 

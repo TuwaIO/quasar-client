@@ -138,6 +138,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     tryAgain: 'Try again',
     failed: 'The payment failed on {network}. Only the network fee was spent; the invoice is still open.',
     mismatch: 'This transaction does not pay the invoice. If money left your wallet, contact {merchant}.',
+    mismatchTakenElsewhere:
+      'This transaction pays another invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
     payAgain: 'Pay again',
     unsupported: "{wallet} can't make this payment.",
     wrongCluster: '{wallet} is on another network, so nothing was paid. Switch it to {network} and pay again.',
@@ -272,11 +274,17 @@ export const defaultLabels: NovaPaymentsLabels = {
       'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact {merchant} with the transaction hash.',
     unconfirmedRetrying:
       'This page keeps handing your payment over to Quasar. Keep it open until the payment shows here.',
+    unconfirmedTakenElsewhere:
+      'This transaction was handed over for another invoice first. Quasar credits it to the invoice it pays and shows the result here. Do not pay again; if your payment does not show here, contact {merchant} with the transaction hash.',
+    unconfirmedSettlementFailed:
+      'The network confirmed your payment, but Quasar has not recorded it yet and tries again daily. Do not pay again; contact {merchant} with the transaction hash.',
     unconfirmedPayAgain: 'The payment did not leave my wallet',
     cancelledTitle: 'This invoice was cancelled',
     cancelledText: '{merchant} cancelled it; nothing was charged.',
     cancelledWhilePaying:
       '{merchant} cancelled it. If your payment arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
+    cancelledAfterQr:
+      '{merchant} cancelled it. If you paid with the QR code, {merchant} accepts the payment when it arrives or returns it.',
     replacedTitle: '{merchant} corrected this invoice',
     replacedText: '{number} replaces it. This invoice can no longer be paid.',
     replacedPaid: 'Already paid? Your payment moved to the new invoice.',

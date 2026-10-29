@@ -13,7 +13,7 @@ import type {
 } from '@tuwaio/quasar-sdk/checkout';
 
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
-import { isMovedMoneyFailure, unconfirmedFollowUp } from './checkout';
+import { isMovedMoneyFailure, isPaidElsewhere, type UnconfirmedFollowUp, unconfirmedFollowUp } from './checkout';
 
 /**
  * Where "Contact <seller>" leads: an email to the seller's support address about the invoice, else the seller's site.
@@ -32,22 +32,61 @@ export function contactHref(
   return merchant.website ?? null;
 }
 
+/**
+ * The notes of the follow-ups after which a payment left the wallet, or may have, that the steps before a payment say
+ * instead of their own texts.
+ */
+const LEFT_THE_WALLET: Partial<
+  Record<UnconfirmedFollowUp, 'unconfirmedClosed' | 'unconfirmedTakenElsewhere' | 'unconfirmedSettlementFailed'>
+> = {
+  closed: 'unconfirmedClosed',
+  takenElsewhere: 'unconfirmedTakenElsewhere',
+  settlementFailed: 'unconfirmedSettlementFailed',
+};
+
+/**
+ * What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
+ * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice), a
+ * payment Quasar closed after 24 hours without a result on chain (`outcome.unconfirmedClosed`), a transaction another
+ * invoice handed over first (`outcome.unconfirmedTakenElsewhere`) and a payment the network confirmed that Quasar has
+ * not recorded yet (`outcome.unconfirmedSettlementFailed`). Never "it failed", "only the network fee was spent" or
+ * "nothing was charged" for them.
+ *
+ * @param error - The store's error, if any.
+ * @param labels - The labels of the checkout language.
+ * @param merchant - The seller's name.
+ * @returns The text, or `null` for any other error, or none.
+ */
+export function leftTheWalletText(
+  error: CheckoutError | null | undefined,
+  labels: NovaPaymentsLabels,
+  merchant = '',
+): string | null {
+  if (isMovedMoneyFailure(error)) {
+    return formatLabel(isPaidElsewhere(error) ? labels.pay.mismatchTakenElsewhere : labels.pay.mismatch, { merchant });
+  }
+  const followUp = unconfirmedFollowUp(error);
+  const note = followUp ? LEFT_THE_WALLET[followUp] : undefined;
+  return note ? formatLabel(labels.outcome[note], { merchant }) : null;
+}
+
 /** Phases in which nothing has been sent yet: leaving releases the price and loses no payment. */
 const NOTHING_SENT: CheckoutPhase[] = ['buyer', 'selectMethod', 'quoting', 'awaitingPayment'];
 
 /**
  * Whether closing the checkout asks first: only while nothing has been sent. Once a transaction is on its way, or the
- * invoice is settled, the checkout closes without a question; also after a transaction that does not pay the invoice
- * (`isMovedMoneyFailure`), which may have moved money, and after a payment Quasar closed without a result on chain
- * within 24 hours (`unresolved_after_24h`), which may have left the wallet, so the question's "Nothing is sent yet"
- * would not be true.
+ * invoice is settled, the checkout closes without a question; also after a payment that left the wallet, or may have
+ * ({@link leftTheWalletText}: a transaction that does not pay the invoice, a payment Quasar closed without a result on
+ * chain within 24 hours, a transaction another invoice handed over first, a confirmed payment Quasar has not recorded
+ * yet), so the question's "Nothing is sent yet" would not be true.
  *
  * @param phase - Where the payment stands.
  * @param error - The store's last error, if any.
  * @returns `true` to ask.
  */
 export function needsLeaveConfirm(phase: CheckoutPhase, error?: CheckoutError | null): boolean {
-  return NOTHING_SENT.includes(phase) && !isMovedMoneyFailure(error) && unconfirmedFollowUp(error) !== 'closed';
+  const followUp = unconfirmedFollowUp(error);
+  return NOTHING_SENT.includes(phase) && !isMovedMoneyFailure(error) && !(followUp && LEFT_THE_WALLET[followUp]);
 }
 
 /**
@@ -55,15 +94,13 @@ export function needsLeaveConfirm(phase: CheckoutPhase, error?: CheckoutError | 
  *
  * @param error - The store's error.
  * @param labels - The labels of the checkout language.
- * @param merchant - The seller's name, for a transaction that does not pay the invoice (`pay.mismatch`) and a payment
- * Quasar closed without a result (`outcome.unconfirmedClosed`).
+ * @param merchant - The seller's name, for a payment that left the wallet, or may have ({@link leftTheWalletText}).
  * @returns The text.
  */
 export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels, merchant = ''): string {
-  // It may have moved money: never "something went wrong", say whom to contact
-  if (isMovedMoneyFailure(error)) return formatLabel(labels.pay.mismatch, { merchant });
-  // Closed after 24 hours without a result on chain: it may have left the wallet, so the seller looks at it
-  if (unconfirmedFollowUp(error) === 'closed') return formatLabel(labels.outcome.unconfirmedClosed, { merchant });
+  // It may have moved money: never "something went wrong", say what happens to it and whom to contact
+  const leftTheWallet = leftTheWalletText(error, labels, merchant);
+  if (leftTheWallet !== null) return leftTheWallet;
   switch (error.code) {
     case 'screening_unavailable':
       return labels.pay.screeningUnavailable;

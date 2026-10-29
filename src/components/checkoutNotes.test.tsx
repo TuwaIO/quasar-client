@@ -43,6 +43,23 @@ const NOT_RECEIVED =
 const CLOSED =
   'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact Cosmos with the transaction hash.';
 
+/** A transaction another invoice handed over first, while Quasar decides (M3). */
+const TAKEN_ELSEWHERE =
+  'This transaction was handed over for another invoice first. Quasar credits it to the invoice it pays and shows the result here. Do not pay again; if your payment does not show here, contact Cosmos with the transaction hash.';
+/** A transaction Quasar credited to another invoice (M3). */
+const PAYS_ANOTHER =
+  'This transaction pays another invoice. If it was your payment for this one, contact Cosmos with the transaction hash.';
+/** A confirmed payment Quasar has not recorded yet (M1). */
+const SETTLEMENT_FAILED =
+  'The network confirmed your payment, but Quasar has not recorded it yet and tries again daily. Do not pay again; contact Cosmos with the transaction hash.';
+/** The errors of a payment that left the wallet and may still pay the invoice, with what the checkout says. */
+const LEFT_THE_WALLET = [
+  [{ code: 'payment_unconfirmed', message: '', reason: 'tx_already_used', status: 409 }, TAKEN_ELSEWHERE],
+  [{ code: 'payment_unconfirmed', message: '', reason: 'settlement_failed' }, SETTLEMENT_FAILED],
+  // An older store reports a settlement failure as a mismatch
+  [{ code: 'payment_mismatch', message: '', reason: 'settlement_failed' }, SETTLEMENT_FAILED],
+] as const;
+
 /** The text of the rendered tree. */
 const textOf = (node: unknown): string =>
   fixture
@@ -422,6 +439,55 @@ describe('a cancelled invoice', () => {
     }
   });
 
+  // M1, M3 (review of 2026-10-29): the payment left the wallet; the merchant or Quasar decides, with its hash
+  it('says what happens to a transaction another invoice took or a confirmed payment not recorded yet', () => {
+    for (const [error, expected] of LEFT_THE_WALLET) {
+      show('cancelled', { status: 'cancelled', amountPaid: null });
+      ctx = { ...ctx, state: { ...ctx.state, phase: 'cancelled', txKey: '0xabc', error } as never };
+      const tree = OutcomeScreen({ kind: 'cancelled' });
+      const text = textOf(tree);
+      expect(text).toContain(expected);
+      expect(text).not.toContain('nothing was charged');
+      expect(text).not.toContain('does not pay the invoice');
+      expect(showsHash(tree, '0xabc')).toBe(true);
+    }
+  });
+
+  it('says that the transaction pays another invoice, with its hash', () => {
+    show('cancelled', { status: 'cancelled', amountPaid: null });
+    const error = { code: 'payment_mismatch', message: '', reason: 'tx_already_used' };
+    // The store ended the payment: nothing of it is on its way
+    ctx = {
+      ...ctx,
+      state: { ...ctx.state, phase: 'cancelled', txKey: '0xabc', paymentOnTheWay: false, error } as never,
+    };
+    const tree = OutcomeScreen({ kind: 'cancelled' });
+    expect(textOf(tree)).toContain(PAYS_ANOTHER);
+    expect(textOf(tree)).not.toContain('nothing was charged');
+    expect(showsHash(tree, '0xabc')).toBe(true);
+  });
+
+  // M2 (review of 2026-10-29): a QR code the page showed may have been paid from a phone, which this page does not see
+  it('never says that nothing was charged after the page showed a QR code', () => {
+    show('cancelled', { status: 'cancelled', amountPaid: null }, {}, null);
+    ctx = { ...ctx, qrShown: true, state: { ...ctx.state, phase: 'cancelled' } as never };
+    const text = textOf(OutcomeScreen({ kind: 'cancelled' }));
+    expect(text).toContain(
+      'Cosmos cancelled it. If you paid with the QR code, Cosmos accepts the payment when it arrives or returns it.',
+    );
+    expect(text).not.toContain('nothing was charged');
+  });
+
+  it('says what happens to a payment on its way also after the page showed a QR code', () => {
+    show('cancelled', { status: 'cancelled', amountPaid: null }, {}, null);
+    ctx = { ...ctx, qrShown: true, state: { ...ctx.state, phase: 'cancelled', paymentOnTheWay: true } as never };
+    const text = textOf(OutcomeScreen({ kind: 'cancelled' }));
+    expect(text).toContain(
+      'Cosmos cancelled it. If your payment arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
+    );
+    expect(text).not.toContain('nothing was charged');
+  });
+
   it('says that the transaction does not pay the invoice after a mismatch', () => {
     show('cancelled', { status: 'cancelled', amountPaid: null });
     const error = { code: 'payment_mismatch', message: '', reason: 'no_matching_transfer' };
@@ -590,6 +656,38 @@ describe('a payment Quasar could not confirm', () => {
     expect(payAgain).toHaveBeenCalledOnce();
   });
 
+  // M1, M3 (review of 2026-10-29): the payment left the wallet and may still pay the invoice: no second payment, and
+  // the store's payAgain does nothing for it
+  it('offers no payment after a transaction another invoice took or a confirmed payment not recorded yet', () => {
+    for (const [error, expected] of LEFT_THE_WALLET) {
+      const tree = unconfirmedScreen(vi.fn(), {
+        code: error.code,
+        reason: error.reason,
+        rechecked: false,
+        txKey: '0xabc',
+      });
+      const text = textOf(tree);
+      expect(text).toContain(expected);
+      expect(text).not.toContain('Check your wallet before paying again');
+      expect(text).not.toContain('does not pay the invoice');
+      expect(text).not.toContain('24 hours');
+      expect(fixture.ofType(tree, PrimaryButton)).toHaveLength(0);
+      expect(fixture.ofType(tree, SecondaryButton)).toHaveLength(0);
+      expect(showsHash(tree, '0xabc')).toBe(true);
+    }
+  });
+
+  it('says that a transaction Quasar credited to another invoice pays that one, with its hash', () => {
+    const tree = unconfirmedScreen(vi.fn(), {
+      code: 'payment_mismatch',
+      reason: 'tx_already_used',
+      rechecked: false,
+      txKey: '0xabc',
+    });
+    expect(textOf(tree)).toContain(PAYS_ANOTHER);
+    expect(showsHash(tree, '0xabc')).toBe(true);
+  });
+
   it('offers nothing to pay with a store that cannot go back to the payment', () => {
     expect(fixture.ofType(unconfirmedScreen(), SecondaryButton)).toHaveLength(0);
   });
@@ -612,6 +710,49 @@ describe('an invoice that expired after the page showed a QR code', () => {
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
     expect(text).toContain('Part of the payment arrived: 80.00 USDC.');
     expect(text).toContain('If you paid with the QR code, Cosmos accepts the payment when it arrives or returns it.');
+  });
+});
+
+// M1, M3 (review of 2026-10-29): the payment left the wallet; it is not "nothing was charged" on an expired invoice
+describe('an expired invoice after a payment that left the wallet', () => {
+  it('says what happens to a transaction another invoice took or a confirmed payment not recorded yet', () => {
+    for (const [error, expected] of LEFT_THE_WALLET) {
+      show('expired', { status: 'expired', amountPaid: null });
+      ctx = { ...ctx, paymentSent: true, state: { ...ctx.state, phase: 'expired', txKey: '0xabc', error } as never };
+      const tree = OutcomeScreen({ kind: 'expired' });
+      const text = textOf(tree);
+      expect(text).toContain(expected);
+      expect(text).not.toContain('nothing was charged');
+      expect(text).not.toContain('24 hours');
+      expect(showsHash(tree, '0xabc')).toBe(true);
+    }
+  });
+
+  it('says that the transaction pays another invoice, with its hash', () => {
+    show('expired', { status: 'expired', amountPaid: null });
+    const error = { code: 'payment_mismatch', message: '', reason: 'tx_already_used' };
+    // The store ended the payment: nothing of it is on its way
+    ctx = {
+      ...ctx,
+      state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false, error } as never,
+    };
+    const tree = OutcomeScreen({ kind: 'expired' });
+    expect(textOf(tree)).toContain(PAYS_ANOTHER);
+    expect(showsHash(tree, '0xabc')).toBe(true);
+  });
+});
+
+// M3 (review of 2026-10-29): Quasar credited the transaction to another invoice
+describe('the pay step after a transaction that pays another invoice', () => {
+  it('says so, with whom to contact', () => {
+    show('pay');
+    ctx = {
+      ...ctx,
+      state: { ...ctx.state, error: { code: 'payment_mismatch', message: '', reason: 'tx_already_used' } } as never,
+    };
+    const text = textOf(render(PayScreen, {}));
+    expect(text).toContain(PAYS_ANOTHER);
+    expect(text).not.toContain('does not pay the invoice');
   });
 });
 

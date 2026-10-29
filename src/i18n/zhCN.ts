@@ -136,6 +136,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     tryAgain: '重试',
     failed: '付款在 {network} 上失败。只消耗了网络费，发票仍可支付。',
     mismatch: '此交易未支付该发票。如果有款项从您的钱包转出，请联系 {merchant}。',
+    mismatchTakenElsewhere: '此交易支付的是另一张发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
     payAgain: '再次付款',
     unsupported: '{wallet} 无法完成此笔付款。',
     wrongCluster: '{wallet} 处于其他网络，因此未完成任何付款。请将其切换到 {network} 后重新付款。',
@@ -263,11 +264,16 @@ export const zhCNLabels: NovaPaymentsLabels = {
     unconfirmedClosed:
       'Quasar 在 24 小时内未在网络上找到这笔付款，且不再核查。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
     unconfirmedRetrying: '此页面会继续将您的付款提交给 Quasar。请保持页面打开，直到付款显示在此处。',
+    unconfirmedTakenElsewhere:
+      '此交易已先被提交给另一张发票。Quasar 会将其计入它所支付的发票，并在此处显示结果。请勿再次付款；如果您的付款未在此处显示，请提供交易哈希联系 {merchant}。',
+    unconfirmedSettlementFailed:
+      '网络已确认您的付款，但 Quasar 尚未记录，并会每天重试。请勿再次付款；请提供交易哈希联系 {merchant}。',
     unconfirmedPayAgain: '款项未从我的钱包转出',
     cancelledTitle: '此发票已取消',
     cancelledText: '{merchant} 已取消此发票；您没有被扣款。',
     cancelledWhilePaying:
       '{merchant} 已取消此发票。如果您的付款到账，将被记录并显示给 {merchant}，由其接受或退回这笔款项。',
+    cancelledAfterQr: '{merchant} 已取消此发票。如果您已通过二维码付款，{merchant} 会在款项到账后接受或退回这笔款项。',
     replacedTitle: '{merchant} 已更正此发票',
     replacedText: '{number} 已替代此发票。此发票无法再支付。',
     replacedPaid: '已经付款？您的付款已转到新发票。',

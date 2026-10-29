@@ -350,10 +350,24 @@ export function sentBeforeDeadline({ state, checkout, handedOverAt, dueAt }: Sen
 }
 
 /**
+ * The reason of a payment the network confirmed that Quasar could not record yet and settles again daily: the money
+ * reached the seller's address, so it is never a failure or a transaction that does not pay the invoice (an older
+ * `@tuwaio/quasar-sdk` reports it as `payment_mismatch`).
+ */
+const SETTLEMENT_FAILED = 'settlement_failed';
+
+/**
+ * The reason of a transaction Quasar tracks for another invoice of the seller, whose page handed it over first: with
+ * `payment_unconfirmed` Quasar decides which invoice it pays, with `payment_mismatch` it paid another one.
+ */
+const TAKEN_ELSEWHERE = 'tx_already_used';
+
+/**
  * Whether the last error says that the payment can never pay the invoice: `payment_failed` (reverted, cancelled…) or
  * `payment_mismatch` (it does not pay the invoice: a wrong amount or recipient…), with the reason Quasar gave. A failure
  * without a reason comes from a Quasar or a `@tuwaio/quasar-sdk` that cannot tell a final failure from a payment that
- * may still arrive, so it does not count.
+ * may still arrive, so it does not count, nor does `settlement_failed` (a payment the network confirmed that Quasar has
+ * not recorded yet, which an older store reports as `payment_mismatch`).
  *
  * @param error - The store's error.
  * @returns `true` when the payment failed for good.
@@ -361,10 +375,9 @@ export function sentBeforeDeadline({ state, checkout, handedOverAt, dueAt }: Sen
 export function isFinalPaymentFailure(error: CheckoutError | null | undefined): boolean {
   // `reason` and `payment_mismatch` are newer than some `@tuwaio/quasar-sdk` alphas: read them as strings
   const code: string | undefined = error?.code;
-  return (
-    (code === 'payment_failed' || code === 'payment_mismatch') &&
-    Boolean((error as CheckoutError & { reason?: string }).reason)
-  );
+  const reason = (error as (CheckoutError & { reason?: string }) | null | undefined)?.reason;
+  // A confirmed payment Quasar has not recorded yet (an older store calls it a mismatch) is not over
+  return (code === 'payment_failed' || code === 'payment_mismatch') && Boolean(reason) && reason !== SETTLEMENT_FAILED;
 }
 
 /**
@@ -386,7 +399,9 @@ const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
  * asset or recipient, no Solana Pay reference, sent before the price was locked…): `payment_mismatch` of a current
  * `@tuwaio/quasar-sdk`, or `payment_failed` with such a reason from an older one. It may have moved money, so the
  * checkout never says that it did not go through or that nothing was charged: it says that the transaction does not pay
- * the invoice, and to contact the seller if money left the wallet.
+ * the invoice, and to contact the seller if money left the wallet. A payment the network confirmed that Quasar has not
+ * recorded yet (`settlement_failed`, which an older store reports as `payment_mismatch`) is not one: it pays the
+ * invoice once Quasar records it.
  *
  * @param error - The store's error.
  * @returns `true` for a transaction that does not pay the invoice.
@@ -394,9 +409,24 @@ const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
 export function isMovedMoneyFailure(error: CheckoutError | null | undefined): boolean {
   // `payment_mismatch` and `reason` are newer than some `@tuwaio/quasar-sdk` alphas: read them as strings
   const code: string | undefined = error?.code;
-  if (code === 'payment_mismatch') return true;
   const reason = (error as (CheckoutError & { reason?: string }) | null | undefined)?.reason;
+  // Confirmed on chain and not recorded yet: it pays the invoice once Quasar records it
+  if (reason === SETTLEMENT_FAILED) return false;
+  if (code === 'payment_mismatch') return true;
   return code === 'payment_failed' && reason !== undefined && MOVED_MONEY_REASONS.has(reason);
+}
+
+/**
+ * Whether the last error says that Quasar credited the transaction to another invoice of the seller, the one whose
+ * quoted wallet sent it (`tx_already_used` of a transaction that does not pay this invoice): the buyer names it to the
+ * seller if it was the payment of this invoice.
+ *
+ * @param error - The store's error.
+ * @returns `true` for a transaction that pays another invoice.
+ */
+export function isPaidElsewhere(error: CheckoutError | null | undefined): boolean {
+  const reason = (error as (CheckoutError & { reason?: string }) | null | undefined)?.reason;
+  return isMovedMoneyFailure(error) && reason === TAKEN_ELSEWHERE;
 }
 
 /**
@@ -425,16 +455,23 @@ export function isInvoicePaymentUnresolved(
  * it arrives), `retrying` (the checkout store keeps handing over a transaction the wallet sent, which Quasar has not
  * received yet: keep the page open), `notReceived` (the store gave up handing it over after an hour: Quasar never
  * received it), `contact` (a reason Quasar never reads again: a relay operation lost, `transaction_failed`, a Quasar
- * or a store that does not say) and `closed` (Quasar saw no result on chain within 24 hours and closed it). For all but
- * `rechecked` and `retrying` the buyer contacts the seller with the transaction hash if the payment left the wallet.
+ * or a store that does not say), `closed` (Quasar saw no result on chain within 24 hours and closed it),
+ * `takenElsewhere` (the page of another invoice handed the transaction over first: Quasar credits it to the invoice
+ * whose quoted wallet sent it, and the page shows the result) and `settlementFailed` (the network confirmed it, but
+ * Quasar has not recorded it yet and settles it again daily). For all but `rechecked` and `retrying` the buyer contacts
+ * the seller with the transaction hash; after `takenElsewhere` and `settlementFailed` the payment left the wallet, so
+ * the checkout offers no payment.
  */
-export type UnconfirmedFollowUp = 'rechecked' | 'retrying' | 'notReceived' | 'contact' | 'closed';
+export type UnconfirmedFollowUp =
+  'rechecked' | 'retrying' | 'notReceived' | 'contact' | 'closed' | 'takenElsewhere' | 'settlementFailed';
 
 /**
  * What to tell the buyer about a payment Quasar did not confirm, from the store's error: `payment_unconfirmed` with
  * `rechecked` (set by a current `@tuwaio/quasar-sdk` only while Quasar reads the payment again) promises the 24-hour
- * re-check, its `submit_retrying` and `submit_failed` reasons are the store's hand-over, any other is for the seller;
- * `payment_failed` with the reason `unresolved_after_24h` is a payment Quasar closed without a result.
+ * re-check, its `submit_retrying` and `submit_failed` reasons are the store's hand-over, `tx_already_used` a transaction
+ * another invoice handed over first, any other is for the seller; `payment_failed` with the reason
+ * `unresolved_after_24h` is a payment Quasar closed without a result; the reason `settlement_failed` (`payment_mismatch`
+ * of an older store) a confirmed payment Quasar has not recorded yet.
  *
  * @param error - The store's error.
  * @returns See {@link UnconfirmedFollowUp}; `null` for any other error, or none.
@@ -444,7 +481,11 @@ export function unconfirmedFollowUp(error: CheckoutError | null | undefined): Un
   const code: string | undefined = error?.code;
   const { reason, rechecked } = (error ?? {}) as { reason?: string; rechecked?: boolean };
   if (code === 'payment_failed' && reason === 'unresolved_after_24h') return 'closed';
+  if (reason === SETTLEMENT_FAILED && (code === 'payment_unconfirmed' || code === 'payment_mismatch')) {
+    return 'settlementFailed';
+  }
   if (code !== 'payment_unconfirmed') return null;
+  if (reason === TAKEN_ELSEWHERE) return 'takenElsewhere';
   if (reason === 'submit_retrying') return 'retrying';
   if (reason === 'submit_failed') return 'notReceived';
   return rechecked === true ? 'rechecked' : 'contact';

@@ -12,6 +12,13 @@ import {
   underpaidRest,
 } from './outcome';
 
+/** What the checkout says about a transaction another invoice handed over first (M3). */
+const TAKEN_ELSEWHERE =
+  'This transaction was handed over for another invoice first. Quasar credits it to the invoice it pays and shows the result here. Do not pay again; if your payment does not show here, contact Cosmos with the transaction hash.';
+/** What the checkout says about a confirmed payment Quasar has not recorded yet (M1). */
+const SETTLEMENT_FAILED =
+  'The network confirmed your payment, but Quasar has not recorded it yet and tries again daily. Do not pay again; contact Cosmos with the transaction hash.';
+
 describe('contactHref', () => {
   it("writes to the seller's support email about the invoice, else opens the seller's site", () => {
     expect(
@@ -57,6 +64,19 @@ describe('needsLeaveConfirm', () => {
   });
 });
 
+// M1, M3 (review of 2026-10-29): a payment another invoice took or Quasar has not recorded yet left the wallet
+describe('needsLeaveConfirm after a payment that left the wallet', () => {
+  it('does not ask after a transaction another invoice took or a confirmed payment not recorded yet', () => {
+    for (const error of [
+      { code: 'payment_unconfirmed', message: '', reason: 'tx_already_used', status: 409 },
+      { code: 'payment_unconfirmed', message: '', reason: 'settlement_failed' },
+      { code: 'payment_mismatch', message: '', reason: 'settlement_failed' },
+    ]) {
+      expect(needsLeaveConfirm('awaitingPayment', error as never)).toBe(false);
+    }
+  });
+});
+
 describe('methodErrorText', () => {
   // F9: back at the methods after a transaction that does not pay the invoice, the buyer learns what to do if money left
   it('says that a transaction does not pay the invoice, never that it did not go through', () => {
@@ -82,6 +102,34 @@ describe('methodErrorText', () => {
     ).toBe(
       'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact Cosmos with the transaction hash.',
     );
+  });
+
+  // M3 (review of 2026-10-29): Quasar credited the transaction to another invoice, the one of the wallet that sent it
+  it('says that the transaction pays another invoice, with the hash for the merchant', () => {
+    for (const code of ['payment_mismatch', 'payment_failed']) {
+      expect(
+        methodErrorText({ code, message: 'raw', reason: 'tx_already_used' } as never, defaultLabels, 'Cosmos'),
+      ).toBe(
+        'This transaction pays another invoice. If it was your payment for this one, contact Cosmos with the transaction hash.',
+      );
+    }
+  });
+
+  it('says what happens to a payment another invoice took, or one Quasar has not recorded yet', () => {
+    expect(
+      methodErrorText(
+        { code: 'payment_unconfirmed', message: 'raw', reason: 'tx_already_used', status: 409 } as never,
+        defaultLabels,
+        'Cosmos',
+      ),
+    ).toBe(TAKEN_ELSEWHERE);
+    expect(
+      methodErrorText(
+        { code: 'payment_mismatch', message: 'raw', reason: 'settlement_failed' } as never,
+        defaultLabels,
+        'Cosmos',
+      ),
+    ).toBe(SETTLEMENT_FAILED);
   });
 
   it('says what went wrong and what to do, in the language of the checkout', () => {

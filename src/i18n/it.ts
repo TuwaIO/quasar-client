@@ -141,6 +141,8 @@ export const itLabels: NovaPaymentsLabels = {
     failed:
       'Il pagamento non è riuscito su {network}. È stata spesa solo la commissione di rete; la fattura è ancora aperta.',
     mismatch: 'Questa transazione non paga la fattura. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
+    mismatchTakenElsewhere:
+      "Questa transazione paga un'altra fattura. Se era il tuo pagamento per questa, contatta {merchant} indicando l'hash della transazione.",
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
     wrongCluster: "{wallet} è su un'altra rete, quindi non è stato pagato nulla. Passalo a {network} e paga di nuovo.",
@@ -281,11 +283,17 @@ export const itLabels: NovaPaymentsLabels = {
       "Quasar non ha trovato questo pagamento sulla rete entro 24 ore e non lo controlla più. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
     unconfirmedRetrying:
       'Questa pagina continua a consegnare il pagamento a Quasar. Tienila aperta finché il pagamento non compare qui.',
+    unconfirmedTakenElsewhere:
+      "Questa transazione è stata consegnata prima per un'altra fattura. Quasar la accredita alla fattura che paga e mostra qui il risultato. Non pagare di nuovo; se il tuo pagamento non compare qui, contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedSettlementFailed:
+      "La rete ha confermato il tuo pagamento, ma Quasar non l'ha ancora registrato e riprova ogni giorno. Non pagare di nuovo; contatta {merchant} indicando l'hash della transazione.",
     unconfirmedPayAgain: 'Il pagamento non è partito dal mio wallet',
     cancelledTitle: 'Questa fattura è stata annullata',
     cancelledText: "{merchant} l'ha annullata; non ti è stato addebitato nulla.",
     cancelledWhilePaying:
       "{merchant} l'ha annullata. Se il tuo pagamento arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.",
+    cancelledAfterQr:
+      "{merchant} l'ha annullata. Se hai pagato con il codice QR, {merchant} accetta il pagamento quando arriva o lo restituisce.",
     replacedTitle: '{merchant} ha corretto questa fattura',
     replacedText: 'La sostituisce {number}. Questa fattura non si può più pagare.',
     replacedPaid: 'Hai già pagato? Il tuo pagamento è passato alla nuova fattura.',

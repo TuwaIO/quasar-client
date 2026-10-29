@@ -264,6 +264,12 @@ export type NovaPaymentsLabels = {
      * transaction does not pay the invoice. If money left your wallet, contact {merchant}.`)
      */
     mismatch: string;
+    /**
+     * Instead of `mismatch` when Quasar credited the transaction to another invoice of the seller, the one whose quoted
+     * wallet sent it (`tx_already_used`): `{merchant}` (default: `This transaction pays another invoice. If it was your
+     * payment for this one, contact {merchant} with the transaction hash.`)
+     */
+    mismatchTakenElsewhere: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
@@ -561,6 +567,24 @@ export type NovaPaymentsLabels = {
      */
     unconfirmedRetrying: string;
     /**
+     * Instead of `unconfirmedText` and `unconfirmedNote`, and on the expired and cancelled outcomes, next to its
+     * transaction, when the page of another invoice handed the transaction over first (EVM invoices share the seller's
+     * address, so anyone who saw the hash may have done so): Quasar recorded this invoice's claim and credits the
+     * transaction to the invoice whose quoted wallet sent it, and the checkout offers no payment meanwhile:
+     * `{merchant}` (default: `This transaction was handed over for another invoice first. Quasar credits it to the
+     * invoice it pays and shows the result here. Do not pay again; if your payment does not show here, contact
+     * {merchant} with the transaction hash.`)
+     */
+    unconfirmedTakenElsewhere: string;
+    /**
+     * Instead of `unconfirmedText` and `unconfirmedNote`, and on the expired and cancelled outcomes, next to its
+     * transaction, when the network confirmed the payment but Quasar could not record it yet and settles it again daily
+     * (`settlement_failed`): the money reached the seller's address, so the checkout offers no payment: `{merchant}`
+     * (default: `The network confirmed your payment, but Quasar has not recorded it yet and tries again daily. Do not
+     * pay again; contact {merchant} with the transaction hash.`)
+     */
+    unconfirmedSettlementFailed: string;
+    /**
      * The button that goes back to the payment once the buyer checked the wallet (default: `The payment did not leave
      * my wallet`)
      */
@@ -575,6 +599,12 @@ export type NovaPaymentsLabels = {
      * arrives, it is recorded and shown to {merchant}, who accepts it or returns it.`)
      */
     cancelledWhilePaying: string;
+    /**
+     * Instead of `cancelledText` when the invoice was cancelled after the checkout showed a QR code, which the buyer may
+     * have paid with from a phone: `{merchant}` (default: `{merchant} cancelled it. If you paid with the QR code,
+     * {merchant} accepts the payment when it arrives or returns it.`)
+     */
+    cancelledAfterQr: string;
     /** Heading of a corrected invoice: `{merchant}` (default: `{merchant} corrected this invoice`) */
     replacedTitle: string;
     /** Its text: `{number}` of the new invoice (default: `{number} replaces it. This invoice can no longer be paid.`) */

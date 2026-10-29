@@ -8,13 +8,7 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePayment } from '../hooks/usePayment';
 import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
-import {
-  isMovedMoneyFailure,
-  isQuoteEnding,
-  QUOTE_WARNING_MS,
-  screensPayingWallets,
-  unconfirmedFollowUp,
-} from '../utils/checkout';
+import { isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/checkout';
 import {
   baseUnitsToDecimal,
   formatCountdown,
@@ -24,6 +18,7 @@ import {
   shortAddress,
 } from '../utils/format';
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
+import { leftTheWalletText } from '../utils/outcome';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
 import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
@@ -58,10 +53,11 @@ function problemText(
   if (problem === 'declined') return formatLabel(labels.pay.declined, values);
   if (problem === 'unsupported') return formatLabel(labels.pay.unsupported, values);
   if (problem === 'wrongNetwork') return formatLabel(labels.pay.wrongCluster, values);
-  // The transaction succeeded on chain without paying the invoice: it may have moved money, so never "it failed"
-  if (!problem && isMovedMoneyFailure(error)) return formatLabel(labels.pay.mismatch, values);
-  // Quasar closed it after 24 hours without a result on chain: it may have left the wallet, so never "only the fee"
-  if (!problem && unconfirmedFollowUp(error) === 'closed') return formatLabel(labels.outcome.unconfirmedClosed, values);
+  // The payment left the wallet, or may have (a transaction that does not pay the invoice or pays another one, closed
+  // after 24 hours without a result, taken by another invoice, confirmed and not recorded yet): never "it failed" or
+  // "only the fee"
+  const leftTheWallet = problem ? null : leftTheWalletText(error, labels, values.merchant);
+  if (leftTheWallet !== null) return leftTheWallet;
   if (problem === 'failed' || errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;

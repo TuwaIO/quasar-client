@@ -26,7 +26,7 @@ import {
 } from '../utils/checkout';
 import { formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from '../utils/format';
 import { networkName, payerFor } from '../utils/methods';
-import { contactHref, receivedAmount, underpaidRest } from '../utils/outcome';
+import { contactHref, leftTheWalletText, receivedAmount, underpaidRest } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { mono, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
@@ -50,10 +50,27 @@ const FOLLOW_UP_NOTE: Record<UnconfirmedFollowUp, keyof NovaPaymentsLabels['outc
   notReceived: 'unconfirmedNotReceived',
   contact: 'unconfirmedContact',
   closed: 'unconfirmedClosed',
+  takenElsewhere: 'unconfirmedTakenElsewhere',
+  settlementFailed: 'unconfirmedSettlementFailed',
 };
 
-/** Follow-ups after which the buyer names the transaction to the seller: Quasar does not record the payment. */
-const FOR_THE_SELLER: ReadonlySet<UnconfirmedFollowUp> = new Set(['notReceived', 'contact', 'closed']);
+/**
+ * Follow-ups after which the buyer names the transaction to the seller: Quasar does not record the payment, decides
+ * which invoice it pays, or has not recorded it yet.
+ */
+const FOR_THE_SELLER: ReadonlySet<UnconfirmedFollowUp> = new Set([
+  'notReceived',
+  'contact',
+  'closed',
+  'takenElsewhere',
+  'settlementFailed',
+]);
+
+/**
+ * Follow-ups of a payment that left the wallet and may still pay the invoice: the screen offers no payment ("The
+ * payment did not leave my wallet" would not be true, and `payAgain` of the checkout store does nothing for them).
+ */
+const LEFT_THE_WALLET: ReadonlySet<UnconfirmedFollowUp> = new Set(['takenElsewhere', 'settlementFailed']);
 
 /** The icon and tone of each outcome. */
 const LOOK: Record<OutcomeKind, { Icon: ComponentType<SVGProps<SVGSVGElement>>; tone: string }> = {
@@ -117,8 +134,12 @@ function ContactLink() {
  * store, the screen says that Quasar checks it for 24 hours and records it for the seller if it arrives; while the
  * store hands a transaction the wallet sent over again, the buyer keeps the page open; otherwise (a reason Quasar never
  * reads again, a hand-over the store gave up) the buyer contacts the seller with the transaction hash, which the screen
- * shows; a transfer that moved money without paying the invoice says so; no payment is offered, only, on a payable
- * invoice, "The payment did not leave my wallet", which goes back to it with `payAgain` of the checkout store), an
+ * shows; a transfer that moved money without paying the invoice says so, and one Quasar credited to another invoice
+ * says that it pays that one; a transaction the page of another invoice handed over first, which Quasar credits to the
+ * invoice whose quoted wallet sent it, and a payment the network confirmed that Quasar has not recorded yet are named
+ * with their hash for the seller, and the buyer is asked not to pay again; no payment is offered, only, on a payable
+ * invoice and for a payment that may not have left the wallet, "The payment did not leave my wallet", which goes back
+ * to it with `payAgain` of the checkout store), an
  * underpaid invoice ("Pay the rest"), a payment the seller reviews (screening,
  * late, overpaid, after the price lock ran out), a refunded invoice, an expired one (with what arrived before the
  * deadline, which the seller can refund; never "nothing was charged" while a payment may still arrive: one this page
@@ -127,7 +148,7 @@ function ContactLink() {
  * wallet, one Quasar does not read again or closed after 24 hours without a result, for the seller with its transaction
  * hash, one that does not pay the invoice and may have moved money, and after a QR code showed, a payment made with it,
  * as this page does not see it), a cancelled one (the same: never "nothing was charged" while a payment may still
- * arrive, and "recorded if it arrives" only for a payment Quasar records), a corrected one
+ * arrive, also after a QR code showed, and "recorded if it arrives" only for a payment Quasar records), a corrected one
  * ("Open <new invoice>" opens it here) and a payer the wallet check refused ("Use another wallet"). Each offers to
  * contact the seller.
  *
@@ -200,12 +221,21 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
     case 'unconfirmed': {
       title = labels.outcome.unconfirmedTitle;
       if (isMovedMoneyFailure(state.error)) {
-        // A transfer that moved money without paying the invoice, which Quasar has not called final: no re-check, the
-        // seller looks at it
+        // A transfer that moved money without paying the invoice (or that pays another one), which Quasar has not
+        // called final: no re-check, the seller looks at it
         body = (
           <>
-            <Text>{formatLabel(labels.pay.mismatch, { merchant })}</Text>
+            <Text>{leftTheWalletText(state.error, labels, merchant)}</Text>
             {transaction('mismatch')}
+          </>
+        );
+      } else if (followUp && LEFT_THE_WALLET.has(followUp)) {
+        // It left the wallet: another invoice handed it over first (Quasar decides which one it pays), or the network
+        // confirmed it and Quasar has not recorded it yet. Not "check your wallet before paying again"
+        body = (
+          <>
+            <Text>{followUpNote(followUp)}</Text>
+            {transaction(followUp)}
           </>
         );
       } else {
@@ -225,7 +255,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const status = state.invoiceStatus ?? checkout.invoice.status;
       // Not the main button: the buyer pays again only after checking that the payment did not leave the wallet, and
       // only while the invoice can be paid
-      if (payAgain && (status === 'open' || status === 'underpaid')) {
+      if (payAgain && (status === 'open' || status === 'underpaid') && !(followUp && LEFT_THE_WALLET.has(followUp))) {
         action = <SecondaryButton onClick={() => payAgain()}>{labels.outcome.unconfirmedPayAgain}</SecondaryButton>;
       }
       break;
@@ -315,9 +345,10 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       // reject for good. Quasar records it and the seller accepts or returns it, so never "nothing was charged". A
       // `held` or `paid` invoice the store hears of later replaces this outcome
       const onItsWay = isPaymentOnTheWay(state) || isInvoicePaymentOnTheWay(state, checkout);
-      // Quasar could not confirm a payment, or reports one it reads again (unresolved), with none on its way: check
-      // the wallet
-      const unconfirmed = isUnconfirmed(state.error) || (!onItsWay && isInvoicePaymentUnresolved(state, checkout));
+      // Quasar could not confirm a payment (or has not recorded a confirmed one yet: an older store calls it a
+      // mismatch), or reports one it reads again (unresolved), with none on its way: check the wallet
+      const ownUnconfirmed = isUnconfirmed(state.error) || followUp === 'settlementFailed';
+      const unconfirmed = ownUnconfirmed || (!onItsWay && isInvoicePaymentUnresolved(state, checkout));
       // Quasar closed a payment after 24 hours without a result on chain: it may have left the wallet
       const closed = !unconfirmed && followUp === 'closed';
       const sent = !unconfirmed && !closed && (onItsWay || paymentSent);
@@ -327,7 +358,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const maybePaid = sent || unconfirmed || closed || mismatch || qrShown;
       // What Quasar does with the payment it did not confirm: reads it again (also one it reports as unresolved without
       // an error), waits for the store's hand-over, or nothing (the seller looks at it)
-      const unconfirmedNext: UnconfirmedFollowUp = isUnconfirmed(state.error) ? (followUp ?? 'contact') : 'rechecked';
+      const unconfirmedNext: UnconfirmedFollowUp = ownUnconfirmed ? (followUp ?? 'contact') : 'rechecked';
       body = (
         <>
           {received ? (
@@ -361,7 +392,10 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
           ) : sent ? (
             <Text>{formatLabel(labels.outcome.expiredWhileConfirming, { merchant })}</Text>
           ) : mismatch ? (
-            <Text>{formatLabel(labels.pay.mismatch, { merchant })}</Text>
+            <>
+              <Text>{leftTheWalletText(state.error, labels, merchant)}</Text>
+              {transaction('mismatch')}
+            </>
           ) : qrShown ? (
             <Text>{formatLabel(labels.outcome.expiredAfterQr, { merchant })}</Text>
           ) : (
@@ -392,14 +426,17 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         isInvoicePaymentOnTheWay(state, checkout) ||
         isInvoicePaymentUnresolved(state, checkout) ||
         paymentSent;
+      const mismatch = !maybePaid && isMovedMoneyFailure(state.error);
+      // A QR code may have been paid from a phone, which this page does not see: never "nothing was charged" either
       const text = maybePaid
-        ? labels.outcome.cancelledWhilePaying
-        : isMovedMoneyFailure(state.error)
-          ? labels.pay.mismatch
-          : labels.outcome.cancelledText;
+        ? formatLabel(labels.outcome.cancelledWhilePaying, { merchant })
+        : mismatch
+          ? leftTheWalletText(state.error, labels, merchant)
+          : formatLabel(qrShown ? labels.outcome.cancelledAfterQr : labels.outcome.cancelledText, { merchant });
       body = (
         <>
-          <Text>{formatLabel(text, { merchant })}</Text>
+          <Text>{text}</Text>
+          {mismatch && transaction('mismatch')}
           {/* Quasar records it once it has it: the store keeps handing it over meanwhile */}
           {followUp === 'retrying' && <Text muted>{labels.outcome.unconfirmedRetrying}</Text>}
         </>

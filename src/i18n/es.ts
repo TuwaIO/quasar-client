@@ -140,6 +140,8 @@ export const esLabels: NovaPaymentsLabels = {
     tryAgain: 'Reintentar',
     failed: 'El pago falló en {network}. Solo se gastó la comisión de red; la factura sigue abierta.',
     mismatch: 'Esta transacción no paga la factura. Si salió dinero de tu billetera, contacta con {merchant}.',
+    mismatchTakenElsewhere:
+      'Esta transacción paga otra factura. Si era tu pago de esta, contacta con {merchant} e indica el hash de la transacción.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',
@@ -276,11 +278,17 @@ export const esLabels: NovaPaymentsLabels = {
       'Quasar no encontró este pago en la red en 24 horas y ya no lo comprueba. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
     unconfirmedRetrying:
       'Esta página sigue entregando tu pago a Quasar. Mantenla abierta hasta que el pago aparezca aquí.',
+    unconfirmedTakenElsewhere:
+      'Esta transacción se entregó primero para otra factura. Quasar la abona a la factura que paga y muestra el resultado aquí. No vuelvas a pagar; si tu pago no aparece aquí, contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedSettlementFailed:
+      'La red confirmó tu pago, pero Quasar aún no lo ha registrado y lo vuelve a intentar cada día. No vuelvas a pagar; contacta con {merchant} e indica el hash de la transacción.',
     unconfirmedPayAgain: 'El pago no salió de mi billetera',
     cancelledTitle: 'Esta factura se canceló',
     cancelledText: '{merchant} la canceló; no se te cobró nada.',
     cancelledWhilePaying:
       '{merchant} la canceló. Si tu pago llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
+    cancelledAfterQr:
+      '{merchant} la canceló. Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
     replacedTitle: '{merchant} corrigió esta factura',
     replacedText: 'La sustituye {number}. Esta factura ya no se puede pagar.',
     replacedPaid: '¿Ya pagaste? Tu pago pasó a la nueva factura.',
