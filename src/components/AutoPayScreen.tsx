@@ -61,6 +61,7 @@ export function AutoPayScreen() {
     }
   };
 
+  const prompting = asking && wallet !== null;
   const values = { wallet: wallet?.name ?? '', network: terms ? networkName(terms.chainId) : '' };
   const problemText =
     problem === 'declined'
@@ -75,7 +76,8 @@ export function AutoPayScreen() {
 
   return (
     <div className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
-      <div inert={asking} className="novapay:flex novapay:flex-1 novapay:flex-col">
+      {/* While the wallet asks, the offer leaves the layout (keeping its state): the prompt takes its place */}
+      <div inert={asking} className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompting && 'novapay:hidden')}>
         <ScreenContent title={labels.autoPay.title} subtitle={labels.autoPay.subtitle}>
           {terms && (
             <>
@@ -128,7 +130,7 @@ export function AutoPayScreen() {
           <FooterNote>{labels.autoPay.walletNote}</FooterNote>
         </ScreenFooter>
       </div>
-      {asking && wallet && (
+      {prompting && (
         <WalletPrompt
           kind="permission"
           walletName={wallet.name}

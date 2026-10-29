@@ -1,6 +1,6 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { WalletIcon } from '@tuwaio/nova-core';
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
@@ -38,10 +38,14 @@ export interface WalletPromptProps {
 }
 
 /**
- * The window over the pay step while the wallet asks the buyer: what to sign or confirm, and what to check in the
- * wallet before — the amount, the recipient, the network and the time left of the price (WCAG 3.3.4). The heading
- * takes the focus, so screen readers say what happens. "Try again" re-asks only for a signature; for a transaction
- * the buyer is sent to the wallet, where the request still waits, so it cannot be paid twice.
+ * The window that stands for the pay step while the wallet asks the buyer: what to sign or confirm, and what to check
+ * in the wallet before — the amount, the recipient, the network and the time left of the price (WCAG 3.3.4). The
+ * screen hides its step while it shows (the step keeps its state), so the window fills the checkout pane, centered,
+ * without the scrollbar of a taller step. The heading takes the focus, so screen readers say what happens; when the
+ * window closes and the step comes back, the focus returns to the button that opened it ("Pay", "Switch to …")
+ * from the page or the dialog frame it fell back to, unless the buyer moved it elsewhere. "Try again" re-asks only
+ * for a signature; for a transaction the buyer is sent to the wallet, where the request still waits, so it cannot be
+ * paid twice.
  *
  * @param props - See {@link WalletPromptProps}.
  * @returns The window.
@@ -62,6 +66,20 @@ export function WalletPrompt({
   const headingId = useId();
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [kind]);
+  // The button that opened the window, read before the step under it leaves the layout and loses the focus
+  const [opener] = useState(() => (typeof document === 'undefined' ? null : (document.activeElement as HTMLElement)));
+  useEffect(
+    () => () => {
+      // The window went and the focus with it, to the page or to a frame around the step (a dialog focuses its
+      // content): back to the button, if its step is still on screen
+      const page = opener?.ownerDocument;
+      if (!opener || !page || opener === page.body || !opener.isConnected) return;
+      const active = page.activeElement;
+      if (active && active !== page.body && !active.contains(opener)) return;
+      opener.focus();
+    },
+    [opener],
+  );
   const values = { wallet: walletName, amount, merchant, network };
   const title =
     kind === 'sign'
@@ -77,7 +95,7 @@ export function WalletPrompt({
   return (
     <section
       aria-labelledby={headingId}
-      className="novapay:absolute novapay:inset-0 novapay:z-10 novapay:flex novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center"
+      className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center"
     >
       <span className="novapay:relative novapay:h-12 novapay:w-12">
         {walletId && <WalletIcon walletName={walletId} />}

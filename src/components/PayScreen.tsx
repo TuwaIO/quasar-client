@@ -215,7 +215,11 @@ export function PayScreen() {
 
   return (
     <div className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
-      <div inert={prompt !== null} className="novapay:flex novapay:flex-1 novapay:flex-col">
+      {/* While the wallet asks, the step leaves the layout (keeping its state): the prompt takes its place */}
+      <div
+        inert={prompt !== null}
+        className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompt !== null && 'novapay:hidden')}
+      >
         <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-3 novapay:px-5 novapay:py-4">
           <h2 {...screenHeading} className="novapay:sr-only">
             {labels.pay.title}
