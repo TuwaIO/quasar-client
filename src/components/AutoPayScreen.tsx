@@ -135,6 +135,7 @@ export function AutoPayScreen() {
           kind="permission"
           walletName={wallet.name}
           walletId={wallet.walletId}
+          walletIcon={wallet.icon}
           amount=""
           merchant={merchant}
           network={values.network}

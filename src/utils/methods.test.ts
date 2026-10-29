@@ -42,6 +42,7 @@ describe('connected wallet', () => {
       connectorType: 'evm:metamask',
       walletId: 'metamask',
       name: 'MetaMask',
+      icon: undefined,
       connection,
     });
     expect(
@@ -60,6 +61,76 @@ describe('connected wallet', () => {
     expect(walletLabel('evm:coinbase')).toBe('Coinbase Wallet');
     expect(walletLabel('solana:solflare')).toBe('Solflare');
     expect(walletLabel('evm:rabby')).toBe('Rabby');
+  });
+
+  const icon = (name: string) => `data:image/svg+xml;base64,${name}`;
+  const evmAt = (connectorType: string) => ({
+    address: '0x1111111111111111111111111111111111111111',
+    chainId: 8453,
+    connectorType,
+  });
+
+  it('names and shows a wallet as the wallet calls itself: an EIP-6963 wallet Nova does not know', () => {
+    const connectors = {
+      evm: [
+        { name: 'MetaMask', icon: icon('mm') },
+        { name: 'Switch Wallet', icon: icon('sw') },
+      ],
+    };
+    expect(connectedWallet(evmAt('evm:switchwallet'), connectors)).toMatchObject({
+      walletId: 'switchwallet',
+      name: 'Switch Wallet',
+      icon: icon('sw'),
+    });
+  });
+
+  it('takes the wallet with exactly the connection type, never one whose type only contains it', () => {
+    const connectors = {
+      evm: [
+        { name: 'MetaMask Flask', icon: icon('flask') },
+        { name: 'MetaMask', icon: icon('mm') },
+        { name: 'Coinbase Wallet', icon: icon('cbw') },
+        { name: 'Base Account', icon: icon('base') },
+      ],
+    };
+    expect(connectedWallet(evmAt('evm:metamask'), connectors)).toMatchObject({ name: 'MetaMask', icon: icon('mm') });
+    // `Base Account` is `coinbase`, `Coinbase Wallet` is `coinbasewallet`
+    expect(connectedWallet(evmAt('evm:coinbase'), connectors)).toMatchObject({
+      name: 'Base Account',
+      icon: icon('base'),
+    });
+    // Only MetaMask Flask is listed: the connection is not it
+    expect(connectedWallet(evmAt('evm:metamask'), { evm: [{ name: 'MetaMask Flask', icon: icon('flask') }] })).toEqual(
+      expect.objectContaining({ name: 'MetaMask', icon: undefined }),
+    );
+  });
+
+  it('matches the wallet within the chain family of the connection', () => {
+    const solana = {
+      address: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+      chainId: 'devnet',
+      connectorType: 'solana:phantom',
+    };
+    const connectors = {
+      evm: [{ name: 'Phantom', icon: icon('evm') }],
+      solana: [{ name: 'Phantom', icon: icon('sol') }],
+    };
+    expect(connectedWallet(solana, connectors)).toMatchObject({ name: 'Phantom', icon: icon('sol') });
+  });
+
+  it('falls back to the icon of the connection and a name from the connector type when the wallet is not listed', () => {
+    expect(connectedWallet({ ...evmAt('evm:switchwallet'), icon: ` ${icon('own')} ` }, { evm: [] })).toMatchObject({
+      name: 'Switchwallet',
+      icon: icon('own'),
+    });
+    expect(connectedWallet(evmAt('evm:switchwallet'))).toMatchObject({ name: 'Switchwallet', icon: undefined });
+  });
+
+  it('keeps the names Nova gives to known wallets and to the generic browser connector', () => {
+    expect(walletLabel('evm:metamask', 'MetaMask')).toBe('MetaMask');
+    expect(walletLabel('evm:injected', 'Injected')).toBe('Browser wallet');
+    expect(walletLabel('evm:switchwallet', ' Switch Wallet ')).toBe('Switch Wallet');
+    expect(walletLabel('evm:switchwallet', '')).toBe('Switchwallet');
   });
 
   it("pays from the wallet's address on the method's chain, and only within its chain family", () => {

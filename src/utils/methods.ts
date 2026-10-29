@@ -5,7 +5,11 @@
 
 import { getChainName } from '@tuwaio/nova-core';
 import {
+  type ConnectorType,
   formatCaip10AccountId,
+  formatConnectorName,
+  getAdapterFromConnectorType,
+  getConnectorTypeFromName,
   parseCaip2ChainId,
   parseCaip19AssetId,
   toCaip2ChainId,
@@ -28,8 +32,14 @@ export interface CheckoutWallet {
   connectorType: string;
   /** The wallet id for `WalletIcon` of `@tuwaio/nova-core` (`metamask`). */
   walletId: string;
-  /** The wallet name to show. */
+  /** The wallet name to show: the name the wallet gives itself (`Switch Wallet`), see {@link walletLabel}. */
   name: string;
+  /**
+   * The icon the wallet gives itself, usually a `data:` URI (EIP-6963, Wallet Standard): of its connector in the
+   * Satellite store, else of the connection; `undefined` when it has none, and the checkout shows the icon of
+   * `walletId`.
+   */
+  icon?: string;
   /** The Satellite Connect connection itself, for the chain adapters (the Solana adapter signs with its account). */
   connection: unknown;
 }
@@ -45,15 +55,46 @@ const WALLET_NAMES: Record<string, string> = {
 };
 
 /**
- * The name of a wallet from its connector type.
+ * The name of a wallet: the name it gives itself, as the wallet list of Nova Connect shows it (`Switch Wallet`);
+ * without one, the name Nova knows for its connector type (`evm:metamask` is `MetaMask`), else the connector type
+ * with a capital letter. The generic injected connector is always `Browser wallet`.
  *
  * @param connectorType - Connector type of Satellite Connect, for example `evm:metamask`.
+ * @param ownName - The name of the wallet's connector (`name` of the wagmi connector or the Wallet Standard wallet).
  * @returns The name, for example `MetaMask`.
  */
-export function walletLabel(connectorType: string): string {
+export function walletLabel(connectorType: string, ownName?: string): string {
   const id = connectorType.slice(connectorType.indexOf(':') + 1).toLowerCase();
-  return WALLET_NAMES[id] ?? id.charAt(0).toUpperCase() + id.slice(1);
+  if (id === 'injected') return WALLET_NAMES.injected;
+  return ownName?.trim() || WALLET_NAMES[id] || id.charAt(0).toUpperCase() + id.slice(1);
 }
+
+/** What a wallet of the Satellite store says about itself. */
+type OwnWallet = { name?: unknown; icon?: unknown };
+
+/**
+ * The wallet of a connection in the wallet lists of the Satellite store: the one of its chain family whose
+ * connector type is exactly the connection's, as the chain adapters of Satellite Connect find it. A wallet whose type
+ * only contains it is never taken (`metamaskflask` is not `metamask`, `coinbasewallet` is not `coinbase`).
+ *
+ * @param connectors - The wallets by adapter, as `getConnectors()` of the Satellite store returns them.
+ * @param connectorType - Connector type of the connection, for example `evm:switchwallet`.
+ * @returns The wallet, or `undefined` when none is listed.
+ */
+function walletOfType(connectors: Partial<Record<string, unknown[]>>, connectorType: string): OwnWallet | undefined {
+  const adapter = getAdapterFromConnectorType(connectorType as ConnectorType);
+  const wallets = connectors[adapter];
+  if (!Array.isArray(wallets)) return undefined;
+  return wallets.find(
+    (wallet): wallet is OwnWallet =>
+      typeof wallet === 'object' &&
+      wallet !== null &&
+      typeof (wallet as OwnWallet).name === 'string' &&
+      getConnectorTypeFromName(adapter, formatConnectorName((wallet as { name: string }).name)) === connectorType,
+  );
+}
+
+const iconOf = (value: unknown): string | undefined => (typeof value === 'string' && value.trim()) || undefined;
 
 /**
  * The family of a CAIP-2 chain.
@@ -67,26 +108,32 @@ export const familyOf = (chainId: string): PaymentFamily | null => {
 };
 
 /**
- * The connected wallet of Satellite Connect in CAIP identifiers.
+ * The connected wallet of Satellite Connect in CAIP identifiers, named and shown as the wallet calls itself.
  *
  * @param connection - The active connection of the Satellite store: `address`, `chainId` (an EVM number or a Solana
- * cluster), `connectorType`.
+ * cluster), `connectorType`, and the `icon` of the wallet when the adapter set it.
+ * @param connectors - The wallets of the Satellite store by adapter (`getConnectors()`): the one with the connector
+ * type of the connection gives the name and the icon (see {@link walletLabel}). Without it, or when it is not listed,
+ * the name comes from the connector type and the icon from the connection.
  * @returns The wallet, or `null` without a connection or with a chain the checkout cannot read.
  */
 export function connectedWallet(
-  connection: { address: string; chainId: string | number; connectorType: string } | null | undefined,
+  connection: { address: string; chainId: string | number; connectorType: string; icon?: string } | null | undefined,
+  connectors?: Partial<Record<string, unknown[]>>,
 ): CheckoutWallet | null {
   if (!connection?.address) return null;
   const chainId = toCaip2ChainId(connection.chainId);
   const family = chainId ? familyOf(chainId) : null;
   if (!chainId || !family) return null;
+  const own = connectors ? walletOfType(connectors, connection.connectorType) : undefined;
   return {
     address: connection.address,
     chainId,
     family,
     connectorType: connection.connectorType,
     walletId: connection.connectorType.slice(connection.connectorType.indexOf(':') + 1).toLowerCase(),
-    name: walletLabel(connection.connectorType),
+    name: walletLabel(connection.connectorType, typeof own?.name === 'string' ? own.name : undefined),
+    icon: iconOf(own?.icon) ?? iconOf(connection.icon),
     connection,
   };
 }

@@ -1,11 +1,10 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
-import { WalletIcon } from '@tuwaio/nova-core';
 import { useEffect, useId, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
 import { screenTitle } from './classes';
-import { DetailRow, DetailsCard, FooterAction, SecondaryButton } from './ScreenParts';
+import { CheckoutWalletIcon, DetailRow, DetailsCard, FooterAction, SecondaryButton } from './ScreenParts';
 
 /**
  * What the wallet asks for: a gasless signature, a transaction, a network switch, the permission of automatic
@@ -17,10 +16,12 @@ export type WalletPromptKind = 'sign' | 'confirm' | 'switch' | 'permission' | 's
 export interface WalletPromptProps {
   /** What the wallet asks for. */
   kind: WalletPromptKind;
-  /** The wallet's name. */
+  /** The wallet's name, as it calls itself (`name` of the connected wallet). */
   walletName: string;
-  /** The wallet's id, for its icon. */
+  /** The wallet's id, for the icon Nova has of it when the wallet gives none. */
   walletId: string;
+  /** The icon the wallet gives itself (`icon` of the connected wallet), usually a `data:` URI. */
+  walletIcon?: string;
   /** The amount with its symbol. */
   amount: string;
   /** The seller. */
@@ -54,6 +55,7 @@ export function WalletPrompt({
   kind,
   walletName,
   walletId,
+  walletIcon,
   amount,
   merchant,
   network,
@@ -98,7 +100,7 @@ export function WalletPrompt({
       className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center"
     >
       <span className="novapay:relative novapay:h-12 novapay:w-12">
-        {walletId && <WalletIcon walletName={walletId} />}
+        {(walletId || walletIcon) && <CheckoutWalletIcon walletId={walletId} icon={walletIcon} />}
         <ArrowPathIcon
           aria-hidden
           className="novapay:absolute novapay:-bottom-1 novapay:-right-1 novapay:h-5 novapay:w-5 novapay:animate-spin novapay:rounded-full novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-accent)] novapay:motion-reduce:animate-none"

@@ -1,5 +1,5 @@
 import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
-import { cn, WalletIcon } from '@tuwaio/nova-core';
+import { cn } from '@tuwaio/nova-core';
 import type { CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 import { useState } from 'react';
 
@@ -23,6 +23,7 @@ import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { focusRing, mono, screenHeading } from './classes';
 import {
+  CheckoutWalletIcon,
   CopyButton,
   DetailRow,
   DetailsCard,
@@ -228,7 +229,7 @@ export function PayScreen() {
           {wallet && (
             <div className="novapay:flex novapay:items-center novapay:gap-2.5 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2">
               <span className="novapay:h-7 novapay:w-7 novapay:shrink-0">
-                <WalletIcon walletName={wallet.walletId} />
+                <CheckoutWalletIcon walletId={wallet.walletId} icon={wallet.icon} />
               </span>
               <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col">
                 <span className="novapay:text-[13px] novapay:font-semibold">{wallet.name}</span>
@@ -474,6 +475,7 @@ export function PayScreen() {
           kind={prompt}
           walletName={wallet?.name ?? ''}
           walletId={wallet?.walletId ?? ''}
+          walletIcon={wallet?.icon}
           amount={token(amounts.send)}
           merchant={merchant}
           network={network}

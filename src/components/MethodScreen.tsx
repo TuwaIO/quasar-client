@@ -1,5 +1,5 @@
 import { DevicePhoneMobileIcon, QrCodeIcon, WalletIcon as WalletOutlineIcon } from '@heroicons/react/24/outline';
-import { cn, NetworkIcon, TokenIcon, WalletIcon } from '@tuwaio/nova-core';
+import { cn, NetworkIcon, TokenIcon } from '@tuwaio/nova-core';
 import { toEvmChainId } from '@tuwaio/orbit-core';
 import type { CheckoutMethod } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useEffect, useEffectEvent, useId, useMemo, useState } from 'react';
@@ -13,7 +13,7 @@ import { methodErrorText } from '../utils/outcome';
 import { focusRing, mono } from './classes';
 import { checkoutClassName } from './customization';
 import { RadioCards } from './RadioCards';
-import { GroupLabel, PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
+import { CheckoutWalletIcon, GroupLabel, PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
 
 /** A small badge of a network option. */
 function Badge({ tone, children }: { tone: 'neutral' | 'accent' | 'success'; children: ReactNode }) {
@@ -301,7 +301,7 @@ export function MethodScreen() {
               <>
                 {wallet ? (
                   <span className="novapay:h-5 novapay:w-5 novapay:shrink-0">
-                    <WalletIcon walletName={wallet.walletId} />
+                    <CheckoutWalletIcon walletId={wallet.walletId} icon={wallet.icon} />
                   </span>
                 ) : (
                   <WalletOutlineIcon

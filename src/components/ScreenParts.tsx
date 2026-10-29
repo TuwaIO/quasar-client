@@ -1,5 +1,5 @@
 import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
-import { cn } from '@tuwaio/nova-core';
+import { cn, WalletIcon } from '@tuwaio/nova-core';
 import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
@@ -12,6 +12,31 @@ const partClass = (
   context: CheckoutContextValue | null,
   part: Parameters<typeof checkoutClassName>[1],
 ): string | undefined => (context ? checkoutClassName(context, part) : undefined);
+
+// An icon a wallet gives itself that the checkout shows: an image `data:` URI (EIP-6963, Wallet Standard) or HTTPS
+const isWalletIconUrl = (icon: string) => /^data:image\//i.test(icon) || /^https:\/\//i.test(icon);
+
+/**
+ * The icon of the connected wallet: the icon the wallet gives itself (`icon` of `CheckoutWallet`), else, or
+ * when that image does not load, the icon of its id from `WalletIcon` of `@tuwaio/nova-core`. Decorative: the name of
+ * the wallet is written next to it.
+ *
+ * @internal
+ */
+export function CheckoutWalletIcon({ walletId, icon }: { walletId: string; icon?: string }) {
+  const [failed, setFailed] = useState<string | null>(null);
+  if (icon && icon !== failed && isWalletIconUrl(icon)) {
+    return (
+      <img
+        src={icon}
+        alt=""
+        onError={() => setFailed(icon)}
+        className="novapay:block novapay:h-full novapay:w-full novapay:object-contain"
+      />
+    );
+  }
+  return <WalletIcon walletName={walletId} />;
+}
 
 /** The scrolling content of a screen, with its heading. @internal */
 export function ScreenContent({

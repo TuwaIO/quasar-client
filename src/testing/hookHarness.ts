@@ -24,7 +24,12 @@ export const hooks = {
   useState(initial: unknown) {
     const slot = nextSlot();
     if (!('value' in slot)) slot.value = typeof initial === 'function' ? (initial as () => unknown)() : initial;
-    return [slot.value, (next: unknown) => (slot.value = next)];
+    // A function is an updater of the current value, as in React
+    return [
+      slot.value,
+      (next: unknown) =>
+        (slot.value = typeof next === 'function' ? (next as (value: unknown) => unknown)(slot.value) : next),
+    ];
   },
   useRef(initial: unknown) {
     const slot = nextSlot();
