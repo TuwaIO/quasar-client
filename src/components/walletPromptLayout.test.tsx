@@ -226,3 +226,145 @@ describe('the wallet prompt', () => {
     expect(button.focus).not.toHaveBeenCalled();
   });
 });
+
+describe('the height of the step on a phone, while the wallet asks', () => {
+  /** A step of `height` px in a checkout pane whose scrolling area has `room` px. */
+  function stepNode(height: number, room: number) {
+    const scroller = { getBoundingClientRect: () => ({ height: room }) };
+    const node = {
+      height,
+      getBoundingClientRect: () => ({ height: node.height }),
+      closest: (selector: string) => (selector === '[data-novapay-scroll]' ? scroller : null),
+    };
+    return node;
+  }
+
+  /** A `ResizeObserver` the test fires by hand. */
+  function resizes() {
+    const live = new Set<{ callback: () => void; observed: unknown[] }>();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        entry: { callback: () => void; observed: unknown[] };
+        constructor(callback: () => void) {
+          this.entry = { callback, observed: [] };
+          live.add(this.entry);
+        }
+        observe(target: unknown) {
+          this.entry.observed.push(target);
+        }
+        disconnect() {
+          live.delete(this.entry);
+        }
+      },
+    );
+    return { live, fire: () => [...live].forEach((entry) => entry.callback()) };
+  }
+
+  /** The pay step with the measured step node attached to its ref. */
+  function payStep(node: ReturnType<typeof stepNode>) {
+    payOnBase();
+    const tree = render(PayScreen, {});
+    (stepOf(tree).props.ref as (element: unknown) => void)(node);
+    return render(PayScreen, {});
+  }
+
+  const promptOf = (tree: unknown) => fixture.ofType(tree, WalletPrompt)[0];
+
+  it('hands the height of the pay step to the prompt, so the sheet keeps its size', () => {
+    resizes();
+    payStep(stepNode(520, 700));
+    payment.status = 'switching';
+    const tree = render(PayScreen, {});
+
+    expect(promptOf(tree).props.stepHeight).toBe(520);
+  });
+
+  it('caps the height at the room of the pane, so a short phone gets no scrollbar back', () => {
+    resizes();
+    payStep(stepNode(900, 610));
+    payment.status = 'wallet';
+    const tree = render(PayScreen, {});
+
+    expect(promptOf(tree).props.stepHeight).toBe(610);
+  });
+
+  it('follows the step while it shows, keeps the last height while hidden, and releases it after the prompt', () => {
+    const { live, fire } = resizes();
+    const node = stepNode(520, 700);
+    payStep(node);
+    expect([...live][0].observed).toContain(node);
+    node.height = 480;
+    fire();
+
+    payment.status = 'switching';
+    let tree = render(PayScreen, {});
+    expect(promptOf(tree).props.stepHeight).toBe(480);
+    // Hidden, the step measures 0: the prompt keeps the height of the step it stands for
+    expect(live.size).toBe(0);
+
+    payment.status = 'idle';
+    tree = render(PayScreen, {});
+    expect(fixture.ofType(tree, WalletPrompt)).toHaveLength(0);
+    expect(stepOf(tree).props.style).toBeUndefined();
+    node.height = 430;
+    fire();
+    payment.status = 'switching';
+    tree = render(PayScreen, {});
+    expect(promptOf(tree).props.stepHeight).toBe(430);
+  });
+
+  it('hands the height of the automatic payments offer to its prompt', () => {
+    resizes();
+    const offer = {
+      status: 'available',
+      methodId: 'usdc-base',
+      request: {
+        chainId: '0x2105',
+        to: '0x7a0b0000000000000000000000000000000077e1',
+        permission: { data: { periodAmount: '0x989680', periodDuration: 2_592_000 } },
+        rules: [],
+      },
+    };
+    const checkout = { ...fixture.checkout, autoCharge: offer } as unknown as typeof fixture.checkout;
+    ctx = fixture.checkoutContextValue(
+      {},
+      {
+        checkout,
+        screen: 'autoPay',
+        wallet: wallet as never,
+        adapterFor: () => ({ family: 'eip155', requestPermission: () => new Promise(() => undefined) }) as never,
+      },
+    );
+    let tree = render(AutoPayScreen, {});
+    (stepOf(tree).props.ref as (element: unknown) => void)(stepNode(560, 700));
+    tree = render(AutoPayScreen, {});
+    (fixture.ofType(tree, PrimaryButton)[0].props.onClick as () => void)();
+    tree = render(AutoPayScreen, {});
+
+    expect(promptOf(tree).props.stepHeight).toBe(560);
+  });
+
+  it('takes that height as its minimum below 640 px only, and nothing without it', () => {
+    const props = {
+      kind: 'switch' as const,
+      walletName: 'MetaMask',
+      walletId: 'metamask',
+      amount: '2 USDC',
+      merchant: 'Cosmos',
+      network: 'Base',
+      to: '0x7a0b…77e1',
+      priceTime: '9:59',
+      onCancel: vi.fn(),
+    };
+    const sized = render(WalletPrompt, { ...props, stepHeight: 520 }) as { props: Record<string, unknown> };
+    expect(sized.props.style).toEqual({ '--novapay-step-height': '520px' });
+    const heights = classesOf(sized).filter((name) => name.includes('min-h'));
+    expect(heights).toEqual(['novapay:max-sm:min-h-[var(--novapay-step-height)]']);
+    unmount();
+
+    const plain = render(WalletPrompt, props) as { props: Record<string, unknown> };
+    expect(plain.props.style).toBeUndefined();
+    expect(classesOf(plain).filter((name) => name.includes('min-h'))).toEqual([]);
+  });
+});

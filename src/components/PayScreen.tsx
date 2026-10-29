@@ -7,6 +7,7 @@ import { useAsyncValue } from '../hooks/useAsyncValue';
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePayment } from '../hooks/usePayment';
 import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
+import { useStepHeight } from '../hooks/useStepHeight';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/checkout';
 import {
@@ -160,6 +161,13 @@ export function PayScreen() {
   const shortfall =
     quote && typeof balance === 'bigint' ? balanceShortfall(balance, quote, native && fee ? fee.amount : 0n) : null;
   const alternatives = useAlternatives(methods, quote, balanceCheck && Boolean(shortfall));
+  // The wallet asks (the prompt below shows): on a phone the prompt keeps the height of the step
+  const prompting =
+    payment.status === 'switching' ||
+    payment.status === 'submitting' ||
+    payment.status === 'wallet' ||
+    state.phase === 'submitting';
+  const [stepRef, stepHeight] = useStepHeight(prompting);
 
   if (!checkout || !quote || !method) return null;
 
@@ -208,18 +216,17 @@ export function PayScreen() {
       ? 'switch'
       : payment.status === 'submitting' || state.phase === 'submitting'
         ? 'submitting'
-        : payment.status === 'wallet'
-          ? path === 'transfer'
-            ? 'confirm'
-            : 'sign'
-          : null;
+        : path === 'transfer'
+          ? 'confirm'
+          : 'sign';
 
   return (
     <div className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
       {/* While the wallet asks, the step leaves the layout (keeping its state): the prompt takes its place */}
       <div
-        inert={prompt !== null}
-        className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompt !== null && 'novapay:hidden')}
+        ref={stepRef}
+        inert={prompting}
+        className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompting && 'novapay:hidden')}
       >
         <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-3 novapay:px-5 novapay:py-4">
           <h2 {...screenHeading} className="novapay:sr-only">
@@ -470,7 +477,7 @@ export function PayScreen() {
         </ScreenFooter>
       </div>
 
-      {prompt && (
+      {prompting && (
         <WalletPrompt
           kind={prompt}
           walletName={wallet?.name ?? ''}
@@ -483,6 +490,7 @@ export function PayScreen() {
           priceTime={expired ? null : formatCountdown(left)}
           onRetry={path === 'relay' ? () => void payment.pay() : undefined}
           onCancel={payment.dismiss}
+          stepHeight={stepHeight}
         />
       )}
     </div>

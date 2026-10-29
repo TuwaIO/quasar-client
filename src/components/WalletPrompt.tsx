@@ -1,5 +1,6 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
-import { useEffect, useId, useRef, useState } from 'react';
+import { cn } from '@tuwaio/nova-core';
+import { type CSSProperties, useEffect, useId, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
@@ -36,13 +37,22 @@ export interface WalletPromptProps {
   onRetry?: () => void;
   /** Closes the window. */
   onCancel: () => void;
+  /**
+   * The height in px of the step the window stands for, measured while the step showed and capped at the room of the
+   * checkout pane. Below 640 px, where the checkout has no fixed height, the window keeps it as its minimum height, so
+   * the sheet does not shrink while the wallet asks and grow back after. Wider screens have the fixed height of the
+   * checkout and ignore it.
+   */
+  stepHeight?: number | null;
 }
 
 /**
  * The window that stands for the pay step while the wallet asks the buyer: what to sign or confirm, and what to check
- * in the wallet before — the amount, the recipient, the network and the time left of the price (WCAG 3.3.4). The
- * screen hides its step while it shows (the step keeps its state), so the window fills the checkout pane, centered,
- * without the scrollbar of a taller step. The heading takes the focus, so screen readers say what happens; when the
+ * in the wallet before — the amount, the recipient, the network and the time left of the price (WCAG 3.3.4). It sits
+ * in the flow of the screen, in place of the step: a screen that shows it (a custom screen of
+ * `customization.components.screens` too) hides its step while it shows, with `display: none` and `inert` (the step
+ * keeps its state), so the window fills the checkout pane, centered, without the scrollbar of a taller step, and
+ * passes the step's height as `stepHeight`, so a phone keeps the height of the sheet. The heading takes the focus, so screen readers say what happens; when the
  * window closes and the step comes back, the focus returns to the button that opened it ("Pay", "Switch to …")
  * from the page or the dialog frame it fell back to, unless the buyer moved it elsewhere. "Try again" re-asks only
  * for a signature; for a transaction the buyer is sent to the wallet, where the request still waits, so it cannot be
@@ -63,6 +73,7 @@ export function WalletPrompt({
   priceTime,
   onRetry,
   onCancel,
+  stepHeight,
 }: WalletPromptProps) {
   const { labels } = useCheckoutContext();
   const headingId = useId();
@@ -97,7 +108,12 @@ export function WalletPrompt({
   return (
     <section
       aria-labelledby={headingId}
-      className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center"
+      // Below 640 px the checkout takes its content's height: the window keeps the height of the step
+      style={stepHeight ? ({ '--novapay-step-height': `${stepHeight}px` } as CSSProperties) : undefined}
+      className={cn(
+        'novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center',
+        stepHeight && 'novapay:max-sm:min-h-[var(--novapay-step-height)]',
+      )}
     >
       <span className="novapay:relative novapay:h-12 novapay:w-12">
         {(walletId || walletIcon) && <CheckoutWalletIcon walletId={walletId} icon={walletIcon} />}

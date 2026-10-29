@@ -3,6 +3,7 @@ import { cn, WalletIcon } from '@tuwaio/nova-core';
 import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
+import { isWalletIconUrl } from '../utils/methods';
 import type { CheckoutContextValue } from './checkoutContext';
 import { focusRing, iconButton, mono, primaryAction, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName, type CheckoutPrimaryButtonProps } from './customization';
@@ -12,9 +13,6 @@ const partClass = (
   context: CheckoutContextValue | null,
   part: Parameters<typeof checkoutClassName>[1],
 ): string | undefined => (context ? checkoutClassName(context, part) : undefined);
-
-// An icon a wallet gives itself that the checkout shows: an image `data:` URI (EIP-6963, Wallet Standard) or HTTPS
-const isWalletIconUrl = (icon: string) => /^data:image\//i.test(icon) || /^https:\/\//i.test(icon);
 
 /**
  * The icon of the connected wallet: the icon the wallet gives itself (`icon` of `CheckoutWallet`), else, or

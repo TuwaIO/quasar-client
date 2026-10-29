@@ -35,9 +35,9 @@ export interface CheckoutWallet {
   /** The wallet name to show: the name the wallet gives itself (`Switch Wallet`), see {@link walletLabel}. */
   name: string;
   /**
-   * The icon the wallet gives itself, usually a `data:` URI (EIP-6963, Wallet Standard): of its connector in the
-   * Satellite store, else of the connection; `undefined` when it has none, and the checkout shows the icon of
-   * `walletId`.
+   * The icon the wallet gives itself, an image `data:` URI (EIP-6963, Wallet Standard) or an HTTPS URL: of the
+   * connection (the connector that connected), else of its wallet in the Satellite store; `undefined` when neither
+   * gives one the checkout can show, and the checkout shows the icon of `walletId`.
    */
   icon?: string;
   /** The Satellite Connect connection itself, for the chain adapters (the Solana adapter signs with its account). */
@@ -73,28 +73,50 @@ export function walletLabel(connectorType: string, ownName?: string): string {
 type OwnWallet = { name?: unknown; icon?: unknown };
 
 /**
+ * Whether the checkout shows an icon a wallet gives itself: an image `data:` URI (EIP-6963, Wallet Standard) or an
+ * HTTPS URL.
+ *
+ * @param icon - The icon.
+ * @returns `true` for an image `data:` URI or an HTTPS URL.
+ * @internal
+ */
+export const isWalletIconUrl = (icon: string): boolean => /^data:image\//i.test(icon) || /^https:\/\//i.test(icon);
+
+/** An icon the checkout can show, trimmed; `undefined` for anything else. */
+const iconOf = (value: unknown): string | undefined => {
+  const icon = typeof value === 'string' ? value.trim() : '';
+  return icon && isWalletIconUrl(icon) ? icon : undefined;
+};
+
+/**
  * The wallet of a connection in the wallet lists of the Satellite store: the one of its chain family whose
  * connector type is exactly the connection's, as the chain adapters of Satellite Connect find it. A wallet whose type
- * only contains it is never taken (`metamaskflask` is not `metamask`, `coinbasewallet` is not `coinbase`).
+ * only contains it is never taken (`metamaskflask` is not `metamask`, `coinbasewallet` is not `coinbase`). When
+ * several wallets have that type (`Trust` and `Trust Wallet` are both `trust`), the one with the icon of the connection
+ * (the connector that connected) wins, else the first.
  *
  * @param connectors - The wallets by adapter, as `getConnectors()` of the Satellite store returns them.
  * @param connectorType - Connector type of the connection, for example `evm:switchwallet`.
+ * @param icon - The icon of the connection, when the checkout can show it.
  * @returns The wallet, or `undefined` when none is listed.
  */
-function walletOfType(connectors: Partial<Record<string, unknown[]>>, connectorType: string): OwnWallet | undefined {
+function walletOfType(
+  connectors: Partial<Record<string, unknown[]>>,
+  connectorType: string,
+  icon: string | undefined,
+): OwnWallet | undefined {
   const adapter = getAdapterFromConnectorType(connectorType as ConnectorType);
   const wallets = connectors[adapter];
   if (!Array.isArray(wallets)) return undefined;
-  return wallets.find(
+  const ofType = wallets.filter(
     (wallet): wallet is OwnWallet =>
       typeof wallet === 'object' &&
       wallet !== null &&
       typeof (wallet as OwnWallet).name === 'string' &&
       getConnectorTypeFromName(adapter, formatConnectorName((wallet as { name: string }).name)) === connectorType,
   );
+  return (icon && ofType.find((wallet) => iconOf(wallet.icon) === icon)) || ofType[0];
 }
-
-const iconOf = (value: unknown): string | undefined => (typeof value === 'string' && value.trim()) || undefined;
 
 /**
  * The family of a CAIP-2 chain.
@@ -113,8 +135,9 @@ export const familyOf = (chainId: string): PaymentFamily | null => {
  * @param connection - The active connection of the Satellite store: `address`, `chainId` (an EVM number or a Solana
  * cluster), `connectorType`, and the `icon` of the wallet when the adapter set it.
  * @param connectors - The wallets of the Satellite store by adapter (`getConnectors()`): the one with the connector
- * type of the connection gives the name and the icon (see {@link walletLabel}). Without it, or when it is not listed,
- * the name comes from the connector type and the icon from the connection.
+ * type of the connection gives the name (see {@link walletLabel}); of several such wallets, the one with the icon of
+ * the connection. When it is not listed, the name comes from the connector type. The icon is the connection's, else
+ * the listed wallet's, when it is an image `data:` URI or an HTTPS URL.
  * @returns The wallet, or `null` without a connection or with a chain the checkout cannot read.
  */
 export function connectedWallet(
@@ -125,7 +148,9 @@ export function connectedWallet(
   const chainId = toCaip2ChainId(connection.chainId);
   const family = chainId ? familyOf(chainId) : null;
   if (!chainId || !family) return null;
-  const own = connectors ? walletOfType(connectors, connection.connectorType) : undefined;
+  // The icon of the connector that connected first: a listed wallet of the same type may be another one
+  const ownIcon = iconOf(connection.icon);
+  const own = connectors ? walletOfType(connectors, connection.connectorType, ownIcon) : undefined;
   return {
     address: connection.address,
     chainId,
@@ -133,7 +158,7 @@ export function connectedWallet(
     connectorType: connection.connectorType,
     walletId: connection.connectorType.slice(connection.connectorType.indexOf(':') + 1).toLowerCase(),
     name: walletLabel(connection.connectorType, typeof own?.name === 'string' ? own.name : undefined),
-    icon: iconOf(own?.icon) ?? iconOf(connection.icon),
+    icon: ownIcon ?? iconOf(own?.icon),
     connection,
   };
 }

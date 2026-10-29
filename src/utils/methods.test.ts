@@ -105,6 +105,31 @@ describe('connected wallet', () => {
     );
   });
 
+  it('shows the icon of the connector that connected, and names the listed wallet of that icon', () => {
+    // Two wallets announce the same connector type (`evm:trust`)
+    const connectors = {
+      evm: [
+        { name: 'Trust', icon: icon('t') },
+        { name: 'Trust Wallet', icon: icon('tw') },
+      ],
+    };
+    expect(connectedWallet({ ...evmAt('evm:trust'), icon: icon('tw') }, connectors)).toMatchObject({
+      name: 'Trust Wallet',
+      icon: icon('tw'),
+    });
+    // An icon of the connection the checkout cannot show: the listed wallet's
+    expect(
+      connectedWallet({ ...evmAt('evm:trust'), icon: 'http://wallet.example/icon.png' }, connectors),
+    ).toMatchObject({ name: 'Trust', icon: icon('t') });
+    expect(connectedWallet({ ...evmAt('evm:trust'), icon: 'javascript:alert(1)' }, connectors)).toMatchObject({
+      icon: icon('t'),
+    });
+    // Neither gives a usable icon: `WalletIcon` of the id
+    expect(
+      connectedWallet({ ...evmAt('evm:trust'), icon: 'wallet.png' }, { evm: [{ name: 'Trust', icon: 'trust.svg' }] }),
+    ).toMatchObject({ walletId: 'trust', icon: undefined });
+  });
+
   it('matches the wallet within the chain family of the connection', () => {
     const solana = {
       address: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',

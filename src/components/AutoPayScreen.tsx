@@ -2,6 +2,7 @@ import { cn } from '@tuwaio/nova-core';
 import { useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
+import { useStepHeight } from '../hooks/useStepHeight';
 import { formatLabel } from '../i18n';
 import { formatTokenAmount, shortAddress } from '../utils/format';
 import { methodFamily, networkName } from '../utils/methods';
@@ -34,6 +35,9 @@ export function AutoPayScreen() {
   const { checkout, state, store, labels, locale, wallet, adapterFor, setAutoPay } = useCheckoutContext();
   const [asking, setAsking] = useState(false);
   const [problem, setProblem] = useState<PaymentWalletErrorKind | null>(null);
+  const prompting = asking && wallet !== null;
+  // On a phone the prompt keeps the height of the offer
+  const [stepRef, stepHeight] = useStepHeight(prompting);
   if (!checkout) return null;
   const merchant = checkout.merchant.name;
   const terms = autoPayTerms(checkout.autoCharge, checkout.methods);
@@ -61,7 +65,6 @@ export function AutoPayScreen() {
     }
   };
 
-  const prompting = asking && wallet !== null;
   const values = { wallet: wallet?.name ?? '', network: terms ? networkName(terms.chainId) : '' };
   const problemText =
     problem === 'declined'
@@ -77,7 +80,11 @@ export function AutoPayScreen() {
   return (
     <div className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
       {/* While the wallet asks, the offer leaves the layout (keeping its state): the prompt takes its place */}
-      <div inert={asking} className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompting && 'novapay:hidden')}>
+      <div
+        ref={stepRef}
+        inert={asking}
+        className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompting && 'novapay:hidden')}
+      >
         <ScreenContent title={labels.autoPay.title} subtitle={labels.autoPay.subtitle}>
           {terms && (
             <>
@@ -130,7 +137,7 @@ export function AutoPayScreen() {
           <FooterNote>{labels.autoPay.walletNote}</FooterNote>
         </ScreenFooter>
       </div>
-      {prompting && (
+      {prompting && wallet && (
         <WalletPrompt
           kind="permission"
           walletName={wallet.name}
@@ -142,6 +149,7 @@ export function AutoPayScreen() {
           to=""
           priceTime={null}
           onCancel={() => setAsking(false)}
+          stepHeight={stepHeight}
         />
       )}
     </div>
