@@ -45,13 +45,13 @@ const CLOSED =
 
 /** A transaction another invoice handed over first, while Quasar decides (M3). */
 const TAKEN_ELSEWHERE =
-  'This transaction was handed over for another invoice first. Quasar credits it to the invoice it pays and shows the result here. Do not pay again; if your payment does not show here, contact Cosmos with the transaction hash.';
+  'This transaction was handed over for another invoice first. Quasar credits it to the invoice the wallet that sent it confirmed, and this page shows the result while it follows the payment. Do not pay again; if your payment does not show here, contact Cosmos with the transaction hash.';
 /** A transaction Quasar credited to another invoice (M3). */
 const PAYS_ANOTHER =
   'This transaction pays another invoice. If it was your payment for this one, contact Cosmos with the transaction hash.';
-/** A confirmed payment Quasar has not recorded yet (M1). */
+/** A confirmed payment Quasar has not recorded, without promising retries (M1). */
 const SETTLEMENT_FAILED =
-  'The network confirmed your payment, but Quasar has not recorded it yet and tries again daily. Do not pay again; contact Cosmos with the transaction hash.';
+  'The network confirmed your payment, but Quasar has not recorded it. Do not pay again; contact Cosmos with the transaction hash.';
 /** The errors of a payment that left the wallet and may still pay the invoice, with what the checkout says. */
 const LEFT_THE_WALLET = [
   [{ code: 'payment_unconfirmed', message: '', reason: 'tx_already_used', status: 409 }, TAKEN_ELSEWHERE],
@@ -611,7 +611,7 @@ describe('a payment Quasar could not confirm', () => {
   it('says that a transaction that moved money does not pay the invoice, with no re-check promise', () => {
     const tree = unconfirmedScreen(vi.fn(), {
       code: 'payment_mismatch',
-      reason: 'payer_mismatch',
+      reason: 'no_matching_transfer',
       rechecked: false,
       txKey: '0xabc',
     });

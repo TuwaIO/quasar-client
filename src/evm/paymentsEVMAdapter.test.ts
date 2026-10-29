@@ -19,6 +19,7 @@ const wagmi = vi.hoisted(() => ({
   getConnection: vi.fn(),
   sendCalls: vi.fn(),
   waitForCallsStatus: vi.fn(),
+  signMessage: vi.fn(),
 }));
 vi.mock('@wagmi/core', () => wagmi);
 
@@ -271,5 +272,22 @@ describe('paymentsEVMAdapter', () => {
         token: 'native',
       }),
     ).rejects.toThrow('not an EVM chain');
+  });
+
+  it('signs the payer confirmation of Quasar with personal_sign, exactly as Quasar wrote it', async () => {
+    wagmi.signMessage.mockResolvedValue('0xsigned');
+    const message = 'shop.example wants you to sign in with your Ethereum account:\n0x1111…';
+    await expect(
+      paymentsEVMAdapter(config).signMessage!({ message, account: ACCOUNT, chainId: BASE_SEPOLIA }),
+    ).resolves.toBe('0xsigned');
+    expect(wagmi.signMessage).toHaveBeenCalledWith(config, { account: ACCOUNT, message });
+  });
+
+  it('refuses to confirm a Safe, which cannot pay this checkout', async () => {
+    wagmi.getConnection.mockReturnValue({ connector: { id: 'safe', type: 'safe' } });
+    await expect(
+      paymentsEVMAdapter(config).signMessage!({ message: 'm', account: ACCOUNT, chainId: BASE_SEPOLIA }),
+    ).rejects.toMatchObject({ kind: 'unsupported' });
+    expect(wagmi.signMessage).not.toHaveBeenCalled();
   });
 });

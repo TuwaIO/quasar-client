@@ -14,10 +14,10 @@ import {
 
 /** What the checkout says about a transaction another invoice handed over first (M3). */
 const TAKEN_ELSEWHERE =
-  'This transaction was handed over for another invoice first. Quasar credits it to the invoice it pays and shows the result here. Do not pay again; if your payment does not show here, contact Cosmos with the transaction hash.';
-/** What the checkout says about a confirmed payment Quasar has not recorded yet (M1). */
+  'This transaction was handed over for another invoice first. Quasar credits it to the invoice the wallet that sent it confirmed, and this page shows the result while it follows the payment. Do not pay again; if your payment does not show here, contact Cosmos with the transaction hash.';
+/** What the checkout says about a confirmed payment Quasar has not recorded, without promising retries (M1). */
 const SETTLEMENT_FAILED =
-  'The network confirmed your payment, but Quasar has not recorded it yet and tries again daily. Do not pay again; contact Cosmos with the transaction hash.';
+  'The network confirmed your payment, but Quasar has not recorded it. Do not pay again; contact Cosmos with the transaction hash.';
 
 describe('contactHref', () => {
   it("writes to the seller's support email about the invoice, else opens the seller's site", () => {
@@ -236,5 +236,43 @@ describe('receivedAmount', () => {
     expect(receivedAmount('0')).toBeNull();
     expect(receivedAmount(null)).toBeNull();
     expect(receivedAmount('')).toBeNull();
+  });
+});
+
+describe('a transfer from a wallet that did not confirm the invoice (N2)', () => {
+  const OTHER_WALLET =
+    'This transfer came from a wallet that did not confirm this invoice, so it pays no invoice. Cosmos returns it to the wallet that sent it.';
+
+  it('says that the seller returns it to the wallet that sent it, never that it may pay', () => {
+    for (const reason of ['payer_mismatch', 'payer_unconfirmed']) {
+      const error = { code: 'payment_mismatch', message: '', reason } as never;
+      expect(methodErrorText(error, defaultLabels, 'Cosmos')).toBe(OTHER_WALLET);
+    }
+  });
+
+  it('asks for the confirmation when Quasar wants the wallet confirmed first', () => {
+    expect(methodErrorText({ code: 'payer_proof_required', message: '' }, defaultLabels)).toBe(
+      defaultLabels.payerProof.text,
+    );
+  });
+
+  it('promises the settlement retries only while Quasar makes them, for 30 days', () => {
+    const retrying = methodErrorText(
+      { code: 'payment_unconfirmed', message: '', reason: 'settlement_failed', rechecked: true } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(retrying).toBe(
+      'The network confirmed your payment, but Quasar has not recorded it yet. Quasar tries again daily, for 30 days after it learned of the payment. Do not pay again; contact Cosmos with the transaction hash.',
+    );
+    const stopped = methodErrorText(
+      { code: 'payment_unconfirmed', message: '', reason: 'settlement_failed' } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(stopped).toBe(
+      'The network confirmed your payment, but Quasar has not recorded it. Do not pay again; contact Cosmos with the transaction hash.',
+    );
+    expect(stopped).not.toMatch(/again daily/);
   });
 });

@@ -37,20 +37,32 @@ export function contactHref(
  * instead of their own texts.
  */
 const LEFT_THE_WALLET: Partial<
-  Record<UnconfirmedFollowUp, 'unconfirmedClosed' | 'unconfirmedTakenElsewhere' | 'unconfirmedSettlementFailed'>
+  Record<
+    UnconfirmedFollowUp,
+    'unconfirmedClosed' | 'unconfirmedTakenElsewhere' | 'unconfirmedSettlementRetrying' | 'unconfirmedSettlementFailed'
+  >
 > = {
   closed: 'unconfirmedClosed',
   takenElsewhere: 'unconfirmedTakenElsewhere',
+  settlementRetrying: 'unconfirmedSettlementRetrying',
   settlementFailed: 'unconfirmedSettlementFailed',
 };
 
 /**
+ * Rejection reasons of a transfer Quasar ties to no invoice: it came from a wallet that did not confirm the invoice, and
+ * the seller returns it to the wallet that sent it.
+ */
+const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
+
+/**
  * What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
- * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice), a
- * payment Quasar closed after 24 hours without a result on chain (`outcome.unconfirmedClosed`), a transaction another
- * invoice handed over first (`outcome.unconfirmedTakenElsewhere`) and a payment the network confirmed that Quasar has
- * not recorded yet (`outcome.unconfirmedSettlementFailed`). Never "it failed", "only the network fee was spent" or
- * "nothing was charged" for them.
+ * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
+ * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, which the seller returns to
+ * the wallet that sent it), a payment Quasar closed after 24 hours without a result on chain
+ * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
+ * and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
+ * Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the
+ * network fee was spent" or "nothing was charged" for them.
  *
  * @param error - The store's error, if any.
  * @param labels - The labels of the checkout language.
@@ -63,7 +75,13 @@ export function leftTheWalletText(
   merchant = '',
 ): string | null {
   if (isMovedMoneyFailure(error)) {
-    return formatLabel(isPaidElsewhere(error) ? labels.pay.mismatchTakenElsewhere : labels.pay.mismatch, { merchant });
+    const reason = (error as { reason?: string }).reason ?? '';
+    const text = FROM_ANOTHER_WALLET.has(reason)
+      ? labels.pay.mismatchOtherWallet
+      : isPaidElsewhere(error)
+        ? labels.pay.mismatchTakenElsewhere
+        : labels.pay.mismatch;
+    return formatLabel(text, { merchant });
   }
   const followUp = unconfirmedFollowUp(error);
   const note = followUp ? LEFT_THE_WALLET[followUp] : undefined;
@@ -121,6 +139,9 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.method.priceUnavailable;
     case 'consent_required':
       return labels.method.consentRequired;
+    // Quasar wants the wallet confirmed before the price: the step that confirms it says so
+    case 'payer_proof_required':
+      return labels.payerProof.text;
     default:
       return labels.error.generic;
   }

@@ -521,3 +521,54 @@ describe('unconfirmedTxKey', () => {
     expect(unconfirmedTxKey({ txKey: null, txHash: null }, null)).toBeNull();
   });
 });
+
+// Owner, 2026-10-29: the paying wallet confirms the invoice right after the wallet and the method, before the price
+describe('the step that confirms the paying wallet', () => {
+  const view = { invoice: { status: 'open', replacedBy: null } } as unknown as CheckoutView;
+  const state = (phase: string, payerProof: string, quote: CheckoutQuote | null = null) =>
+    ({ phase, checkout: view, quote, payerProof }) as Parameters<typeof checkoutScreen>[0];
+
+  it('shows while the wallet must confirm the invoice after the buyer continued, and while it confirms', () => {
+    expect(checkoutScreen(state('selectMethod', 'required'), { confirmWallet: true })).toBe('confirmWallet');
+    expect(checkoutScreen(state('selectMethod', 'confirming'), { confirmWallet: true })).toBe('confirmWallet');
+    // Confirmed: the price is being locked, on the same step
+    expect(checkoutScreen(state('quoting', 'confirmed'), { confirmWallet: true })).toBe('confirmWallet');
+  });
+
+  it('gives way to the method step before the buyer continued, and after a refused price', () => {
+    expect(checkoutScreen(state('selectMethod', 'required'))).toBe('method');
+    expect(checkoutScreen(state('selectMethod', 'confirmed'), { confirmWallet: true })).toBe('method');
+    expect(checkoutScreen(state('selectMethod', 'not_needed'), { confirmWallet: true })).toBe('method');
+  });
+
+  it('gives way to the pay step once the price is locked, and to the outcomes', () => {
+    expect(checkoutScreen(state('awaitingPayment', 'confirmed', QUOTE), { confirmWallet: true })).toBe('pay');
+    expect(checkoutScreen(state('blocked', 'confirmed'), { confirmWallet: true })).toBe('blocked');
+  });
+
+  it('belongs to the method step, and the deadline counts down on it', () => {
+    expect(checkoutSteps('confirmWallet')?.find((step) => step.state === 'current')?.key).toBe('method');
+    expect(deadlineState('open', 'confirmWallet')).toBe('paying');
+  });
+});
+
+describe('payments Quasar ties to no invoice, and the 30 days of settlement retries', () => {
+  it('counts a transfer from a wallet that did not confirm the invoice as one that moved money', () => {
+    for (const reason of ['payer_mismatch', 'payer_unconfirmed']) {
+      expect(isMovedMoneyFailure({ code: 'payment_failed', message: '', reason } as never)).toBe(true);
+      expect(isFinalPaymentFailure({ code: 'payment_mismatch', message: '', reason } as never)).toBe(true);
+    }
+  });
+
+  it('promises the daily settlement retries only while Quasar still makes them', () => {
+    const settlement = (rechecked?: true) =>
+      ({
+        code: 'payment_unconfirmed',
+        message: '',
+        reason: 'settlement_failed',
+        ...(rechecked ? { rechecked } : {}),
+      }) as never;
+    expect(unconfirmedFollowUp(settlement(true))).toBe('settlementRetrying');
+    expect(unconfirmedFollowUp(settlement())).toBe('settlementFailed');
+  });
+});

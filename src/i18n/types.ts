@@ -270,6 +270,13 @@ export type NovaPaymentsLabels = {
      * payment for this one, contact {merchant} with the transaction hash.`)
      */
     mismatchTakenElsewhere: string;
+    /**
+     * Instead of `mismatch` for a transfer from a wallet that did not confirm the invoice (`payer_mismatch`,
+     * `payer_unconfirmed`): Quasar ties it to no invoice, and the seller returns it to the wallet that sent it:
+     * `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it pays no invoice.
+     * {merchant} returns it to the wallet that sent it.`)
+     */
+    mismatchOtherWallet: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
@@ -319,6 +326,80 @@ export type NovaPaymentsLabels = {
     cancel: string;
     /** While Quasar takes the payment (default: `Handing the payment to Quasar…`) */
     submitting: string;
+  };
+  /**
+   * The step that confirms the paying wallet: right after the wallet and the method, before the price, the wallet signs
+   * Quasar's message (a free signature that moves no money) for an EVM payment it sends itself; one signature per
+   * invoice and wallet.
+   */
+  payerProof: {
+    /** Heading (default: `Confirm your wallet`) */
+    title: string;
+    /** The one sentence under it (default: `Confirm this wallet — it is free and moves no money.`) */
+    text: string;
+    /** Above the summary of the message (default: `What you sign`) */
+    summary: string;
+    /** Row of the invoice number (default: `Invoice`) */
+    invoice: string;
+    /** Row of the seller (default: `Seller`) */
+    merchant: string;
+    /** Row of the invoice total (default: `Amount`) */
+    amount: string;
+    /** Row of the wallet (default: `Wallet`) */
+    wallet: string;
+    /** Row of the site the message names, in the wallet's window (default: `Site`) */
+    site: string;
+    /**
+     * Why it is asked (default: `Payments from this wallet count for this invoice once it signs. Your wallet shows a
+     * message to sign, not a payment: no fee, nothing leaves the wallet.`)
+     */
+    why: string;
+    /** For a smart wallet: `{wallet}` (default: `{wallet} may ask for your passkey or fingerprint to sign.`) */
+    passkey: string;
+    /** The main button, which opens the wallet's signature request: `{wallet}` (default: `Confirm in {wallet}`) */
+    confirm: string;
+    /** The main button while the request waits in the wallet: `{wallet}` (default: `Waiting for {wallet}…`) */
+    waiting: string;
+    /**
+     * Under the buttons (default: `One signature per wallet for this invoice: a new price, token or network needs no
+     * new one.`)
+     */
+    note: string;
+    /**
+     * Text of the wallet window: `{invoice}`, `{merchant}` (default: `Sign the message that confirms this wallet pays
+     * invoice {invoice} of {merchant}. It is free and moves no money.`)
+     */
+    promptText: string;
+    /**
+     * The same for a smart wallet: `{wallet}`, `{invoice}`, `{merchant}` (default: `Confirm with your passkey in
+     * {wallet}. It signs the message that confirms this wallet pays invoice {invoice} of {merchant}; it is free and
+     * moves no money.`)
+     */
+    promptPasskey: string;
+    /**
+     * The buyer refused the signature: `{wallet}` (default: `You declined the signature in {wallet}. It is free and
+     * moves no money: sign it to pay from this wallet, or choose another wallet or method.`)
+     */
+    declined: string;
+    /** The wallet cannot sign messages: `{wallet}` (default: `{wallet} can't sign this confirmation. Choose another wallet or method.`) */
+    unsupported: string;
+    /** The wallet failed to sign: `{wallet}` (default: `{wallet} did not sign the confirmation. Try again.`) */
+    failed: string;
+    /** Quasar could not verify the signature (`payer_proof_invalid`) */
+    invalid: string;
+    /** The network could not check a smart wallet's signature (`payer_proof_unavailable`) */
+    unavailable: string;
+    /** The wallet is on another network than the method's (`payer_chain_mismatch`): `{wallet}`, `{network}` */
+    wrongNetwork: string;
+    /** Too many wallets confirmed the invoice (`too_many_payers`): `{merchant}` */
+    tooManyWallets: string;
+    /**
+     * The main button of the pay step when the buyer pays the gas (or through the paymaster) of a method the gasless
+     * relay could pay: the wallet confirms the invoice first (default: `Confirm this wallet to pay`)
+     */
+    confirmToPay: string;
+    /** The note above it */
+    payNote: string;
   };
   /** The QR code step: Solana Pay, or this checkout on a phone. */
   qr: {
@@ -489,6 +570,26 @@ export type NovaPaymentsLabels = {
     heldQuoteExpired: string;
     /** Under it (default: `The seller contacts you if anything is needed.`) */
     heldNote: string;
+    /**
+     * Heading of a payment held for a refund only (`refundOnly` of the review: Quasar ties it to no invoice):
+     * `{merchant}` (default: `{merchant} returns this payment`)
+     */
+    heldRefundOnlyTitle: string;
+    /**
+     * Reason `payer_mismatch`: `{merchant}` (default: `The payment came from another wallet than the one that confirmed
+     * this invoice. {merchant} returns it to the wallet that sent it.`)
+     */
+    heldPayerMismatch: string;
+    /**
+     * Reason `payer_unconfirmed`: `{merchant}` (default: `The payment came from a wallet that did not confirm this
+     * invoice. {merchant} returns it to the wallet that sent it.`)
+     */
+    heldPayerUnconfirmed: string;
+    /**
+     * Under it: a held invoice takes no other payment: `{merchant}` (default: `This invoice takes no other payment: ask
+     * {merchant} for a new invoice and pay it from the confirmed wallet.`)
+     */
+    heldRefundOnlyNext: string;
     /** Heading of a refunded invoice (default: `Refunded`) */
     refundedTitle: string;
     /** Its text: `{merchant}`, `{amount}`, `{currency}` (default: `{merchant} refunded this invoice: {amount} {currency}.`) */
@@ -570,20 +671,33 @@ export type NovaPaymentsLabels = {
      * Instead of `unconfirmedText` and `unconfirmedNote`, and on the expired and cancelled outcomes, next to its
      * transaction, when the page of another invoice handed the transaction over first (EVM invoices share the seller's
      * address, so anyone who saw the hash may have done so): Quasar recorded this invoice's claim and credits the
-     * transaction to the invoice whose quoted wallet sent it, and the checkout offers no payment meanwhile:
+     * transaction to the invoice that the wallet that sent it confirmed, and the checkout offers no payment meanwhile:
      * `{merchant}` (default: `This transaction was handed over for another invoice first. Quasar credits it to the
-     * invoice it pays and shows the result here. Do not pay again; if your payment does not show here, contact
-     * {merchant} with the transaction hash.`)
+     * invoice the wallet that sent it confirmed, and this page shows the result while it follows the payment. Do not pay
+     * again; if your payment does not show here, contact {merchant} with the transaction hash.`)
      */
     unconfirmedTakenElsewhere: string;
     /**
      * Instead of `unconfirmedText` and `unconfirmedNote`, and on the expired and cancelled outcomes, next to its
-     * transaction, when the network confirmed the payment but Quasar could not record it yet and settles it again daily
-     * (`settlement_failed`): the money reached the seller's address, so the checkout offers no payment: `{merchant}`
-     * (default: `The network confirmed your payment, but Quasar has not recorded it yet and tries again daily. Do not
-     * pay again; contact {merchant} with the transaction hash.`)
+     * transaction, when the network confirmed the payment but Quasar could not record it (`settlement_failed`) and
+     * does not say that it still tries: the money reached the seller's address, so the checkout offers no payment:
+     * `{merchant}` (default: `The network confirmed your payment, but Quasar has not recorded it. Do not pay again;
+     * contact {merchant} with the transaction hash.`)
      */
     unconfirmedSettlementFailed: string;
+    /**
+     * Instead of `unconfirmedSettlementFailed` while Quasar still settles the payment again daily (`rechecked`, for 30
+     * days after it learned of it): `{merchant}` (default: `The network confirmed your payment, but Quasar has not
+     * recorded it yet. Quasar tries again daily, for 30 days after it learned of the payment. Do not pay again; contact
+     * {merchant} with the transaction hash.`)
+     */
+    unconfirmedSettlementRetrying: string;
+    /**
+     * On the expired and cancelled outcomes while this page follows a payment on its way (`followingUntil` of the
+     * checkout store): `{time}` (default: `This page follows the payment until {time}. Later, reload it to see the
+     * outcome.`)
+     */
+    followingUntil: string;
     /**
      * The button that goes back to the payment once the buyer checked the wallet (default: `The payment did not leave
      * my wallet`)

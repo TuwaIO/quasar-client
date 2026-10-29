@@ -22,6 +22,7 @@ import { checkoutScreen, deadlineAnnouncement, deadlineState } from '../utils/ch
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { needsLeaveConfirm } from '../utils/outcome';
+import { lockPrice } from '../utils/payerProof';
 import { AutoPayScreen } from './AutoPayScreen';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
@@ -29,6 +30,7 @@ import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
 import { screenHeading, screenTitle } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
+import { ConfirmWalletScreen } from './ConfirmWalletScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
 import { LeaveDialog } from './LeaveDialog';
 import { MethodScreen } from './MethodScreen';
@@ -158,6 +160,7 @@ export function ScreenBody() {
   if (screen === 'error') return <ErrorScreen />;
   if (screen === 'buyer') return <BuyerScreen />;
   if (screen === 'method') return <MethodScreen />;
+  if (screen === 'confirmWallet') return <ConfirmWalletScreen />;
   if (screen === 'pay') return <PayScreen />;
   if (screen === 'qr') return <QrScreen />;
   if (screen === 'confirm') return <ConfirmScreen />;
@@ -342,6 +345,8 @@ export function PaymentCheckout({
   const [handoff, setHandoff] = useState(false);
   const [autoPay, setAutoPay] = useState(false);
   const [askLeave, setAskLeave] = useState(false);
+  // The buyer continued with a wallet that confirms the invoice before the price (owner rule of 2026-10-29)
+  const [confirmWallet, setConfirmWallet] = useState(false);
   // Another invoice opened: the choices made for the previous one no longer apply
   const [shownToken, setShownToken] = useState(activeToken);
   if (shownToken !== activeToken) {
@@ -349,6 +354,7 @@ export function PaymentCheckout({
     setHandoff(false);
     setAutoPay(false);
     setPayWith('wallet');
+    setConfirmWallet(false);
   }
   // The method a wallet is being connected for: its price is locked once the wallet arrives
   const connectingFor = useRef<string | null>(null);
@@ -356,7 +362,17 @@ export function PaymentCheckout({
   // English; a language switched to later shows once its labels arrive, without leaving the screen
   const [labelsShown, setLabelsShown] = useState(false);
   if (!labelsShown && checkout && hasLabels(locale)) setLabelsShown(true);
-  const screen = checkoutScreen(state, { payWith, handoff, autoPay, labelsReady: labelsShown || !checkout });
+  const screen = checkoutScreen(state, {
+    payWith,
+    handoff,
+    autoPay,
+    confirmWallet,
+    labelsReady: labelsShown || !checkout,
+  });
+  // The price for the wallet set on the store, or the step that confirms the wallet first
+  const lockStorePrice = async () => {
+    await lockPrice(store, setConfirmWallet);
+  };
   const handedOverAt = useHandOverTime(store);
   const qrShown = useQrShown({ store, screen });
   // The transaction the wallet last returned, by invoice store: a payment counts as sent from then on, before the store
@@ -395,7 +411,7 @@ export function PaymentCheckout({
       if (!payer) return;
       connectingFor.current = null;
       store.getState().setPayer(payer);
-      void store.getState().requestQuote();
+      void lockStorePrice();
       return;
     }
     // Another wallet became active over a locked price: lock it again for that wallet, or go back to the methods
@@ -405,7 +421,7 @@ export function PaymentCheckout({
     if (payer === quote.payer) return;
     if (!payer) return store.getState().releaseQuote();
     store.getState().setPayer(payer);
-    void store.getState().requestQuote();
+    void lockStorePrice();
   });
   useEffect(() => lockForWallet(), [wallet?.address, wallet?.chainId, wallet?.connectorType]);
   // The connect modal closed without a wallet of that family
@@ -464,8 +480,12 @@ export function PaymentCheckout({
     setHandoff,
     backToMethods: () => {
       setHandoff(false);
+      setConfirmWallet(false);
       store.getState().releaseQuote();
     },
+    confirmWallet,
+    setConfirmWallet,
+    lockPrice: lockStorePrice,
     onPaymentSent,
     autoPay,
     setAutoPay,

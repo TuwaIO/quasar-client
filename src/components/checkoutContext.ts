@@ -76,6 +76,24 @@ export interface CheckoutContextValue {
   /** Goes back to the method step: forgets the locked price and the phone hand-off. */
   backToMethods: () => void;
   /**
+   * Whether the buyer continued with a wallet that must confirm the invoice before the price: the step that confirms
+   * it shows while the checkout store waits for the signature (`ConfirmWalletScreen`).
+   */
+  confirmWallet: boolean;
+  /**
+   * Shows or leaves the step that confirms the wallet ("Back to methods").
+   *
+   * @param show - Whether it shows.
+   */
+  setConfirmWallet: (show: boolean) => void;
+  /**
+   * Locks the price for the wallet set on the checkout store, or shows the step that confirms the wallet first while
+   * the store says it must (owner rule of 2026-10-29: before the price).
+   *
+   * @returns Resolves when the price is locked, refused, or the step shows.
+   */
+  lockPrice: () => Promise<void>;
+  /**
    * Remembers the payment the wallet sent: the checkout tracks it while open, and hands it over to the app's Pulsar
    * store when it closes before Quasar settled it.
    *

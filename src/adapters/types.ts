@@ -96,6 +96,18 @@ export interface PaymentsAdapter {
     account: string;
   }) => Promise<string>;
   /**
+   * Signs a message with `personal_sign` (EIP-191), with the wallet's prompt: the EIP-4361 message by which the paying
+   * wallet confirms the invoice before an EVM payment it sends itself (`confirmPayer` of the checkout store of
+   * `@tuwaio/quasar-sdk/checkout`). A free signature that moves no funds; a smart wallet signs it through its own flow
+   * (ERC-1271, ERC-6492), often with a passkey. Without it the checkout cannot pay methods that need the confirmation
+   * from this wallet.
+   *
+   * @param params - The message exactly as Quasar wrote it, the signer, and the CAIP-2 network the message names (the
+   *   wallet is on it already: the checkout switches it first).
+   * @returns The signature, as hex.
+   */
+  signMessage?: (params: { message: string; account: string; chainId: string }) => Promise<string>;
+  /**
    * Sends the sponsored calls of a gasless quote with `wallet_sendCalls` and the paymaster, with the wallet's prompt,
    * and waits for the transaction that carries them.
    *

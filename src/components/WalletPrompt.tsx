@@ -9,9 +9,9 @@ import { DetailRow, DetailsCard, FooterAction, SecondaryButton } from './ScreenP
 
 /**
  * What the wallet asks for: a gasless signature, a transaction, a network switch, the permission of automatic
- * payments, or Quasar takes the payment.
+ * payments, the signature that confirms the paying wallet (`proof`), or Quasar takes the payment.
  */
-export type WalletPromptKind = 'sign' | 'confirm' | 'switch' | 'permission' | 'submitting';
+export type WalletPromptKind = 'sign' | 'confirm' | 'switch' | 'permission' | 'proof' | 'submitting';
 
 /** Props of {@link WalletPrompt}. */
 export interface WalletPromptProps {
@@ -33,13 +33,18 @@ export interface WalletPromptProps {
   priceTime: string | null;
   /** Asks the wallet again; only where a second request cannot pay twice (a signature). */
   onRetry?: () => void;
+  /** What the window says instead of the text of its kind (the signature that confirms the wallet). */
+  text?: string;
+  /** The rows to check in the wallet instead of the payment's (the signature that confirms the wallet). */
+  details?: { name: string; value: string }[];
   /** Closes the window. */
   onCancel: () => void;
 }
 
 /**
  * The window over the pay step while the wallet asks the buyer: what to sign or confirm, and what to check in the
- * wallet before — the amount, the recipient, the network and the time left of the price (WCAG 3.3.4). The heading
+ * wallet before — the amount, the recipient, the network and the time left of the price (WCAG 3.3.4); for the
+ * signature that confirms the paying wallet, the invoice, the seller and the site the message names. The heading
  * takes the focus, so screen readers say what happens. "Try again" re-asks only for a signature; for a transaction
  * the buyer is sent to the wallet, where the request still waits, so it cannot be paid twice.
  *
@@ -56,6 +61,8 @@ export function WalletPrompt({
   to,
   priceTime,
   onRetry,
+  text,
+  details,
   onCancel,
 }: WalletPromptProps) {
   const { labels } = useCheckoutContext();
@@ -64,7 +71,7 @@ export function WalletPrompt({
   useEffect(() => heading.current?.focus(), [kind]);
   const values = { wallet: walletName, amount, merchant, network };
   const title =
-    kind === 'sign'
+    kind === 'sign' || kind === 'proof'
       ? labels.walletPrompt.signIn
       : kind === 'switch'
         ? labels.walletPrompt.switchIn
@@ -89,20 +96,31 @@ export function WalletPrompt({
       <h2 id={headingId} ref={heading} tabIndex={-1} className={screenTitle}>
         {formatLabel(title, values)}
       </h2>
-      {(kind === 'sign' || kind === 'confirm') && (
+      {(kind === 'sign' || kind === 'confirm' || kind === 'proof') && (
         <>
           <p className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
-            {formatLabel(kind === 'sign' ? labels.walletPrompt.signText : labels.walletPrompt.confirmText, values)}
+            {text ??
+              formatLabel(kind === 'confirm' ? labels.walletPrompt.confirmText : labels.walletPrompt.signText, values)}
           </p>
           <div className="novapay:flex novapay:w-full novapay:max-w-xs novapay:flex-col novapay:gap-1.5 novapay:text-left">
             <span className="novapay:text-[11px] novapay:font-semibold">
               {formatLabel(labels.walletPrompt.check, values)}
             </span>
             <DetailsCard>
-              <DetailRow name={labels.walletPrompt.amount}>{amount}</DetailRow>
-              <DetailRow name={labels.walletPrompt.to}>{to}</DetailRow>
-              <DetailRow name={labels.walletPrompt.network}>{network}</DetailRow>
-              {priceTime && <DetailRow name={labels.walletPrompt.priceLocked}>{priceTime}</DetailRow>}
+              {details ? (
+                details.map((row) => (
+                  <DetailRow key={row.name} name={row.name}>
+                    {row.value}
+                  </DetailRow>
+                ))
+              ) : (
+                <>
+                  <DetailRow name={labels.walletPrompt.amount}>{amount}</DetailRow>
+                  <DetailRow name={labels.walletPrompt.to}>{to}</DetailRow>
+                  <DetailRow name={labels.walletPrompt.network}>{network}</DetailRow>
+                  {priceTime && <DetailRow name={labels.walletPrompt.priceLocked}>{priceTime}</DetailRow>}
+                </>
+              )}
             </DetailsCard>
           </div>
           {onRetry ? (

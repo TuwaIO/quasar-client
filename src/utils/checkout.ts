@@ -13,15 +13,16 @@ import type {
 } from '@tuwaio/quasar-sdk/checkout';
 
 /**
- * A screen of the checkout: the steps of a payment (`buyer`, `method`, `pay` or `qr`, `confirm`, `autoPay`), a payment
- * Quasar could not confirm (`unconfirmed`: it may still arrive, so the buyer checks the wallet before paying again) or
- * its outcome.
+ * A screen of the checkout: the steps of a payment (`buyer`, `method`, `confirmWallet` — the paying wallet confirms the
+ * invoice with a free signature before the price —, `pay` or `qr`, `confirm`, `autoPay`), a payment Quasar could not
+ * confirm (`unconfirmed`: it may still arrive, so the buyer checks the wallet before paying again) or its outcome.
  */
 export type CheckoutScreen =
   | 'loading'
   | 'error'
   | 'buyer'
   | 'method'
+  | 'confirmWallet'
   | 'pay'
   | 'qr'
   | 'confirm'
@@ -52,6 +53,12 @@ export interface CheckoutScreenChoices {
    * its first screen never shows in English before the buyer's language arrives.
    */
   labelsReady?: boolean;
+  /**
+   * The buyer continued with a wallet that must confirm the invoice before the price (`payerProof` of the checkout
+   * store is `required`): the step that confirms it shows while the store waits for the signature and locks the price
+   * after it.
+   */
+  confirmWallet?: boolean;
 }
 
 /**
@@ -61,26 +68,38 @@ export interface CheckoutScreenChoices {
  * @param state.phase - Where the payment stands.
  * @param state.checkout - What the checkout token opens; `null` until loaded.
  * @param state.quote - The locked price; while the first one is being locked the method screen stays, with its button
- * busy, so a refused payer or a failed request is shown where the buyer chose.
+ * busy, so a refused payer or a failed request is shown where the buyer chose (the step that confirms the wallet, when
+ * the price is locked after it).
+ * @param state.payerProof - Whether the connected wallet must confirm the invoice (`payerProof` of the checkout store;
+ * left out by older stores).
  * @param choices - What the buyer chose on the page.
- * @returns The screen: `qr` instead of `pay` when the buyer pays with a QR code (or the price was locked without a
- * payer), `replaced` for an invoice the seller
+ * @returns The screen: `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
+ * confirm the invoice or confirms it, and while the price is locked after it, `qr` instead of `pay` when the buyer pays
+ * with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller
  * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open, `loading` until
  * the labels of the invoice's language are loaded, `unconfirmed` in the phase of that name of a current
  * `@tuwaio/quasar-sdk` (Quasar could not confirm the payment, which may still arrive).
  */
 export function checkoutScreen(
-  state: { phase: CheckoutPhase; checkout: CheckoutView | null; quote?: CheckoutQuote | null },
+  state: {
+    phase: CheckoutPhase;
+    checkout: CheckoutView | null;
+    quote?: CheckoutQuote | null;
+    readonly payerProof?: string;
+  },
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
   if (choices.labelsReady === false && state.phase !== 'error') return 'loading';
   // `unconfirmed` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
   if ((state.phase as string) === 'unconfirmed') return 'unconfirmed';
+  // The wallet the buyer continued with confirms the invoice, then the price is locked on the same step
+  const proving = state.payerProof === 'required' || state.payerProof === 'confirming';
   switch (state.phase) {
     case 'selectMethod':
+      if (choices.confirmWallet && proving && !(choices.handoff && choices.payWith === 'qr')) return 'confirmWallet';
       return choices.handoff && choices.payWith === 'qr' ? 'qr' : 'method';
     case 'quoting':
-      if (!state.quote) return 'method';
+      if (!state.quote) return choices.confirmWallet ? 'confirmWallet' : 'method';
       return choices.payWith === 'qr' || state.quote.payer === null ? 'qr' : 'pay';
     case 'awaitingPayment':
     case 'submitting':
@@ -108,6 +127,7 @@ export interface CheckoutStep {
 const STEP_OF_SCREEN: Partial<Record<CheckoutScreen, CheckoutStep['key']>> = {
   buyer: 'details',
   method: 'method',
+  confirmWallet: 'method',
   pay: 'pay',
   qr: 'pay',
   underpaid: 'pay',
@@ -184,6 +204,7 @@ const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
   'error',
   'buyer',
   'method',
+  'confirmWallet',
   'pay',
   'qr',
   'underpaid',
@@ -390,6 +411,7 @@ const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
   'too_early',
   'tx_already_used',
   'payer_mismatch',
+  'payer_unconfirmed',
   'native_from_contract_unverifiable',
   'invoice_not_payable',
 ]);
@@ -417,9 +439,9 @@ export function isMovedMoneyFailure(error: CheckoutError | null | undefined): bo
 }
 
 /**
- * Whether the last error says that Quasar credited the transaction to another invoice of the seller, the one whose
- * quoted wallet sent it (`tx_already_used` of a transaction that does not pay this invoice): the buyer names it to the
- * seller if it was the payment of this invoice.
+ * Whether the last error says that Quasar credited the transaction to another invoice of the seller, the one the
+ * wallet that sent it confirmed or whose mark it carries (`tx_already_used` of a transaction that does not pay this
+ * invoice): the buyer names it to the seller if it was the payment of this invoice.
  *
  * @param error - The store's error.
  * @returns `true` for a transaction that pays another invoice.
@@ -457,13 +479,22 @@ export function isInvoicePaymentUnresolved(
  * received it), `contact` (a reason Quasar never reads again: a relay operation lost, `transaction_failed`, a Quasar
  * or a store that does not say), `closed` (Quasar saw no result on chain within 24 hours and closed it),
  * `takenElsewhere` (the page of another invoice handed the transaction over first: Quasar credits it to the invoice
- * whose quoted wallet sent it, and the page shows the result) and `settlementFailed` (the network confirmed it, but
- * Quasar has not recorded it yet and settles it again daily). For all but `rechecked` and `retrying` the buyer contacts
- * the seller with the transaction hash; after `takenElsewhere` and `settlementFailed` the payment left the wallet, so
- * the checkout offers no payment.
+ * that the wallet that sent it confirmed, and the page shows the result while it follows the payment),
+ * `settlementRetrying` (the network confirmed it, but Quasar has not recorded it yet and settles it again daily, for 30
+ * days after it learned of it: `rechecked`) and `settlementFailed` (the same, without Quasar saying that it still
+ * tries). For all but `rechecked` and `retrying` the buyer contacts the seller with the transaction hash; after
+ * `takenElsewhere`, `settlementRetrying` and `settlementFailed` the payment left the wallet, so the checkout offers no
+ * payment.
  */
 export type UnconfirmedFollowUp =
-  'rechecked' | 'retrying' | 'notReceived' | 'contact' | 'closed' | 'takenElsewhere' | 'settlementFailed';
+  | 'rechecked'
+  | 'retrying'
+  | 'notReceived'
+  | 'contact'
+  | 'closed'
+  | 'takenElsewhere'
+  | 'settlementRetrying'
+  | 'settlementFailed';
 
 /**
  * What to tell the buyer about a payment Quasar did not confirm, from the store's error: `payment_unconfirmed` with
@@ -471,7 +502,8 @@ export type UnconfirmedFollowUp =
  * re-check, its `submit_retrying` and `submit_failed` reasons are the store's hand-over, `tx_already_used` a transaction
  * another invoice handed over first, any other is for the seller; `payment_failed` with the reason
  * `unresolved_after_24h` is a payment Quasar closed without a result; the reason `settlement_failed` (`payment_mismatch`
- * of an older store) a confirmed payment Quasar has not recorded yet.
+ * of an older store) a confirmed payment Quasar has not recorded yet, which Quasar settles again daily only while
+ * `rechecked` (for 30 days after it learned of it).
  *
  * @param error - The store's error.
  * @returns See {@link UnconfirmedFollowUp}; `null` for any other error, or none.
@@ -482,7 +514,7 @@ export function unconfirmedFollowUp(error: CheckoutError | null | undefined): Un
   const { reason, rechecked } = (error ?? {}) as { reason?: string; rechecked?: boolean };
   if (code === 'payment_failed' && reason === 'unresolved_after_24h') return 'closed';
   if (reason === SETTLEMENT_FAILED && (code === 'payment_unconfirmed' || code === 'payment_mismatch')) {
-    return 'settlementFailed';
+    return rechecked === true ? 'settlementRetrying' : 'settlementFailed';
   }
   if (code !== 'payment_unconfirmed') return null;
   if (reason === TAKEN_ELSEWHERE) return 'takenElsewhere';
