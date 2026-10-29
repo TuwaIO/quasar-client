@@ -230,10 +230,21 @@ describe('the wallet prompt', () => {
 describe('the height of the step on a phone, while the wallet asks', () => {
   /** A step of `height` px in a checkout pane whose scrolling area has `room` px. */
   function stepNode(height: number, room: number) {
-    const scroller = { getBoundingClientRect: () => ({ height: room }) };
+    // The box on screen is scaled (the opening animation of the modal, a host's scaled preview); the layout is not
+    const scroller = {
+      room,
+      get offsetHeight() {
+        return scroller.room;
+      },
+      getBoundingClientRect: () => ({ height: scroller.room * 0.9 }),
+    };
     const node = {
       height,
-      getBoundingClientRect: () => ({ height: node.height }),
+      scroller,
+      get offsetHeight() {
+        return node.height;
+      },
+      getBoundingClientRect: () => ({ height: node.height * 0.9 }),
       closest: (selector: string) => (selector === '[data-novapay-scroll]' ? scroller : null),
     };
     return node;
@@ -300,8 +311,9 @@ describe('the height of the step on a phone, while the wallet asks', () => {
     payment.status = 'switching';
     let tree = render(PayScreen, {});
     expect(promptOf(tree).props.stepHeight).toBe(480);
-    // Hidden, the step measures 0: the prompt keeps the height of the step it stands for
-    expect(live.size).toBe(0);
+    // Hidden, the step measures 0: the prompt keeps the height of the step it stands for, and only the room of the
+    // scrolling area is followed
+    expect([...live].flatMap((entry) => entry.observed)).toEqual([node.scroller]);
 
     payment.status = 'idle';
     tree = render(PayScreen, {});
@@ -312,6 +324,22 @@ describe('the height of the step on a phone, while the wallet asks', () => {
     payment.status = 'switching';
     tree = render(PayScreen, {});
     expect(promptOf(tree).props.stepHeight).toBe(430);
+  });
+
+  // Review 2026-10-29: a turned phone has less room while the prompt shows; the prompt follows the room down
+  it('caps the kept height at the room the pane has now, while the prompt shows', () => {
+    const { live, fire } = resizes();
+    const node = stepNode(520, 700);
+    payStep(node);
+    payment.status = 'switching';
+    let tree = render(PayScreen, {});
+    expect(promptOf(tree).props.stepHeight).toBe(520);
+    expect([...live].some((entry) => entry.observed.includes(node.scroller))).toBe(true);
+
+    node.scroller.room = 300;
+    fire();
+    tree = render(PayScreen, {});
+    expect(promptOf(tree).props.stepHeight).toBe(300);
   });
 
   it('hands the height of the automatic payments offer to its prompt', () => {
