@@ -144,7 +144,7 @@ export const itLabels: NovaPaymentsLabels = {
     mismatchTakenElsewhere:
       "Questa transazione paga un'altra fattura. Se era il tuo pagamento per questa, contatta {merchant} indicando l'hash della transazione.",
     mismatchOtherWallet:
-      "Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non paga nessuna fattura. {merchant} lo restituisce al wallet che l'ha inviato.",
+      'Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
     wrongCluster: "{wallet} è su un'altra rete, quindi non è stato pagato nulla. Passalo a {network} e paga di nuovo.",
@@ -186,6 +186,8 @@ export const itLabels: NovaPaymentsLabels = {
     confirm: 'Conferma in {wallet}',
     waiting: 'In attesa di {wallet}…',
     note: 'Una firma per wallet per questa fattura: un nuovo prezzo, token o rete non ne richiede un’altra.',
+    noteSmart:
+      'Una firma per wallet per questa fattura: un nuovo prezzo o token non ne richiede un’altra; un’altra rete la chiede di nuovo.',
     promptText:
       'Firma il messaggio che conferma che questo wallet paga la fattura {invoice} di {merchant}. È gratuito e non sposta fondi.',
     promptPasskey:
@@ -202,6 +204,7 @@ export const itLabels: NovaPaymentsLabels = {
     confirmToPay: 'Conferma questo wallet per pagare',
     payNote:
       'Per pagare da questo wallet serve prima una firma gratuita: conferma che il wallet paga questa fattura e non sposta fondi.',
+    signInRequest: '{wallet} potrebbe mostrarla come una richiesta di accesso per {site}.',
   },
   qr: {
     solanaTitle: 'Scansiona con un wallet Solana',
@@ -297,6 +300,8 @@ export const itLabels: NovaPaymentsLabels = {
       "Il pagamento è arrivato da un wallet che non ha confermato questa fattura. {merchant} lo restituisce al wallet che l'ha inviato.",
     heldRefundOnlyNext:
       'Questa fattura non accetta altri pagamenti: chiedi a {merchant} una nuova fattura e pagala dal wallet confermato.',
+    heldRefundOnlyNextUnconfirmed:
+      'Questa fattura non accetta altri pagamenti: chiedi a {merchant} una nuova fattura e conferma il tuo wallet nella sua pagina prima di pagare.',
     refundedTitle: 'Rimborsato',
     refundedText: '{merchant} ha rimborsato questa fattura: {amount} {currency}.',
     expiredTitle: 'Questa fattura è scaduta',

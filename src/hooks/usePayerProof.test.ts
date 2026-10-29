@@ -126,6 +126,19 @@ describe('usePayerProof', () => {
     expect(confirmPayer).not.toHaveBeenCalled();
   });
 
+  it('asks for no signature after a cancel during the network switch', async () => {
+    const { adapter, confirmPayer, renderHook } = setup({ walletChainId: 'eip155:1' });
+    const switched = deferred<undefined>();
+    adapter.switchChain = vi.fn(() => switched.promise);
+    const confirming = renderHook().confirm({ quote: true });
+    await vi.waitFor(() => expect(adapter.switchChain).toHaveBeenCalled());
+    renderHook().dismiss();
+    switched.resolve(undefined);
+    await expect(confirming).resolves.toBe(false);
+    expect(confirmPayer).not.toHaveBeenCalled();
+    expect(renderHook().step).toBe('idle');
+  });
+
   it('closes the window on cancel, and still locks the price if the wallet signs later', async () => {
     const { signMessage, signature, requestQuote, renderHook } = setup();
     const confirming = renderHook().confirm({ quote: true });

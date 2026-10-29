@@ -72,9 +72,11 @@ export interface CheckoutScreenChoices {
  * the price is locked after it).
  * @param state.payerProof - Whether the connected wallet must confirm the invoice (`payerProof` of the checkout store;
  * left out by older stores).
+ * @param state.error - The store's last error: a price refused after the signature shows on the method step.
  * @param choices - What the buyer chose on the page.
  * @returns The screen: `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
- * confirm the invoice or confirms it, and while the price is locked after it, `qr` instead of `pay` when the buyer pays
+ * confirm the invoice or confirms it, and after it until the price is locked (unless it was refused), also on an
+ * underpaid invoice whose rest another wallet pays, `qr` instead of `pay` when the buyer pays
  * with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller
  * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open, `loading` until
  * the labels of the invoice's language are loaded, `unconfirmed` in the phase of that name of a current
@@ -86,18 +88,27 @@ export function checkoutScreen(
     checkout: CheckoutView | null;
     quote?: CheckoutQuote | null;
     readonly payerProof?: string;
+    error?: CheckoutError | null;
   },
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
   if (choices.labelsReady === false && state.phase !== 'error') return 'loading';
   // `unconfirmed` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
   if ((state.phase as string) === 'unconfirmed') return 'unconfirmed';
-  // The wallet the buyer continued with confirms the invoice, then the price is locked on the same step
-  const proving = state.payerProof === 'required' || state.payerProof === 'confirming';
+  // The wallet the buyer continued with confirms the invoice, then the price is locked on the same step: the step stays
+  // between the signature and the price, unless the price was refused
+  const proving =
+    state.payerProof === 'required' ||
+    state.payerProof === 'confirming' ||
+    (state.payerProof === 'confirmed' && !state.error);
+  const confirmingWallet = Boolean(choices.confirmWallet && proving);
   switch (state.phase) {
     case 'selectMethod':
-      if (choices.confirmWallet && proving && !(choices.handoff && choices.payWith === 'qr')) return 'confirmWallet';
+      if (confirmingWallet && !(choices.handoff && choices.payWith === 'qr')) return 'confirmWallet';
       return choices.handoff && choices.payWith === 'qr' ? 'qr' : 'method';
+    case 'underpaid':
+      // Another wallet pays the rest: it confirms the invoice first
+      return confirmingWallet ? 'confirmWallet' : 'underpaid';
     case 'quoting':
       if (!state.quote) return choices.confirmWallet ? 'confirmWallet' : 'method';
       return choices.payWith === 'qr' || state.quote.payer === null ? 'qr' : 'pay';

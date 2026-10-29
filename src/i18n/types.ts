@@ -272,9 +272,9 @@ export type NovaPaymentsLabels = {
     mismatchTakenElsewhere: string;
     /**
      * Instead of `mismatch` for a transfer from a wallet that did not confirm the invoice (`payer_mismatch`,
-     * `payer_unconfirmed`): Quasar ties it to no invoice, and the seller returns it to the wallet that sent it:
-     * `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it pays no invoice.
-     * {merchant} returns it to the wallet that sent it.`)
+     * `payer_unconfirmed`): it does not pay the invoice, and no hold promises a refund (a held invoice shows its own
+     * outcome): `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does
+     * not pay it. If money left your wallet, contact {merchant}.`)
      */
     mismatchOtherWallet: string;
     /** Button after a failed transaction (default: `Pay again`) */
@@ -366,6 +366,11 @@ export type NovaPaymentsLabels = {
      */
     note: string;
     /**
+     * Instead of `note` for a smart wallet, whose signature counts on its network only (default: `One signature per
+     * wallet for this invoice: a new price or token needs no new one; another network asks again.`)
+     */
+    noteSmart: string;
+    /**
      * Text of the wallet window: `{invoice}`, `{merchant}` (default: `Sign the message that confirms this wallet pays
      * invoice {invoice} of {merchant}. It is free and moves no money.`)
      */
@@ -400,6 +405,11 @@ export type NovaPaymentsLabels = {
     confirmToPay: string;
     /** The note above it */
     payNote: string;
+    /**
+     * Line in the wallet window: the wallet may present the message as a sign-in: `{wallet}`, `{site}` (default:
+     * `{wallet} may show it as a sign-in request for {site}.`)
+     */
+    signInRequest: string;
   };
   /** The QR code step: Solana Pay, or this checkout on a phone. */
   qr: {
@@ -590,6 +600,12 @@ export type NovaPaymentsLabels = {
      * {merchant} for a new invoice and pay it from the confirmed wallet.`)
      */
     heldRefundOnlyNext: string;
+    /**
+     * Instead of `heldRefundOnlyNext` for reason `payer_unconfirmed`, where no wallet confirmed the invoice: `{merchant}`
+     * (default: `This invoice takes no other payment: ask {merchant} for a new invoice, and confirm your wallet on its
+     * page before paying.`)
+     */
+    heldRefundOnlyNextUnconfirmed: string;
     /** Heading of a refunded invoice (default: `Refunded`) */
     refundedTitle: string;
     /** Its text: `{merchant}`, `{amount}`, `{currency}` (default: `{merchant} refunded this invoice: {amount} {currency}.`) */

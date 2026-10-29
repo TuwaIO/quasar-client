@@ -241,9 +241,9 @@ describe('receivedAmount', () => {
 
 describe('a transfer from a wallet that did not confirm the invoice (N2)', () => {
   const OTHER_WALLET =
-    'This transfer came from a wallet that did not confirm this invoice, so it pays no invoice. Cosmos returns it to the wallet that sent it.';
+    'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact Cosmos.';
 
-  it('says that the seller returns it to the wallet that sent it, never that it may pay', () => {
+  it('never promises a refund: without a hold, nothing says the seller returns it', () => {
     for (const reason of ['payer_mismatch', 'payer_unconfirmed']) {
       const error = { code: 'payment_mismatch', message: '', reason } as never;
       expect(methodErrorText(error, defaultLabels, 'Cosmos')).toBe(OTHER_WALLET);

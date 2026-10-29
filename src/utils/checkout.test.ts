@@ -1,5 +1,5 @@
 import type { CheckoutMethod, CheckoutQuote, CheckoutView } from '@tuwaio/quasar-sdk/checkout';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   checkoutScreen,
@@ -18,6 +18,7 @@ import {
   unconfirmedFollowUp,
   unconfirmedTxKey,
 } from './checkout';
+import { lockPrice } from './payerProof';
 
 const method = (id: string, symbol: string, chainId: string, featured = false): CheckoutMethod => ({
   id,
@@ -537,8 +538,34 @@ describe('the step that confirms the paying wallet', () => {
 
   it('gives way to the method step before the buyer continued, and after a refused price', () => {
     expect(checkoutScreen(state('selectMethod', 'required'))).toBe('method');
-    expect(checkoutScreen(state('selectMethod', 'confirmed'), { confirmWallet: true })).toBe('method');
+    const refused = { ...state('selectMethod', 'confirmed'), error: { code: 'price_unavailable', message: '' } };
+    expect(checkoutScreen(refused as never, { confirmWallet: true })).toBe('method');
     expect(checkoutScreen(state('selectMethod', 'not_needed'), { confirmWallet: true })).toBe('method');
+  });
+
+  it('stays mounted between the signature and the price, so the method step never flashes', () => {
+    expect(checkoutScreen(state('selectMethod', 'confirmed'), { confirmWallet: true })).toBe('confirmWallet');
+    expect(checkoutScreen(state('selectMethod', 'confirmed'))).toBe('method');
+  });
+
+  it('shows on an underpaid invoice for a wallet that has not confirmed it, and its outcome otherwise', () => {
+    expect(checkoutScreen(state('underpaid', 'required'), { confirmWallet: true })).toBe('confirmWallet');
+    expect(checkoutScreen(state('underpaid', 'confirming'), { confirmWallet: true })).toBe('confirmWallet');
+    expect(checkoutScreen(state('underpaid', 'required'))).toBe('underpaid');
+    expect(checkoutScreen(state('underpaid', 'not_needed'), { confirmWallet: true })).toBe('underpaid');
+  });
+
+  it('Pay the rest with a new wallet: the wallet confirms the invoice first, then the price is locked', async () => {
+    let confirmWallet = false;
+    const requestQuote = vi.fn(async () => null);
+    const store = { getState: () => ({ payerProof: 'required', error: null, requestQuote }) } as never;
+    await lockPrice(store, (show) => (confirmWallet = show));
+    expect(requestQuote).not.toHaveBeenCalled();
+    expect(checkoutScreen(state('underpaid', 'required'), { confirmWallet })).toBe('confirmWallet');
+    // Signed: the price follows on the same step, then the pay step
+    expect(checkoutScreen(state('underpaid', 'confirmed'), { confirmWallet })).toBe('confirmWallet');
+    expect(checkoutScreen(state('quoting', 'confirmed'), { confirmWallet })).toBe('confirmWallet');
+    expect(checkoutScreen(state('awaitingPayment', 'confirmed', QUOTE), { confirmWallet })).toBe('pay');
   });
 
   it('gives way to the pay step once the price is locked, and to the outcomes', () => {

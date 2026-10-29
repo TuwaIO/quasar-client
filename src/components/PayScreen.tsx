@@ -21,7 +21,7 @@ import {
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
 import { leftTheWalletText } from '../utils/outcome';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
-import { isSmartWallet, needsPayerProof, payerProofErrorText } from '../utils/payerProof';
+import { isPayerProofError, isSmartWallet, needsPayerProof, payerProofErrorText } from '../utils/payerProof';
 import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { focusRing, mono, screenHeading } from './classes';
@@ -192,8 +192,8 @@ export function PayScreen() {
     payment.status !== 'idle' ||
     state.phase === 'submitting' ||
     quoting ||
-    // `payerProof` is newer than some `@tuwaio/quasar-sdk` alphas
-    (state.payerProof as string | undefined) === 'confirming';
+    // Busy only while the wallet window of the confirmation is open: once closed, the buyer can ask again
+    proof.step !== 'idle';
   const problem = problemText(
     labels,
     { wallet: wallet?.name ?? '', network, merchant },
@@ -206,7 +206,11 @@ export function PayScreen() {
   const payerProof: string | undefined = state.payerProof;
   const confirmFirst = needsPayerProof(payerProof, path);
   const proofError = confirmFirst
-    ? payerProofErrorText(state.error, proof.problem, labels, { wallet: wallet?.name ?? '', network, merchant })
+    ? payerProofErrorText(isPayerProofError(state.error) ? state.error : null, proof.problem, labels, {
+        wallet: wallet?.name ?? '',
+        network,
+        merchant,
+      })
     : null;
 
   let action: { label: string; run: () => void; disabled?: boolean };
@@ -523,6 +527,12 @@ export function PayScreen() {
             { name: labels.payerProof.invoice, value: invoice },
             { name: labels.payerProof.merchant, value: merchant },
           ]}
+          hint={
+            proof.request
+              ? formatLabel(labels.payerProof.signInRequest, { wallet: wallet?.name ?? '', site: proof.request.domain })
+              : undefined
+          }
+          onRetry={() => void proof.confirm()}
           onCancel={proof.dismiss}
         />
       )}

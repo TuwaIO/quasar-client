@@ -172,9 +172,42 @@ describe('the step that confirms the paying wallet', () => {
   });
 
   it('keeps the button busy while the wallet signs and while the price is locked after it', () => {
-    expect(step({ payerProof: 'confirming' }).button.props.busy).toBe(true);
+    expect(step({ payerProof: 'confirming', flow: { step: 'signing' } }).button.props.busy).toBe(true);
     const quoting = step({ payerProof: 'confirmed', phase: 'quoting' });
     expect(quoting.button.props.busy).toBe(true);
     expect(quoting.button.props.children).toBe(defaultLabels.method.quoting);
+  });
+
+  it('lets the buyer confirm again once the wallet window is closed: signing again moves no money', () => {
+    // The wallet never answered the first request; the store still waits for it
+    const { button } = step({ payerProof: 'confirming' });
+    expect(button.props.busy).toBe(false);
+    expect(button.props.children).toBe('Confirm in MetaMask');
+    (button.props.onClick as () => void)();
+    expect(flow.confirm).toHaveBeenCalledWith({ quote: true });
+  });
+
+  it('offers "Try again" in the wallet window, and says the wallet may call it a sign-in request', () => {
+    const { tree } = step({
+      flow: { step: 'signing', request: { domain: 'shop.example' } as PayerProofFlow['request'] },
+      payerProof: 'confirming',
+    });
+    const prompt = fixture.ofType(tree, WalletPrompt)[0] as ReactElement<Props>;
+    (prompt.props.onRetry as () => void)();
+    expect(flow.confirm).toHaveBeenCalledWith({ quote: true });
+    expect(prompt.props.hint).toBe('MetaMask may show it as a sign-in request for shop.example.');
+  });
+
+  it('says that a smart wallet confirms again on another network', () => {
+    const { text } = step({ connectorType: 'evm:coinbase' });
+    expect(text).toContain(defaultLabels.payerProof.noteSmart);
+    expect(text).not.toContain(defaultLabels.payerProof.note);
+  });
+
+  it('explains a refusal on an underpaid invoice too, where a new wallet pays the rest', () => {
+    const { tree } = step({ phase: 'underpaid', error: { code: 'payer_proof_invalid', message: '' } });
+    expect((fixture.ofType(tree, ScreenError)[0] as ReactElement<Props>).props.children).toBe(
+      defaultLabels.payerProof.invalid,
+    );
   });
 });

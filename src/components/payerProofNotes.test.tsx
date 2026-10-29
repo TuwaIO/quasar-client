@@ -36,7 +36,8 @@ const { defaultLabels } = await import('../i18n');
 const { PayScreen } = await import('./PayScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
 const { MethodScreen } = await import('./MethodScreen');
-const { PrimaryButton } = await import('./ScreenParts');
+const { PrimaryButton, ScreenError } = await import('./ScreenParts');
+const { WalletPrompt } = await import('./WalletPrompt');
 
 type Props = Record<string, unknown>;
 const BASE = 'eip155:8453';
@@ -111,7 +112,11 @@ function show(
   );
 }
 
-afterEach(() => unmount());
+afterEach(() => {
+  unmount();
+  flow.step = 'idle';
+  flow.request = null;
+});
 
 describe('the pay step of a method the gasless relay may pay', () => {
   it('pays by the relay at once: its signed authorization confirms the wallet', () => {
@@ -132,6 +137,43 @@ describe('the pay step of a method the gasless relay may pay', () => {
     expect(flow.confirm).toHaveBeenCalledWith();
     expect(pay).not.toHaveBeenCalled();
     expect(textOf(tree)).toContain(defaultLabels.payerProof.payNote);
+  });
+
+  it('lets the buyer confirm again once the wallet window is closed', () => {
+    show('pay', { quote: quoteOf(null), payerProof: 'confirming' });
+    const button = fixture.ofType(render(PayScreen, {}), PrimaryButton)[0] as ReactElement<Props>;
+    expect(button.props.busy).toBe(false);
+    expect(button.props.children).toBe(defaultLabels.payerProof.confirmToPay);
+  });
+
+  it('offers "Try again" in the wallet window of the confirmation', () => {
+    show('pay', { quote: quoteOf(null), payerProof: 'confirming' });
+    flow.step = 'signing';
+    flow.request = { domain: 'shop.example' } as PayerProofFlow['request'];
+    const prompt = fixture.ofType(render(PayScreen, {}), WalletPrompt)[0] as ReactElement<Props>;
+    expect(prompt.props.kind).toBe('proof');
+    vi.mocked(flow.confirm).mockClear();
+    (prompt.props.onRetry as () => void)();
+    expect(flow.confirm).toHaveBeenCalledWith();
+    expect(prompt.props.hint).toBe('MetaMask may show it as a sign-in request for shop.example.');
+  });
+
+  it("shows only the confirmation's own refusals as its error", () => {
+    for (const code of ['request_failed', 'price_unavailable']) {
+      show('pay', { quote: quoteOf(null), payerProof: 'unless_relayed', error: { code, message: '' } });
+      const errors = (fixture.ofType(render(PayScreen, {}), ScreenError) as ReactElement<Props>[]).map(
+        (error) => error.props.children,
+      );
+      expect(errors).not.toContain(defaultLabels.error.generic);
+      expect(errors.filter((text) => text === defaultLabels.pay.noAnswer).length).toBeLessThanOrEqual(1);
+    }
+    show('pay', {
+      quote: quoteOf(null),
+      payerProof: 'unless_relayed',
+      error: { code: 'payer_proof_invalid', message: '' },
+    });
+    const errors = fixture.ofType(render(PayScreen, {}), ScreenError) as ReactElement<Props>[];
+    expect(errors.map((error) => error.props.children)).toContain(defaultLabels.payerProof.invalid);
   });
 
   it('pays once the wallet confirmed the invoice', () => {
@@ -173,9 +215,15 @@ describe('a payment held for a refund only', () => {
       { quote: null },
       { status: 'held', review: { reason: 'payer_unconfirmed', refundOnly: true } as never },
     );
-    expect(textOf(OutcomeScreen({ kind: 'held' }))).toContain(
+    const text = textOf(OutcomeScreen({ kind: 'held' }));
+    expect(text).toContain(
       'The payment came from a wallet that did not confirm this invoice. Cosmos returns it to the wallet that sent it.',
     );
+    // No wallet confirmed it: the next invoice asks for the confirmation on its page
+    expect(text).toContain(
+      'This invoice takes no other payment: ask Cosmos for a new invoice, and confirm your wallet on its page before paying.',
+    );
+    expect(text).not.toContain('pay it from the confirmed wallet');
   });
 });
 

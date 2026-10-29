@@ -342,7 +342,15 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
                 { merchant },
               )}
             </Text>
-            <Text muted>{formatLabel(labels.outcome.heldRefundOnlyNext, { merchant })}</Text>
+            <Text muted>
+              {formatLabel(
+                // No wallet confirmed the invoice: the next one asks for the confirmation on its page
+                review?.reason === 'payer_unconfirmed'
+                  ? labels.outcome.heldRefundOnlyNextUnconfirmed
+                  : labels.outcome.heldRefundOnlyNext,
+                { merchant },
+              )}
+            </Text>
           </>
         );
         break;

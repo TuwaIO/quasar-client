@@ -37,6 +37,8 @@ export interface WalletPromptProps {
   text?: string;
   /** The rows to check in the wallet instead of the payment's (the signature that confirms the wallet). */
   details?: { name: string; value: string }[];
+  /** A line under the text: how the wallet may present the request (the signature that confirms the wallet). */
+  hint?: string;
   /** Closes the window. */
   onCancel: () => void;
 }
@@ -63,6 +65,7 @@ export function WalletPrompt({
   onRetry,
   text,
   details,
+  hint,
   onCancel,
 }: WalletPromptProps) {
   const { labels } = useCheckoutContext();
@@ -102,6 +105,11 @@ export function WalletPrompt({
             {text ??
               formatLabel(kind === 'confirm' ? labels.walletPrompt.confirmText : labels.walletPrompt.signText, values)}
           </p>
+          {hint && (
+            <p className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+              {hint}
+            </p>
+          )}
           <div className="novapay:flex novapay:w-full novapay:max-w-xs novapay:flex-col novapay:gap-1.5 novapay:text-left">
             <span className="novapay:text-[11px] novapay:font-semibold">
               {formatLabel(labels.walletPrompt.check, values)}

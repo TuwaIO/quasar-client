@@ -143,7 +143,7 @@ export const esLabels: NovaPaymentsLabels = {
     mismatchTakenElsewhere:
       'Esta transacción paga otra factura. Si era tu pago de esta, contacta con {merchant} e indica el hash de la transacción.',
     mismatchOtherWallet:
-      'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no paga ninguna factura. {merchant} la devuelve a la billetera que la envió.',
+      'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. Si salió dinero de tu billetera, contacta con {merchant}.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',
@@ -185,6 +185,8 @@ export const esLabels: NovaPaymentsLabels = {
     confirm: 'Confirmar en {wallet}',
     waiting: 'Esperando a {wallet}…',
     note: 'Una firma por billetera para esta factura: un nuevo precio, token o red no necesita otra.',
+    noteSmart:
+      'Una firma por billetera para esta factura: un nuevo precio o token no necesita otra; otra red la pide de nuevo.',
     promptText:
       'Firma el mensaje que confirma que esta billetera paga la factura {invoice} de {merchant}. Es gratis y no mueve fondos.',
     promptPasskey:
@@ -201,6 +203,7 @@ export const esLabels: NovaPaymentsLabels = {
     confirmToPay: 'Confirmar esta billetera para pagar',
     payNote:
       'Para pagar desde esta billetera primero hace falta una firma gratuita: confirma que la billetera paga esta factura y no mueve fondos.',
+    signInRequest: '{wallet} puede mostrarlo como una solicitud de inicio de sesión para {site}.',
   },
   qr: {
     solanaTitle: 'Escanea con una billetera de Solana',
@@ -293,6 +296,8 @@ export const esLabels: NovaPaymentsLabels = {
       'El pago llegó desde una billetera que no confirmó esta factura. {merchant} lo devuelve a la billetera que lo envió.',
     heldRefundOnlyNext:
       'Esta factura no acepta otro pago: pide a {merchant} una factura nueva y págala desde la billetera confirmada.',
+    heldRefundOnlyNextUnconfirmed:
+      'Esta factura no acepta otro pago: pide a {merchant} una factura nueva y confirma tu billetera en su página antes de pagar.',
     refundedTitle: 'Reembolsado',
     refundedText: '{merchant} reembolsó esta factura: {amount} {currency}.',
     expiredTitle: 'Esta factura ha vencido',

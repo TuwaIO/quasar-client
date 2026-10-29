@@ -49,16 +49,16 @@ const LEFT_THE_WALLET: Partial<
 };
 
 /**
- * Rejection reasons of a transfer Quasar ties to no invoice: it came from a wallet that did not confirm the invoice, and
- * the seller returns it to the wallet that sent it.
+ * Rejection reasons of a transfer Quasar ties to no invoice: it came from a wallet that did not confirm the invoice. Such
+ * a rejection holds nothing (a held invoice shows its own outcome), so its text promises no refund.
  */
 const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
 
 /**
  * What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
  * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
- * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, which the seller returns to
- * the wallet that sent it), a payment Quasar closed after 24 hours without a result on chain
+ * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, without a promise of a
+ * refund: only a held invoice is refunded, and it shows its own outcome), a payment Quasar closed after 24 hours without a result on chain
  * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
  * and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
  * Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the

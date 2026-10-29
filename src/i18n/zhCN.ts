@@ -137,7 +137,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
     failed: '付款在 {network} 上失败。只消耗了网络费，发票仍可支付。',
     mismatch: '此交易未支付该发票。如果有款项从您的钱包转出，请联系 {merchant}。',
     mismatchTakenElsewhere: '此交易支付的是另一张发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
-    mismatchOtherWallet: '此转账来自未确认此发票的钱包，因此不支付任何发票。{merchant} 会将其退回到发送它的钱包。',
+    mismatchOtherWallet:
+      '此转账来自未确认此发票的钱包，因此不支付此发票。如果有款项从您的钱包转出，请联系 {merchant}。',
     payAgain: '再次付款',
     unsupported: '{wallet} 无法完成此笔付款。',
     wrongCluster: '{wallet} 处于其他网络，因此未完成任何付款。请将其切换到 {network} 后重新付款。',
@@ -178,6 +179,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     confirm: '在 {wallet} 中确认',
     waiting: '正在等待 {wallet}…',
     note: '此发票每个钱包只需签名一次：新的价格、代币或网络无需再次签名。',
+    noteSmart: '此发票每个钱包只需签名一次：新的价格或代币无需再次签名；换到其他网络时需要重新签名。',
     promptText: '请签署确认此钱包支付 {merchant} 的发票 {invoice} 的消息。此操作免费，不会转移资金。',
     promptPasskey:
       '请在 {wallet} 中使用通行密钥确认。这将签署确认此钱包支付 {merchant} 的发票 {invoice} 的消息；此操作免费，不会转移资金。',
@@ -190,6 +192,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     tooManyWallets: '确认此发票的钱包过多。请使用其中一个钱包付款，或向 {merchant} 索取新发票。',
     confirmToPay: '确认此钱包以付款',
     payNote: '使用此钱包付款前需要先进行一次免费签名：它确认此钱包支付此发票，不会转移资金。',
+    signInRequest: '{wallet} 可能会将其显示为 {site} 的登录请求。',
   },
   qr: {
     solanaTitle: '使用 Solana 钱包扫码',
@@ -275,6 +278,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
     heldPayerMismatch: '这笔付款来自与确认此发票的钱包不同的另一个钱包。{merchant} 会将其退回到发送它的钱包。',
     heldPayerUnconfirmed: '这笔付款来自未确认此发票的钱包。{merchant} 会将其退回到发送它的钱包。',
     heldRefundOnlyNext: '此发票不再接受其他付款：请向 {merchant} 索取新发票，并使用已确认的钱包支付。',
+    heldRefundOnlyNextUnconfirmed:
+      '此发票不再接受其他付款：请向 {merchant} 索取新发票，并在付款前在其页面上确认您的钱包。',
     refundedTitle: '已退款',
     refundedText: '{merchant} 已退还此发票的款项：{amount} {currency}。',
     expiredTitle: '此发票已过期',

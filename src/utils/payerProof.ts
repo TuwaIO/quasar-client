@@ -73,6 +73,22 @@ export async function lockPrice(
   return quote;
 }
 
+/** Codes of Quasar's and the store's refusals of the wallet's confirmation, besides `payer_proof_*`. */
+const PAYER_PROOF_CODES: ReadonlySet<string> = new Set(['payer_chain_mismatch', 'too_many_payers']);
+
+/**
+ * Whether the error is a refusal of the wallet's confirmation (`payer_proof_*`, `payer_chain_mismatch`,
+ * `too_many_payers`): the pay step shows only these under the confirmation, its other errors have texts of their own.
+ *
+ * @param error - The checkout store's error, if any.
+ * @returns `true` for a refusal of the confirmation.
+ */
+export function isPayerProofError(error: CheckoutError | null | undefined): boolean {
+  // Error codes newer than some `@tuwaio/quasar-sdk` alphas: compare them as strings
+  const code: string | undefined = error?.code;
+  return code !== undefined && (code.startsWith('payer_proof_') || PAYER_PROOF_CODES.has(code));
+}
+
 /**
  * What the step that confirms the wallet says about a refusal, with what to do: the wallet's (the buyer declined, the
  * wallet cannot sign messages, it failed) or Quasar's (`payer_proof_invalid`, `payer_proof_unavailable`,

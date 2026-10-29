@@ -356,6 +356,9 @@ export function PaymentCheckout({
     setPayWith('wallet');
     setConfirmWallet(false);
   }
+  // The price is locked, or refused after the signature: the step that confirms the wallet is done
+  const priceRefused = (state.payerProof as string | undefined) === 'confirmed' && Boolean(state.error);
+  if (confirmWallet && (state.phase === 'awaitingPayment' || priceRefused)) setConfirmWallet(false);
   // The method a wallet is being connected for: its price is locked once the wallet arrives
   const connectingFor = useRef<string | null>(null);
   // The first screen waits for the labels of the invoice's language (a file of their own), so it never flashes in

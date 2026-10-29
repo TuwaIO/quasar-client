@@ -2,7 +2,7 @@ import type { CheckoutError } from '@tuwaio/quasar-sdk/checkout';
 import { describe, expect, it, vi } from 'vitest';
 
 import { defaultLabels } from '../i18n/en';
-import { isSmartWallet, lockPrice, needsPayerProof, payerProofErrorText } from './payerProof';
+import { isPayerProofError, isSmartWallet, lockPrice, needsPayerProof, payerProofErrorText } from './payerProof';
 
 const values = { wallet: 'MetaMask', network: 'Base', merchant: 'Cosmos' };
 const refusal = (code: string, reason?: string): CheckoutError =>
@@ -114,5 +114,19 @@ describe('payerProofErrorText', () => {
   it('says nothing about the reason the step shows, nor without an error', () => {
     expect(payerProofErrorText(refusal('payer_proof_required'), null, defaultLabels, values)).toBeNull();
     expect(payerProofErrorText(null, null, defaultLabels, values)).toBeNull();
+  });
+});
+
+describe('isPayerProofError', () => {
+  it("knows the refusals of the wallet's confirmation, and nothing else", () => {
+    for (const code of ['payer_proof_declined', 'payer_proof_invalid', 'payer_proof_unavailable']) {
+      expect(isPayerProofError(refusal(code))).toBe(true);
+    }
+    expect(isPayerProofError(refusal('payer_chain_mismatch'))).toBe(true);
+    expect(isPayerProofError(refusal('too_many_payers'))).toBe(true);
+    for (const code of ['request_failed', 'price_unavailable', 'payment_mismatch', 'rate_limited']) {
+      expect(isPayerProofError(refusal(code))).toBe(false);
+    }
+    expect(isPayerProofError(null)).toBe(false);
   });
 });

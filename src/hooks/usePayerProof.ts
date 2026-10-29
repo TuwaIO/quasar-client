@@ -39,7 +39,9 @@ export interface PayerProofFlow {
   confirm: (options?: { quote?: boolean }) => Promise<boolean>;
   /**
    * Closes the wallet window. The request stays open in the wallet: a signature it gives later still confirms the
-   * invoice (and locks the price), a refusal is not shown.
+   * invoice (and locks the price), a refusal is not shown. A cancel during the network switch asks for no signature.
+   * {@link PayerProofFlow.confirm} can be called again at once: the new request replaces the open one, and signing
+   * twice moves no money.
    */
   dismiss: () => void;
 }
@@ -83,6 +85,8 @@ export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProof
         }
         return false;
       }
+      // Cancelled while the wallet switched: no signature request the page no longer shows
+      if (!isCurrent()) return false;
     }
     if (isCurrent()) setStep('signing');
     // Why the wallet did not sign: the store reports it as `payer_proof_declined` only

@@ -27,10 +27,13 @@ import { WalletPrompt } from './WalletPrompt';
  * the price, for an EVM payment the buyer's wallet sends itself (`payerProof` of the checkout store is `required`): one
  * sentence that it is free and moves no money, the summary of what the wallet signs (the invoice, the seller, the
  * amount and the wallet), and the main button that opens the wallet's signature request. Meanwhile the window of the
- * wallet covers the step, with the site the message names to check; a smart wallet is said to ask for its passkey. A
- * refusal keeps the buyer on the step, with its reason and the same button to try again; "Back to methods" returns to
- * the methods. Once the wallet signed, the price is locked on this step and the pay step follows. One signature per
- * invoice and wallet: a new price, token or network needs no new one.
+ * wallet covers the step, with the site the message names to check, a line that the wallet may show it as a sign-in
+ * request for that site, and "Try again" (signing again moves no money); a smart wallet is said to ask for its passkey.
+ * Once the window is closed the button works again, also while the wallet never answered. A refusal keeps the buyer
+ * on the step, with its reason and the same button to try again; "Back to methods" returns to the methods (or to the
+ * underpaid invoice whose rest another wallet pays). Once the wallet signed, the price is locked on this step and the
+ * pay step follows. One signature per invoice and wallet: a new price or token needs no new one, nor a new network for
+ * an ordinary wallet (a smart wallet's signature counts on its network only).
  *
  * Side effects: wallet prompts (a network switch, the signature); `POST payer-proof/message`, `POST payer-proof` and
  * `POST quote` through the checkout store.
@@ -69,16 +72,16 @@ export function ConfirmWalletScreen() {
     ? `${formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale)} ${checkout.invoice.currency}`
     : null;
   const smart = isSmartWallet(wallet);
-  // `payerProof` is newer than some `@tuwaio/quasar-sdk` alphas: read it as a string
-  const payerProof: string | undefined = state.payerProof;
   const quoting = state.phase === 'quoting';
-  const waiting = payerProof === 'confirming';
-  const error = payerProofErrorText(state.phase === 'selectMethod' ? state.error : null, proof.problem, labels, {
+  // Busy only while the wallet window is open: once it is closed, the buyer can ask the wallet again
+  const waiting = prompting;
+  const error = payerProofErrorText(quoting ? null : state.error, proof.problem, labels, {
     wallet: walletName,
     network,
     merchant,
   });
   const values = { wallet: walletName, invoice, merchant };
+  const retry = () => void proof.confirm({ quote: true });
 
   return (
     <div ref={area} className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
@@ -131,7 +134,7 @@ export function ConfirmWalletScreen() {
         </ScreenContent>
 
         <ScreenFooter>
-          <PrimaryButton busy={waiting || quoting} onClick={() => void proof.confirm({ quote: true })}>
+          <PrimaryButton busy={waiting || quoting} onClick={retry}>
             {quoting
               ? labels.method.quoting
               : waiting
@@ -139,7 +142,7 @@ export function ConfirmWalletScreen() {
                 : formatLabel(labels.payerProof.confirm, values)}
           </PrimaryButton>
           <SecondaryButton onClick={() => setConfirmWallet(false)}>{labels.pay.back}</SecondaryButton>
-          <FooterNote>{labels.payerProof.note}</FooterNote>
+          <FooterNote>{smart ? labels.payerProof.noteSmart : labels.payerProof.note}</FooterNote>
         </ScreenFooter>
       </div>
 
@@ -160,6 +163,12 @@ export function ConfirmWalletScreen() {
             { name: labels.payerProof.merchant, value: merchant },
             ...(amount ? [{ name: labels.payerProof.amount, value: amount }] : []),
           ]}
+          hint={
+            proof.request
+              ? formatLabel(labels.payerProof.signInRequest, { wallet: walletName, site: proof.request.domain })
+              : undefined
+          }
+          onRetry={retry}
           onCancel={proof.dismiss}
         />
       )}

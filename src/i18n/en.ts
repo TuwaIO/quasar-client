@@ -141,7 +141,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     mismatchTakenElsewhere:
       'This transaction pays another invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
     mismatchOtherWallet:
-      'This transfer came from a wallet that did not confirm this invoice, so it pays no invoice. {merchant} returns it to the wallet that sent it.',
+      'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact {merchant}.',
     payAgain: 'Pay again',
     unsupported: "{wallet} can't make this payment.",
     wrongCluster: '{wallet} is on another network, so nothing was paid. Switch it to {network} and pay again.',
@@ -182,6 +182,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     confirm: 'Confirm in {wallet}',
     waiting: 'Waiting for {wallet}…',
     note: 'One signature per wallet for this invoice: a new price, token or network needs no new one.',
+    noteSmart:
+      'One signature per wallet for this invoice: a new price or token needs no new one; another network asks again.',
     promptText:
       'Sign the message that confirms this wallet pays invoice {invoice} of {merchant}. It is free and moves no money.',
     promptPasskey:
@@ -198,6 +200,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     confirmToPay: 'Confirm this wallet to pay',
     payNote:
       'Paying from this wallet needs a free signature first: it confirms that the wallet pays this invoice and moves no money.',
+    signInRequest: '{wallet} may show it as a sign-in request for {site}.',
   },
   qr: {
     solanaTitle: 'Scan with a Solana wallet',
@@ -289,6 +292,8 @@ export const defaultLabels: NovaPaymentsLabels = {
       'The payment came from a wallet that did not confirm this invoice. {merchant} returns it to the wallet that sent it.',
     heldRefundOnlyNext:
       'This invoice takes no other payment: ask {merchant} for a new invoice and pay it from the confirmed wallet.',
+    heldRefundOnlyNextUnconfirmed:
+      'This invoice takes no other payment: ask {merchant} for a new invoice, and confirm your wallet on its page before paying.',
     refundedTitle: 'Refunded',
     refundedText: '{merchant} refunded this invoice: {amount} {currency}.',
     expiredTitle: 'This invoice has expired',
