@@ -57,6 +57,7 @@ const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'pay
 /**
  * What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
  * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
+ * `pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
  * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, without a promise of a
  * refund: only a held invoice is refunded, and it shows its own outcome), a payment Quasar closed after 24 hours without a result on chain
  * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
@@ -76,11 +77,15 @@ export function leftTheWalletText(
 ): string | null {
   if (isMovedMoneyFailure(error)) {
     const reason = (error as { reason?: string }).reason ?? '';
+    // `held` is newer than some `@tuwaio/quasar-sdk` alphas: held on another invoice for a refund only, it pays none
+    const held = (error as { held?: boolean }).held === true;
     const text = FROM_ANOTHER_WALLET.has(reason)
       ? labels.pay.mismatchOtherWallet
-      : isPaidElsewhere(error)
-        ? labels.pay.mismatchTakenElsewhere
-        : labels.pay.mismatch;
+      : held
+        ? labels.pay.mismatchHeldElsewhere
+        : isPaidElsewhere(error)
+          ? labels.pay.mismatchTakenElsewhere
+          : labels.pay.mismatch;
     return formatLabel(text, { merchant });
   }
   const followUp = unconfirmedFollowUp(error);

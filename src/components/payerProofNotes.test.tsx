@@ -227,6 +227,48 @@ describe('a payment held for a refund only', () => {
   });
 });
 
+// Owner, 2026-10-29: the rest of an underpaid invoice is paid from the wallet that paid first only
+describe('the rest of an underpaid invoice', () => {
+  const FIRST = '0x3333333333333333333333333333333333333333';
+  const REFUSAL = 'Only the wallet that paid first, 0x3333…3333, can pay the rest. Connect that wallet to pay it.';
+
+  it('offers the rest only to the wallet that paid first', () => {
+    show(
+      'underpaid',
+      { phase: 'underpaid', quote: { ...quoteOf(null), payer: `${BASE}:${FIRST}` } },
+      { status: 'underpaid', amountPaid: '80000000' },
+    );
+    ctx = { ...ctx, lockPrice: vi.fn(async () => undefined) };
+    const tree = OutcomeScreen({ kind: 'underpaid' });
+    expect(textOf(tree)).toContain(REFUSAL);
+    const button = fixture.ofType(tree, PrimaryButton)[0] as ReactElement<Props>;
+    (button.props.onClick as () => void)();
+    expect(ctx.lockPrice).not.toHaveBeenCalled();
+    expect(ctx.connectWallet).toHaveBeenCalled();
+  });
+
+  it("names the first wallet when Quasar refuses the rest from another one, and pays it from the first one's page", () => {
+    show(
+      'underpaid',
+      {
+        phase: 'underpaid',
+        quote: quoteOf(null),
+        error: { code: 'payer_mismatch', message: '', status: 409, originWallet: `${BASE}:${FIRST}` },
+      },
+      { status: 'underpaid', amountPaid: '80000000' },
+    );
+    expect(textOf(OutcomeScreen({ kind: 'underpaid' }))).toContain(REFUSAL);
+
+    // The wallet that paid first sees no refusal and pays the rest
+    show('underpaid', { phase: 'underpaid', quote: quoteOf(null) }, { status: 'underpaid', amountPaid: '80000000' });
+    ctx = { ...ctx, lockPrice: vi.fn(async () => undefined) };
+    const tree = OutcomeScreen({ kind: 'underpaid' });
+    expect(textOf(tree)).not.toContain('paid first');
+    ((fixture.ofType(tree, PrimaryButton)[0] as ReactElement<Props>).props.onClick as () => void)();
+    expect(ctx.lockPrice).toHaveBeenCalledOnce();
+  });
+});
+
 describe('the follow window of an expired or cancelled invoice', () => {
   it('says until when this page follows the payment, from the store', () => {
     show(

@@ -140,6 +140,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     mismatch: 'This transaction does not pay the invoice. If money left your wallet, contact {merchant}.',
     mismatchTakenElsewhere:
       'This transaction pays another invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
+    mismatchHeldElsewhere:
+      'This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
     mismatchOtherWallet:
       'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact {merchant}.',
     payAgain: 'Pay again',
@@ -277,6 +279,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     underpaidText: '{received} of {total} received.',
     underpaidRest: 'Send the rest, {rest}, from the same wallet on {network}.',
     underpaidNote: 'Until the rest arrives, {merchant} sees the invoice as underpaid. It stays payable until {date}.',
+    payRestFirstWallet: 'Only the wallet that paid first, {wallet}, can pay the rest. Connect that wallet to pay it.',
     payRest: 'Pay the rest',
     heldTitle: 'Payment received, {merchant} is checking it',
     heldScreening: '{merchant} checks the payment before confirming the order.',

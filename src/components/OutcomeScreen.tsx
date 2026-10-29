@@ -79,6 +79,9 @@ const LEFT_THE_WALLET: ReadonlySet<UnconfirmedFollowUp> = new Set([
 ]);
 
 /** Review reasons of a payment Quasar ties to no invoice, which the seller only returns to the wallet that sent it. */
+/** Whether two account addresses are one: EVM ones in any case, Solana (base58) ones exactly. */
+const sameAddress = (a: string, b: string) => (a.startsWith('0x') ? a.toLowerCase() === b.toLowerCase() : a === b);
+
 const REFUND_ONLY: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
 
 /** The icon and tone of each outcome. */
@@ -312,15 +315,38 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
           {due && <Text muted>{formatLabel(labels.outcome.underpaidNote, { merchant, date: due })}</Text>}
         </>
       );
+      // Owner, 2026-10-29: only the wallet that paid first pays the rest; Quasar refuses another one (`payer_mismatch`)
+      const connected = method && wallet ? payerFor(wallet, method) : null;
+      const refusedFrom =
+        (state.error as { code?: string; originWallet?: string } | null)?.code === 'payer_mismatch'
+          ? ((state.error as { originWallet?: string }).originWallet ?? null)
+          : null;
+      const first = refusedFrom ?? quote?.payer ?? null;
+      const firstAddress = first ? parseCaip10AccountId(first)?.address : undefined;
+      // The connected wallet decides once it is known (the buyer may have switched to the first one since a refusal)
+      const connectedAddress = connected ? parseCaip10AccountId(connected)?.address : undefined;
+      const otherWallet = Boolean(
+        firstAddress && (connectedAddress ? !sameAddress(connectedAddress, firstAddress) : refusedFrom),
+      );
       const payRest = () => {
         if (!method) return;
+        // Another wallet is connected: the buyer connects the one that paid first
+        if (otherWallet) return void connectWallet(method);
         // The same wallet pays the rest: Quasar quotes what is left for it
-        const payer = quote?.payer === null ? null : wallet ? payerFor(wallet, method) : null;
+        const payer = quote?.payer === null ? null : connected;
         if (quote?.payer !== null && !payer) return void connectWallet(method);
         store.getState().setPayer(payer);
         // Another wallet confirms the invoice first; the wallet that paid confirmed it already
         void lockPrice();
       };
+      if (otherWallet && firstAddress) {
+        body = (
+          <>
+            {body}
+            <Text>{formatLabel(labels.outcome.payRestFirstWallet, { wallet: shortAddress(firstAddress) })}</Text>
+          </>
+        );
+      }
       action = (
         <PrimaryButton busy={state.phase === 'quoting'} onClick={payRest}>
           {labels.outcome.payRest}

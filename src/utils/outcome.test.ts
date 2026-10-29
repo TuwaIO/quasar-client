@@ -115,6 +115,19 @@ describe('methodErrorText', () => {
     }
   });
 
+  // Owner, 2026-10-29: a transfer held on another invoice for a refund only pays no invoice
+  it('says that a transfer held on another invoice is tied to it, never that it pays it', () => {
+    const text = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'tx_already_used', held: true } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(text).toBe(
+      'This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not count for this invoice. If it was your payment for this one, contact Cosmos with the transaction hash.',
+    );
+    expect(text).not.toMatch(/\bpays\b/);
+  });
+
   it('says what happens to a payment another invoice took, or one Quasar has not recorded yet', () => {
     expect(
       methodErrorText(

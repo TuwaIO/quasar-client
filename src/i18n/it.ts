@@ -143,6 +143,8 @@ export const itLabels: NovaPaymentsLabels = {
     mismatch: 'Questa transazione non paga la fattura. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     mismatchTakenElsewhere:
       "Questa transazione paga un'altra fattura. Se era il tuo pagamento per questa, contatta {merchant} indicando l'hash della transazione.",
+    mismatchHeldElsewhere:
+      "Questa transazione è legata a un'altra fattura, che la trattiene per rimborsarla al wallet che l'ha inviata. Non vale per questa fattura. Se era il tuo pagamento per questa, contatta {merchant} con l'hash della transazione.",
     mismatchOtherWallet:
       'Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     payAgain: 'Paga di nuovo',
@@ -284,6 +286,8 @@ export const itLabels: NovaPaymentsLabels = {
     underpaidRest: 'Invia il resto, {rest}, dallo stesso wallet su {network}.',
     underpaidNote:
       'Finché non arriva il resto, {merchant} vede la fattura come pagata in parte. Si può pagare fino al {date}.',
+    payRestFirstWallet:
+      'Solo il wallet che ha pagato per primo, {wallet}, può pagare il resto. Collega quel wallet per pagarlo.',
     payRest: 'Paga il resto',
     heldTitle: 'Pagamento ricevuto, {merchant} lo sta verificando',
     heldScreening: "{merchant} verifica il pagamento prima di confermare l'ordine.",

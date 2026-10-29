@@ -137,6 +137,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
     failed: '付款在 {network} 上失败。只消耗了网络费，发票仍可支付。',
     mismatch: '此交易未支付该发票。如果有款项从您的钱包转出，请联系 {merchant}。',
     mismatchTakenElsewhere: '此交易支付的是另一张发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
+    mismatchHeldElsewhere:
+      '此交易已关联到另一张发票，该发票暂扣此交易，以便退回给发送它的钱包。它不计入此发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
     mismatchOtherWallet:
       '此转账来自未确认此发票的钱包，因此不支付此发票。如果有款项从您的钱包转出，请联系 {merchant}。',
     payAgain: '再次付款',
@@ -267,6 +269,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     underpaidText: '已收到 {received}，共需 {total}。',
     underpaidRest: '请从同一个钱包在 {network} 上发送剩余的 {rest}。',
     underpaidNote: '在剩余款项到账之前，{merchant} 会将此发票视为未付清。发票在 {date} 之前仍可支付。',
+    payRestFirstWallet: '只有最先付款的钱包 {wallet} 才能支付剩余款项。请连接该钱包后支付。',
     payRest: '支付剩余款项',
     heldTitle: '已收到付款，{merchant} 正在核查',
     heldScreening: '{merchant} 会在确认订单之前核查这笔付款。',

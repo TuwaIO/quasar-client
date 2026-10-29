@@ -271,6 +271,13 @@ export type NovaPaymentsLabels = {
      */
     mismatchTakenElsewhere: string;
     /**
+     * Instead of `mismatch` when another invoice of the seller holds the transaction for a refund only
+     * (`tx_already_used` with `held`): it pays neither invoice, so never say that it pays one: `{merchant}` (default:
+     * `This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not
+     * count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.`)
+     */
+    mismatchHeldElsewhere: string;
+    /**
      * Instead of `mismatch` for a transfer from a wallet that did not confirm the invoice (`payer_mismatch`,
      * `payer_unconfirmed`): it does not pay the invoice, and no hold promises a refund (a held invoice shows its own
      * outcome): `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does
@@ -566,6 +573,12 @@ export type NovaPaymentsLabels = {
     underpaidRest: string;
     /** Until when: `{merchant}`, `{date}` */
     underpaidNote: string;
+    /**
+     * Instead of paying the rest when another wallet than the one that paid first is connected, or Quasar refused the
+     * rest from it (`payer_mismatch`): `{wallet}`, the first wallet's short address (default: `Only the wallet that paid
+     * first, {wallet}, can pay the rest. Connect that wallet to pay it.`)
+     */
+    payRestFirstWallet: string;
     /** Button that pays the rest (default: `Pay the rest`) */
     payRest: string;
     /** Heading of a payment on review: `{merchant}` (default: `Payment received, {merchant} is checking it`) */
