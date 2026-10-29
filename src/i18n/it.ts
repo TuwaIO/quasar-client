@@ -304,6 +304,7 @@ export const itLabels: NovaPaymentsLabels = {
     secured: 'Protetto da Quasar',
     help: 'Aiuto',
     compact: '{count} articoli · IVA incl. {tax}',
+    compactOne: '{count} articolo · IVA incl. {tax}',
     showOrder: 'Dettagli',
   },
   refund: {

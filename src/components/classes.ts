@@ -1,3 +1,5 @@
+import type { PaymentCheckoutDisplay } from './PaymentCheckout';
+
 /** Classes shared by the checkout parts. @internal */
 export const focusRing =
   'novapay:focus-visible:outline-2 novapay:focus-visible:outline-offset-2 novapay:focus-visible:outline-[var(--tuwa-text-accent)]';
@@ -26,3 +28,21 @@ export const primaryAction = `${mono} novapay:inline-flex novapay:h-11 novapay:w
 
 /** A second action under the main one (back, close, contact): the same size, with a border. @internal */
 export const secondaryAction = `${mono} novapay:inline-flex novapay:h-11 novapay:w-full novapay:cursor-pointer novapay:items-center novapay:justify-center novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:text-sm novapay:font-bold novapay:text-[var(--tuwa-text-primary)] novapay:no-underline novapay:transition-colors novapay:hover:bg-[var(--tuwa-bg-muted)] novapay:disabled:cursor-not-allowed novapay:disabled:opacity-70 ${focusRing}`;
+
+/**
+ * The width classes of the checkout: in a dialog the frame is 760 px wide from 640 px, but never wider than the window
+ * with the padding and border of the dialog (on a 700 px window it would otherwise run off both sides); in a page the
+ * block (`section`) is 760 px wide but never wider than its place, and the frame fills the block, so page padding never
+ * makes it overflow. A width of 760 px capped by `max-width: 100%`, not `width: 100%`: in a parent that takes the width
+ * of its content (a centered flex box) a full width would follow the content and change from step to step. The two
+ * panes show from 640 px of window and hold down to a frame of about 590 px.
+ *
+ * @param display - Where the checkout is shown.
+ * @returns The classes of the frame and of the block around it in a page.
+ * @internal
+ */
+export function checkoutWidthClasses(display: PaymentCheckoutDisplay): { frame: string; section: string } {
+  return display === 'modal'
+    ? { frame: 'novapay:sm:w-[min(760px,calc(100vw_-_2rem_-_2px))]', section: '' }
+    : { frame: '', section: 'novapay:box-border novapay:w-[760px] novapay:max-w-full' };
+}

@@ -4,7 +4,7 @@ import type { CheckoutView } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useId, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
-import { formatLabel, type NovaPaymentsLabels } from '../i18n';
+import { formatCountLabel, formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { formatCountdown, formatFiat, minorToDecimal } from '../utils/format';
 import { invoiceTotals } from '../utils/totals';
 import { focusRing, mono } from './classes';
@@ -377,10 +377,12 @@ export function CompactSummary({ className }: { className?: string } = {}) {
         )}
       </div>
       <Disclosure
-        label={`${formatLabel(labels.summary.compact, {
-          count: invoice.lineItems.length,
-          tax: totals.tax ? formatFiat(totals.tax, locale) : formatFiat('0', locale),
-        })} · ${labels.summary.showOrder}`}
+        label={`${formatCountLabel(
+          { one: labels.summary.compactOne, other: labels.summary.compact },
+          invoice.lineItems.length,
+          locale,
+          { tax: totals.tax ? formatFiat(totals.tax, locale) : formatFiat('0', locale) },
+        )} · ${labels.summary.showOrder}`}
       >
         <div className="novapay:flex novapay:flex-col novapay:gap-3 novapay:pt-1">
           <OrderLines />

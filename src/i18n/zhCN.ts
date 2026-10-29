@@ -289,6 +289,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     secured: '由 Quasar 提供保障',
     help: '帮助',
     compact: '{count} 件商品 · 含增值税 {tax}',
+    compactOne: '{count} 件商品 · 含增值税 {tax}',
     showOrder: '详情',
   },
   refund: {

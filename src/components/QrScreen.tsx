@@ -59,14 +59,15 @@ export function QrScreen() {
   return (
     <>
       <ScreenContent title={labels.qr.solanaTitle} subtitle={labels.qr.solanaHint}>
-        <div className="novapay:flex novapay:flex-col novapay:items-center novapay:gap-4 novapay:sm:flex-row novapay:sm:items-start">
+        {/* Side by side when the screen area has the room (from 440 px), not by the width of the window */}
+        <div className="novapay:flex novapay:flex-col novapay:items-center novapay:gap-4 novapay:@min-[440px]:flex-row novapay:@min-[440px]:items-start">
           <QrCode
             value={instructions.solanaPayUrl}
             label={formatLabel(labels.qr.solanaCode, { amount })}
             className={cn('novapay:h-44 novapay:w-44 novapay:shrink-0', expired && 'novapay:opacity-30')}
           />
           {/* On a phone the facts take the width of the screen under the code, aligned with the rest of it */}
-          <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-2 novapay:self-stretch novapay:text-xs novapay:sm:self-auto">
+          <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-2 novapay:self-stretch novapay:text-xs novapay:@min-[440px]:self-auto">
             <ol className="novapay:m-0 novapay:flex novapay:list-decimal novapay:flex-col novapay:gap-1 novapay:pl-4">
               <li>{labels.qr.scanStep}</li>
               <li>{labels.qr.approveStep}</li>

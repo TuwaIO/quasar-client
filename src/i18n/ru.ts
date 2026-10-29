@@ -299,6 +299,7 @@ export const ruLabels: NovaPaymentsLabels = {
     secured: 'Под защитой Quasar',
     help: 'Помощь',
     compact: 'Позиций: {count} · вкл. НДС {tax}',
+    compactOne: '{count} позиция · вкл. НДС {tax}',
     showOrder: 'Подробнее',
   },
   refund: {

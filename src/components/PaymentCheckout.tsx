@@ -23,7 +23,7 @@ import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
-import { screenHeading, screenTitle } from './classes';
+import { checkoutWidthClasses, screenHeading, screenTitle } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
 import { LeaveDialog } from './LeaveDialog';
@@ -42,8 +42,9 @@ export interface PaymentCheckoutProps {
   /** The checkout token of the invoice (its `checkoutToken`, or the end of its `payUrl`). */
   token: string;
   /**
-   * `modal` (default): a dialog over the page, a sheet from the bottom under 640 px; `inline`: a block in the page;
-   * `page`: the block centered on its own page, as the Quasar payment page shows it.
+   * `modal` (default): a dialog over the page, 760 px wide (less on a narrower window), a sheet from the bottom under
+   * 640 px; `inline`: a block in the page, as wide as its place up to 760 px; `page`: the block centered on its own
+   * page, as the Quasar payment page shows it.
    */
   display?: PaymentCheckoutDisplay;
   /** Whether the modal is open (`display="modal"`; default `true`). */
@@ -181,7 +182,7 @@ export function CheckoutFrame({
   leave: { onStay: () => void; onLeave: () => void } | null;
 }) {
   const context = useCheckoutContext();
-  const { checkout, locale, labels, now, customization } = context;
+  const { checkout, locale, labels, now, customization, display } = context;
   const {
     Header = CheckoutHeader,
     Summary = CheckoutSummary,
@@ -224,7 +225,8 @@ export function CheckoutFrame({
       ref={frame}
       lang={locale}
       className={cn(
-        'novapay:relative novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:w-[760px] novapay:sm:flex-row',
+        'novapay:relative novapay:box-border novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:flex-row',
+        checkoutWidthClasses(display).frame,
         className,
       )}
     >
@@ -249,10 +251,11 @@ export function CheckoutFrame({
           {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
           <MobileSteps withDetails={withDetails} />
         </div>
+        {/* A container: a screen lays itself out by the width of this area, 320 px in two panes on a 640 px window */}
         <div
           data-novapay-scroll=""
           className={cn(
-            'novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto',
+            'novapay:@container novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto',
             checkoutClassName(context, 'body'),
           )}
         >
@@ -490,7 +493,8 @@ export function PaymentCheckout({
     <section
       aria-label={formatLabel(labels.common.dialogTitle, { merchant: checkout?.merchant.name ?? '' })}
       className={cn(
-        'novapay:w-full novapay:overflow-hidden novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:sm:w-[760px]',
+        'novapay:overflow-hidden novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)]',
+        checkoutWidthClasses(display).section,
         display === 'page' && 'novapay:mx-auto novapay:my-8',
         blockClassName,
       )}

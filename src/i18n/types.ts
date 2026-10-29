@@ -555,8 +555,16 @@ export type NovaPaymentsLabels = {
     secured: string;
     /** Before the seller's support email (default: `Help`) */
     help: string;
-    /** On a phone: the number of lines and the tax; `{count}`, `{tax}` (default: `{count} items · incl. VAT {tax}`) */
+    /**
+     * On a phone: the number of lines and the tax; `{count}`, `{tax}` (default: `{count} items · incl. VAT {tax}`).
+     * Used when the plural rule of the language does not pick `one` for the count.
+     */
     compact: string;
+    /**
+     * On a phone, when the plural rule of the language picks `one` for the number of lines (1; in Ukrainian and
+     * Russian also 21, 31…); `{count}`, `{tax}` (default: `{count} item · incl. VAT {tax}`)
+     */
+    compactOne: string;
     /** On a phone: button that shows the order (default: `Details`) */
     showOrder: string;
   };

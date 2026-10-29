@@ -298,6 +298,7 @@ export const ukLabels: NovaPaymentsLabels = {
     secured: 'Під захистом Quasar',
     help: 'Допомога',
     compact: 'Позицій: {count} · з ПДВ {tax}',
+    compactOne: '{count} позиція · з ПДВ {tax}',
     showOrder: 'Докладніше',
   },
   refund: {
