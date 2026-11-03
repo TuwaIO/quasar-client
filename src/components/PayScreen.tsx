@@ -1,10 +1,11 @@
 import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
-import type { CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutError, CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 import { useState } from 'react';
 
 import { useAsyncValue } from '../hooks/useAsyncValue';
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
+import { usePayerProof } from '../hooks/usePayerProof';
 import { usePayment } from '../hooks/usePayment';
 import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
 import { useStepHeight } from '../hooks/useStepHeight';
@@ -19,7 +20,9 @@ import {
   shortAddress,
 } from '../utils/format';
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
+import { leftTheWalletText } from '../utils/outcome';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
+import { isPayerProofError, isSmartWallet, needsPayerProof, payerProofErrorText } from '../utils/payerProof';
 import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { focusRing, mono, screenHeading } from './classes';
@@ -46,13 +49,19 @@ function formatRate(rate: number, locale: string): string {
 /** The text of a refusal of the wallet or of Quasar, with the action that follows it. */
 function problemText(
   labels: NovaPaymentsLabels,
-  values: { wallet: string; network: string },
+  values: { wallet: string; network: string; merchant: string },
   problem: PaymentWalletErrorKind | null,
-  errorCode: string | undefined,
+  error: CheckoutError | null | undefined,
 ): string | null {
+  const errorCode = error?.code;
   if (problem === 'declined') return formatLabel(labels.pay.declined, values);
   if (problem === 'unsupported') return formatLabel(labels.pay.unsupported, values);
   if (problem === 'wrongNetwork') return formatLabel(labels.pay.wrongCluster, values);
+  // The payment left the wallet, or may have (a transaction that does not pay the invoice or pays another one, closed
+  // after 24 hours without a result, taken by another invoice, confirmed and not recorded yet): never "it failed" or
+  // "only the fee"
+  const leftTheWallet = problem ? null : leftTheWalletText(error, labels, values.merchant);
+  if (leftTheWallet !== null) return leftTheWallet;
   if (problem === 'failed' || errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;
@@ -94,7 +103,9 @@ function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null,
  * The pay step: the connected wallet (with "Change"), the exact amount to send with its network and invoice value,
  * the price lock with "Keep this price" in its last minute, the rate, the network fee (the merchant's or an estimate),
  * the recipient, and the main action — "Sign to pay" when the merchant pays the gas, "Pay" otherwise, "Switch to …"
- * on the wrong network. Before the prompt it reads the wallet's balance (unless `config.balanceCheck` is `false`)
+ * on the wrong network, "Confirm this wallet to pay" before a transfer or a paymaster payment of a method the gasless
+ * relay could pay (the wallet signs Quasar's free confirmation of the invoice first; the relay's authorization needs
+ * none). Before the prompt it reads the wallet's balance (unless `config.balanceCheck` is `false`)
  * and, when it is short, offers the methods the wallet can pay and the seller's top-up link. `handlers.onSubmit` wraps
  * the pay button. A Solana payment off mainnet reminds the buyer to switch the wallet to its cluster (Solana wallets
  * choose their network themselves), with the steps of Phantom and Solflare. The note under the buttons says that the
@@ -121,6 +132,7 @@ export function PayScreen() {
     backToMethods,
     onPaymentSent,
     customization,
+    lockPrice,
   } = useCheckoutContext();
   const balanceCheck = customization.config?.balanceCheck !== false;
   const quote = state.quote;
@@ -156,6 +168,8 @@ export function PayScreen() {
     paymasterUrl: state.paymasterUrl,
     onSent: onPaymentSent,
   });
+  // A transfer or a paymaster payment of a method the gasless relay could pay: the wallet confirms the invoice first
+  const proof = usePayerProof({ adapter, store, wallet, chainId });
   useSolanaClusterSync(chainId, wallet);
   const native = quote?.instructions.token === 'native';
   const shortfall =
@@ -163,6 +177,8 @@ export function PayScreen() {
   const alternatives = useAlternatives(methods, quote, balanceCheck && Boolean(shortfall));
   // The wallet asks (the prompt below shows): on a phone the prompt keeps the height of the step
   const prompting =
+    proof.step === 'switching' ||
+    proof.step === 'signing' ||
     payment.status === 'switching' ||
     payment.status === 'submitting' ||
     payment.status === 'wallet' ||
@@ -183,21 +199,37 @@ export function PayScreen() {
   const total = checkout.invoice.totalMinor ? formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale) : null;
   const walletMatches = Boolean(wallet && quote.payer && payerFor(wallet, method) === quote.payer);
   const wrongNetwork = family === 'eip155' && wallet && wallet.chainId !== chainId && Boolean(adapter?.switchChain);
-  const busy = payment.status !== 'idle' || state.phase === 'submitting' || quoting;
+  const busy =
+    payment.status !== 'idle' ||
+    state.phase === 'submitting' ||
+    quoting ||
+    // Busy only while the wallet window of the confirmation is open: once closed, the buyer can ask again
+    proof.step !== 'idle';
   const problem = problemText(
     labels,
-    { wallet: wallet?.name ?? '', network },
+    { wallet: wallet?.name ?? '', network, merchant },
     payment.problem,
-    state.phase === 'awaitingPayment' ? state.error?.code : undefined,
+    state.phase === 'awaitingPayment' ? state.error : undefined,
   );
   const solanaNetwork = solanaNetworkHint(chainId, wallet, labels);
   const renew = () => void store.getState().requestQuote();
+  // `payerProof` is newer than some `@tuwaio/quasar-sdk` alphas: read it as a string
+  const payerProof: string | undefined = state.payerProof;
+  const confirmFirst = needsPayerProof(payerProof, path);
+  const proofError = confirmFirst
+    ? payerProofErrorText(isPayerProofError(state.error) ? state.error : null, proof.problem, labels, {
+        wallet: wallet?.name ?? '',
+        network,
+        merchant,
+      })
+    : null;
 
   let action: { label: string; run: () => void; disabled?: boolean };
   if (expired) action = { label: labels.pay.newPrice, run: renew };
   else if (!walletMatches) action = { label: labels.pay.connect, run: () => void connectWallet(method) };
   else if (wrongNetwork)
     action = { label: formatLabel(labels.pay.switchTo, { network }), run: () => void payment.switchNetwork() };
+  else if (confirmFirst) action = { label: labels.payerProof.confirmToPay, run: () => void proof.confirm() };
   else {
     action = {
       label: formatLabel(path === 'transfer' ? labels.pay.payAmount : labels.pay.signToPay, {
@@ -212,13 +244,21 @@ export function PayScreen() {
     };
   }
   const prompt =
-    payment.status === 'switching'
+    proof.step === 'switching'
       ? 'switch'
-      : payment.status === 'submitting' || state.phase === 'submitting'
-        ? 'submitting'
-        : path === 'transfer'
-          ? 'confirm'
-          : 'sign';
+      : proof.step === 'signing'
+        ? 'proof'
+        : payment.status === 'switching'
+          ? 'switch'
+          : payment.status === 'submitting' || state.phase === 'submitting'
+            ? 'submitting'
+            : payment.status === 'wallet'
+              ? path === 'transfer'
+                ? 'confirm'
+                : 'sign'
+              : null;
+  const invoice = checkout.invoice.number ?? checkout.invoice.id;
+  const proofValues = { wallet: wallet?.name ?? '', invoice, merchant };
 
   return (
     <div className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
@@ -387,7 +427,8 @@ export function PayScreen() {
                         const payer = wallet ? payerFor(wallet, other) : null;
                         store.getState().selectMethod(other.id);
                         store.getState().setPayer(payer);
-                        void store.getState().requestQuote();
+                        // A smart wallet confirms the invoice again on another network, before the price
+                        void lockPrice();
                       }}
                       className={cn(
                         'novapay:flex novapay:cursor-pointer novapay:items-center novapay:justify-between novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-transparent novapay:px-2.5 novapay:py-1.5 novapay:text-left novapay:text-xs novapay:text-[var(--tuwa-text-primary)] novapay:hover:bg-[var(--tuwa-bg-muted)]',
@@ -459,6 +500,12 @@ export function PayScreen() {
             </DetailRow>
           </DetailsCard>
 
+          {confirmFirst && !expired && (
+            <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+              {labels.payerProof.payNote}
+            </p>
+          )}
+          {proofError && <ScreenError>{proofError}</ScreenError>}
           {problem && <ScreenError>{problem}</ScreenError>}
         </section>
 
@@ -477,7 +524,37 @@ export function PayScreen() {
         </ScreenFooter>
       </div>
 
-      {prompting && (
+      {prompt === 'proof' && (
+        <WalletPrompt
+          kind="proof"
+          walletName={wallet?.name ?? ''}
+          walletId={wallet?.walletId ?? ''}
+          walletIcon={wallet?.icon}
+          amount={token(amounts.send)}
+          merchant={merchant}
+          network={network}
+          to={shortAddress(quote.instructions.to)}
+          priceTime={null}
+          text={formatLabel(
+            isSmartWallet(wallet) ? labels.payerProof.promptPasskey : labels.payerProof.promptText,
+            proofValues,
+          )}
+          details={[
+            ...(proof.request ? [{ name: labels.payerProof.site, value: proof.request.domain }] : []),
+            { name: labels.payerProof.invoice, value: invoice },
+            { name: labels.payerProof.merchant, value: merchant },
+          ]}
+          hint={
+            proof.request
+              ? formatLabel(labels.payerProof.signInRequest, { wallet: wallet?.name ?? '', site: proof.request.domain })
+              : undefined
+          }
+          onRetry={() => void proof.confirm()}
+          onCancel={proof.dismiss}
+          stepHeight={stepHeight}
+        />
+      )}
+      {prompt && prompt !== 'proof' && (
         <WalletPrompt
           kind={prompt}
           walletName={wallet?.name ?? ''}
@@ -489,7 +566,7 @@ export function PayScreen() {
           to={shortAddress(quote.instructions.to)}
           priceTime={expired ? null : formatCountdown(left)}
           onRetry={path === 'relay' ? () => void payment.pay() : undefined}
-          onCancel={payment.dismiss}
+          onCancel={proof.step === 'switching' ? proof.dismiss : payment.dismiss}
           stepHeight={stepHeight}
         />
       )}

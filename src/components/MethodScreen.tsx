@@ -108,15 +108,28 @@ function AgreeLine({
  * merchant's Popular methods next; a discount or markup of a method shows on it. Paying from a wallet needs the chain
  * adapter of the method's family (`adapters` of `NovaPaymentsProvider`). "Continue" locks the price for the connected
  * wallet (or connects one first), locks it without a payer for a Solana Pay QR code, or shows the QR code of the
- * payment page for an EVM method paid on a phone. A consent the seller asks (`checkout.consent`) is a box the buyer
+ * payment page for an EVM method paid on a phone; a wallet that must confirm the invoice first (an EVM payment it sends
+ * itself) goes to the step that confirms it before the price. A consent the seller asks (`checkout.consent`) is a box the buyer
  * ticks under the ways to pay; a required one keeps "Continue" off until it is ticked, and the quote carries it.
  *
  * @returns The method step.
  */
 export function MethodScreen() {
   const context = useCheckoutContext();
-  const { checkout, state, store, labels, wallet, payWith, setPayWith, payUrl, connectWallet, adapterFor, setHandoff } =
-    context;
+  const {
+    checkout,
+    state,
+    store,
+    labels,
+    wallet,
+    payWith,
+    setPayWith,
+    payUrl,
+    connectWallet,
+    adapterFor,
+    setHandoff,
+    lockPrice,
+  } = context;
   const { TokenOption, NetworkOption } = context.customization.components ?? {};
   const methods = useMemo(() => checkout?.methods ?? [], [checkout]);
   const groups = useMemo(() => groupMethodsByToken(methods, wallet?.chainId), [methods, wallet?.chainId]);
@@ -174,7 +187,8 @@ export function MethodScreen() {
     const payer = payerFor(wallet, selected);
     if (!payer) return setCannotConnect(!connectWallet(selected));
     store.getState().setPayer(payer);
-    await store.getState().requestQuote();
+    // The wallet confirms the invoice first when it must (an EVM payment it sends itself), then the price is locked
+    await lockPrice();
   };
 
   return (
@@ -382,7 +396,7 @@ export function MethodScreen() {
           <ScreenError>{qrAvailable ? labels.pay.connectUnavailable : labels.method.methodUnavailable}</ScreenError>
         )}
         {state.error && state.phase === 'selectMethod' && (
-          <ScreenError>{methodErrorText(state.error, labels)}</ScreenError>
+          <ScreenError>{methodErrorText(state.error, labels, checkout.merchant.name)}</ScreenError>
         )}
       </ScreenContent>
       <ScreenFooter>

@@ -1,0 +1,122 @@
+import type { CheckoutState, PayerProofMessage } from '@tuwaio/quasar-sdk/checkout';
+import { useRef, useState } from 'react';
+
+import type { PaymentsAdapter } from '../adapters/types';
+import type { CheckoutWallet } from '../utils/methods';
+import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
+
+/** Where the confirmation of the paying wallet stands: the wallet switches its network, then signs. */
+export type PayerProofStep = 'idle' | 'switching' | 'signing';
+
+/** What {@link usePayerProof} needs. */
+export interface UsePayerProofParams {
+  /** The adapter of the method's chain family; without `signMessage` the wallet cannot confirm the invoice. */
+  adapter: PaymentsAdapter | undefined;
+  /** The checkout store. */
+  store: { getState: () => Pick<CheckoutState, 'confirmPayer' | 'requestQuote'> };
+  /** The connected wallet. */
+  wallet: CheckoutWallet | null;
+  /** The CAIP-2 network of the method: a smart wallet's signature counts there only. */
+  chainId: string;
+}
+
+/** What {@link usePayerProof} returns. */
+export interface PayerProofFlow {
+  /** Where the confirmation stands. */
+  step: PayerProofStep;
+  /** Why the wallet did not switch or sign, until the next try. */
+  problem: PaymentWalletErrorKind | null;
+  /** The message Quasar issued for the wallet to sign (its site, network, nonce), once Quasar answered. */
+  request: PayerProofMessage | null;
+  /**
+   * Confirms the invoice from the wallet: switches the wallet to the method's network when it is on another one, then
+   * has it sign Quasar's message (`confirmPayer` of the checkout store).
+   *
+   * @param options - `quote: true` locks the price once the wallet confirmed (the step before the price).
+   * @param options.quote - Whether to lock the price after it.
+   * @returns Whether the wallet confirmed the invoice.
+   */
+  confirm: (options?: { quote?: boolean }) => Promise<boolean>;
+  /**
+   * Closes the wallet window. The request stays open in the wallet: a signature it gives later still confirms the
+   * invoice (and locks the price), a refusal is not shown. A cancel during the network switch asks for no signature.
+   * {@link PayerProofFlow.confirm} can be called again at once: the new request replaces the open one, and signing
+   * twice moves no money.
+   */
+  dismiss: () => void;
+}
+
+/**
+ * Confirms that the connected wallet pays the invoice, for the step before the price and for a payment of a method the
+ * gasless relay could pay: a free signature of Quasar's EIP-4361 message that moves no money (owner rule of
+ * 2026-10-29), one per invoice and wallet.
+ *
+ * Side effects: wallet prompts (a network switch, the signature); `POST payer-proof/message` and `POST payer-proof`
+ * through the checkout store, then `POST quote` with `quote: true`.
+ *
+ * @param params - See {@link UsePayerProofParams}.
+ * @returns See {@link PayerProofFlow}.
+ */
+export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProofParams): PayerProofFlow {
+  const [step, setStep] = useState<PayerProofStep>('idle');
+  const [problem, setProblem] = useState<PaymentWalletErrorKind | null>(null);
+  const [request, setRequest] = useState<PayerProofMessage | null>(null);
+  // Each try gets a number; a dismissed one no longer changes the page
+  const attempt = useRef(0);
+
+  const confirm = async ({ quote = false }: { quote?: boolean } = {}) => {
+    const id = ++attempt.current;
+    const isCurrent = () => attempt.current === id;
+    setProblem(null);
+    const signMessage = adapter?.signMessage;
+    if (!signMessage || !wallet) {
+      setProblem('unsupported');
+      return false;
+    }
+    // A smart wallet signs for the network it is on: the one of the method, where the payment goes too
+    if (wallet.chainId !== chainId && adapter.switchChain) {
+      setStep('switching');
+      try {
+        await adapter.switchChain(chainId);
+      } catch (error) {
+        if (isCurrent()) {
+          setProblem(walletErrorKind(error));
+          setStep('idle');
+        }
+        return false;
+      }
+      // Cancelled while the wallet switched: no signature request the page no longer shows
+      if (!isCurrent()) return false;
+    }
+    if (isCurrent()) setStep('signing');
+    // Why the wallet did not sign: the store reports it as `payer_proof_declined` only
+    let refusal: PaymentWalletErrorKind | null = null;
+    const confirmed = await store.getState().confirmPayer(async (message, issued) => {
+      if (isCurrent()) setRequest(issued);
+      try {
+        return await signMessage({ message, account: wallet.address, chainId: issued.chainId });
+      } catch (error) {
+        refusal = walletErrorKind(error);
+        throw error;
+      }
+    });
+    if (isCurrent()) {
+      setProblem(refusal);
+      setStep('idle');
+    }
+    // The buyer signed, also after closing the window: the price follows
+    if (confirmed && quote) await store.getState().requestQuote();
+    return confirmed;
+  };
+
+  return {
+    step,
+    problem,
+    request,
+    confirm,
+    dismiss: () => {
+      attempt.current++;
+      setStep('idle');
+    },
+  };
+}

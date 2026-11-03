@@ -340,12 +340,20 @@ export interface PaymentCheckoutHandlers {
    */
   onError?: (params: { error: CheckoutError; screen: CheckoutScreen }) => void;
   /**
-   * The locked price ran out (`quote`), or the invoice expired (`invoice`).
+   * The locked price ran out (`quote`), or the invoice expired (`invoice`). Either can happen while a payment is on its
+   * way: the invoice can still close while it confirms (Quasar waits for a payment it learned of
+   * before the deadline only for a limited time, and holds a payment that lands later for the seller to accept or
+   * return), so do not offer a new invoice at once when `paymentOnTheWay` is `true`; the checkout keeps following the
+   * invoice and shows a paid or held outcome if it changes.
    *
    * @param params - What expired.
    * @param params.kind - `quote` or `invoice`.
+   * @param params.paymentOnTheWay - A payment is on its way: one this page handed over (`paymentOnTheWay` of the
+   * checkout store, or, with an older `@tuwaio/quasar-sdk`, a transaction handed over), one of the invoice Quasar
+   * reports (`invoicePaymentOnTheWay`: the page was reopened while it was on its way, another tab paid), or one Quasar
+   * could not confirm yet and reads again (`invoicePaymentUnresolved`).
    */
-  onExpire?: (params: { kind: 'quote' | 'invoice' }) => void;
+  onExpire?: (params: { kind: 'quote' | 'invoice'; paymentOnTheWay: boolean }) => void;
 }
 
 /**
@@ -365,7 +373,10 @@ export interface PaymentCheckoutConfig {
    * wallet can pay with (default `true`).
    */
   balanceCheck?: boolean;
-  /** Minutes before the invoice deadline at which screen readers hear the time left (default `[10, 5, 1]`). */
+  /**
+   * Minutes before the invoice deadline at which screen readers hear the time left, while the buyer can still pay (not
+   * once the payment is on its way) (default `[10, 5, 1]`).
+   */
   deadlineAnnouncements?: readonly number[];
 }
 

@@ -5,18 +5,11 @@ import { type ReactNode, useId, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatCountLabel, formatLabel, type NovaPaymentsLabels } from '../i18n';
+import { deadlineState } from '../utils/checkout';
 import { formatCountdown, formatFiat, minorToDecimal } from '../utils/format';
 import { invoiceTotals } from '../utils/totals';
 import { focusRing, mono } from './classes';
 import { checkoutClassName } from './customization';
-
-/** States in which the invoice can still be paid, so its deadline counts down. */
-const PAYABLE = new Set(['open', 'processing', 'underpaid']);
-/** Steps at which the buyer can still pay; once the payment is sent (confirm) or settled, the deadline is past concern. */
-const PAYING_SCREENS = new Set(['loading', 'error', 'buyer', 'method', 'pay', 'qr', 'underpaid']);
-
-/** Whether the deadline counts: the invoice can be paid and the buyer has not sent the payment yet. */
-const countsDown = (status: string, screen: string) => PAYABLE.has(status) && PAYING_SCREENS.has(screen);
 
 /** The host name of a website link, for display. */
 const hostOf = (url: string) => {
@@ -148,11 +141,14 @@ export function SellerDetailsContent({ checkout, labels }: { checkout: CheckoutV
   );
 }
 
-/** The countdown to the invoice deadline, while the buyer can still pay the invoice. @internal */
+/**
+ * The countdown to the invoice deadline, through every step of the payment until it succeeded (`deadlineState`); it
+ * stays at 00:00 when the deadline passes while the payment confirms. @internal
+ */
 export function DeadlineTimer() {
   const { checkout, labels, locale, now, screen } = useCheckoutContext();
   const dueAt = checkout?.invoice.dueAt;
-  if (!checkout || !dueAt || !countsDown(checkout.invoice.status, screen)) return null;
+  if (!checkout || !dueAt || !deadlineState(checkout.invoice.status, screen)) return null;
   const date = new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
@@ -313,7 +309,8 @@ function Disclosure({ label, children, className }: { label: string; children: R
 
 /**
  * The order panel on the left of the checkout (from 640 px): the merchant, the seller details (unfolded in place, the
- * lines scroll while the deadline and the total stay), the countdown, the lines and the total, and the help.
+ * lines scroll while the deadline and the total stay), the countdown to the deadline (through every step of the
+ * payment, also while it confirms, until it succeeded), the lines and the total, and the help.
  *
  * @returns The order panel.
  */
@@ -339,8 +336,8 @@ export function CheckoutSummary() {
 }
 
 /**
- * The order on a phone, above the steps: the total and the countdown, with the lines and the seller details behind a
- * "Details" button.
+ * The order on a phone, above the steps: the total and the countdown to the deadline (until the payment succeeded), with
+ * the lines and the seller details behind a "Details" button.
  *
  * @param props - The classes.
  * @param props.className - Classes added to the order (`customization.classNames.compactSummary`).
@@ -351,7 +348,7 @@ export function CompactSummary({ className }: { className?: string } = {}) {
   if (!checkout) return null;
   const { invoice } = checkout;
   const totals = invoiceTotals(invoice);
-  const dueAt = invoice.dueAt && countsDown(invoice.status, screen) ? Date.parse(invoice.dueAt) : null;
+  const dueAt = invoice.dueAt && deadlineState(invoice.status, screen) ? Date.parse(invoice.dueAt) : null;
   return (
     <div
       className={cn(

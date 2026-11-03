@@ -12,6 +12,7 @@ import {
   readContract,
   sendCalls,
   sendTransaction,
+  signMessage,
   switchChain,
   waitForCallsStatus,
   writeContract,
@@ -54,8 +55,8 @@ function transferRequest(instructions: Extract<PaymentInstructions, { family: 'e
  * The adapter that pays EVM methods of a Nova Payments checkout from the wallet connected through wagmi (the config
  * Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
  * switch networks, sends the transfer (native coin or ERC-20 `transfer`), signs the EIP-3009 authorization of a gasless
- * quote with `eth_signTypedData_v4` exactly as Quasar issued it, and sends sponsored calls with `wallet_sendCalls` and
- * the checkout's ERC-7677 paymaster. A Safe wallet is refused: it returns a Safe transaction hash, not the transaction
+ * quote with `eth_signTypedData_v4` exactly as Quasar issued it, signs Quasar's message that confirms the paying wallet
+ * with `personal_sign`, and sends sponsored calls with `wallet_sendCalls` and the checkout's ERC-7677 paymaster. A Safe wallet is refused: it returns a Safe transaction hash, not the transaction
  * Quasar follows. Pass it in `adapters` of `NovaPaymentsProvider`.
  *
  * Side effects: RPC reads through the wagmi transports; wallet prompts.
@@ -157,6 +158,12 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         method: 'eth_signTypedData_v4',
         params: [account as Address, JSON.stringify(typedData)],
       });
+    },
+
+    signMessage: async ({ message, account }) => {
+      // A Safe cannot pay this checkout, so it does not confirm the invoice either
+      refuseSafe();
+      return signMessage(config, { account: account as Address, message });
     },
 
     sendSponsoredCalls: async ({ calls, paymasterUrl, chainId, account, onSent }) => {

@@ -139,6 +139,13 @@ export const esLabels: NovaPaymentsLabels = {
     declined: 'Rechazaste la solicitud en {wallet}.',
     tryAgain: 'Reintentar',
     failed: 'El pago falló en {network}. Solo se gastó la comisión de red; la factura sigue abierta.',
+    mismatch: 'Esta transacción no paga la factura. Si salió dinero de tu billetera, contacta con {merchant}.',
+    mismatchTakenElsewhere:
+      'Esta transacción paga otra factura. Si era tu pago de esta, contacta con {merchant} e indica el hash de la transacción.',
+    mismatchHeldElsewhere:
+      'Esta transacción está vinculada a otra factura, que la retiene para devolverla a la billetera que la envió. No cuenta para esta factura. Si era tu pago de esta, contacta con {merchant} con el hash de la transacción.',
+    mismatchOtherWallet:
+      'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. Si salió dinero de tu billetera, contacta con {merchant}.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',
@@ -165,6 +172,40 @@ export const esLabels: NovaPaymentsLabels = {
     stillWaiting: '¿No aparece la ventana? Abre {wallet}: la solicitud te espera allí.',
     cancel: 'Cancelar',
     submitting: 'Entregando el pago a Quasar…',
+  },
+  payerProof: {
+    title: 'Confirma tu billetera',
+    text: 'Confirma esta billetera: es gratis y no mueve fondos.',
+    summary: 'Lo que firmas',
+    invoice: 'Factura',
+    merchant: 'Vendedor',
+    amount: 'Importe',
+    wallet: 'Billetera',
+    site: 'Sitio',
+    why: 'Los pagos desde esta billetera cuentan para esta factura en cuanto la firma. Tu billetera muestra un mensaje para firmar, no un pago: sin comisión, no sale nada de la billetera.',
+    passkey: '{wallet} puede pedirte tu llave de acceso (passkey) o tu huella para firmar.',
+    confirm: 'Confirmar en {wallet}',
+    waiting: 'Esperando a {wallet}…',
+    note: 'Una firma por billetera para esta factura: un nuevo precio, token o red no necesita otra.',
+    noteSmart:
+      'Una firma por billetera para esta factura: un nuevo precio o token no necesita otra; otra red la pide de nuevo.',
+    promptText:
+      'Firma el mensaje que confirma que esta billetera paga la factura {invoice} de {merchant}. Es gratis y no mueve fondos.',
+    promptPasskey:
+      'Confirma con tu llave de acceso en {wallet}. Así firmas el mensaje que confirma que esta billetera paga la factura {invoice} de {merchant}; es gratis y no mueve fondos.',
+    declined:
+      'Rechazaste la firma en {wallet}. Es gratis y no mueve fondos: fírmala para pagar desde esta billetera, o elige otra billetera u otro método.',
+    unsupported: '{wallet} no puede firmar esta confirmación. Elige otra billetera u otro método.',
+    failed: '{wallet} no firmó la confirmación. Vuelve a intentarlo.',
+    invalid: 'No se pudo verificar la firma. Vuelve a intentarlo o paga desde otra billetera.',
+    unavailable: 'La red no puede comprobar ahora la firma de esta billetera. Vuelve a intentarlo en un minuto.',
+    wrongNetwork: 'Cambia {wallet} a {network} y vuelve a confirmar.',
+    tooManyWallets:
+      'Demasiadas billeteras han confirmado esta factura. Paga desde una de ellas o pide a {merchant} una factura nueva.',
+    confirmToPay: 'Confirmar esta billetera para pagar',
+    payNote:
+      'Para pagar desde esta billetera primero hace falta una firma gratuita: confirma que la billetera paga esta factura y no mueve fondos.',
+    signInRequest: '{wallet} puede mostrarlo como una solicitud de inicio de sesión para {site}.',
   },
   qr: {
     solanaTitle: 'Escanea con una billetera de Solana',
@@ -196,6 +237,10 @@ export const esLabels: NovaPaymentsLabels = {
     transaction: 'Transacción',
     from: 'Desde',
     canClose: 'Puedes cerrar esta ventana: el pago sigue su curso y el vendedor envía el recibo.',
+    afterDeadline: 'Tu pago se envió antes de que venciera el plazo y se está confirmando.',
+    pastDeadline:
+      'Tu pago se está confirmando. Si llega después de que se cierre la factura, {merchant} lo acepta o lo devuelve.',
+    invoicePayment: 'Ya hay un pago de esta factura en camino. Espera a que se confirme antes de volver a pagar.',
     viewOnExplorer: 'Ver en el explorador',
     copyHash: 'Copiar la transacción',
   },
@@ -238,6 +283,8 @@ export const esLabels: NovaPaymentsLabels = {
     underpaidRest: 'Envía el resto, {rest}, desde la misma billetera en {network}.',
     underpaidNote:
       'Hasta que llegue el resto, {merchant} ve la factura como pagada en parte. Se puede pagar hasta el {date}.',
+    payRestFirstWallet:
+      'Solo la billetera que pagó primero, {wallet}, puede pagar el resto. Conecta esa billetera para pagarlo.',
     payRest: 'Pagar el resto',
     heldTitle: 'Pago recibido, {merchant} lo está revisando',
     heldScreening: '{merchant} revisa el pago antes de confirmar el pedido.',
@@ -246,6 +293,15 @@ export const esLabels: NovaPaymentsLabels = {
       'Enviaste más de lo que indica la factura. {merchant} confirma el pedido o te devuelve la diferencia a tu billetera.',
     heldQuoteExpired: 'El pago llegó después de que venciera el precio fijado. {merchant} lo acepta o lo devuelve.',
     heldNote: 'El vendedor se pondrá en contacto contigo si hace falta algo.',
+    heldRefundOnlyTitle: '{merchant} devuelve este pago',
+    heldPayerMismatch:
+      'El pago llegó desde otra billetera distinta de la que confirmó esta factura. {merchant} lo devuelve a la billetera que lo envió.',
+    heldPayerUnconfirmed:
+      'El pago llegó desde una billetera que no confirmó esta factura. {merchant} lo devuelve a la billetera que lo envió.',
+    heldRefundOnlyNext:
+      'Esta factura no acepta otro pago: pide a {merchant} una factura nueva y págala desde la billetera confirmada.',
+    heldRefundOnlyNextUnconfirmed:
+      'Esta factura no acepta otro pago: pide a {merchant} una factura nueva y confirma tu billetera en su página antes de pagar.',
     refundedTitle: 'Reembolsado',
     refundedText: '{merchant} reembolsó esta factura: {amount} {currency}.',
     expiredTitle: 'Esta factura ha vencido',
@@ -254,8 +310,37 @@ export const esLabels: NovaPaymentsLabels = {
     expiredPartNoAmount: 'Se podía pagar hasta el {date}. Llegó parte del pago.',
     expiredPartRefund: '{merchant} puede reembolsarla a la billetera que pagó; contacta con {merchant}.',
     expiredNote: 'Un pago enviado después del plazo queda retenido hasta que el vendedor lo reembolse o lo acepte.',
+    expiredWhileConfirming:
+      'La factura se cerró mientras se confirmaba tu pago. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
+    expiredAfterQr: 'Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
+    expiredUnconfirmed:
+      'Aún no se pudo confirmar tu pago. Revisa tu billetera: si el pago salió de ella, Quasar lo vuelve a comprobar durante 24 horas. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
+    unconfirmedTitle: 'No pudimos confirmar tu pago',
+    unconfirmedText: 'Revisa tu billetera antes de volver a pagar: es posible que tu pago siga en camino.',
+    unconfirmedNote:
+      'Quasar vuelve a comprobar tu pago durante 24 horas. Si llega, se registra y se muestra a {merchant}.',
+    unconfirmedContact:
+      'Quasar ya no vuelve a comprobar este pago. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedNotReceived:
+      'Quasar no recibió este pago. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedClosed:
+      'Quasar no encontró este pago en la red en 24 horas y ya no lo comprueba. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedRetrying:
+      'Esta página sigue entregando tu pago a Quasar. Mantenla abierta hasta que el pago aparezca aquí.',
+    unconfirmedTakenElsewhere:
+      'Esta transacción se entregó primero para otra factura. Quasar la abona a la factura que confirmó la billetera que la envió, y esta página muestra el resultado mientras sigue el pago. No vuelvas a pagar; si tu pago no aparece aquí, contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedSettlementFailed:
+      'La red confirmó tu pago, pero Quasar no lo ha registrado. No vuelvas a pagar; contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedSettlementRetrying:
+      'La red confirmó tu pago, pero Quasar aún no lo ha registrado. Quasar lo vuelve a intentar cada día durante 30 días desde que supo del pago. No vuelvas a pagar; contacta con {merchant} e indica el hash de la transacción.',
+    followingUntil: 'Esta página sigue el pago hasta {time}. Después, vuelve a cargarla para ver el resultado.',
+    unconfirmedPayAgain: 'El pago no salió de mi billetera',
     cancelledTitle: 'Esta factura se canceló',
     cancelledText: '{merchant} la canceló; no se te cobró nada.',
+    cancelledWhilePaying:
+      '{merchant} la canceló. Si tu pago llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
+    cancelledAfterQr:
+      '{merchant} la canceló. Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
     replacedTitle: '{merchant} corrigió esta factura',
     replacedText: 'La sustituye {number}. Esta factura ya no se puede pagar.',
     replacedPaid: '¿Ya pagaste? Tu pago pasó a la nueva factura.',

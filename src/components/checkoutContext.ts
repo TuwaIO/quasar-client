@@ -25,6 +25,18 @@ export interface CheckoutContextValue {
   labels: NovaPaymentsLabels;
   /** `Date.now()` of the latest second tick. */
   now: number;
+  /**
+   * When this page handed its current payment over (the phase became `confirming`), by the clock of the page; `null`
+   * while no payment of it is confirming, or when it was already confirming as the checkout opened.
+   */
+  handedOverAt: number | null;
+  /** The checkout showed a QR code for the invoice, which the buyer may have paid with from a phone. */
+  qrShown: boolean;
+  /**
+   * This page handed a payment of the invoice over, or saw one on its way, and Quasar did not say that it failed for
+   * good: it may still arrive, also after the store stopped following it.
+   */
+  paymentSent: boolean;
   /** Closes the checkout; `undefined` when it cannot be closed (inline without `onClose`). */
   close?: () => void;
   /** The wallet connected through Satellite Connect, if any. */
@@ -63,6 +75,24 @@ export interface CheckoutContextValue {
   setHandoff: (handoff: boolean) => void;
   /** Goes back to the method step: forgets the locked price and the phone hand-off. */
   backToMethods: () => void;
+  /**
+   * Whether the buyer continued with a wallet that must confirm the invoice before the price: the step that confirms
+   * it shows while the checkout store waits for the signature (`ConfirmWalletScreen`).
+   */
+  confirmWallet: boolean;
+  /**
+   * Shows or leaves the step that confirms the wallet ("Back to methods").
+   *
+   * @param show - Whether it shows.
+   */
+  setConfirmWallet: (show: boolean) => void;
+  /**
+   * Locks the price for the wallet set on the checkout store, or shows the step that confirms the wallet first while
+   * the store says it must (owner rule of 2026-10-29: before the price).
+   *
+   * @returns Resolves when the price is locked, refused, or the step shows.
+   */
+  lockPrice: () => Promise<void>;
   /**
    * Remembers the payment the wallet sent: the checkout tracks it while open, and hands it over to the app's Pulsar
    * store when it closes before Quasar settled it.

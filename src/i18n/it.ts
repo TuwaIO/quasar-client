@@ -140,6 +140,13 @@ export const itLabels: NovaPaymentsLabels = {
     tryAgain: 'Riprova',
     failed:
       'Il pagamento non è riuscito su {network}. È stata spesa solo la commissione di rete; la fattura è ancora aperta.',
+    mismatch: 'Questa transazione non paga la fattura. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
+    mismatchTakenElsewhere:
+      "Questa transazione paga un'altra fattura. Se era il tuo pagamento per questa, contatta {merchant} indicando l'hash della transazione.",
+    mismatchHeldElsewhere:
+      "Questa transazione è legata a un'altra fattura, che la trattiene per rimborsarla al wallet che l'ha inviata. Non vale per questa fattura. Se era il tuo pagamento per questa, contatta {merchant} con l'hash della transazione.",
+    mismatchOtherWallet:
+      'Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
     wrongCluster: "{wallet} è su un'altra rete, quindi non è stato pagato nulla. Passalo a {network} e paga di nuovo.",
@@ -166,6 +173,40 @@ export const itLabels: NovaPaymentsLabels = {
     stillWaiting: 'Nessuna finestra? Apri {wallet}: la richiesta ti aspetta lì.',
     cancel: 'Annulla',
     submitting: 'Consegna del pagamento a Quasar…',
+  },
+  payerProof: {
+    title: 'Conferma il tuo wallet',
+    text: 'Conferma questo wallet: è gratuito e non sposta fondi.',
+    summary: 'Cosa firmi',
+    invoice: 'Fattura',
+    merchant: 'Venditore',
+    amount: 'Importo',
+    wallet: 'Wallet',
+    site: 'Sito',
+    why: 'I pagamenti da questo wallet contano per questa fattura appena firma. Il wallet mostra un messaggio da firmare, non un pagamento: nessuna commissione, nulla esce dal wallet.',
+    passkey: '{wallet} potrebbe chiederti la passkey o l’impronta per firmare.',
+    confirm: 'Conferma in {wallet}',
+    waiting: 'In attesa di {wallet}…',
+    note: 'Una firma per wallet per questa fattura: un nuovo prezzo, token o rete non ne richiede un’altra.',
+    noteSmart:
+      'Una firma per wallet per questa fattura: un nuovo prezzo o token non ne richiede un’altra; un’altra rete la chiede di nuovo.',
+    promptText:
+      'Firma il messaggio che conferma che questo wallet paga la fattura {invoice} di {merchant}. È gratuito e non sposta fondi.',
+    promptPasskey:
+      'Conferma con la passkey in {wallet}. Così firmi il messaggio che conferma che questo wallet paga la fattura {invoice} di {merchant}; è gratuito e non sposta fondi.',
+    declined:
+      'Hai rifiutato la firma in {wallet}. È gratuita e non sposta fondi: firmala per pagare da questo wallet, oppure scegli un altro wallet o metodo.',
+    unsupported: '{wallet} non può firmare questa conferma. Scegli un altro wallet o metodo.',
+    failed: '{wallet} non ha firmato la conferma. Riprova.',
+    invalid: 'Non è stato possibile verificare la firma. Riprova oppure paga da un altro wallet.',
+    unavailable: 'Al momento la rete non può verificare la firma di questo wallet. Riprova tra un minuto.',
+    wrongNetwork: 'Passa {wallet} a {network}, poi conferma di nuovo.',
+    tooManyWallets:
+      'Troppi wallet hanno confermato questa fattura. Paga da uno di questi oppure chiedi a {merchant} una nuova fattura.',
+    confirmToPay: 'Conferma questo wallet per pagare',
+    payNote:
+      'Per pagare da questo wallet serve prima una firma gratuita: conferma che il wallet paga questa fattura e non sposta fondi.',
+    signInRequest: '{wallet} potrebbe mostrarla come una richiesta di accesso per {site}.',
   },
   qr: {
     solanaTitle: 'Scansiona con un wallet Solana',
@@ -198,6 +239,11 @@ export const itLabels: NovaPaymentsLabels = {
     transaction: 'Transazione',
     from: 'Da',
     canClose: 'Puoi chiudere questa finestra: il pagamento prosegue e il venditore invia la ricevuta.',
+    afterDeadline: 'Il pagamento è stato inviato prima del termine ed è in fase di conferma.',
+    pastDeadline:
+      'Il pagamento è in fase di conferma. Se arriva dopo la chiusura della fattura, {merchant} lo accetta o lo restituisce.',
+    invoicePayment:
+      'Un pagamento di questa fattura è già in arrivo. Attendi che venga confermato prima di pagare di nuovo.',
     viewOnExplorer: "Vedi nell'explorer",
     copyHash: 'Copia la transazione',
   },
@@ -240,6 +286,8 @@ export const itLabels: NovaPaymentsLabels = {
     underpaidRest: 'Invia il resto, {rest}, dallo stesso wallet su {network}.',
     underpaidNote:
       'Finché non arriva il resto, {merchant} vede la fattura come pagata in parte. Si può pagare fino al {date}.',
+    payRestFirstWallet:
+      'Solo il wallet che ha pagato per primo, {wallet}, può pagare il resto. Collega quel wallet per pagarlo.',
     payRest: 'Paga il resto',
     heldTitle: 'Pagamento ricevuto, {merchant} lo sta verificando',
     heldScreening: "{merchant} verifica il pagamento prima di confermare l'ordine.",
@@ -249,6 +297,15 @@ export const itLabels: NovaPaymentsLabels = {
     heldQuoteExpired:
       'Il pagamento è arrivato dopo la scadenza del blocco del prezzo. {merchant} lo accetta o lo restituisce.',
     heldNote: 'Il venditore ti contatterà se serve qualcosa.',
+    heldRefundOnlyTitle: '{merchant} restituisce questo pagamento',
+    heldPayerMismatch:
+      "Il pagamento è arrivato da un wallet diverso da quello che ha confermato questa fattura. {merchant} lo restituisce al wallet che l'ha inviato.",
+    heldPayerUnconfirmed:
+      "Il pagamento è arrivato da un wallet che non ha confermato questa fattura. {merchant} lo restituisce al wallet che l'ha inviato.",
+    heldRefundOnlyNext:
+      'Questa fattura non accetta altri pagamenti: chiedi a {merchant} una nuova fattura e pagala dal wallet confermato.',
+    heldRefundOnlyNextUnconfirmed:
+      'Questa fattura non accetta altri pagamenti: chiedi a {merchant} una nuova fattura e conferma il tuo wallet nella sua pagina prima di pagare.',
     refundedTitle: 'Rimborsato',
     refundedText: '{merchant} ha rimborsato questa fattura: {amount} {currency}.',
     expiredTitle: 'Questa fattura è scaduta',
@@ -258,8 +315,37 @@ export const itLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} può rimborsarla al wallet che ha pagato; contatta {merchant}.',
     expiredNote:
       'Un pagamento inviato dopo la scadenza resta in sospeso finché il venditore non lo rimborsa o lo accetta.',
+    expiredWhileConfirming:
+      'La fattura si è chiusa mentre il pagamento veniva confermato. Se arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.',
+    expiredAfterQr: 'Se hai pagato con il codice QR, {merchant} accetta il pagamento quando arriva o lo restituisce.',
+    expiredUnconfirmed:
+      'Non è stato ancora possibile confermare il pagamento. Controlla il wallet: se il pagamento è partito, Quasar lo ricontrolla per 24 ore. Se arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.',
+    unconfirmedTitle: 'Non è stato possibile confermare il pagamento',
+    unconfirmedText: 'Controlla il wallet prima di pagare di nuovo: il pagamento potrebbe essere ancora in arrivo.',
+    unconfirmedNote:
+      'Quasar ricontrolla il tuo pagamento per 24 ore. Se arriva, viene registrato e mostrato a {merchant}.',
+    unconfirmedContact:
+      "Quasar non ricontrolla più questo pagamento. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedNotReceived:
+      "Quasar non ha ricevuto questo pagamento. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedClosed:
+      "Quasar non ha trovato questo pagamento sulla rete entro 24 ore e non lo controlla più. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedRetrying:
+      'Questa pagina continua a consegnare il pagamento a Quasar. Tienila aperta finché il pagamento non compare qui.',
+    unconfirmedTakenElsewhere:
+      "Questa transazione è stata consegnata prima per un'altra fattura. Quasar la accredita alla fattura confermata dal wallet che l'ha inviata, e questa pagina mostra il risultato finché segue il pagamento. Non pagare di nuovo; se il tuo pagamento non compare qui, contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedSettlementFailed:
+      "La rete ha confermato il tuo pagamento, ma Quasar non l'ha registrato. Non pagare di nuovo; contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedSettlementRetrying:
+      "La rete ha confermato il tuo pagamento, ma Quasar non l'ha ancora registrato. Quasar riprova ogni giorno per 30 giorni da quando ha saputo del pagamento. Non pagare di nuovo; contatta {merchant} indicando l'hash della transazione.",
+    followingUntil: 'Questa pagina segue il pagamento fino a {time}. Più tardi, ricaricala per vedere l’esito.',
+    unconfirmedPayAgain: 'Il pagamento non è partito dal mio wallet',
     cancelledTitle: 'Questa fattura è stata annullata',
     cancelledText: "{merchant} l'ha annullata; non ti è stato addebitato nulla.",
+    cancelledWhilePaying:
+      "{merchant} l'ha annullata. Se il tuo pagamento arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.",
+    cancelledAfterQr:
+      "{merchant} l'ha annullata. Se hai pagato con il codice QR, {merchant} accetta il pagamento quando arriva o lo restituisce.",
     replacedTitle: '{merchant} ha corretto questa fattura',
     replacedText: 'La sostituisce {number}. Questa fattura non si può più pagare.',
     replacedPaid: 'Hai già pagato? Il tuo pagamento è passato alla nuova fattura.',

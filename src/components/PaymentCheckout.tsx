@@ -1,23 +1,28 @@
 import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
-import type { CheckoutApi, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutApi, CheckoutStore, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { useCheckoutEvents } from '../hooks/useCheckoutEvents';
 import { useCheckoutState, useCheckoutStore } from '../hooks/useCheckoutStore';
 import { useConnectedWallet } from '../hooks/useConnectedWallet';
+import { useHandOverTime } from '../hooks/useHandOverTime';
 import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
 import { usePaidCallback } from '../hooks/useOutcomeEffects';
 import { usePaymentHandOver } from '../hooks/usePaymentHandOver';
+import { usePaymentSent } from '../hooks/usePaymentSent';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
+import { useQrShown } from '../hooks/useQrShown';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel, hasLabels } from '../i18n';
-import { checkoutScreen, deadlineAnnouncement } from '../utils/checkout';
+import { checkoutScreen, deadlineAnnouncement, deadlineState } from '../utils/checkout';
+import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { needsLeaveConfirm } from '../utils/outcome';
+import { lockPrice } from '../utils/payerProof';
 import { AutoPayScreen } from './AutoPayScreen';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
@@ -25,6 +30,7 @@ import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
 import { checkoutWidthClasses, screenHeading, screenTitle } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
+import { ConfirmWalletScreen } from './ConfirmWalletScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
 import { LeaveDialog } from './LeaveDialog';
 import { MethodScreen } from './MethodScreen';
@@ -155,6 +161,7 @@ export function ScreenBody() {
   if (screen === 'error') return <ErrorScreen />;
   if (screen === 'buyer') return <BuyerScreen />;
   if (screen === 'method') return <MethodScreen />;
+  if (screen === 'confirmWallet') return <ConfirmWalletScreen />;
   if (screen === 'pay') return <PayScreen />;
   if (screen === 'qr') return <QrScreen />;
   if (screen === 'confirm') return <ConfirmScreen />;
@@ -167,7 +174,7 @@ export function ScreenBody() {
  * The checkout block: the order on the left (from 640 px; on a phone a compact order above the steps), the header
  * with the steps, language and close, and the current screen. The language follows the invoice, its texts the labels
  * of that language, and `lang` is set on the block (WCAG 3.1.2). Screen readers hear the time left at 10, 5 and 1
- * minutes before the deadline. `customization` adds classes to the order and the screen area, and can replace the
+ * minutes before the deadline while the buyer can still pay. `customization` adds classes to the order and the screen area, and can replace the
  * header and the order.
  *
  * @internal
@@ -207,18 +214,20 @@ export function CheckoutFrame({
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
+  // The minutes left to pay are heard only while the buyer can still pay: not once the payment is on its way or done
+  const paying = checkout ? deadlineState(checkout.invoice.status, screen) === 'paying' : false;
 
   useEffect(() => {
     if (dueAt === null) return;
     const left = dueAt - now;
     const minutes = deadlineAnnouncement(previous.current, left, announcements);
     previous.current = left;
-    if (minutes !== null) {
+    if (minutes !== null && paying) {
       setAnnouncement(
         minutes === 1 ? labels.summary.oneMinuteLeft : formatLabel(labels.summary.minutesLeft, { minutes }),
       );
     }
-  }, [dueAt, now, labels, announcements]);
+  }, [dueAt, now, labels, announcements, paying]);
 
   return (
     <div
@@ -339,6 +348,8 @@ export function PaymentCheckout({
   const [handoff, setHandoff] = useState(false);
   const [autoPay, setAutoPay] = useState(false);
   const [askLeave, setAskLeave] = useState(false);
+  // The buyer continued with a wallet that confirms the invoice before the price (owner rule of 2026-10-29)
+  const [confirmWallet, setConfirmWallet] = useState(false);
   // Another invoice opened: the choices made for the previous one no longer apply
   const [shownToken, setShownToken] = useState(activeToken);
   if (shownToken !== activeToken) {
@@ -346,18 +357,42 @@ export function PaymentCheckout({
     setHandoff(false);
     setAutoPay(false);
     setPayWith('wallet');
+    setConfirmWallet(false);
   }
+  // The price is locked, or refused after the signature: the step that confirms the wallet is done
+  const priceRefused = (state.payerProof as string | undefined) === 'confirmed' && Boolean(state.error);
+  if (confirmWallet && (state.phase === 'awaitingPayment' || priceRefused)) setConfirmWallet(false);
   // The method a wallet is being connected for: its price is locked once the wallet arrives
   const connectingFor = useRef<string | null>(null);
   // The first screen waits for the labels of the invoice's language (a file of their own), so it never flashes in
   // English; a language switched to later shows once its labels arrive, without leaving the screen
   const [labelsShown, setLabelsShown] = useState(false);
   if (!labelsShown && checkout && hasLabels(locale)) setLabelsShown(true);
-  const screen = checkoutScreen(state, { payWith, handoff, autoPay, labelsReady: labelsShown || !checkout });
+  const screen = checkoutScreen(state, {
+    payWith,
+    handoff,
+    autoPay,
+    confirmWallet,
+    labelsReady: labelsShown || !checkout,
+  });
+  // The price for the wallet set on the store, or the step that confirms the wallet first
+  const lockStorePrice = async () => {
+    await lockPrice(store, setConfirmWallet);
+  };
+  const handedOverAt = useHandOverTime(store);
+  const qrShown = useQrShown({ store, screen });
+  // The transaction the wallet last returned, by invoice store: a payment counts as sent from then on, before the store
+  // says anything of it (an invoice the seller cancelled meanwhile keeps its outcome while Quasar records the payment)
+  const [walletSent, setWalletSent] = useState<{ store: CheckoutStore; txKey: string } | null>(null);
+  const paymentSent = usePaymentSent({
+    store,
+    state,
+    walletTxKey: walletSent?.store === store ? walletSent.txKey : null,
+  });
   usePaidCallback(state.phase, checkout?.invoice, onPaid);
   useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
-  const onPaymentSent = usePaymentHandOver({
+  const handOverOnClose = usePaymentHandOver({
     store,
     open: display !== 'modal' || open,
     adapterFor,
@@ -365,6 +400,13 @@ export function PaymentCheckout({
     labels,
     locale,
   });
+  const onPaymentSent = useCallback(
+    (payment: SentPayment) => {
+      setWalletSent({ store, txKey: payment.txKey });
+      handOverOnClose(payment);
+    },
+    [store, handOverOnClose],
+  );
 
   const lockForWallet = useEffectEvent(() => {
     if (!wallet || !checkout) return;
@@ -375,7 +417,7 @@ export function PaymentCheckout({
       if (!payer) return;
       connectingFor.current = null;
       store.getState().setPayer(payer);
-      void store.getState().requestQuote();
+      void lockStorePrice();
       return;
     }
     // Another wallet became active over a locked price: lock it again for that wallet, or go back to the methods
@@ -385,7 +427,7 @@ export function PaymentCheckout({
     if (payer === quote.payer) return;
     if (!payer) return store.getState().releaseQuote();
     store.getState().setPayer(payer);
-    void store.getState().requestQuote();
+    void lockStorePrice();
   });
   useEffect(() => lockForWallet(), [wallet?.address, wallet?.chainId, wallet?.connectorType]);
   // The connect modal closed without a wallet of that family
@@ -401,7 +443,9 @@ export function PaymentCheckout({
     return onClose;
   }, [display, onOpenChange, onClose]);
   // Before anything is sent the checkout asks first; once a transaction is on its way it closes at once
-  const close = closeNow && (() => (needsLeaveConfirm(store.getState().phase) ? setAskLeave(true) : closeNow()));
+  const close =
+    closeNow &&
+    (() => (needsLeaveConfirm(store.getState().phase, store.getState().error) ? setAskLeave(true) : closeNow()));
   const leave = askLeave
     ? {
         onStay: () => setAskLeave(false),
@@ -422,6 +466,9 @@ export function PaymentCheckout({
     locale,
     labels,
     now,
+    handedOverAt,
+    qrShown,
+    paymentSent,
     close,
     wallet,
     payWith,
@@ -439,8 +486,12 @@ export function PaymentCheckout({
     setHandoff,
     backToMethods: () => {
       setHandoff(false);
+      setConfirmWallet(false);
       store.getState().releaseQuote();
     },
+    confirmWallet,
+    setConfirmWallet,
+    lockPrice: lockStorePrice,
     onPaymentSent,
     autoPay,
     setAutoPay,
@@ -475,7 +526,7 @@ export function PaymentCheckout({
           // Escape and a click outside ask first too, while nothing is sent
           // Escape on the question to leave answers "Stay"
           if (!next && askLeave) return setAskLeave(false);
-          if (!next && needsLeaveConfirm(store.getState().phase)) return setAskLeave(true);
+          if (!next && needsLeaveConfirm(store.getState().phase, store.getState().error)) return setAskLeave(true);
           onOpenChange?.(next);
           if (!next) onClose?.();
         }}

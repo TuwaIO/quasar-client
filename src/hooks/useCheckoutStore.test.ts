@@ -14,6 +14,7 @@ const VIEW = {
   invoice: { status: 'open', locale: 'en', replacedBy: null },
   quote: null,
   buyer: { required: false },
+  methods: [],
 };
 
 const apiFor = (token: string) =>

@@ -12,7 +12,8 @@ import type {
   CheckoutQuote,
 } from '@tuwaio/quasar-sdk/checkout';
 
-import type { NovaPaymentsLabels } from '../i18n';
+import { formatLabel, type NovaPaymentsLabels } from '../i18n';
+import { isMovedMoneyFailure, isPaidElsewhere, type UnconfirmedFollowUp, unconfirmedFollowUp } from './checkout';
 
 /**
  * Where "Contact <seller>" leads: an email to the seller's support address about the invoice, else the seller's site.
@@ -31,18 +32,84 @@ export function contactHref(
   return merchant.website ?? null;
 }
 
+/**
+ * The notes of the follow-ups after which a payment left the wallet, or may have, that the steps before a payment say
+ * instead of their own texts.
+ */
+const LEFT_THE_WALLET: Partial<
+  Record<
+    UnconfirmedFollowUp,
+    'unconfirmedClosed' | 'unconfirmedTakenElsewhere' | 'unconfirmedSettlementRetrying' | 'unconfirmedSettlementFailed'
+  >
+> = {
+  closed: 'unconfirmedClosed',
+  takenElsewhere: 'unconfirmedTakenElsewhere',
+  settlementRetrying: 'unconfirmedSettlementRetrying',
+  settlementFailed: 'unconfirmedSettlementFailed',
+};
+
+/**
+ * Rejection reasons of a transfer Quasar ties to no invoice: it came from a wallet that did not confirm the invoice. Such
+ * a rejection holds nothing (a held invoice shows its own outcome), so its text promises no refund.
+ */
+const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
+
+/**
+ * What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
+ * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
+ * `pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
+ * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, without a promise of a
+ * refund: only a held invoice is refunded, and it shows its own outcome), a payment Quasar closed after 24 hours without a result on chain
+ * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
+ * and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
+ * Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the
+ * network fee was spent" or "nothing was charged" for them.
+ *
+ * @param error - The store's error, if any.
+ * @param labels - The labels of the checkout language.
+ * @param merchant - The seller's name.
+ * @returns The text, or `null` for any other error, or none.
+ */
+export function leftTheWalletText(
+  error: CheckoutError | null | undefined,
+  labels: NovaPaymentsLabels,
+  merchant = '',
+): string | null {
+  if (isMovedMoneyFailure(error)) {
+    const reason = (error as { reason?: string }).reason ?? '';
+    // `held` is newer than some `@tuwaio/quasar-sdk` alphas: held on another invoice for a refund only, it pays none
+    const held = (error as { held?: boolean }).held === true;
+    const text = FROM_ANOTHER_WALLET.has(reason)
+      ? labels.pay.mismatchOtherWallet
+      : held
+        ? labels.pay.mismatchHeldElsewhere
+        : isPaidElsewhere(error)
+          ? labels.pay.mismatchTakenElsewhere
+          : labels.pay.mismatch;
+    return formatLabel(text, { merchant });
+  }
+  const followUp = unconfirmedFollowUp(error);
+  const note = followUp ? LEFT_THE_WALLET[followUp] : undefined;
+  return note ? formatLabel(labels.outcome[note], { merchant }) : null;
+}
+
 /** Phases in which nothing has been sent yet: leaving releases the price and loses no payment. */
 const NOTHING_SENT: CheckoutPhase[] = ['buyer', 'selectMethod', 'quoting', 'awaitingPayment'];
 
 /**
  * Whether closing the checkout asks first: only while nothing has been sent. Once a transaction is on its way, or the
- * invoice is settled, the checkout closes without a question.
+ * invoice is settled, the checkout closes without a question; also after a payment that left the wallet, or may have
+ * ({@link leftTheWalletText}: a transaction that does not pay the invoice, a payment Quasar closed without a result on
+ * chain within 24 hours, a transaction another invoice handed over first, a confirmed payment Quasar has not recorded
+ * yet), so the question's "Nothing is sent yet" would not be true.
  *
  * @param phase - Where the payment stands.
+ * @param error - The store's last error, if any.
  * @returns `true` to ask.
  */
-export function needsLeaveConfirm(phase: CheckoutPhase): boolean {
-  return NOTHING_SENT.includes(phase);
+export function needsLeaveConfirm(phase: CheckoutPhase, error?: CheckoutError | null): boolean {
+  const followUp = unconfirmedFollowUp(error);
+  return NOTHING_SENT.includes(phase) && !isMovedMoneyFailure(error) && !(followUp && LEFT_THE_WALLET[followUp]);
 }
 
 /**
@@ -50,9 +117,13 @@ export function needsLeaveConfirm(phase: CheckoutPhase): boolean {
  *
  * @param error - The store's error.
  * @param labels - The labels of the checkout language.
+ * @param merchant - The seller's name, for a payment that left the wallet, or may have ({@link leftTheWalletText}).
  * @returns The text.
  */
-export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels): string {
+export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels, merchant = ''): string {
+  // It may have moved money: never "something went wrong", say what happens to it and whom to contact
+  const leftTheWallet = leftTheWalletText(error, labels, merchant);
+  if (leftTheWallet !== null) return leftTheWallet;
   switch (error.code) {
     case 'screening_unavailable':
       return labels.pay.screeningUnavailable;
@@ -73,6 +144,9 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.method.priceUnavailable;
     case 'consent_required':
       return labels.method.consentRequired;
+    // Quasar wants the wallet confirmed before the price: the step that confirms it says so
+    case 'payer_proof_required':
+      return labels.payerProof.text;
     default:
       return labels.error.generic;
   }
