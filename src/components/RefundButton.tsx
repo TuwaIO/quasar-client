@@ -475,7 +475,7 @@ export function ConfirmStep({
           <DetailRow name={text.send}>{formatLabel(text.sendValue, values)}</DetailRow>
           {transfer && (
             <DetailRow name={text.to}>
-              {shortAddress(transfer.to)} · {text.thePayer}
+              {shortAddress(transfer.to)} · {flow.refund?.heldTransfer ? text.theSender : text.thePayer}
             </DetailRow>
           )}
           {flow.wallet && (

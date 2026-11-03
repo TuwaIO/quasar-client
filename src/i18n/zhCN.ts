@@ -141,6 +141,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
       '此交易已关联到另一张发票，该发票暂扣此交易，以便退回给发送它的钱包。它不计入此发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
     mismatchOtherWallet:
       '此转账来自未确认此发票的钱包，因此不支付此发票。如果有款项从您的钱包转出，请联系 {merchant}。',
+    mismatchOtherWalletHeld:
+      '此转账来自未确认此发票的钱包，因此不支付此发票。{merchant} 会将其退回到发送它的钱包，您仍可使用已确认此发票的钱包支付此发票。',
     payAgain: '再次付款',
     unsupported: '{wallet} 无法完成此笔付款。',
     wrongCluster: '{wallet} 处于其他网络，因此未完成任何付款。请将其切换到 {network} 后重新付款。',
@@ -277,12 +279,6 @@ export const zhCNLabels: NovaPaymentsLabels = {
     heldOverpaid: '您发送的金额超过了发票金额。{merchant} 会确认订单，或将差额退回您的钱包。',
     heldQuoteExpired: '付款在价格锁定到期后才到账。{merchant} 会接受或退回这笔款项。',
     heldNote: '如有需要，卖方会与您联系。',
-    heldRefundOnlyTitle: '{merchant} 将退回这笔付款',
-    heldPayerMismatch: '这笔付款来自与确认此发票的钱包不同的另一个钱包。{merchant} 会将其退回到发送它的钱包。',
-    heldPayerUnconfirmed: '这笔付款来自未确认此发票的钱包。{merchant} 会将其退回到发送它的钱包。',
-    heldRefundOnlyNext: '此发票不再接受其他付款：请向 {merchant} 索取新发票，并使用已确认的钱包支付。',
-    heldRefundOnlyNextUnconfirmed:
-      '此发票不再接受其他付款：请向 {merchant} 索取新发票，并在付款前在其页面上确认您的钱包。',
     refundedTitle: '已退款',
     refundedText: '{merchant} 已退还此发票的款项：{amount} {currency}。',
     expiredTitle: '此发票已过期',
@@ -382,6 +378,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     sendValue: '在 {network} 上发送 {amount}',
     to: '收款方',
     thePayer: '付款人',
+    theSender: '此笔转账的发送方',
     from: '付款钱包',
     balance: '余额 {amount}',
     networkFee: '网络费用',
@@ -419,5 +416,6 @@ export const zhCNLabels: NovaPaymentsLabels = {
     close: '关闭',
     txTitle: '{invoice} 退款',
     txDescription: '向付款人退还 {amount}',
+    txDescriptionSender: '向转账发送方退还 {amount}',
   },
 };

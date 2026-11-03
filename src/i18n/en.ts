@@ -144,6 +144,8 @@ export const defaultLabels: NovaPaymentsLabels = {
       'This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
     mismatchOtherWallet:
       'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact {merchant}.',
+    mismatchOtherWalletHeld:
+      'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. {merchant} returns it to the wallet that sent it, and you can still pay this invoice from the wallet that confirmed it.',
     payAgain: 'Pay again',
     unsupported: "{wallet} can't make this payment.",
     wrongCluster: '{wallet} is on another network, so nothing was paid. Switch it to {network} and pay again.',
@@ -288,15 +290,6 @@ export const defaultLabels: NovaPaymentsLabels = {
       'You sent more than the invoice. {merchant} confirms the order or returns the difference to your wallet.',
     heldQuoteExpired: 'The payment arrived after the price lock ran out. {merchant} accepts it or returns it.',
     heldNote: 'The seller contacts you if anything is needed.',
-    heldRefundOnlyTitle: '{merchant} returns this payment',
-    heldPayerMismatch:
-      'The payment came from another wallet than the one that confirmed this invoice. {merchant} returns it to the wallet that sent it.',
-    heldPayerUnconfirmed:
-      'The payment came from a wallet that did not confirm this invoice. {merchant} returns it to the wallet that sent it.',
-    heldRefundOnlyNext:
-      'This invoice takes no other payment: ask {merchant} for a new invoice and pay it from the confirmed wallet.',
-    heldRefundOnlyNextUnconfirmed:
-      'This invoice takes no other payment: ask {merchant} for a new invoice, and confirm your wallet on its page before paying.',
     refundedTitle: 'Refunded',
     refundedText: '{merchant} refunded this invoice: {amount} {currency}.',
     expiredTitle: 'This invoice has expired',
@@ -405,6 +398,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     sendValue: '{amount} on {network}',
     to: 'To',
     thePayer: 'the payer',
+    theSender: 'the sender of this transfer',
     from: 'From',
     balance: 'Holds {amount}',
     networkFee: 'Network fee',
@@ -443,5 +437,6 @@ export const defaultLabels: NovaPaymentsLabels = {
     close: 'Close',
     txTitle: 'Refund of {invoice}',
     txDescription: '{amount} to the payer',
+    txDescriptionSender: '{amount} to the sender of the transfer',
   },
 };

@@ -78,11 +78,8 @@ const LEFT_THE_WALLET: ReadonlySet<UnconfirmedFollowUp> = new Set([
   'settlementFailed',
 ]);
 
-/** Review reasons of a payment Quasar ties to no invoice, which the seller only returns to the wallet that sent it. */
 /** Whether two account addresses are one: EVM ones in any case, Solana (base58) ones exactly. */
 const sameAddress = (a: string, b: string) => (a.startsWith('0x') ? a.toLowerCase() === b.toLowerCase() : a === b);
-
-const REFUND_ONLY: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
 
 /** The icon and tone of each outcome. */
 const LOOK: Record<OutcomeKind, { Icon: ComponentType<SVGProps<SVGSVGElement>>; tone: string }> = {
@@ -153,9 +150,7 @@ function ContactLink() {
  * invoice and for a payment that may not have left the wallet, "The payment did not leave my wallet", which goes back
  * to it with `payAgain` of the checkout store), an
  * underpaid invoice ("Pay the rest"), a payment the seller reviews (screening,
- * late, overpaid, after the price lock ran out), a payment held for a refund only (`refundOnly`: it came from a wallet
- * that did not confirm the invoice, pays no invoice, and the seller returns it to the wallet that sent it; this
- * invoice takes no other payment), a refunded invoice, an expired one (with what arrived before the
+ * late, overpaid, after the price lock ran out), a refunded invoice, an expired one (with what arrived before the
  * deadline, which the seller can refund; never "nothing was charged" while a payment may still arrive: one this page
  * handed over or saw on its way, or that the wallet sent, also after the checkout stopped following it, which Quasar
  * records and shows to the seller if it arrives, one Quasar could not confirm or reports as unresolved, to check in the
@@ -189,11 +184,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
   } = context;
   if (!checkout) return null;
   const merchant = checkout.merchant.name;
-  // A payment Quasar ties to no invoice (`refundOnly`): the seller only returns it, so it is not a payment on review;
-  // `refundOnly` and its reasons are newer than some `@tuwaio/quasar-sdk` alphas
-  const review = checkout.invoice.review as { reason?: string; refundOnly?: boolean } | null | undefined;
-  const refundOnly = kind === 'held' && Boolean(review && (review.refundOnly || REFUND_ONLY.has(review.reason ?? '')));
-  const { Icon, tone } = refundOnly ? LOOK.refunded : LOOK[kind];
+  const { Icon, tone } = LOOK[kind];
   const StatusIcon = context.customization.components?.StatusIcon;
   const iconClassName = checkoutClassName(context, 'statusIcon', { kind });
   const quote = state.quote;
@@ -355,32 +346,6 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       break;
     }
     case 'held': {
-      if (refundOnly) {
-        // Never "the seller checks your payment": it pays no invoice and goes back to the wallet that sent it
-        title = formatLabel(labels.outcome.heldRefundOnlyTitle, { merchant });
-        body = (
-          <>
-            <Text>
-              {formatLabel(
-                review?.reason === 'payer_unconfirmed'
-                  ? labels.outcome.heldPayerUnconfirmed
-                  : labels.outcome.heldPayerMismatch,
-                { merchant },
-              )}
-            </Text>
-            <Text muted>
-              {formatLabel(
-                // No wallet confirmed the invoice: the next one asks for the confirmation on its page
-                review?.reason === 'payer_unconfirmed'
-                  ? labels.outcome.heldRefundOnlyNextUnconfirmed
-                  : labels.outcome.heldRefundOnlyNext,
-                { merchant },
-              )}
-            </Text>
-          </>
-        );
-        break;
-      }
       title = formatLabel(labels.outcome.heldTitle, { merchant });
       // `quote_expired` is newer than some `@tuwaio/quasar-sdk` alphas; an unknown reason reads as a check
       const reason: string | undefined = checkout.invoice.review?.reason;

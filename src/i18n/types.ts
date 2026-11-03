@@ -284,6 +284,13 @@ export type NovaPaymentsLabels = {
      * not pay it. If money left your wallet, contact {merchant}.`)
      */
     mismatchOtherWallet: string;
+    /**
+     * Instead of `mismatchOtherWallet` when Quasar recorded the transfer as a held transfer, which the seller returns:
+     * `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does not pay
+     * it. {merchant} returns it to the wallet that sent it, and you can still pay this invoice from the wallet that
+     * confirmed it.`)
+     */
+    mismatchOtherWalletHeld: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
@@ -593,32 +600,6 @@ export type NovaPaymentsLabels = {
     heldQuoteExpired: string;
     /** Under it (default: `The seller contacts you if anything is needed.`) */
     heldNote: string;
-    /**
-     * Heading of a payment held for a refund only (`refundOnly` of the review: Quasar ties it to no invoice):
-     * `{merchant}` (default: `{merchant} returns this payment`)
-     */
-    heldRefundOnlyTitle: string;
-    /**
-     * Reason `payer_mismatch`: `{merchant}` (default: `The payment came from another wallet than the one that confirmed
-     * this invoice. {merchant} returns it to the wallet that sent it.`)
-     */
-    heldPayerMismatch: string;
-    /**
-     * Reason `payer_unconfirmed`: `{merchant}` (default: `The payment came from a wallet that did not confirm this
-     * invoice. {merchant} returns it to the wallet that sent it.`)
-     */
-    heldPayerUnconfirmed: string;
-    /**
-     * Under it: a held invoice takes no other payment: `{merchant}` (default: `This invoice takes no other payment: ask
-     * {merchant} for a new invoice and pay it from the confirmed wallet.`)
-     */
-    heldRefundOnlyNext: string;
-    /**
-     * Instead of `heldRefundOnlyNext` for reason `payer_unconfirmed`, where no wallet confirmed the invoice: `{merchant}`
-     * (default: `This invoice takes no other payment: ask {merchant} for a new invoice, and confirm your wallet on its
-     * page before paying.`)
-     */
-    heldRefundOnlyNextUnconfirmed: string;
     /** Heading of a refunded invoice (default: `Refunded`) */
     refundedTitle: string;
     /** Its text: `{merchant}`, `{amount}`, `{currency}` (default: `{merchant} refunded this invoice: {amount} {currency}.`) */
@@ -883,6 +864,8 @@ export type NovaPaymentsLabels = {
     to: string;
     /** After the recipient (default: `the payer`) */
     thePayer: string;
+    /** After the recipient of the refund of a held transfer (default: `the sender of this transfer`) */
+    theSender: string;
     /** Row: the sending wallet (default: `From`) */
     from: string;
     /** Under the sending wallet; `{amount}` (default: `Holds {amount}`) */
@@ -957,5 +940,7 @@ export type NovaPaymentsLabels = {
     txTitle: string;
     /** Its description; `{amount}` (default: `{amount} to the payer`) */
     txDescription: string;
+    /** Its description for the refund of a held transfer; `{amount}` (default: `{amount} to the sender of the transfer`) */
+    txDescriptionSender: string;
   };
 };

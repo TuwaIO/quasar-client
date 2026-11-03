@@ -161,6 +161,13 @@ describe('RefundButton', () => {
     expect(flow.send).toHaveBeenCalled();
   });
 
+  it('names the sender of a held transfer as the one its refund goes back to', () => {
+    const flow = flowOf({ refund: { ...(flowOf().refund as object), heldTransfer: 'ht_1' } as never });
+    const text = textOf(confirm(flow));
+    expect(text).toContain('the sender of this transfer');
+    expect(text).not.toContain('the payer');
+  });
+
   it('asks a wallet on another network to switch first, as the checkout does', () => {
     const flow = flowOf({ wrongNetwork: true });
     const tree = confirm(flow);

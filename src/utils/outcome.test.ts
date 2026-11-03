@@ -115,6 +115,25 @@ describe('methodErrorText', () => {
     }
   });
 
+  // A transfer from a wallet that did not confirm the invoice is a held transfer: the invoice stays payable
+  it('says that the seller returns a held transfer, and that the confirmed wallet can still pay the invoice', () => {
+    const held = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'payer_unconfirmed', held: true } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(held).toBe(
+      'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. Cosmos returns it to the wallet that sent it, and you can still pay this invoice from the wallet that confirmed it.',
+    );
+    // Without a held transfer nothing promises a refund
+    const plain = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'payer_mismatch' } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(plain).not.toMatch(/returns it/);
+  });
+
   // A transfer held on another invoice for a refund only pays no invoice
   it('says that a transfer held on another invoice is tied to it, never that it pays it', () => {
     const text = methodErrorText(

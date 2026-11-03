@@ -194,39 +194,6 @@ describe('the method step', () => {
   });
 });
 
-// A transfer Quasar ties to no invoice is held for a refund only
-describe('a payment held for a refund only', () => {
-  it('says that it came from another wallet and that the seller returns it, never that the seller checks it', () => {
-    show('held', { quote: null }, { status: 'held', review: { reason: 'payer_mismatch', refundOnly: true } as never });
-    const text = textOf(OutcomeScreen({ kind: 'held' }));
-    expect(text).toContain('Cosmos returns this payment');
-    expect(text).toContain(
-      'The payment came from another wallet than the one that confirmed this invoice. Cosmos returns it to the wallet that sent it.',
-    );
-    expect(text).toContain(
-      'This invoice takes no other payment: ask Cosmos for a new invoice and pay it from the confirmed wallet.',
-    );
-    expect(text).not.toMatch(/is checking it|checks the payment/);
-  });
-
-  it('says the same of a wallet that never confirmed the invoice', () => {
-    show(
-      'held',
-      { quote: null },
-      { status: 'held', review: { reason: 'payer_unconfirmed', refundOnly: true } as never },
-    );
-    const text = textOf(OutcomeScreen({ kind: 'held' }));
-    expect(text).toContain(
-      'The payment came from a wallet that did not confirm this invoice. Cosmos returns it to the wallet that sent it.',
-    );
-    // No wallet confirmed it: the next invoice asks for the confirmation on its page
-    expect(text).toContain(
-      'This invoice takes no other payment: ask Cosmos for a new invoice, and confirm your wallet on its page before paying.',
-    );
-    expect(text).not.toContain('pay it from the confirmed wallet');
-  });
-});
-
 // The rest of an underpaid invoice is paid from the wallet that paid first only
 describe('the rest of an underpaid invoice', () => {
   const FIRST = '0x3333333333333333333333333333333333333333';

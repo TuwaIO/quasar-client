@@ -49,8 +49,9 @@ const LEFT_THE_WALLET: Partial<
 };
 
 /**
- * Rejection reasons of a transfer Quasar ties to no invoice: it came from a wallet that did not confirm the invoice. Such
- * a rejection holds nothing (a held invoice shows its own outcome), so its text promises no refund.
+ * Rejection reasons of a transfer Quasar ties to no invoice: it came from a wallet that did not confirm the invoice.
+ * With `held` Quasar recorded it as a held transfer, which the seller returns, and the invoice stays payable; without
+ * it the text promises no refund.
  */
 const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
 
@@ -58,8 +59,8 @@ const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'pay
  * What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
  * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
  * `pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
- * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, without a promise of a
- * refund: only a held invoice is refunded, and it shows its own outcome), a payment Quasar closed after 24 hours without a result on chain
+ * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, `pay.mismatchOtherWalletHeld`
+ * when Quasar recorded it as a held transfer the seller returns, `held`), a payment Quasar closed after 24 hours without a result on chain
  * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
  * and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
  * Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the
@@ -77,10 +78,12 @@ export function leftTheWalletText(
 ): string | null {
   if (isMovedMoneyFailure(error)) {
     const reason = (error as { reason?: string }).reason ?? '';
-    // `held` is newer than some `@tuwaio/quasar-sdk` alphas: held on another invoice for a refund only, it pays none
+    // `held`: Quasar recorded the transfer as a held transfer, here or at another invoice; it pays neither
     const held = (error as { held?: boolean }).held === true;
     const text = FROM_ANOTHER_WALLET.has(reason)
-      ? labels.pay.mismatchOtherWallet
+      ? held
+        ? labels.pay.mismatchOtherWalletHeld
+        : labels.pay.mismatchOtherWallet
       : held
         ? labels.pay.mismatchHeldElsewhere
         : isPaidElsewhere(error)

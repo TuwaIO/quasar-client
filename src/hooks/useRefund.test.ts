@@ -64,7 +64,9 @@ const merchantWallet = (chainId = 'eip155:8453'): CheckoutWallet => ({
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-function setup(options: { balance?: bigint; to?: string | null; submit?: RefundStoreOptions['submit'] } = {}) {
+function setup(
+  options: { balance?: bigint; to?: string | null; submit?: RefundStoreOptions['submit']; heldTransfer?: string } = {},
+) {
   const adapter: PaymentsAdapter = {
     family: 'eip155',
     getBalance: vi.fn(async () => options.balance ?? 100_000_000n),
@@ -75,7 +77,7 @@ function setup(options: { balance?: bigint; to?: string | null; submit?: RefundS
   settings.adapters = [adapter];
   settings.pulsar = undefined;
   const request = vi.fn(async () => ({
-    refund,
+    refund: options.heldTransfer ? ({ ...(refund as object), heldTransfer: options.heldTransfer } as never) : refund,
     instructions: { ...instructions, to: options.to === undefined ? PAYER : options.to },
   }));
   const submit = vi.fn(options.submit ?? (async () => ({ ...(refund as object), status: 'submitted' }) as never));
@@ -247,6 +249,19 @@ describe('useRefund', () => {
     expect(flow()).toMatchObject({ transfer: null, problem: 'noRecipient' });
     await flow().send();
     expect(adapter.sendTransfer).not.toHaveBeenCalled();
+  });
+
+  it('describes the refund of a held transfer as going back to the sender of the transfer', async () => {
+    const { adapter, flow, store } = setup({ heldTransfer: 'ht_1' });
+    settings.pulsar = { injectExternalPendingTxs: vi.fn(async () => undefined) };
+    adapter.pulsarTransaction = vi.fn((params) => ({ txKey: params.txKey, title: params.title }) as never);
+    wallet = merchantWallet();
+    await flow().start({ mode: 'exact_received' });
+    await flow().send();
+    expect(adapter.pulsarTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({ description: '15.89 USDC to the sender of the transfer' }),
+    );
+    store.getState().reset();
   });
 
   it("gives the refund to the app's Pulsar store, which tracks it and shows its toast", async () => {

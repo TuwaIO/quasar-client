@@ -146,6 +146,8 @@ export const esLabels: NovaPaymentsLabels = {
       'Esta transacción está vinculada a otra factura, que la retiene para devolverla a la billetera que la envió. No cuenta para esta factura. Si era tu pago de esta, contacta con {merchant} con el hash de la transacción.',
     mismatchOtherWallet:
       'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. Si salió dinero de tu billetera, contacta con {merchant}.',
+    mismatchOtherWalletHeld:
+      'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. {merchant} la devuelve a la billetera que la envió, y aún puedes pagar esta factura desde la billetera que la confirmó.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',
@@ -293,15 +295,6 @@ export const esLabels: NovaPaymentsLabels = {
       'Enviaste más de lo que indica la factura. {merchant} confirma el pedido o te devuelve la diferencia a tu billetera.',
     heldQuoteExpired: 'El pago llegó después de que venciera el precio fijado. {merchant} lo acepta o lo devuelve.',
     heldNote: 'El vendedor se pondrá en contacto contigo si hace falta algo.',
-    heldRefundOnlyTitle: '{merchant} devuelve este pago',
-    heldPayerMismatch:
-      'El pago llegó desde otra billetera distinta de la que confirmó esta factura. {merchant} lo devuelve a la billetera que lo envió.',
-    heldPayerUnconfirmed:
-      'El pago llegó desde una billetera que no confirmó esta factura. {merchant} lo devuelve a la billetera que lo envió.',
-    heldRefundOnlyNext:
-      'Esta factura no acepta otro pago: pide a {merchant} una factura nueva y págala desde la billetera confirmada.',
-    heldRefundOnlyNextUnconfirmed:
-      'Esta factura no acepta otro pago: pide a {merchant} una factura nueva y confirma tu billetera en su página antes de pagar.',
     refundedTitle: 'Reembolsado',
     refundedText: '{merchant} reembolsó esta factura: {amount} {currency}.',
     expiredTitle: 'Esta factura ha vencido',
@@ -412,6 +405,7 @@ export const esLabels: NovaPaymentsLabels = {
     sendValue: '{amount} en {network}',
     to: 'Para',
     thePayer: 'quien pagó',
+    theSender: 'quien envió esta transferencia',
     from: 'Desde',
     balance: 'Tiene {amount}',
     networkFee: 'Comisión de red',
@@ -451,5 +445,6 @@ export const esLabels: NovaPaymentsLabels = {
     close: 'Cerrar',
     txTitle: 'Reembolso de {invoice}',
     txDescription: '{amount} para quien pagó',
+    txDescriptionSender: '{amount} para quien envió la transferencia',
   },
 };
