@@ -17,7 +17,7 @@ const shownOn = (store: CheckoutStore, screen: CheckoutScreen) => render(useQrSh
 
 afterEach(() => unmount());
 
-// Owner, 2026-10-28: a QR code the page showed may have been paid from a phone, which this page does not see, so an
+// A QR code the page showed may have been paid from a phone, which this page does not see, so an
 // invoice that expires afterwards never says that nothing was charged
 describe('useQrShown', () => {
   it('is false until a QR code shows, then stays true for the invoice', () => {

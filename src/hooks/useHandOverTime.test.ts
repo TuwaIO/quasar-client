@@ -19,7 +19,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-// Owner, 2026-10-28: "sent before the deadline" only for a payment handed over before it. The store does not say when
+// "sent before the deadline" only for a payment handed over before it. The store does not say when
 // the payment was handed over, so the checkout notes the moment its phase becomes `confirming`
 describe('useHandOverTime', () => {
   it('notes when the phase becomes confirming', () => {
@@ -50,7 +50,7 @@ describe('useHandOverTime', () => {
     expect(render(useHandOverTime, store)).toBeNull();
   });
 
-  // M3: a payment of the invoice the store found on its way (a reopened page, another tab) was not handed over here
+  // A payment of the invoice the store found on its way (a reopened page, another tab) was not handed over here
   it('knows no time for a payment the store found on its way when it loaded or while the page offered to pay', () => {
     const reopened = storeIn('loading');
     render(useHandOverTime, reopened);

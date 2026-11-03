@@ -194,7 +194,7 @@ describe('the method step', () => {
   });
 });
 
-// N2 of the round-6 review: a transfer Quasar ties to no invoice is held for a refund only
+// A transfer Quasar ties to no invoice is held for a refund only
 describe('a payment held for a refund only', () => {
   it('says that it came from another wallet and that the seller returns it, never that the seller checks it', () => {
     show('held', { quote: null }, { status: 'held', review: { reason: 'payer_mismatch', refundOnly: true } as never });
@@ -227,7 +227,7 @@ describe('a payment held for a refund only', () => {
   });
 });
 
-// Owner, 2026-10-29: the rest of an underpaid invoice is paid from the wallet that paid first only
+// The rest of an underpaid invoice is paid from the wallet that paid first only
 describe('the rest of an underpaid invoice', () => {
   const FIRST = '0x3333333333333333333333333333333333333333';
   const REFUSAL = 'Only the wallet that paid first, 0x3333…3333, can pay the rest. Connect that wallet to pay it.';

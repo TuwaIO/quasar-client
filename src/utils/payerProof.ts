@@ -1,5 +1,5 @@
 /**
- * @file The paying wallet's confirmation of the invoice (owner rule of 2026-10-29): before an EVM payment the buyer's
+ * @file The paying wallet's confirmation of the invoice: before an EVM payment the buyer's
  * wallet sends itself, it signs Quasar's message for free, so that Quasar credits its transfers to this invoice only.
  * When the checkout asks for it, what it says about a refusal, and which wallets sign with a passkey.
  */

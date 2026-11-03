@@ -92,7 +92,7 @@ function step(
 
 afterEach(() => unmount());
 
-// Owner, 2026-10-29: a free signature before an EVM payment the buyer's wallet sends, right after the wallet and the
+// A free signature before an EVM payment the buyer's wallet sends, right after the wallet and the
 // method, before the price; one per invoice and wallet
 describe('the step that confirms the paying wallet', () => {
   it('says what it is in one sentence, and what the wallet signs: invoice, seller, amount and wallet', () => {

@@ -105,7 +105,7 @@ describe('checkoutScreen', () => {
   });
 });
 
-// Owner, 2026-10-28: the buyer is never invited to pay twice. A store of a current `@tuwaio/quasar-sdk` has the phase
+// The buyer is never invited to pay twice. A store of a current `@tuwaio/quasar-sdk` has the phase
 // `unconfirmed` when Quasar could not confirm the payment (not found, no receipt in time…) but it may still arrive
 describe('checkoutScreen of a payment that may still arrive', () => {
   it('shows the unconfirmed screen, not the payment', () => {
@@ -137,7 +137,7 @@ describe('checkoutSteps', () => {
     ]);
   });
 
-  // H1: a payment Quasar could not confirm stands at the confirm step, not at an outcome
+  // A payment Quasar could not confirm stands at the confirm step, not at an outcome
   it('keeps the confirm step current while the payment could not be confirmed', () => {
     expect(checkoutSteps('unconfirmed')?.map((step) => `${step.key}:${step.state}`)).toEqual([
       'method:done',
@@ -248,7 +248,7 @@ describe('screensPayingWallets', () => {
   });
 });
 
-// Owner, 2026-10-28: the notes about the deadline follow the payment's real state. The store of a current
+// The notes about the deadline follow the payment's real state. The store of a current
 // `@tuwaio/quasar-sdk` says whether a payment of this page is on its way (also a relay answered `sending`, which has no
 // transaction key, and no longer once it failed or settled); an older store only has the transaction it was given
 describe('isPaymentOnTheWay', () => {
@@ -265,7 +265,7 @@ describe('isPaymentOnTheWay', () => {
   });
 });
 
-// Owner, 2026-10-28: a reopened page with a payment on its way shows it, never the payment screen or "nothing was
+// A reopened page with a payment on its way shows it, never the payment screen or "nothing was
 // charged". A current store says so (`invoicePaymentOnTheWay`); an older one only has the checkout it read
 describe('isInvoicePaymentOnTheWay', () => {
   it("follows the store's invoicePaymentOnTheWay when it has one", () => {
@@ -283,7 +283,7 @@ describe('isInvoicePaymentOnTheWay', () => {
   });
 });
 
-// L3: "sent before the deadline" comes from Quasar (`paymentCountsUntil`: it learned of a payment before `dueAt` and
+// "sent before the deadline" comes from Quasar (`paymentCountsUntil`: it learned of a payment before `dueAt` and
 // waits for it), not from the page's clock; a Quasar without the field keeps the clock rule
 describe('sentBeforeDeadline', () => {
   const DUE = Date.parse('2026-10-29T08:28:00Z');
@@ -318,7 +318,7 @@ describe('sentBeforeDeadline', () => {
     expect(sentBeforeDeadline({ state: {}, checkout: reporting(null), handedOverAt: BEFORE, dueAt: DUE })).toBe(false);
   });
 
-  // M1: Quasar may wait for another payment learned of in time while this page's own payment, handed over after the
+  // Quasar may wait for another payment learned of in time while this page's own payment, handed over after the
   // deadline, will be held
   it('says no for a payment this page handed over at or after the deadline', () => {
     expect(
@@ -379,7 +379,7 @@ describe('sentBeforeDeadline', () => {
   });
 });
 
-// M4: only a rejection Quasar calls final (it carries its reason) means that the payment can never arrive
+// Only a rejection Quasar calls final (it carries its reason) means that the payment can never arrive
 describe('isFinalPaymentFailure', () => {
   it('is true for a failed payment with the reason Quasar gave', () => {
     expect(isFinalPaymentFailure({ code: 'payment_failed', message: '', reason: 'reverted' } as never)).toBe(true);
@@ -393,7 +393,7 @@ describe('isFinalPaymentFailure', () => {
     expect(isFinalPaymentFailure(null)).toBe(false);
   });
 
-  // M1 (review of 2026-10-29): Quasar settles a confirmed payment again daily; an older store calls it a mismatch
+  // Quasar settles a confirmed payment again daily; an older store calls it a mismatch
   it('is false for a confirmed payment Quasar has not recorded yet', () => {
     expect(isFinalPaymentFailure({ code: 'payment_mismatch', message: '', reason: 'settlement_failed' } as never)).toBe(
       false,
@@ -425,7 +425,7 @@ describe('isMovedMoneyFailure', () => {
     }
   });
 
-  // M1 (review of 2026-10-29): a confirmed payment Quasar has not recorded yet pays the invoice once it is recorded
+  // A confirmed payment Quasar has not recorded yet pays the invoice once it is recorded
   it('is false for a confirmed payment Quasar has not recorded yet, whatever the store calls it', () => {
     for (const code of ['payment_mismatch', 'payment_failed', 'payment_unconfirmed']) {
       expect(isMovedMoneyFailure({ code, message: '', reason: 'settlement_failed' } as never)).toBe(false);
@@ -454,7 +454,7 @@ describe('isInvoicePaymentUnresolved', () => {
   });
 });
 
-// N1, N7a (review of 2026-10-28): the page promises the 24-hour re-check only when Quasar still reads the payment again;
+// The page promises the 24-hour re-check only when Quasar still reads the payment again;
 // otherwise the buyer contacts the merchant with the transaction hash
 describe('unconfirmedFollowUp', () => {
   const unconfirmed = (extra: Record<string, unknown>) =>
@@ -479,19 +479,19 @@ describe('unconfirmedFollowUp', () => {
     expect(unconfirmedFollowUp(unconfirmed({ reason: 'submit_failed' }))).toBe('notReceived');
   });
 
-  // N5: a payment with no result on chain within 24 hours is closed for good, but may have left the wallet
+  // A payment with no result on chain within 24 hours is closed for good, but may have left the wallet
   it('sends the buyer to the merchant for a payment Quasar closed after 24 hours without a result', () => {
     expect(unconfirmedFollowUp({ code: 'payment_failed', message: '', reason: 'unresolved_after_24h' } as never)).toBe(
       'closed',
     );
   });
 
-  // M3 (review of 2026-10-29): another invoice's page handed the transaction over first; Quasar decides whose it is
+  // Another invoice's page handed the transaction over first; Quasar decides whose it is
   it('says that another invoice took the transaction while Quasar decides', () => {
     expect(unconfirmedFollowUp(unconfirmed({ reason: 'tx_already_used', status: 409 }))).toBe('takenElsewhere');
   });
 
-  // M1 (review of 2026-10-29): confirmed on chain, Quasar has not recorded it yet and settles it again daily
+  // Confirmed on chain, Quasar has not recorded it yet and settles it again daily
   it('says that a confirmed payment is not recorded yet, also when an older store calls it a mismatch', () => {
     expect(unconfirmedFollowUp(unconfirmed({ reason: 'settlement_failed' }))).toBe('settlementFailed');
     expect(unconfirmedFollowUp({ code: 'payment_mismatch', message: '', reason: 'settlement_failed' } as never)).toBe(
@@ -523,7 +523,7 @@ describe('unconfirmedTxKey', () => {
   });
 });
 
-// Owner, 2026-10-29: the paying wallet confirms the invoice right after the wallet and the method, before the price
+// The paying wallet confirms the invoice right after the wallet and the method, before the price
 describe('the step that confirms the paying wallet', () => {
   const view = { invoice: { status: 'open', replacedBy: null } } as unknown as CheckoutView;
   const state = (phase: string, payerProof: string, quote: CheckoutQuote | null = null) =>

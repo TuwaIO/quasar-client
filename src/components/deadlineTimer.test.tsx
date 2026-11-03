@@ -31,7 +31,7 @@ const hasTimer = (tree: unknown) => fixture.elements(tree).some((element) => ele
 
 afterEach(() => unmount());
 
-// Owner, 2026-10-28: the countdown stays through every step of the payment (signing, handing it over, confirming) and
+// The countdown stays through every step of the payment (signing, handing it over, confirming) and
 // goes only once the payment succeeded (paid), or with an outcome in which a deadline means nothing (held, refunded,
 // expired, cancelled, replaced)
 describe('the countdown to the deadline', () => {

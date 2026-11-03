@@ -23,7 +23,7 @@ import {
 import { WalletPrompt } from './WalletPrompt';
 
 /**
- * The step that confirms the paying wallet (owner rule of 2026-10-29), right after the wallet and the method and before
+ * The step that confirms the paying wallet, right after the wallet and the method and before
  * the price, for an EVM payment the buyer's wallet sends itself (`payerProof` of the checkout store is `required`): one
  * sentence that it is free and moves no money, the summary of what the wallet signs (the invoice, the seller, the
  * amount and the wallet), and the main button that opens the wallet's signature request. Meanwhile the window of the

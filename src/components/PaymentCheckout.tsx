@@ -348,7 +348,7 @@ export function PaymentCheckout({
   const [handoff, setHandoff] = useState(false);
   const [autoPay, setAutoPay] = useState(false);
   const [askLeave, setAskLeave] = useState(false);
-  // The buyer continued with a wallet that confirms the invoice before the price (owner rule of 2026-10-29)
+  // The buyer continued with a wallet that confirms the invoice before the price
   const [confirmWallet, setConfirmWallet] = useState(false);
   // Another invoice opened: the choices made for the previous one no longer apply
   const [shownToken, setShownToken] = useState(activeToken);

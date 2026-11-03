@@ -122,7 +122,7 @@ export interface RefundFlow {
 }
 
 /**
- * Refunds a payment from the merchant's connected wallet (spec §7.5): asks Quasar for the refund through the store,
+ * Refunds a payment from the merchant's connected wallet: asks Quasar for the refund through the store,
  * sends its transfer to the payer with the payments adapter of the chain family (switching the wallet to the payment's
  * network first, and never prompting a wallet that holds too little), hands the transaction to Quasar and lets the
  * store follow it until Quasar confirms it and issues the credit note. A transaction the wallet sent is handed over

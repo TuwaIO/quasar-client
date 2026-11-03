@@ -55,7 +55,7 @@ const textOf = (node: unknown): string =>
 
 afterEach(() => unmount());
 
-// Quasar plan 12 §9.8: the line the seller asks the buyer to tick before paying
+// The line the seller asks the buyer to tick before paying
 describe('the consent of the method step', () => {
   it('asks nothing when the seller set no consent', () => {
     const { box, button } = methodStep(null);

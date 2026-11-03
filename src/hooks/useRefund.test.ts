@@ -93,7 +93,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-// Plan 12 §7.5, board RefundSendStates: the merchant sends a refund from a wallet, Quasar follows it
+// The merchant sends a refund from a wallet, Quasar follows it
 describe('useRefund', () => {
   it('asks for what to refund, then has the merchant connect a wallet of the network of the payment', async () => {
     const { request, flow } = setup();

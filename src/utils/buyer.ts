@@ -1,5 +1,5 @@
 /**
- * @file The buyer details the checkout collects when the merchant's settings ask for them (plan 12 §6.8): which
+ * @file The buyer details the checkout collects when the merchant's settings ask for them: which
  * fields, what is missing, and the countries to pick from.
  */
 

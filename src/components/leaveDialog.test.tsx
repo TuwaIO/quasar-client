@@ -32,7 +32,7 @@ function question() {
 
 afterEach(() => unmount());
 
-// Owner, 2026-10-28: the question showed inside the checkout modal, so the checkout's frame stayed sharp around the
+// The question showed inside the checkout modal, so the checkout's frame stayed sharp around the
 // blurred checkout. It is a Nova dialog of its own now: one backdrop over the whole screen, the checkout under it
 describe('the question to leave the checkout', () => {
   it('is a dialog of its own, open, over the checkout and its frame', () => {

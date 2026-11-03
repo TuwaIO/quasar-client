@@ -53,7 +53,7 @@ describe('checkout languages', () => {
     },
   );
 
-  // Owner, 2026-10-28: "antes del plazo" reads as "early"; the payment was sent before the deadline passed
+  // "antes del plazo" reads as "early"; the payment was sent before the deadline passed
   it('says in Spanish that the payment was sent before the deadline passed', async () => {
     const es = await loadLabels('es');
     expect(es.confirm.afterDeadline).toBe('Tu pago se envió antes de que venciera el plazo y se está confirmando.');

@@ -326,7 +326,7 @@ describe('the height of the step on a phone, while the wallet asks', () => {
     expect(promptOf(tree).props.stepHeight).toBe(430);
   });
 
-  // Review 2026-10-29: a turned phone has less room while the prompt shows; the prompt follows the room down
+  // A turned phone has less room while the prompt shows; the prompt follows the room down
   it('caps the kept height at the room the pane has now, while the prompt shows', () => {
     const { live, fire } = resizes();
     const node = stepNode(520, 700);

@@ -55,7 +55,7 @@ function paid(display: CheckoutContextValue['display'], autoReturnSeconds: numbe
 
 afterEach(() => unmount());
 
-// Owner, 2026-10-28: after paying for quota in the dashboard, the checkout counted down and loaded the billing page again
+// After paying for quota in the dashboard, the checkout counted down and loaded the billing page again
 // (its successUrl), closing everything at once. A checkout opened as a modal belongs to the page under it
 describe('the way back after paying', () => {
   it('in a modal: Close, no countdown and no link that loads the page again', () => {

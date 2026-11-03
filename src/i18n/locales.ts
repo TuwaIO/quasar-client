@@ -2,7 +2,7 @@ import { defaultLabels } from './en';
 import type { NovaPaymentsLabels } from './types';
 
 /**
- * The languages of the checkout, the six of Quasar documents (plan 12 §6.10), with their names in themselves: the
+ * The languages of the checkout, the six of Quasar documents, with their names in themselves: the
  * language menu shows `name` with its own `lang`, so a reader finds their language whatever the page shows.
  */
 export const CHECKOUT_LOCALES = [

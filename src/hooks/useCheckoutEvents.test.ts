@@ -63,7 +63,7 @@ describe('useCheckoutEvents', () => {
     ]);
   });
 
-  // Owner, 2026-10-28: Quasar keeps an invoice open while a payment sent before the deadline confirms, and the invoice
+  // Quasar keeps an invoice open while a payment sent before the deadline confirms, and the invoice
   // may still close meanwhile: the app hears that a payment is on its way, so it does not offer a new invoice at once
   it('tells that the invoice expired while a payment of this page is on its way', () => {
     const onExpire = vi.fn();
@@ -80,7 +80,7 @@ describe('useCheckoutEvents', () => {
     expect(onExpire).toHaveBeenCalledExactlyOnceWith({ kind: 'invoice', paymentOnTheWay: true });
   });
 
-  // M3: a reopened page whose invoice expires while a payment of it, handed over before the reload, is on its way
+  // A reopened page whose invoice expires while a payment of it, handed over before the reload, is on its way
   it('tells that a payment of the invoice that the store found on its way may still arrive', () => {
     const onExpire = vi.fn();
     const handlers = { onExpire };

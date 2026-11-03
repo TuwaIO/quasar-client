@@ -315,7 +315,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
           {due && <Text muted>{formatLabel(labels.outcome.underpaidNote, { merchant, date: due })}</Text>}
         </>
       );
-      // Owner, 2026-10-29: only the wallet that paid first pays the rest; Quasar refuses another one (`payer_mismatch`)
+      // Only the wallet that paid first pays the rest; Quasar refuses another one (`payer_mismatch`)
       const connected = method && wallet ? payerFor(wallet, method) : null;
       const refusedFrom =
         (state.error as { code?: string; originWallet?: string } | null)?.code === 'payer_mismatch'
@@ -356,7 +356,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
     }
     case 'held': {
       if (refundOnly) {
-        // Never "the seller checks your payment": it pays no invoice and goes back to the wallet that sent it (N2)
+        // Never "the seller checks your payment": it pays no invoice and goes back to the wallet that sent it
         title = formatLabel(labels.outcome.heldRefundOnlyTitle, { merchant });
         body = (
           <>

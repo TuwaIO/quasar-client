@@ -88,7 +88,7 @@ export interface CheckoutContextValue {
   setConfirmWallet: (show: boolean) => void;
   /**
    * Locks the price for the wallet set on the checkout store, or shows the step that confirms the wallet first while
-   * the store says it must (owner rule of 2026-10-29: before the price).
+   * the store says it must (before the price).
    *
    * @returns Resolves when the price is locked, refused, or the step shows.
    */

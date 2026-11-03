@@ -48,8 +48,7 @@ export interface PayerProofFlow {
 
 /**
  * Confirms that the connected wallet pays the invoice, for the step before the price and for a payment of a method the
- * gasless relay could pay: a free signature of Quasar's EIP-4361 message that moves no money (owner rule of
- * 2026-10-29), one per invoice and wallet.
+ * gasless relay could pay: a free signature of Quasar's EIP-4361 message that moves no money, one per invoice and wallet.
  *
  * Side effects: wallet prompts (a network switch, the signature); `POST payer-proof/message` and `POST payer-proof`
  * through the checkout store, then `POST quote` with `quote: true`.

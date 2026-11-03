@@ -182,7 +182,7 @@ export interface CheckoutTokenGroup {
 }
 
 /**
- * Groups payment methods by token: the token picked first, then its network (decision of 2026-10-10). Groups with a
+ * Groups payment methods by token: the token picked first, then its network. Groups with a
  * method on the connected wallet's network come first, then those the merchant marks Popular; otherwise the
  * merchant's order stays.
  *

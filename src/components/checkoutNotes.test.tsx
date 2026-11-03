@@ -35,7 +35,7 @@ const COLLECTOR = '0x3333333333333333333333333333333333333333';
 const showsHash = (node: unknown, hash: string) =>
   fixture.elements(node).some((element) => element.props.hash === hash);
 
-/** The texts that send the buyer to the merchant with the transaction hash (N1, N5, N7a). */
+/** The texts that send the buyer to the merchant with the transaction hash. */
 const CONTACT =
   'Quasar does not check this payment again. If it left your wallet, contact Cosmos with the transaction hash.';
 const NOT_RECEIVED =
@@ -201,7 +201,7 @@ describe('an expired invoice', () => {
   });
 });
 
-// Owner, 2026-10-28: a payment sent before the deadline counts, but the invoice can still close while it confirms (the
+// A payment sent before the deadline counts, but the invoice can still close while it confirms (the
 // grace ran out, or Quasar never heard of it in time): the buyer whose payment is on its way never reads "nothing was
 // charged"
 describe('an invoice that expired while the payment of this page was confirming', () => {
@@ -250,7 +250,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(text).not.toContain('The invoice closed while your payment was confirming.');
   });
 
-  // M4: the store stops following an expired invoice 35 minutes past the deadline; Quasar may still settle the payment
+  // The store stops following an expired invoice 35 minutes past the deadline; Quasar may still settle the payment
   it('never says that nothing was charged after the store stopped following the payment', () => {
     show('expired', { status: 'expired', amountPaid: null });
     ctx = {
@@ -278,7 +278,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(text).not.toContain('nothing was charged');
   });
 
-  // N1: Quasar never reads again a payment rejected for another reason (a relay operation lost, transaction_failed)
+  // Quasar never reads again a payment rejected for another reason (a relay operation lost, transaction_failed)
   it('promises no re-check for a payment Quasar does not read again: contact the merchant with the hash', () => {
     show('expired', { status: 'expired', amountPaid: null });
     const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'user_operation_lost' };
@@ -325,7 +325,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(text).not.toContain('nothing was charged');
   });
 
-  // N5: Quasar closes a payment with no result on chain within 24 hours (a final reason), which may have left the wallet
+  // Quasar closes a payment with no result on chain within 24 hours (a final reason), which may have left the wallet
   it('never says that nothing was charged after Quasar closed a payment without a result', () => {
     show('expired', { status: 'expired', amountPaid: null });
     const closed = { code: 'payment_failed', message: '', reason: 'unresolved_after_24h' };
@@ -341,7 +341,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(showsHash(tree, '0xabc')).toBe(true);
   });
 
-  // M3: a page reopened on an invoice that expired while a payment of it is on its way
+  // A page reopened on an invoice that expired while a payment of it is on its way
   it('never says that nothing was charged while Quasar reports a payment of the invoice on its way', () => {
     show('expired', { status: 'expired', amountPaid: null });
     ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', invoicePaymentOnTheWay: true } as never };
@@ -421,7 +421,7 @@ describe('a cancelled invoice', () => {
     }
   });
 
-  // N1, N5, N7a: a payment Quasar does not read again is not "recorded if it arrives": the buyer contacts the merchant
+  // A payment Quasar does not read again is not "recorded if it arrives": the buyer contacts the merchant
   it('sends the buyer to the merchant with the hash for a payment Quasar does not read again', () => {
     for (const [error, expected] of [
       [{ code: 'payment_unconfirmed', message: '', reason: 'transaction_failed' }, CONTACT],
@@ -439,7 +439,7 @@ describe('a cancelled invoice', () => {
     }
   });
 
-  // M1, M3 (review of 2026-10-29): the payment left the wallet; the merchant or Quasar decides, with its hash
+  // The payment left the wallet; the merchant or Quasar decides, with its hash
   it('says what happens to a transaction another invoice took or a confirmed payment not recorded yet', () => {
     for (const [error, expected] of LEFT_THE_WALLET) {
       show('cancelled', { status: 'cancelled', amountPaid: null });
@@ -467,7 +467,7 @@ describe('a cancelled invoice', () => {
     expect(showsHash(tree, '0xabc')).toBe(true);
   });
 
-  // M2 (review of 2026-10-29): a QR code the page showed may have been paid from a phone, which this page does not see
+  // A QR code the page showed may have been paid from a phone, which this page does not see
   it('never says that nothing was charged after the page showed a QR code', () => {
     show('cancelled', { status: 'cancelled', amountPaid: null }, {}, null);
     ctx = { ...ctx, qrShown: true, state: { ...ctx.state, phase: 'cancelled' } as never };
@@ -515,7 +515,7 @@ describe('the pay step after a transaction that does not pay the invoice', () =>
   });
 });
 
-// N5: Quasar closed the payment after 24 hours without a result on chain; it may still have left the wallet
+// Quasar closed the payment after 24 hours without a result on chain; it may still have left the wallet
 describe('the pay step after a payment Quasar closed without a result', () => {
   it('sends the buyer to the merchant with the hash, never that only the fee was spent', () => {
     show('pay');
@@ -532,7 +532,7 @@ describe('the pay step after a payment Quasar closed without a result', () => {
   });
 });
 
-// H1, owner 2026-10-28: a payment Quasar could not confirm (not found, no receipt in time, replaced) may still reach the
+// A payment Quasar could not confirm (not found, no receipt in time, replaced) may still reach the
 // seller: the buyer checks the wallet before paying again, and the screen offers no payment
 describe('a payment Quasar could not confirm', () => {
   const unconfirmedScreen = (
@@ -576,7 +576,7 @@ describe('a payment Quasar could not confirm', () => {
     );
   });
 
-  // N1: only a rejection Quasar reads again (not_found, timeout, replaced, still unresolved) carries `rechecked`
+  // Only a rejection Quasar reads again (not_found, timeout, replaced, still unresolved) carries `rechecked`
   it('promises no re-check for a payment Quasar does not read again, and shows the hash to contact the merchant', () => {
     for (const reason of ['user_operation_lost', 'pimlico_key_required', 'transaction_failed', 'not_found']) {
       const tree = unconfirmedScreen(undefined, { reason, rechecked: false, txKey: '0xabc' });
@@ -607,7 +607,7 @@ describe('a payment Quasar could not confirm', () => {
     expect(showsHash(tree, '0xabc')).toBe(true);
   });
 
-  // N1: a transfer that moved money without paying the invoice, which Quasar has not called final
+  // A transfer that moved money without paying the invoice, which Quasar has not called final
   it('says that a transaction that moved money does not pay the invoice, with no re-check promise', () => {
     const tree = unconfirmedScreen(vi.fn(), {
       code: 'payment_mismatch',
@@ -656,7 +656,7 @@ describe('a payment Quasar could not confirm', () => {
     expect(payAgain).toHaveBeenCalledOnce();
   });
 
-  // M1, M3 (review of 2026-10-29): the payment left the wallet and may still pay the invoice: no second payment, and
+  // The payment left the wallet and may still pay the invoice: no second payment, and
   // the store's payAgain does nothing for it
   it('offers no payment after a transaction another invoice took or a confirmed payment not recorded yet', () => {
     for (const [error, expected] of LEFT_THE_WALLET) {
@@ -693,7 +693,7 @@ describe('a payment Quasar could not confirm', () => {
   });
 });
 
-// Owner, 2026-10-28: a QR code the page showed may have been paid from a phone, which this page does not see
+// A QR code the page showed may have been paid from a phone, which this page does not see
 describe('an invoice that expired after the page showed a QR code', () => {
   it('never says that nothing was charged, and says what happens to a payment made with it', () => {
     show('expired', { status: 'expired', amountPaid: null }, {}, null);
@@ -713,7 +713,7 @@ describe('an invoice that expired after the page showed a QR code', () => {
   });
 });
 
-// M1, M3 (review of 2026-10-29): the payment left the wallet; it is not "nothing was charged" on an expired invoice
+// The payment left the wallet; it is not "nothing was charged" on an expired invoice
 describe('an expired invoice after a payment that left the wallet', () => {
   it('says what happens to a transaction another invoice took or a confirmed payment not recorded yet', () => {
     for (const [error, expected] of LEFT_THE_WALLET) {
@@ -742,7 +742,7 @@ describe('an expired invoice after a payment that left the wallet', () => {
   });
 });
 
-// M3 (review of 2026-10-29): Quasar credited the transaction to another invoice
+// Quasar credited the transaction to another invoice
 describe('the pay step after a transaction that pays another invoice', () => {
   it('says so, with whom to contact', () => {
     show('pay');

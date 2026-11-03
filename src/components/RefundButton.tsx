@@ -121,7 +121,7 @@ export function RefundButton({ label, className, disabled, ...props }: RefundBut
 }
 
 /**
- * The window of a refund from the merchant's wallet (spec §7.5, board RefundSendStates): what to refund (skipped
+ * The window of a refund from the merchant's wallet: what to refund (skipped
  * with `params`), a wallet of the payment's network, the confirmation (what goes where, from which wallet with its
  * balance, the network fee, and the app's rows), the wallet's prompt, the transaction on its way, and the credit note.
  * A refund the wallet did not send says why, offers to send it again and the app's "Record refund". The refund

@@ -21,7 +21,7 @@ const sentOn = (store: CheckoutStore, state: CheckoutState, walletTxKey: string 
 
 afterEach(() => unmount());
 
-// M4, owner 2026-10-28: once this page handed a payment over, the buyer never reads "nothing was charged" while it may
+// Once this page handed a payment over, the buyer never reads "nothing was charged" while it may
 // still arrive, also after the store stopped following it (its 35-minute cap) or Quasar could not confirm it
 describe('usePaymentSent', () => {
   it('is false until a payment is on its way, then stays true for the invoice', () => {
@@ -70,7 +70,7 @@ describe('usePaymentSent', () => {
     expect(sentOn(first, stateOf('awaitingPayment', { paymentOnTheWay: false, error: mismatch }))).toBe(false);
   });
 
-  // N3: the wallet sent the transaction, but the store says nothing of it yet (an invoice the seller cancelled meanwhile
+  // The wallet sent the transaction, but the store says nothing of it yet (an invoice the seller cancelled meanwhile
   // keeps its outcome while Quasar takes the payment): it may arrive, so never "nothing was charged"
   it('counts a payment once the wallet returned its hash, before the store says anything', () => {
     expect(sentOn(first, stateOf('cancelled', { paymentOnTheWay: false }))).toBe(false);

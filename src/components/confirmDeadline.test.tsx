@@ -102,7 +102,7 @@ const noteOf = (tree: unknown) =>
 
 afterEach(() => unmount());
 
-// Owner, 2026-10-28: "a payment sent before the deadline counts". Quasar keeps an open invoice for a payment it learned
+// "a payment sent before the deadline counts". Quasar keeps an open invoice for a payment it learned
 // of before the deadline while that payment confirms, so the confirm step past the deadline says so instead of leaving
 // the payer to think the payment failed
 describe('the confirm step at the deadline', () => {
@@ -148,7 +148,7 @@ describe('the confirm step at the deadline', () => {
   });
 });
 
-// Owner, 2026-10-28: the deadline notes follow the payment's real state — handed over in time, failed, or after the
+// The deadline notes follow the payment's real state — handed over in time, failed, or after the
 // deadline
 describe("the confirm step follows the payment's real state", () => {
   it('says "sent before the deadline" for a relay answered `sending`, which has no transaction key yet', () => {
@@ -179,7 +179,7 @@ describe("the confirm step follows the payment's real state", () => {
   });
 });
 
-// L3: Quasar says whether it waits for a payment it learned of before the deadline (`paymentCountsUntil`); the page's
+// Quasar says whether it waits for a payment it learned of before the deadline (`paymentCountsUntil`); the page's
 // clock decides only with a Quasar that does not say it
 describe("the confirm step takes Quasar's word on time", () => {
   const UNTIL = '2026-10-29T08:58:00Z';
@@ -230,7 +230,7 @@ describe("the confirm step takes Quasar's word on this page's payment", () => {
   });
 });
 
-// M3, owner 2026-10-28: a page reopened while a payment of the invoice is on its way shows that payment being
+// A page reopened while a payment of the invoice is on its way shows that payment being
 // confirmed instead of the payment screen
 describe('the confirm step of a payment this page did not hand over', () => {
   /** The note for a payment the store found on its way when it loaded. */

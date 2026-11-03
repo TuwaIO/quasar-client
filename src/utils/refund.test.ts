@@ -5,7 +5,7 @@ import { refundTransfer } from './refund';
 const PAYER = '0x9c1e000000000000000000000000000000004f02';
 const SOLANA_DEVNET = 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1';
 
-// Plan 12 §7.5: the merchant's wallet sends the refund the way a buyer's wallet sends a payment
+// The merchant's wallet sends the refund the way a buyer's wallet sends a payment
 describe('refundTransfer', () => {
   it('turns the refund of an ERC-20 payment into an EVM transfer to the payer', () => {
     expect(

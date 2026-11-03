@@ -52,7 +52,7 @@ describe('needsLeaveConfirm', () => {
     ).toBe(true);
   });
 
-  // N5: Quasar closed the payment after 24 hours without a result on chain; it may still have left the wallet
+  // Quasar closed the payment after 24 hours without a result on chain; it may still have left the wallet
   it('does not ask after a payment Quasar closed without a result', () => {
     expect(
       needsLeaveConfirm('awaitingPayment', {
@@ -64,7 +64,7 @@ describe('needsLeaveConfirm', () => {
   });
 });
 
-// M1, M3 (review of 2026-10-29): a payment another invoice took or Quasar has not recorded yet left the wallet
+// A payment another invoice took or Quasar has not recorded yet left the wallet
 describe('needsLeaveConfirm after a payment that left the wallet', () => {
   it('does not ask after a transaction another invoice took or a confirmed payment not recorded yet', () => {
     for (const error of [
@@ -104,7 +104,7 @@ describe('methodErrorText', () => {
     );
   });
 
-  // M3 (review of 2026-10-29): Quasar credited the transaction to another invoice, the one of the wallet that sent it
+  // Quasar credited the transaction to another invoice, the one of the wallet that sent it
   it('says that the transaction pays another invoice, with the hash for the merchant', () => {
     for (const code of ['payment_mismatch', 'payment_failed']) {
       expect(
@@ -115,7 +115,7 @@ describe('methodErrorText', () => {
     }
   });
 
-  // Owner, 2026-10-29: a transfer held on another invoice for a refund only pays no invoice
+  // A transfer held on another invoice for a refund only pays no invoice
   it('says that a transfer held on another invoice is tied to it, never that it pays it', () => {
     const text = methodErrorText(
       { code: 'payment_mismatch', message: 'raw', reason: 'tx_already_used', held: true } as never,
@@ -252,7 +252,7 @@ describe('receivedAmount', () => {
   });
 });
 
-describe('a transfer from a wallet that did not confirm the invoice (N2)', () => {
+describe('a transfer from a wallet that did not confirm the invoice', () => {
   const OTHER_WALLET =
     'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact Cosmos.';
 
