@@ -13,7 +13,7 @@ const texts = (labels: NovaPaymentsLabels) =>
 
 describe('checkout languages', () => {
   it('lists the six languages of Quasar documents under their own names', () => {
-    expect(CHECKOUT_LOCALES.map((locale) => locale.code)).toEqual(['en', 'zh-CN', 'es', 'de', 'uk', 'it']);
+    expect(CHECKOUT_LOCALES.map((locale) => locale.code)).toEqual(['en', 'uk', 'zh-CN', 'es', 'it', 'de']);
     expect(CHECKOUT_LOCALES.find((locale) => locale.code === 'uk')?.name).toBe('Українська');
   });
 

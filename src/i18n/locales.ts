@@ -7,11 +7,11 @@ import type { NovaPaymentsLabels } from './types';
  */
 export const CHECKOUT_LOCALES = [
   { code: 'en', name: 'English', short: 'EN' },
+  { code: 'uk', name: 'Українська', short: 'UK' },
   { code: 'zh-CN', name: '简体中文', short: 'ZH' },
   { code: 'es', name: 'Español', short: 'ES' },
-  { code: 'de', name: 'Deutsch', short: 'DE' },
-  { code: 'uk', name: 'Українська', short: 'UK' },
   { code: 'it', name: 'Italiano', short: 'IT' },
+  { code: 'de', name: 'Deutsch', short: 'DE' },
 ] as const;
 
 /** A language of the checkout: a BCP 47 tag of {@link CHECKOUT_LOCALES}. */
