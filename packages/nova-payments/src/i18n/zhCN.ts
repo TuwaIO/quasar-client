@@ -225,7 +225,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
   },
   confirm: {
     title: '正在确认您的付款',
-    hint: '在 {network} 上通常不到一分钟。',
+    hint: '在 {network} 上通常不到两分钟。',
     sent: '已发送',
     confirming: '确认中',
     confirmed: '已确认',

@@ -234,7 +234,7 @@ export const defaultLabels: NovaPaymentsLabels = {
   },
   confirm: {
     title: 'Confirming your payment',
-    hint: 'Usually under a minute on {network}.',
+    hint: 'Usually under two minutes on {network}.',
     sent: 'Sent',
     confirming: 'Confirming',
     confirmed: 'Confirmed',

@@ -247,7 +247,7 @@ export const deLabels: NovaPaymentsLabels = {
   },
   confirm: {
     title: 'Ihre Zahlung wird bestätigt',
-    hint: 'Im Netzwerk {network} meist in unter einer Minute.',
+    hint: 'Im Netzwerk {network} meist in unter zwei Minuten.',
     sent: 'Gesendet',
     confirming: 'Wird bestätigt',
     confirmed: 'Bestätigt',

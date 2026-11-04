@@ -237,7 +237,7 @@ export const esLabels: NovaPaymentsLabels = {
   },
   confirm: {
     title: 'Confirmando tu pago',
-    hint: 'Suele tardar menos de un minuto en {network}.',
+    hint: 'Suele tardar menos de dos minutos en {network}.',
     sent: 'Enviado',
     confirming: 'Confirmando',
     confirmed: 'Confirmado',

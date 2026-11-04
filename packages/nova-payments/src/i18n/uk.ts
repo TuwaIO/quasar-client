@@ -236,7 +236,7 @@ export const ukLabels: NovaPaymentsLabels = {
   },
   confirm: {
     title: 'Підтверджуємо ваш платіж',
-    hint: 'Зазвичай менше хвилини в мережі {network}.',
+    hint: 'Зазвичай менше двох хвилин у мережі {network}.',
     sent: 'Надіслано',
     confirming: 'Підтверджується',
     confirmed: 'Підтверджено',

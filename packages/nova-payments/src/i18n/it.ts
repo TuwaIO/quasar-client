@@ -240,7 +240,7 @@ export const itLabels: NovaPaymentsLabels = {
   },
   confirm: {
     title: 'Conferma del pagamento in corso',
-    hint: 'Di solito meno di un minuto su {network}.',
+    hint: 'Di solito meno di due minuti su {network}.',
     sent: 'Inviato',
     confirming: 'In conferma',
     confirmed: 'Confermato',

@@ -483,7 +483,7 @@ export type NovaPaymentsLabels = {
   confirm: {
     /** Heading (default: `Confirming your payment`) */
     title: string;
-    /** Under the heading: `{network}` (default: `Usually under a minute on {network}.`) */
+    /** Under the heading: `{network}` (default: `Usually under two minutes on {network}.`) */
     hint: string;
     /** First step (default: `Sent`) */
     sent: string;
