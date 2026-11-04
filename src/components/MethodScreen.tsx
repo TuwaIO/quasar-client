@@ -10,10 +10,18 @@ import { groupMethodsByToken } from '../utils/checkout';
 import { shortAddress } from '../utils/format';
 import { canPayWithQr, methodFamily, networkName, payerFor, priceAdjustment } from '../utils/methods';
 import { methodErrorText } from '../utils/outcome';
-import { focusRing, mono } from './classes';
+import { focusRing, mono, textButton } from './classes';
 import { checkoutClassName } from './customization';
 import { RadioCards } from './RadioCards';
-import { CheckoutWalletIcon, GroupLabel, PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
+import {
+  CheckoutWalletIcon,
+  FooterNote,
+  GroupLabel,
+  PrimaryButton,
+  ScreenContent,
+  ScreenError,
+  ScreenFooter,
+} from './ScreenParts';
 
 /** A small badge of a network option. */
 function Badge({ tone, children }: { tone: 'neutral' | 'accent' | 'success'; children: ReactNode }) {
@@ -129,6 +137,7 @@ export function MethodScreen() {
     adapterFor,
     setHandoff,
     lockPrice,
+    setAutoPayOff,
   } = context;
   const { TokenOption, NetworkOption } = context.customization.components ?? {};
   const methods = useMemo(() => checkout?.methods ?? [], [checkout]);
@@ -416,6 +425,14 @@ export function MethodScreen() {
           terms={checkout.merchant.links.terms}
           refundPolicy={checkout.merchant.links.refundPolicy}
         />
+        {checkout.autoCharge?.status === 'active' && checkout.autoCharge.revocation && (
+          <FooterNote>
+            {labels.paid.autoPayActive}{' '}
+            <button type="button" onClick={() => setAutoPayOff('open')} className={textButton}>
+              {labels.paid.autoPayOff}
+            </button>
+          </FooterNote>
+        )}
       </ScreenFooter>
     </>
   );

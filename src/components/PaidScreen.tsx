@@ -9,7 +9,7 @@ import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal } from '../utils/format';
 import { methodFamily } from '../utils/methods';
-import { focusRing, mono, primaryAction, screenHeading, screenTitle, secondaryAction } from './classes';
+import { focusRing, mono, primaryAction, screenHeading, screenTitle, secondaryAction, textButton } from './classes';
 import { checkoutClassName } from './customization';
 import {
   DetailRow,
@@ -34,8 +34,21 @@ import { TxLabels } from './TxLabels';
  */
 export function PaidScreen() {
   const context = useCheckoutContext();
-  const { checkout, state, labels, locale, now, close, wallet, adapterFor, setAutoPay, autoReturnSeconds, display } =
-    context;
+  const {
+    checkout,
+    state,
+    labels,
+    locale,
+    now,
+    close,
+    wallet,
+    adapterFor,
+    setAutoPay,
+    autoPayOff,
+    setAutoPayOff,
+    autoReturnSeconds,
+    display,
+  } = context;
   const child = context.customization.childCustomizations;
   const facts = usePaymentFacts();
   // The time the checkout saw the payment settle: the view carries no payment time
@@ -127,6 +140,16 @@ export function PaidScreen() {
           <p className="novapay:m-0 novapay:flex novapay:items-center novapay:gap-1.5 novapay:text-xs novapay:text-[var(--tuwa-success-text)]">
             <CheckCircleIcon aria-hidden className="novapay:h-4 novapay:w-4" />
             {labels.paid.autoPayActive}
+            {offer.revocation && (
+              <button type="button" onClick={() => setAutoPayOff('open')} className={textButton}>
+                {labels.paid.autoPayOff}
+              </button>
+            )}
+          </p>
+        )}
+        {autoPayOff === 'done' && (
+          <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+            {formatLabel(labels.paid.autoPayTurnedOff, { merchant })}
           </p>
         )}
       </section>

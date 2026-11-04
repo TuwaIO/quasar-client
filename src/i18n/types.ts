@@ -547,6 +547,41 @@ export type NovaPaymentsLabels = {
     autoPayOffer: string;
     /** When automatic payments are on (default: `Automatic payments are on.`) */
     autoPayActive: string;
+    /** Opens the screen that turns them off, beside that text (default: `Turn off`) */
+    autoPayOff: string;
+    /** After they were turned off: `{merchant}` */
+    autoPayTurnedOff: string;
+  };
+  /** Turning off automatic payments: the wallet that allowed them sends the transaction that revokes the permission. */
+  autoPayOff: {
+    /** Heading (default: `Turn off automatic payments?`) */
+    title: string;
+    /** What it means: `{merchant}` */
+    subtitle: string;
+    /** Row of the wallet (default: `Wallet`) */
+    wallet: string;
+    /** Row of the limit (default: `Allowed now`) */
+    allowed: string;
+    /** Who pays for the transaction: `{network}` */
+    fee: string;
+    /** Main button: `{wallet}` (default: `Turn off in {wallet}`) */
+    confirm: string;
+    /** Main button once the wallet sent it (default: `Check again`) */
+    checkAgain: string;
+    /** Goes back (default: `Keep them on`) */
+    keep: string;
+    /** Main button when that wallet is not connected (default: `Connect that wallet`) */
+    connect: string;
+    /** When that wallet is not connected: `{wallet}` */
+    otherWallet: string;
+    /** While the wallet asks: `{wallet}` (default: `Confirm in {wallet}…`) */
+    inWallet: string;
+    /** While the network confirms (default: `Waiting for the network…`) */
+    waiting: string;
+    /** The network does not show the revocation yet */
+    notYet: string;
+    /** The wallet cannot send it: `{wallet}` */
+    unsupported: string;
   };
   /** The automatic payments offer of a subscription (ERC-7715), after a paid period. */
   autoPay: {
@@ -566,7 +601,7 @@ export type NovaPaymentsLabels = {
     to: string;
     /** Row of the expiry (default: `Valid until`) */
     validUntil: string;
-    /** Its value: `{date}` (default: `{date}, or until you cancel`) */
+    /** Its value: `{date}` (default: `{date}, or until you turn it off`) */
     validUntilValue: string;
     /** First note, on who sends the charges: `{merchant}` (default: `Quasar sends each charge for {merchant}, only to {merchant}'s wallet and within this limit.`) */
     collector: string;
@@ -574,7 +609,7 @@ export type NovaPaymentsLabels = {
     invoices: string;
     /** Third note: `{merchant}` (default: `{merchant} can't take more than this limit in a period.`) */
     cap: string;
-    /** Fourth note */
+    /** Fourth note, how to turn it off: `{merchant}` */
     turnOff: string;
     /** Main button (default: `Allow automatic payments`) */
     confirm: string;

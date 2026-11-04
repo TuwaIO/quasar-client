@@ -276,6 +276,8 @@ export const deLabels: NovaPaymentsLabels = {
     stay: 'Hier bleiben',
     autoPayOffer: 'Die nächsten Zeiträume automatisch bezahlen',
     autoPayActive: 'Automatische Zahlungen sind aktiv.',
+    autoPayOff: 'Deaktivieren',
+    autoPayTurnedOff: 'Automatische Zahlungen sind deaktiviert. {merchant} kann dieses Wallet nicht mehr belasten.',
   },
   autoPay: {
     title: 'Die nächsten Zeiträume automatisch bezahlen?',
@@ -287,18 +289,36 @@ export const deLabels: NovaPaymentsLabels = {
     from: 'Von',
     to: 'An',
     validUntil: 'Gültig bis',
-    validUntilValue: '{date} oder bis Sie kündigen',
+    validUntilValue: '{date} oder bis Sie sie deaktivieren',
     collector:
       'Quasar sendet jede Abbuchung für {merchant}, nur an das Wallet von {merchant} und innerhalb dieses Limits.',
     invoices: 'Zu jeder Abbuchung erhalten Sie eine Rechnung und eine Quittung per E-Mail.',
     cap: '{merchant} kann in einem Zeitraum nicht mehr als dieses Limit einziehen.',
     turnOff:
-      'Sie können das jederzeit beenden: Kündigen Sie das Abonnement oder widerrufen Sie die Erlaubnis in Ihrem Wallet.',
+      'Sie können sie jederzeit auf der Seite einer dieser Rechnungen deaktivieren: Ihr Wallet sendet eine Transaktion. Um das Abonnement selbst zu kündigen, wenden Sie sich an {merchant}.',
     confirm: 'Automatische Zahlungen erlauben',
     skip: 'Jetzt nicht, ich bezahle jede Rechnung selbst',
     walletNote: 'Ihr Wallet zeigt diese Erlaubnis (ERC-7715) an, bevor Sie sie bestätigen.',
     approveIn: 'In {wallet} bestätigen',
     unavailable: '{wallet} kann automatische Zahlungen nicht erlauben.',
+  },
+  autoPayOff: {
+    title: 'Automatische Zahlungen deaktivieren?',
+    subtitle:
+      '{merchant} kann dieses Wallet dann nicht mehr belasten. Das Abonnement läuft weiter: Spätere Zeiträume kommen als Rechnungen, die Sie selbst bezahlen. Um es zu kündigen, wenden Sie sich an {merchant}.',
+    wallet: 'Wallet',
+    allowed: 'Derzeit erlaubt',
+    fee: 'Ihr Wallet sendet eine Transaktion im Netzwerk {network}, und Sie zahlen die Netzwerkgebühr.',
+    confirm: 'In {wallet} deaktivieren',
+    checkAgain: 'Erneut prüfen',
+    keep: 'Aktiv lassen',
+    connect: 'Dieses Wallet verbinden',
+    otherWallet: 'Nur das Wallet, das sie erlaubt hat, {wallet}, kann sie deaktivieren.',
+    inWallet: 'In {wallet} bestätigen…',
+    waiting: 'Warten auf das Netzwerk…',
+    notYet:
+      'Das Netzwerk zeigt es noch nicht an. Wenn Ihr Wallet die Transaktion gesendet hat, prüfen Sie in einer Minute erneut.',
+    unsupported: '{wallet} kann diese Transaktion nicht senden.',
   },
   outcome: {
     underpaidTitle: 'Ein Teil der Zahlung ist eingegangen',

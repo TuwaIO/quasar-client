@@ -108,6 +108,14 @@ export interface CheckoutContextValue {
    * @param autoPay - Whether it shows.
    */
   setAutoPay: (autoPay: boolean) => void;
+  /** The screen that turns automatic payments off is open (`open`), or they were turned off (`done`). */
+  autoPayOff: 'open' | 'done' | null;
+  /**
+   * Opens or closes the screen that turns automatic payments off, or says they were turned off.
+   *
+   * @param autoPayOff - The new state.
+   */
+  setAutoPayOff: (autoPayOff: 'open' | 'done' | null) => void;
   /**
    * Opens another invoice in this checkout: the one that replaced a corrected invoice.
    *

@@ -27,6 +27,9 @@ export const screenHeading = { tabIndex: -1, 'data-novapay-heading': '' } as con
 export const primaryAction = `${mono} novapay:inline-flex novapay:h-11 novapay:w-full novapay:cursor-pointer novapay:items-center novapay:justify-center novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border-0 novapay:bg-[var(--tuwa-button-primary-bg)] novapay:text-sm novapay:font-bold novapay:text-[var(--tuwa-text-on-accent)] novapay:no-underline novapay:transition-colors novapay:hover:bg-[var(--tuwa-button-primary-bg-hover)] novapay:disabled:cursor-not-allowed novapay:disabled:opacity-70 ${focusRing}`;
 
 /** A second action under the main one (back, close, contact): the same size, with a border. @internal */
+/** A small action inside a line of text (`Turn off` beside what it turns off). @internal */
+export const textButton = `novapay:cursor-pointer novapay:border-0 novapay:bg-transparent novapay:p-0 novapay:text-[length:inherit] novapay:font-semibold novapay:text-[var(--tuwa-text-accent)] novapay:underline ${focusRing}`;
+
 export const secondaryAction = `${mono} novapay:inline-flex novapay:h-11 novapay:w-full novapay:cursor-pointer novapay:items-center novapay:justify-center novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:text-sm novapay:font-bold novapay:text-[var(--tuwa-text-primary)] novapay:no-underline novapay:transition-colors novapay:hover:bg-[var(--tuwa-bg-muted)] novapay:disabled:cursor-not-allowed novapay:disabled:opacity-70 ${focusRing}`;
 
 /**

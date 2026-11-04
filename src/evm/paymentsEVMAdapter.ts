@@ -15,6 +15,7 @@ import {
   signMessage,
   switchChain,
   waitForCallsStatus,
+  waitForTransactionReceipt,
   writeContract,
 } from '@wagmi/core';
 import { type Address, encodeFunctionData, erc20Abi, type Hex } from 'viem';
@@ -207,6 +208,19 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         delegationManager: granted.delegationManager,
         dependencies: granted.dependencies ?? [],
       };
+    },
+
+    revokePermission: async ({ revocation, chainId, account }) => {
+      refuseSafe();
+      const chain = evmChainId(chainId);
+      await switchChain(config, { chainId: chain });
+      const hash = await sendTransaction(config, {
+        account: account as Address,
+        chainId: chain,
+        to: revocation.to as Address,
+        data: revocation.data as Hex,
+      });
+      await waitForTransactionReceipt(config, { chainId: chain, hash });
     },
 
     pulsarTransaction: ({ txKey, instructions, account, connectorType, title, description, payload }) => {

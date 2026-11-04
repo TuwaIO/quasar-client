@@ -133,6 +133,18 @@ export interface PaymentsAdapter {
     account: string;
   }) => Promise<Omit<GrantPermissionParams, 'payer'>>;
   /**
+   * Sends the transaction that revokes the permission of a subscription's automatic payments, with the wallet's prompt,
+   * and waits until the network includes it. The wallet pays its network fee.
+   *
+   * @param params - The transaction of the checkout's auto-charge offer, its CAIP-2 chain and the account that granted
+   * the permission.
+   */
+  revokePermission?: (params: {
+    revocation: { to: string; data: string };
+    chainId: string;
+    account: string;
+  }) => Promise<void>;
+  /**
    * Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
    * it (and Nova Transactions shows its toast) once the checkout closes.
    *

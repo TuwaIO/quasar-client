@@ -29,6 +29,7 @@ export type CheckoutScreen =
   | 'unconfirmed'
   | 'paid'
   | 'autoPay'
+  | 'autoPayOff'
   | 'underpaid'
   | 'held'
   | 'refunded'
@@ -43,6 +44,8 @@ export interface CheckoutScreenChoices {
   payWith?: 'wallet' | 'qr';
   /** The buyer opened the automatic payments offer after paying the first period of a subscription. */
   autoPay?: boolean;
+  /** The buyer opened the screen that turns automatic payments off, while they are on. */
+  autoPayOff?: boolean;
   /**
    * The buyer continues on a phone: with `payWith` `qr`, the QR code of the payment page shows before any price is
    * locked (an EVM method, paid from the phone's wallet on that page).
@@ -93,6 +96,7 @@ export function checkoutScreen(
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
   if (choices.labelsReady === false && state.phase !== 'error') return 'loading';
+  if (choices.autoPayOff && state.checkout?.autoCharge?.status === 'active') return 'autoPayOff';
   // `unconfirmed` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
   if ((state.phase as string) === 'unconfirmed') return 'unconfirmed';
   // The wallet the buyer continued with confirms the invoice, then the price is locked on the same step: the step stays

@@ -23,6 +23,7 @@ import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm } from '../utils/outcome';
 import { lockPrice } from '../utils/payerProof';
+import { AutoPayOffScreen } from './AutoPayOffScreen';
 import { AutoPayScreen } from './AutoPayScreen';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
@@ -167,6 +168,7 @@ export function ScreenBody() {
   if (screen === 'confirm') return <ConfirmScreen />;
   if (screen === 'paid') return <PaidScreen />;
   if (screen === 'autoPay') return <AutoPayScreen />;
+  if (screen === 'autoPayOff') return <AutoPayOffScreen />;
   return <OutcomeScreen kind={screen} />;
 }
 
@@ -349,6 +351,7 @@ export function PaymentCheckout({
   const [payWith, setPayWith] = useState<'wallet' | 'qr'>('wallet');
   const [handoff, setHandoff] = useState(false);
   const [autoPay, setAutoPay] = useState(false);
+  const [autoPayOff, setAutoPayOff] = useState<'open' | 'done' | null>(null);
   const [askLeave, setAskLeave] = useState(false);
   // The buyer continued with a wallet that confirms the invoice before the price
   const [confirmWallet, setConfirmWallet] = useState(false);
@@ -358,6 +361,7 @@ export function PaymentCheckout({
     setShownToken(activeToken);
     setHandoff(false);
     setAutoPay(false);
+    setAutoPayOff(null);
     setPayWith('wallet');
     setConfirmWallet(false);
   }
@@ -376,6 +380,7 @@ export function PaymentCheckout({
     payWith,
     handoff,
     autoPay,
+    autoPayOff: autoPayOff === 'open',
     confirmWallet,
     labelsReady: labelsShown || !checkout,
   });
@@ -507,6 +512,8 @@ export function PaymentCheckout({
     onPaymentSent,
     autoPay,
     setAutoPay,
+    autoPayOff,
+    setAutoPayOff,
     openInvoice: (next) => setOpened({ from: token, token: next }),
     onContact,
     autoReturnSeconds: autoReturnSeconds ?? (display === 'modal' ? 0 : 5),

@@ -123,7 +123,7 @@ export function AutoPayScreen() {
                 <li>{formatLabel(labels.autoPay.collector, { merchant })}</li>
                 <li>{labels.autoPay.invoices}</li>
                 <li>{formatLabel(labels.autoPay.cap, { merchant })}</li>
-                <li>{labels.autoPay.turnOff}</li>
+                <li>{formatLabel(labels.autoPay.turnOff, { merchant })}</li>
               </ul>
             </>
           )}
