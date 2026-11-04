@@ -279,7 +279,8 @@ export const deLabels: NovaPaymentsLabels = {
   },
   autoPay: {
     title: 'Die nächsten Zeiträume automatisch bezahlen?',
-    subtitle: 'Optional. Ohne automatische Zahlung erhalten Sie in jedem Zeitraum eine Rechnung und bezahlen sie selbst.',
+    subtitle:
+      'Optional. Ohne automatische Zahlung erhalten Sie in jedem Zeitraum eine Rechnung und bezahlen sie selbst.',
     allow: 'Sie erlauben {merchant} den Einzug von',
     limit: 'bis zu {amount}',
     every: 'alle {period}',
