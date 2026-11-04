@@ -815,8 +815,6 @@ export interface PaymentMethod {
   markup: string | number | null;
   /** Discount in percent. */
   discount: string | number | null;
-  /** `default` or `confirmed`. */
-  finality: string | null;
   /** `off` or `auto`. */
   gasless: string | null;
   /** Marked "Popular" in the checkout. */

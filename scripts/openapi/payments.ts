@@ -605,7 +605,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       maxAmount: z.union([z.string(), z.number()]).nullable(),
       markup: z.union([z.string(), z.number()]).nullable(),
       discount: z.union([z.string(), z.number()]).nullable(),
-      finality: z.string().nullable(),
       gasless: z.string().nullable(),
       featured: z.boolean().openapi({ description: 'Marked "Popular" in the checkout.' }),
     })
