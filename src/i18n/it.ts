@@ -433,6 +433,15 @@ export const itLabels: NovaPaymentsLabels = {
     amountHint: 'Fino a {amount}',
     reason: 'Motivo (facoltativo)',
     continue: 'Continua',
+    movedTitle: 'Il prezzo è cambiato',
+    movedText:
+      'Il prezzo di {symbol} è cambiato dopo il pagamento, quindi questo importo richiede un numero diverso di token.',
+    movedSend: 'Questo rimborso invia',
+    movedAtPayment: 'Al tasso del pagamento',
+    movedReceived: 'Il pagamento ha portato',
+    movedExact: 'Per restituire i token così come sono arrivati, torna indietro e scegli «{exact}».',
+    movedContinue: 'Continua con questo importo',
+    movedBack: 'Indietro',
     requesting: 'Richiesta del rimborso a Quasar…',
     connectTitle: 'Collega un wallet',
     connectText:

@@ -918,6 +918,22 @@ export type NovaPaymentsLabels = {
     reason: string;
     /** Button of the amount step (default: `Continue`) */
     continue: string;
+    /** Heading when the price moved since the payment (default: `The price has moved`) */
+    movedTitle: string;
+    /** Why this amount takes another number of tokens: `{symbol}` */
+    movedText: string;
+    /** Row of what the refund sends (default: `This refund sends`) */
+    movedSend: string;
+    /** Row of the amount at the rate of the payment (default: `At the rate of the payment`) */
+    movedAtPayment: string;
+    /** Row of what the payment brought (default: `The payment brought`) */
+    movedReceived: string;
+    /** How to return the tokens as they came: `{exact}`, the name of that choice */
+    movedExact: string;
+    /** Goes on with the amount (default: `Continue with this amount`) */
+    movedContinue: string;
+    /** Goes back to the amount (default: `Back`) */
+    movedBack: string;
     /** While Quasar prices the refund (default: `Asking Quasar for the refund…`) */
     requesting: string;
     /** Heading of the wallet step (default: `Connect a wallet`) */

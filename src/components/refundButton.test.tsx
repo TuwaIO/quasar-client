@@ -30,6 +30,7 @@ const { defaultLabels } = await import('../i18n');
 const { PrimaryButton, SecondaryButton, ScreenContent, ScreenError } = await import('./ScreenParts');
 const { RadioCards } = await import('./RadioCards');
 const { AmountStep, ConfirmStep, RefundButton, RefundDialog, RefundSteps } = await import('./RefundButton');
+const { refundRateMoved } = await import('../utils/outcome');
 
 type Props = Record<string, unknown>;
 const PAYER = '0x9c1e000000000000000000000000000000004f02';
@@ -74,6 +75,7 @@ const flowOf = (extra: Partial<RefundFlow> = {}): RefundFlow => ({
   txKey: null,
   canConnect: true,
   connecting: false,
+  preview: vi.fn(async () => null),
   start: vi.fn(async () => undefined),
   connect: vi.fn(),
   switchNetwork: vi.fn(async () => undefined),
@@ -108,9 +110,15 @@ afterEach(() => {
 
 // Board RefundSendStates of the dashboard sketch: the steps of a refund from the merchant's wallet
 describe('RefundButton', () => {
-  it('asks what to refund: an amount of the invoice currency (everything left when empty) or everything received', () => {
+  it('asks what to refund: an amount of the invoice currency (everything left when empty) or everything received', async () => {
     const flow = flowOf({ step: 'amount' });
-    let tree = render(AmountStep, { flow, labels: defaultLabels, currency: 'USD', refundable: '20.00 USD' });
+    let tree = render(AmountStep, {
+      flow,
+      labels: defaultLabels,
+      locale: 'en',
+      currency: 'USD',
+      refundable: '20.00 USD',
+    });
     const modes = button(tree, RadioCards).props.items as { title: string; hint: string }[];
     expect(modes.map((mode) => mode.title)).toEqual(['An amount', 'Everything received']);
     expect(modes[0].hint).toBe('In USD, converted at the rate of now');
@@ -118,9 +126,65 @@ describe('RefundButton', () => {
 
     const amount = fixture.elements(tree).find((element) => element.props.inputMode === 'decimal')!;
     (amount.props.onChange as (event: unknown) => void)({ target: { value: '12,5' } });
-    tree = render(AmountStep, { flow, labels: defaultLabels, currency: 'USD' });
+    tree = render(AmountStep, { flow, labels: defaultLabels, locale: 'en', currency: 'USD' });
     (button(tree, PrimaryButton).props.onClick as () => void)();
-    expect(flow.start).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '12.5' });
+    await vi.waitFor(() => expect(flow.start).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '12.5' }));
+    expect(flow.preview).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '12.5' });
+  });
+
+  describe('before a refund is asked for, since it then holds its amount', () => {
+    const PREVIEW = {
+      amount: '100.00',
+      currency: 'USD',
+      symbol: 'ETH',
+      decimals: 18,
+      received: '40000000000000000',
+      atPaymentRate: '40000000000000000',
+    };
+    const amountStep = (flow: ReturnType<typeof flowOf>) =>
+      render(AmountStep, { flow, labels: defaultLabels, locale: 'en', currency: 'USD' });
+    const proceed = (tree: unknown) => (button(tree as never, PrimaryButton).props.onClick as () => void)();
+
+    it('shows how many tokens go out against what came in when the price moved, and goes on only when asked', async () => {
+      const flow = flowOf({
+        step: 'amount',
+        preview: vi.fn(async () => ({ ...PREVIEW, cryptoAmount: '52000000000000000' })),
+      });
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(flow.preview).toHaveBeenCalled());
+      await Promise.resolve();
+      expect(flow.start).not.toHaveBeenCalled();
+      const tree = amountStep(flow);
+      expect(textOf(tree)).toContain(defaultLabels.refund.movedTitle);
+      expect(textOf(tree)).toContain('0.052 ETH');
+      expect(textOf(tree)).toContain('0.04 ETH');
+      proceed(tree);
+      expect(flow.start).toHaveBeenCalledOnce();
+    });
+
+    it('asks nothing when the price held: a stablecoin at par goes straight on', async () => {
+      const flow = flowOf({
+        step: 'amount',
+        preview: vi.fn(async () => ({ ...PREVIEW, cryptoAmount: '40100000000000000' })),
+      });
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(flow.start).toHaveBeenCalledOnce());
+    });
+
+    it('asks for nothing when Quasar would refuse it: the error shows', async () => {
+      const flow = flowOf({ step: 'amount', preview: vi.fn(async () => 'refused' as const) });
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(flow.preview).toHaveBeenCalled());
+      await Promise.resolve();
+      expect(flow.start).not.toHaveBeenCalled();
+    });
+
+    it('takes half a percent as a move', () => {
+      expect(refundRateMoved({ cryptoAmount: '1005', atPaymentRate: '1000' })).toBe(true);
+      expect(refundRateMoved({ cryptoAmount: '995', atPaymentRate: '1000' })).toBe(true);
+      expect(refundRateMoved({ cryptoAmount: '1004', atPaymentRate: '1000' })).toBe(false);
+      expect(refundRateMoved({ cryptoAmount: '1000', atPaymentRate: null })).toBe(false);
+    });
   });
 
   it("connects the wallet through the app's handler, for apps without Nova Connect", () => {

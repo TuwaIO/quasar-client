@@ -1,5 +1,6 @@
 import { ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
+import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type { RefundState, RefundStore } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useEffect, useEffectEvent, useId, useState } from 'react';
 
@@ -8,6 +9,7 @@ import { type RefundFlow, type RefundRequest, useRefund } from '../hooks/useRefu
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { formatTokenAmount, shortAddress } from '../utils/format';
 import type { PaymentFamily } from '../utils/methods';
+import { refundRateMoved } from '../utils/outcome';
 import { iconButton, mono, primaryAction } from './classes';
 import { RadioCards } from './RadioCards';
 import {
@@ -205,7 +207,7 @@ export function RefundSteps({
 
   switch (flow.step) {
     case 'amount':
-      return <AmountStep flow={flow} labels={labels} currency={currency} refundable={refundable} />;
+      return <AmountStep flow={flow} labels={labels} locale={locale} currency={currency} refundable={refundable} />;
     case 'requesting':
     case 'submitting':
       return <Waiting>{flow.step === 'requesting' ? text.requesting : text.submitting}</Waiting>;
@@ -339,11 +341,13 @@ function Waiting({ walletId, walletIcon, children }: { walletId?: string; wallet
 export function AmountStep({
   flow,
   labels,
+  locale,
   currency,
   refundable,
 }: {
   flow: RefundFlow;
   labels: NovaPaymentsLabels;
+  locale: string;
   currency: string;
   refundable?: string;
 }) {
@@ -353,6 +357,9 @@ export function AmountStep({
   const [mode, setMode] = useState<'fiat_value' | 'exact_received'>('fiat_value');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [checking, setChecking] = useState(false);
+  // What the refund would send, when the price moved so that it sends another number of tokens than the payment took
+  const [moved, setMoved] = useState<RefundPreview | null>(null);
   const valid = mode === 'exact_received' || amount.trim() === '' || /^\d{1,12}(\.\d{1,2})?$/.test(amount.trim());
   const modes = [
     { key: 'fiat_value', title: text.modeFiat, hint: formatLabel(text.modeFiatText, { currency }) },
@@ -360,6 +367,45 @@ export function AmountStep({
   ] as const;
   const field =
     'novapay:h-10 novapay:w-full novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:text-sm novapay:text-[var(--tuwa-text-primary)]';
+  const request = {
+    mode,
+    ...(mode === 'fiat_value' && amount.trim() && { amount: amount.trim() }),
+    ...(reason.trim() && { reason: reason.trim() }),
+  };
+  /** Looks at what the refund would send first: asked for, it holds its amount until it is sent. */
+  const onContinue = async () => {
+    if (mode === 'fiat_value') {
+      setChecking(true);
+      const preview = await flow.preview(request);
+      setChecking(false);
+      // Refused as the refund would be: the error shows
+      if (preview === 'refused') return;
+      if (preview && refundRateMoved(preview)) return setMoved(preview);
+    }
+    void flow.start(request);
+  };
+  if (moved) {
+    const tokens = (units: string) => `${formatTokenAmount(units, moved.decimals, locale)} ${moved.symbol}`;
+    return (
+      <>
+        <ScreenContent title={text.movedTitle}>
+          <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+            {formatLabel(text.movedText, { symbol: moved.symbol })}
+          </p>
+          <DetailsCard>
+            <DetailRow name={text.movedSend}>{tokens(moved.cryptoAmount)}</DetailRow>
+            {moved.atPaymentRate && <DetailRow name={text.movedAtPayment}>{tokens(moved.atPaymentRate)}</DetailRow>}
+            {moved.received && <DetailRow name={text.movedReceived}>{tokens(moved.received)}</DetailRow>}
+          </DetailsCard>
+          <FooterNote>{formatLabel(text.movedExact, { exact: text.modeExact })}</FooterNote>
+        </ScreenContent>
+        <ScreenFooter>
+          <PrimaryButton onClick={() => void flow.start(request)}>{text.movedContinue}</PrimaryButton>
+          <SecondaryButton onClick={() => setMoved(null)}>{text.movedBack}</SecondaryButton>
+        </ScreenFooter>
+      </>
+    );
+  }
   return (
     <>
       <ScreenContent title={text.amountTitle}>
@@ -411,16 +457,7 @@ export function AmountStep({
         {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
-        <PrimaryButton
-          disabled={!valid}
-          onClick={() =>
-            void flow.start({
-              mode,
-              ...(mode === 'fiat_value' && amount.trim() && { amount: amount.trim() }),
-              ...(reason.trim() && { reason: reason.trim() }),
-            })
-          }
-        >
+        <PrimaryButton busy={checking} disabled={!valid} onClick={() => void onContinue()}>
           {text.continue}
         </PrimaryButton>
       </ScreenFooter>

@@ -4,6 +4,7 @@
  */
 
 import { parseCaip10AccountId } from '@tuwaio/orbit-core';
+import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type {
   AutoChargeOffer,
   CheckoutError,
@@ -295,4 +296,19 @@ export function isSameWallet(a: string, b: string): boolean {
  */
 export function receivedAmount(amountPaid: string | null): string | null {
   return amountPaid && /^\d+$/.test(amountPaid) && BigInt(amountPaid) > 0n ? amountPaid : null;
+}
+
+/**
+ * Whether a refund sends a noticeably different number of tokens than its amount took at the rate of the payment: half a
+ * percent or more, so a stablecoin at par never asks.
+ *
+ * @param preview - What the refund would send.
+ * @returns Whether the merchant should look first.
+ */
+export function refundRateMoved(preview: Pick<RefundPreview, 'cryptoAmount' | 'atPaymentRate'>): boolean {
+  if (!preview.atPaymentRate) return false;
+  const now = BigInt(preview.cryptoAmount);
+  const then = BigInt(preview.atPaymentRate);
+  if (then === 0n) return false;
+  return (now > then ? now - then : then - now) * 200n >= then;
 }

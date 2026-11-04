@@ -1,3 +1,4 @@
+import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type {
   CheckoutError,
   PaymentInstructions,
@@ -79,6 +80,13 @@ export interface RefundFlow {
   step: RefundStep;
   /** The refund store's phase. */
   phase: RefundPhase;
+  /**
+   * What a refund would send, before it is asked for: a requested refund holds its amount until it is sent.
+   *
+   * @param request - What to refund.
+   * @returns The preview; `null` when the store cannot show one; `refused` when Quasar would refuse it (`error` says why).
+   */
+  preview: (request: RefundRequest) => Promise<RefundPreview | 'refused' | null>;
   /** The refund, once asked for. */
   refund: RefundState['refund'];
   /** Why the last request to Quasar failed. */
@@ -278,6 +286,11 @@ export function useRefund({
     txKey,
     canConnect: connection.canConnect,
     connecting: connection.connecting,
+    preview: async (request) => {
+      const shown = await store.getState().preview(invoiceId, request);
+      if (shown) return shown;
+      return store.getState().error ? 'refused' : null;
+    },
     start: async (request) => {
       setProblem(null);
       sentTransactions.delete(store);

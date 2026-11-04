@@ -443,6 +443,15 @@ export const deLabels: NovaPaymentsLabels = {
     amountHint: 'Bis zu {amount}',
     reason: 'Grund (optional)',
     continue: 'Weiter',
+    movedTitle: 'Der Preis hat sich geändert',
+    movedText:
+      'Der Preis von {symbol} hat sich seit der Zahlung geändert, daher erfordert dieser Betrag eine andere Anzahl Token.',
+    movedSend: 'Diese Erstattung sendet',
+    movedAtPayment: 'Zum Kurs der Zahlung',
+    movedReceived: 'Die Zahlung brachte',
+    movedExact: 'Um die Token so zurückzugeben, wie sie eingegangen sind, gehen Sie zurück und wählen Sie „{exact}“.',
+    movedContinue: 'Mit diesem Betrag fortfahren',
+    movedBack: 'Zurück',
     requesting: 'Erstattung wird bei Quasar angefragt…',
     connectTitle: 'Wallet verbinden',
     connectText:
