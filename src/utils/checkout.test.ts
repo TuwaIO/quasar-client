@@ -13,6 +13,7 @@ import {
   isMovedMoneyFailure,
   isPaymentOnTheWay,
   isQuoteEnding,
+  lockedPriceOnWallet,
   screensPayingWallets,
   sentBeforeDeadline,
   unconfirmedFollowUp,
@@ -600,5 +601,32 @@ describe('payments Quasar ties to no invoice, and the 30 days of settlement retr
       }) as never;
     expect(unconfirmedFollowUp(settlement(true))).toBe('settlementRetrying');
     expect(unconfirmedFollowUp(settlement())).toBe('settlementFailed');
+  });
+});
+
+// Another wallet becoming active over a locked price
+describe('lockedPriceOnWallet', () => {
+  const locked = { autoPayOffOpen: false, phase: 'awaitingPayment', quotePayer: '0xa' } as const;
+
+  it('locks the price again for another wallet, and goes back to the methods without one', () => {
+    expect(lockedPriceOnWallet({ ...locked, payer: '0xb' })).toBe('lock');
+    expect(lockedPriceOnWallet({ ...locked, payer: null })).toBe('release');
+  });
+
+  it('keeps it for the same wallet', () => {
+    expect(lockedPriceOnWallet({ ...locked, payer: '0xa' })).toBe('keep');
+  });
+
+  it('keeps it while the wallet was connected only to turn automatic payments off', () => {
+    expect(lockedPriceOnWallet({ ...locked, autoPayOffOpen: true, payer: '0xb' })).toBe('keep');
+    expect(lockedPriceOnWallet({ ...locked, autoPayOffOpen: true, payer: null })).toBe('keep');
+  });
+
+  it('keeps it when no price is locked for a payer, or once the payment went on', () => {
+    expect(lockedPriceOnWallet({ ...locked, quotePayer: null, payer: '0xb' })).toBe('keep');
+    expect(lockedPriceOnWallet({ ...locked, quotePayer: undefined, payer: '0xb' })).toBe('keep');
+    for (const phase of ['idle', 'quoting', 'sending', 'confirming', 'done']) {
+      expect(lockedPriceOnWallet({ ...locked, phase, payer: '0xb' })).toBe('keep');
+    }
   });
 });

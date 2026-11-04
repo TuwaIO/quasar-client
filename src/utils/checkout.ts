@@ -283,6 +283,28 @@ export function deadlineAnnouncement(
 export const QUOTE_WARNING_MS = 60_000;
 
 /**
+ * What the active wallet changing does to a locked price. A wallet connected to turn automatic payments off pays
+ * nothing, so it changes nothing while that screen is open; back on the payment, what follows applies.
+ *
+ * @param params - What the change happens over.
+ * @param params.autoPayOffOpen - The screen that turns automatic payments off is open.
+ * @param params.phase - The phase of the payment; a price is locked only in `awaitingPayment`.
+ * @param params.quotePayer - The payer the price is locked for.
+ * @param params.payer - The payer the active wallet gives for the method of that price, or `null`.
+ * @returns `keep`: nothing changes; `lock`: lock the price again for `payer`; `release`: release it, back to the methods.
+ */
+export function lockedPriceOnWallet(params: {
+  autoPayOffOpen: boolean;
+  phase: string;
+  quotePayer: string | null | undefined;
+  payer: string | null;
+}): 'keep' | 'lock' | 'release' {
+  const { autoPayOffOpen, phase, quotePayer, payer } = params;
+  if (autoPayOffOpen || phase !== 'awaitingPayment' || !quotePayer || payer === quotePayer) return 'keep';
+  return payer ? 'lock' : 'release';
+}
+
+/**
  * Whether a locked price is in its last minute, when the checkout offers to keep it.
  *
  * @param ms - Time left of the price lock.

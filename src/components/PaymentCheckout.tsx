@@ -18,7 +18,7 @@ import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useQrShown } from '../hooks/useQrShown';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel, hasLabels } from '../i18n';
-import { checkoutScreen, deadlineAnnouncement, deadlineState } from '../utils/checkout';
+import { checkoutScreen, deadlineAnnouncement, deadlineState, lockedPriceOnWallet } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm } from '../utils/outcome';
@@ -445,14 +445,16 @@ export function PaymentCheckout({
       if (paysRest(payer)) void lockStorePrice();
       return;
     }
-    // A wallet connected to turn automatic payments off pays nothing; back on the payment, what follows applies
-    if (autoPayOff === 'open') return;
-    // Another wallet became active over a locked price: lock it again for that wallet, or go back to the methods
-    if (phase !== 'awaitingPayment' || !quote?.payer) return;
-    const method = checkout.methods.find((item) => item.id === quote.methodId);
+    const method = checkout.methods.find((item) => item.id === quote?.methodId);
     const payer = method ? payerFor(wallet, method) : null;
-    if (payer === quote.payer) return;
-    if (!payer) return store.getState().releaseQuote();
+    const next = lockedPriceOnWallet({
+      autoPayOffOpen: autoPayOff === 'open',
+      phase,
+      quotePayer: quote?.payer,
+      payer,
+    });
+    if (next === 'release') return store.getState().releaseQuote();
+    if (next === 'keep' || !payer) return;
     store.getState().setPayer(payer);
     if (paysRest(payer)) void lockStorePrice();
   });
