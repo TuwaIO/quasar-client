@@ -148,7 +148,8 @@ export function SellerDetailsContent({ checkout, labels }: { checkout: CheckoutV
 export function DeadlineTimer() {
   const { checkout, labels, locale, now, screen } = useCheckoutContext();
   const dueAt = checkout?.invoice.dueAt;
-  if (!checkout || !dueAt || !deadlineState(checkout.invoice.status, screen)) return null;
+  const state = checkout && deadlineState(checkout.invoice.status, screen, checkout.invoice.restPayable);
+  if (!checkout || !dueAt || !state) return null;
   const date = new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
@@ -159,10 +160,10 @@ export function DeadlineTimer() {
     <div className="novapay:flex novapay:items-center novapay:justify-between novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:py-2.5">
       <div className="novapay:flex novapay:flex-col novapay:gap-0.5">
         <span className={cn(mono, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
-          {labels.summary.payWithin}
+          {state === 'closed' ? labels.summary.refundAfter : labels.summary.payWithin}
         </span>
         <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
-          {formatLabel(labels.summary.until, { date })}
+          {state === 'closed' ? date : formatLabel(labels.summary.until, { date })}
         </span>
       </div>
       {/* role="timer": not announced every second, the checkout announces 10, 5 and 1 minutes left (WCAG 2.2.1) */}

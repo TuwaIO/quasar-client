@@ -34,10 +34,10 @@ describe('usePaymentsLabels', () => {
   it('keeps the labels shown while the next language loads', async () => {
     await loadLabels('es');
     expect(renderHook('es').common.close).toBe('Cerrar');
-    expect(renderHook('ru').common.close).toBe('Cerrar');
-    await loadLabels('ru');
+    expect(renderHook('de').common.close).toBe('Cerrar');
+    await loadLabels('de');
     await flush();
-    expect(renderHook('ru').common.close).toBe('Закрыть');
+    expect(renderHook('de').common.close).toBe('Schließen');
     expect(renderHook('en').common.close).toBe('Close');
   });
 
@@ -47,8 +47,8 @@ describe('usePaymentsLabels', () => {
       steps: { ...labels.steps, pay: `${labels.steps.pay} (${context.locale})` },
     }));
     settings = { labels: { common: { close: 'Fertig' } }, customization: { labels: { transform } } };
-    const labels = renderHook('de');
+    const labels = renderHook('fr');
     expect(labels.common.close).toBe('Fertig');
-    expect(labels.steps.pay).toBe('Pay (de)');
+    expect(labels.steps.pay).toBe('Pay (fr)');
   });
 });

@@ -376,6 +376,7 @@ export const ukLabels: NovaPaymentsLabels = {
     sellerRole:
       '{seller} — продавець. Quasar — платіжне програмне забезпечення: він ніколи не зберігає ваші кошти й не є стороною цієї покупки.',
     payWithin: 'Строк оплати',
+    refundAfter: 'Повернення можливе після',
     until: 'до {date}',
     minutesLeft: 'На оплату залишилося {minutes} хв',
     oneMinuteLeft: 'На оплату залишилася 1 хвилина',

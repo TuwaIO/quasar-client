@@ -9,7 +9,7 @@ export const CHECKOUT_LOCALES = [
   { code: 'en', name: 'English', short: 'EN' },
   { code: 'zh-CN', name: '简体中文', short: 'ZH' },
   { code: 'es', name: 'Español', short: 'ES' },
-  { code: 'ru', name: 'Русский', short: 'RU' },
+  { code: 'de', name: 'Deutsch', short: 'DE' },
   { code: 'uk', name: 'Українська', short: 'UK' },
   { code: 'it', name: 'Italiano', short: 'IT' },
 ] as const;
@@ -21,7 +21,7 @@ export type CheckoutLocale = (typeof CHECKOUT_LOCALES)[number]['code'];
 const LOADERS: Record<Exclude<CheckoutLocale, 'en'>, () => Promise<NovaPaymentsLabels>> = {
   'zh-CN': () => import('./zhCN').then((module) => module.zhCNLabels),
   es: () => import('./es').then((module) => module.esLabels),
-  ru: () => import('./ru').then((module) => module.ruLabels),
+  de: () => import('./de').then((module) => module.deLabels),
   uk: () => import('./uk').then((module) => module.ukLabels),
   it: () => import('./it').then((module) => module.itLabels),
 };

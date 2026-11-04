@@ -219,6 +219,9 @@ describe('deadlineState', () => {
       expect(deadlineState('open', screen), screen).toBe('paying');
     }
     expect(deadlineState('underpaid', 'underpaid')).toBe('paying');
+    // The rest cannot be paid: the time still runs, and no minutes left to pay are announced
+    expect(deadlineState('underpaid', 'underpaid', false)).toBe('closed');
+    expect(deadlineState('underpaid', 'pay', true)).toBe('paying');
     expect(deadlineState('open', 'confirm')).toBe('confirming');
     expect(deadlineState('processing', 'confirm')).toBe('confirming');
   });

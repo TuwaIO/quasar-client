@@ -352,6 +352,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     privacy: '隐私',
     sellerRole: '{seller} 是卖方。Quasar 是付款软件：它从不持有您的资金，也不是此次购买的一方。',
     payWithin: '付款期限',
+    refundAfter: '此后可退款',
     until: '截至 {date}',
     minutesLeft: '剩余 {minutes} 分钟可付款',
     oneMinuteLeft: '剩余 1 分钟可付款',

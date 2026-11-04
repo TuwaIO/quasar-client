@@ -379,6 +379,7 @@ export const esLabels: NovaPaymentsLabels = {
     sellerRole:
       '{seller} es el vendedor. Quasar es el software de pago: nunca guarda tus fondos y no es parte de esta compra.',
     payWithin: 'Plazo de pago',
+    refundAfter: 'Reembolso posible después de',
     until: 'hasta el {date}',
     minutesLeft: 'Quedan {minutes} minutos para pagar',
     oneMinuteLeft: 'Queda 1 minuto para pagar',

@@ -19,10 +19,10 @@ const fixture = await import('../testing/checkoutFixture');
 const { DeadlineTimer, CompactSummary } = await import('./CheckoutSummary');
 
 /** The summary of an invoice in `status`, on the `screen` of the checkout. */
-function at(status: string, screen: CheckoutScreen) {
+function at(status: string, screen: CheckoutScreen, invoice: object = {}) {
   const checkout = {
     ...fixture.checkout,
-    invoice: { ...fixture.checkout.invoice, status, dueAt: '2026-10-29T08:28:00Z' },
+    invoice: { ...fixture.checkout.invoice, status, dueAt: '2026-10-29T08:28:00Z', ...invoice },
   } as typeof fixture.checkout;
   ctx = fixture.checkoutContextValue({}, { checkout, screen, now: Date.parse('2026-10-28T10:00:00Z') });
 }
@@ -65,6 +65,27 @@ describe('the countdown to the deadline', () => {
     at(status, screen);
     expect(render(DeadlineTimer, {})).toBeNull();
     expect(hasTimer(render(CompactSummary, {}))).toBe(false);
+  });
+
+  // Part arrived and the rest cannot be paid here: the time still runs until the invoice closes, and it means a refund
+  it('keeps counting beside a rest that cannot be paid, as the time until the seller can refund', () => {
+    const text = (tree: unknown) =>
+      fixture
+        .elements(tree)
+        .flatMap((element) => [element.props.children].flat())
+        .filter((child): child is string => typeof child === 'string')
+        .join(' ');
+    at('underpaid', 'underpaid', { restPayable: false });
+    const closed = render(DeadlineTimer, {});
+    expect(hasTimer(closed)).toBe(true);
+    expect(hasTimer(render(CompactSummary, {}))).toBe(true);
+    expect(text(closed)).toContain('Refund possible after');
+    expect(text(closed)).not.toContain('Payment deadline');
+    expect(text(closed)).not.toContain('until');
+    unmount();
+
+    at('underpaid', 'underpaid', { restPayable: true });
+    expect(text(render(DeadlineTimer, {}))).toContain('Payment deadline');
   });
 
   it('stays at 00:00 when the deadline passes while the payment is confirming', () => {

@@ -10,7 +10,7 @@ describe('formatCountLabel', () => {
     expect(formatCountLabel(forms, 1, 'en', { seller: 'Acme' })).toBe('1 item of Acme');
     expect(formatCountLabel(forms, 0, 'en', { seller: 'Acme' })).toBe('0 items of Acme');
     expect(formatCountLabel(forms, 2, 'en', { seller: 'Acme' })).toBe('2 items of Acme');
-    // Ukrainian and Russian take `one` for 21, 31…; Chinese never does
+    // Ukrainian takes `one` for 21, 31…; Chinese never does
     expect(formatCountLabel(forms, 21, 'uk', { seller: 'Acme' })).toBe('21 item of Acme');
     expect(formatCountLabel(forms, 1, 'zh-CN', { seller: 'Acme' })).toBe('1 items of Acme');
   });
@@ -30,8 +30,8 @@ describe('the number of lines of the compact order in every language', () => {
     ['uk', 21, '21 позиція · з ПДВ 0.20'],
     ['uk', 3, 'Позицій: 3 · з ПДВ 0.20'],
     ['uk', 11, 'Позицій: 11 · з ПДВ 0.20'],
-    ['ru', 1, '1 позиция · вкл. НДС 0.20'],
-    ['ru', 5, 'Позиций: 5 · вкл. НДС 0.20'],
+    ['de', 1, '1 Position · inkl. USt. 0.20'],
+    ['de', 5, '5 Positionen · inkl. USt. 0.20'],
     ['es', 1, '1 artículo · IVA incl. 0.20'],
     ['es', 2, '2 artículos · IVA incl. 0.20'],
     ['it', 1, '1 articolo · IVA incl. 0.20'],

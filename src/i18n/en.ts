@@ -371,6 +371,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     sellerRole:
       '{seller} is the seller. Quasar is the payment software: it never holds your funds and is not a party to this purchase.',
     payWithin: 'Payment deadline',
+    refundAfter: 'Refund possible after',
     until: 'until {date}',
     minutesLeft: '{minutes} minutes left to pay',
     oneMinuteLeft: '1 minute left to pay',

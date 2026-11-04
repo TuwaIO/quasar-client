@@ -215,7 +215,9 @@ export function CheckoutFrame({
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
   // The minutes left to pay are heard only while the buyer can still pay: not once the payment is on its way or done
-  const paying = checkout ? deadlineState(checkout.invoice.status, screen) === 'paying' : false;
+  const paying = checkout
+    ? deadlineState(checkout.invoice.status, screen, checkout.invoice.restPayable) === 'paying'
+    : false;
 
   useEffect(() => {
     if (dueAt === null) return;

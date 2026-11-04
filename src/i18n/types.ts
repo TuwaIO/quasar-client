@@ -819,6 +819,11 @@ export type NovaPaymentsLabels = {
     sellerRole: string;
     /** Above the countdown, which also shows while the payment confirms (default: `Payment deadline`) */
     payWithin: string;
+    /**
+     * Instead of it once the rest of an underpaid invoice cannot be paid: the time still runs until the invoice closes,
+     * and then the seller can refund what arrived (default: `Refund possible after`)
+     */
+    refundAfter: string;
     /** Under the countdown; `{date}` is the deadline (default: `until {date}`) */
     until: string;
     /** Announced 10 and 5 minutes before the deadline; `{minutes}` (default: `{minutes} minutes left to pay`) */
@@ -847,8 +852,8 @@ export type NovaPaymentsLabels = {
      */
     compact: string;
     /**
-     * On a phone, when the plural rule of the language picks `one` for the number of lines (1; in Ukrainian and
-     * Russian also 21, 31…); `{count}`, `{tax}` (default: `{count} item · incl. VAT {tax}`)
+     * On a phone, when the plural rule of the language picks `one` for the number of lines (1; in Ukrainian
+     * also 21, 31…); `{count}`, `{tax}` (default: `{count} item · incl. VAT {tax}`)
      */
     compactOne: string;
     /** On a phone: button that shows the order (default: `Details`) */

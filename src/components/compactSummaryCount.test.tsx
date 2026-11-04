@@ -43,7 +43,7 @@ describe('the compact order on a phone', () => {
     expect(await compactLabel('es', 1)).toMatch(/^1 artículo · /);
     expect(await compactLabel('it', 1)).toMatch(/^1 articolo · /);
     expect(await compactLabel('uk', 1)).toMatch(/^1 позиція · /);
-    expect(await compactLabel('ru', 1)).toMatch(/^1 позиция · /);
+    expect(await compactLabel('de', 1)).toMatch(/^1 Position · /);
     expect(await compactLabel('zh-CN', 1)).toMatch(/^1 件商品 · /);
   });
 });

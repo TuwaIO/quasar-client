@@ -20,7 +20,7 @@ describe('amounts', () => {
   it('shows a fiat amount with two decimals in the language of the page', () => {
     expect(formatFiat('89.54', 'en')).toBe('89.54');
     expect(formatFiat('1234.5', 'en')).toBe('1,234.50');
-    expect(formatFiat('1234.5', 'ru')).toBe('1\u00a0234,50');
+    expect(formatFiat('1234.5', 'de')).toBe('1.234,50');
     expect(formatFiat('1234.5', 'it')).toBe('1234,50');
     expect(formatFiat(49, 'es')).toBe('49,00');
     expect(formatFiat('90071992547409.93', 'en')).toBe('90,071,992,547,409.93');

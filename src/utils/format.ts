@@ -25,7 +25,7 @@ const decimalSeparator = (locale: string) =>
  *
  * @param amount - A decimal string or a number.
  * @param locale - BCP 47 language of the page.
- * @returns The formatted amount, for example `1,234.50` in English and `1 234,50` in Russian.
+ * @returns The formatted amount, for example `1,234.50` in English and `1.234,50` in German.
  */
 export function formatFiat(amount: string | number, locale: string): string {
   // Exact for decimal strings of any size: invoice amounts have two decimals

@@ -13,7 +13,7 @@ export function formatLabel(label: string, values: Record<string, string | numbe
 
 /**
  * Fills a label that counts something, in the form the plural rule of the language picks for the count
- * (`Intl.PluralRules`): `one` for `1 item` (in Ukrainian and Russian also for 21, 31…), `other` for the rest. A
+ * (`Intl.PluralRules`): `one` for `1 item` (in Ukrainian also for 21, 31…), `other` for the rest. A
  * language tag that `Intl` does not accept takes the English rule.
  *
  * @param forms - The label for the `one` category and the label for every other count; both may use `{count}`.

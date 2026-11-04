@@ -232,18 +232,25 @@ const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
  *
  * @param status - The invoice state (`checkout.invoice.status`).
  * @param screen - The screen shown.
+ * @param restPayable - Whether the rest of an underpaid invoice can be paid (`invoice.restPayable`).
  * @returns `paying` while the buyer can still pay (the countdown shows and screen readers hear the minutes left),
  * `confirming` while the payment is on its way (the countdown shows; at zero the confirm step says that the payment
  * sent in time is being confirmed) and while Quasar could not confirm it (`unconfirmed`: the buyer checks the wallet
  * before paying again, so no minutes left to pay are announced), or `null` once the payment succeeded (`paid`,
  * `autoPay`), on the outcomes in
  * which a deadline means nothing (`held`, `refunded`, `expired`, `cancelled`, `replaced`) and for an invoice that can
- * no longer be paid.
+ * no longer be paid. `closed` while part of an underpaid invoice arrived and its rest cannot be paid: the countdown still
+ * shows, as the time after which the seller can refund, and no minutes left to pay are announced.
  */
-export function deadlineState(status: string, screen: CheckoutScreen): 'paying' | 'confirming' | null {
+export function deadlineState(
+  status: string,
+  screen: CheckoutScreen,
+  restPayable?: boolean,
+): 'paying' | 'confirming' | 'closed' | null {
   if (!PAYABLE_STATUSES.has(status)) return null;
   if (screen === 'confirm' || screen === 'unconfirmed') return 'confirming';
-  return PAYING_SCREENS.has(screen) ? 'paying' : null;
+  if (!PAYING_SCREENS.has(screen)) return null;
+  return status === 'underpaid' && restPayable === false ? 'closed' : 'paying';
 }
 
 /** Minutes before the invoice deadline at which screen readers hear how much time is left. */
