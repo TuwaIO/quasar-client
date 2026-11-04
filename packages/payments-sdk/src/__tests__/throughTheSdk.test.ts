@@ -1,7 +1,8 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 import { ENTRIES, throughTheSdk } from '../../scripts/through-the-sdk.mjs';
@@ -55,6 +56,18 @@ describe('throughTheSdk', () => {
   });
 });
 
+describe('the release', () => {
+  // The package bundles the other two, and release-please splits commits by path: without this, a fix to the checkout
+  // would not release the module that contains it
+  it('releases the module whenever a package it bundles is released', () => {
+    const config = JSON.parse(readFileSync(join(root, '../../release-please-config.json'), 'utf8'));
+    expect(config.plugins).toContain('node-workspace');
+    const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+    expect(pkg.devDependencies['@tuwaio/nova-payments']).toMatch(/^workspace:/);
+    expect(pkg.devDependencies['@tuwaio/quasar-sdk']).toMatch(/^workspace:/);
+  });
+});
+
 describe('the built package', () => {
   it('imports TUWA only through the SDK and its own entries', () => {
     const tuwa = [...builtImports()].filter((name) => name.startsWith('@tuwaio/'));
@@ -80,4 +93,48 @@ describe('the built package', () => {
   it('ships the styles of the checkout', () => {
     expect(existsSync(join(dist, 'styles.css'))).toBe(true);
   });
+});
+
+describe('the types of the built package', () => {
+  const RELATIVE = /(?:from\s*|^import\s+)["'](\.\/[^"']+)["']/gm;
+
+  it('only refer to files that are in dist', () => {
+    const missing: string[] = [];
+    for (const file of readdirSync(dist)) {
+      if (!/\.d\.c?ts$/.test(file)) continue;
+      const code = readFileSync(join(dist, file), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const [, target] of code.matchAll(RELATIVE)) {
+        const base = target.replace(/\.c?js$/, '');
+        if (!existsSync(join(dist, `${base}.d.ts`)) && !existsSync(join(dist, `${base}.d.cts`))) {
+          missing.push(`${file} -> ${target}`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  // Apps with `skipLibCheck` see no error in a broken .d.ts: its types silently become `any`
+  it('compile without skipLibCheck and are not `any`', () => {
+    const entries = readdirSync(dist)
+      .filter((file) => /\.d\.ts$/.test(file))
+      .map((file) => join(dist, file));
+    const program = ts.createProgram([...entries, join(root, 'src/__tests__/fixtures/namedTypes.ts')], {
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      target: ts.ScriptTarget.ESNext,
+      jsx: ts.JsxEmit.ReactJSX,
+      strict: true,
+      noEmit: true,
+      skipLibCheck: false,
+      types: [],
+    });
+    const ours = ts
+      .getPreEmitDiagnostics(program)
+      .filter(({ file }) => file?.fileName.startsWith(root) && !file.fileName.includes('node_modules'))
+      .map(
+        ({ file, messageText }) =>
+          `${relative(root, file!.fileName)}: ${ts.flattenDiagnosticMessageText(messageText, ' ')}`,
+      );
+    expect(ours).toEqual([]);
+  }, 120_000);
 });

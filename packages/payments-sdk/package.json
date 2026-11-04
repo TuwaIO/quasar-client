@@ -79,8 +79,8 @@
     "@solana-program/system": ">=0.15",
     "@solana-program/token": ">=0.17",
     "@solana/kit": ">=8.2",
-    "@tuwaio/sdk": ">=0.6",
-    "@tuwaio/solana-sdk": ">=0.6",
+    "@tuwaio/sdk": ">=1.0.0-0",
+    "@tuwaio/solana-sdk": ">=1.0.0-0",
     "@wagmi/core": "3.x.x",
     "react": ">=19.2.3",
     "viem": "2.x.x"

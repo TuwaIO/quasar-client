@@ -17,7 +17,8 @@
     "docs:gen": "typedoc && node apps/docs/i18n/checkTranslations.mjs",
     "storybook": "pnpm docs:gen && pnpm --filter @tuwaio/quasar-client-docs storybook",
     "prepare": "husky",
-    "openapi:gen": "tsx scripts/generate-openapi.ts"
+    "openapi:gen": "tsx scripts/generate-openapi.ts",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",

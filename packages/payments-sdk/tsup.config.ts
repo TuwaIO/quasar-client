@@ -16,9 +16,12 @@ export default defineConfig([
     clean: true,
     dts: {
       resolve: BUILT_IN,
-      // The dts bundler reads only the `types` field of a package, not its `exports`: the entries have to be named
+      // The dts bundler reads only the `types` field of a package, and leaves the relative imports of what it finds under
+      // node_modules as they are, for files that are not in this package: every entry has to be named
       compilerOptions: {
         paths: {
+          '@tuwaio/nova-payments': ['../nova-payments/dist/index.d.ts'],
+          '@tuwaio/quasar-sdk': ['../quasar-sdk/dist/index.d.ts'],
           '@tuwaio/nova-payments/i18n': ['../nova-payments/dist/i18n/index.d.ts'],
           '@tuwaio/nova-payments/evm': ['../nova-payments/dist/evm/index.d.ts'],
           '@tuwaio/nova-payments/solana': ['../nova-payments/dist/solana/index.d.ts'],
