@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/isInvoicePaymentOnTheWay" />
+
+# isInvoicePaymentOnTheWay()
+
+> **isInvoicePaymentOnTheWay**(`state`, `checkout`): `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:358](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L358)
+
+Whether Quasar reports a payment of the invoice on its way, whoever handed it over (another tab, the page before it
+was reloaded, a Solana Pay transfer Quasar found): `invoicePaymentOnTheWay` of the checkout store of a current
+`@tuwaio/quasar-sdk`, else, with an older store without the field, the `pendingPayments` of the checkout it read.
+
+## Parameters
+
+### state
+
+`object` & `object`
+
+The state of the checkout store.
+
+### checkout
+
+[`CheckoutView`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutview--docs) \| `null`
+
+What the checkout token opens; `null` until loaded.
+
+## Returns
+
+`boolean`
+
+Whether a payment of the invoice may still arrive.

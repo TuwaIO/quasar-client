@@ -1,0 +1,257 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/RefundFlow" />
+
+# RefundFlow
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:78](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L78)
+
+What [useRefund](?path=/docs/packages-nova-payments-payments-functions-userefund--docs) returns.
+
+## Properties
+
+### amount
+
+> **amount**: `string`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:101](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L101)
+
+The amount to send with its symbol.
+
+***
+
+### balance
+
+> **balance**: `bigint` \| `null` \| `undefined`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:107](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L107)
+
+What the wallet holds of the asset: `undefined` while read, `null` when unknown.
+
+***
+
+### canConnect
+
+> **canConnect**: `boolean`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:115](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L115)
+
+Whether the page can connect a wallet.
+
+***
+
+### chainId
+
+> **chainId**: `string` \| `null`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:97](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L97)
+
+The CAIP-2 chain of the payment.
+
+***
+
+### connect
+
+> **connect**: () => `void`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:125](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L125)
+
+Asks the merchant to connect a wallet of the payment's chain family.
+
+#### Returns
+
+`void`
+
+***
+
+### connecting
+
+> **connecting**: `boolean`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:117](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L117)
+
+Whether the connect modal is open.
+
+***
+
+### error
+
+> **error**: [`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:93](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L93)
+
+Why the last request to Quasar failed.
+
+***
+
+### fee
+
+> **fee**: [`NativeFee`](?path=/docs/packages-nova-payments-payments-interfaces-nativefee--docs) \| `null` \| `undefined`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:109](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L109)
+
+The estimated network fee.
+
+***
+
+### network
+
+> **network**: `string`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:99](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L99)
+
+The name of its network.
+
+***
+
+### phase
+
+> **phase**: [`RefundPhase`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-refundphase--docs)
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:82](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L82)
+
+The refund store's phase.
+
+***
+
+### preview
+
+> **preview**: (`request`) => `Promise`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs) \| `"refused"` \| `null`\>
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:89](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L89)
+
+What a refund would send, before it is asked for: a requested refund holds its amount until it is sent.
+
+#### Parameters
+
+##### request
+
+[`RefundRequest`](?path=/docs/packages-nova-payments-payments-type-aliases-refundrequest--docs)
+
+What to refund.
+
+#### Returns
+
+`Promise`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs) \| `"refused"` \| `null`\>
+
+The preview; `null` when the store cannot show one; `refused` when Quasar would refuse it (`error` says why).
+
+***
+
+### problem
+
+> **problem**: [`RefundProblem`](?path=/docs/packages-nova-payments-payments-type-aliases-refundproblem--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:111](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L111)
+
+Why the refund was not sent, until the next try.
+
+***
+
+### refund
+
+> **refund**: [`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:91](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L91)
+
+The refund, once asked for.
+
+***
+
+### send
+
+> **send**: () => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:129](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L129)
+
+Sends the refund from the wallet (switching its network first) and hands its transaction to Quasar.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### start
+
+> **start**: (`params`) => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:123](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L123)
+
+Asks Quasar for the refund.
+
+#### Parameters
+
+##### params
+
+[`RefundRequest`](?path=/docs/packages-nova-payments-payments-type-aliases-refundrequest--docs)
+
+Amount, mode and reason.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### step
+
+> **step**: [`RefundStep`](?path=/docs/packages-nova-payments-payments-type-aliases-refundstep--docs)
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:80](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L80)
+
+Where the refund stands.
+
+***
+
+### switchNetwork
+
+> **switchNetwork**: () => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:127](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L127)
+
+Asks the EVM wallet to switch to the payment's network; sends nothing.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### transfer
+
+> **transfer**: [`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:95](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L95)
+
+What the wallet sends, or `null` before the refund is asked for or without a payer.
+
+***
+
+### txKey
+
+> **txKey**: `string` \| `null`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:113](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L113)
+
+The transaction the wallet sent; while Quasar has not taken it, [RefundFlow.send](#send) hands it over again.
+
+***
+
+### wallet
+
+> **wallet**: [`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:103](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L103)
+
+The connected wallet, when it is of the payment's chain family.
+
+***
+
+### wrongNetwork
+
+> **wrongNetwork**: `boolean`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:105](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L105)
+
+Whether the EVM wallet is on another network than the payment's: [RefundFlow.switchNetwork](#switchnetwork) first.

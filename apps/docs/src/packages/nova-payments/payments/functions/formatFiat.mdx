@@ -1,0 +1,32 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/formatFiat" />
+
+# formatFiat()
+
+> **formatFiat**(`amount`, `locale`): `string`
+
+Defined in: [nova-payments/src/utils/format.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/format.ts#L30)
+
+A fiat amount with two decimals and the grouping of the language, without the currency (the checkout shows its
+code next to it).
+
+## Parameters
+
+### amount
+
+`string` \| `number`
+
+A decimal string or a number.
+
+### locale
+
+`string`
+
+BCP 47 language of the page.
+
+## Returns
+
+`string`
+
+The formatted amount, for example `1,234.50` in English and `1.234,50` in German.

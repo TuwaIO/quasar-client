@@ -1,0 +1,63 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Classes/PaymentWalletError" />
+
+# PaymentWalletError
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:9](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L9)
+
+The error a payments adapter throws when it knows why the wallet did not pay.
+
+## Extends
+
+- `Error`
+
+## Constructors
+
+### Constructor
+
+> **new PaymentWalletError**(`kind`, `message`, `options?`): `PaymentWalletError`
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:16](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L16)
+
+#### Parameters
+
+##### kind
+
+[`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
+
+Why: `declined` by the buyer, `unsupported` by the wallet, `wrongNetwork` when the wallet sent it on
+another network than the payment's (a Solana wallet, which chooses its network itself), or `failed`.
+
+##### message
+
+`string`
+
+What to log.
+
+##### options?
+
+The original error as `cause`.
+
+###### cause?
+
+`unknown`
+
+#### Returns
+
+`PaymentWalletError`
+
+#### Overrides
+
+`Error.constructor`
+
+## Properties
+
+### kind
+
+> `readonly` **kind**: [`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:17](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L17)
+
+Why: `declined` by the buyer, `unsupported` by the wallet, `wrongNetwork` when the wallet sent it on
+another network than the payment's (a Solana wallet, which chooses its network itself), or `failed`.

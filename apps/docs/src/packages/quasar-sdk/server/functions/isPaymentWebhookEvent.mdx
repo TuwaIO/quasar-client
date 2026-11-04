@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Functions/isPaymentWebhookEvent" />
+
+# isPaymentWebhookEvent()
+
+> **isPaymentWebhookEvent**(`event`): `event is PaymentWebhookEvent`
+
+Defined in: [webhooks.ts:269](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L269)
+
+Whether a verified webhook is a payment event (`apiVersion: 'payments.v1'`) rather than a transaction webhook.
+
+## Parameters
+
+### event
+
+[`QuasarWebhook`](?path=/docs/packages-quasar-sdk-server-type-aliases-quasarwebhook--docs)
+
+A body returned by [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebhook--docs).
+
+## Returns
+
+`event is PaymentWebhookEvent`
+
+`true` for a payment event.

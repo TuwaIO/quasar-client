@@ -1,0 +1,92 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/UseRefundParams" />
+
+# UseRefundParams
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:55](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L55)
+
+What [useRefund](?path=/docs/packages-nova-payments-payments-functions-userefund--docs) needs.
+
+## Properties
+
+### invoice?
+
+> `optional` **invoice?**: `string`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:61](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L61)
+
+Its number, for the transaction in Pulsar (the ID without one).
+
+***
+
+### invoiceId
+
+> **invoiceId**: `string`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:59](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L59)
+
+The paid invoice to refund.
+
+***
+
+### labels
+
+> **labels**: [`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:65](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L65)
+
+The labels of the language.
+
+***
+
+### locale
+
+> **locale**: `string`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:67](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L67)
+
+The language, for amounts.
+
+***
+
+### onConnectWallet?
+
+> `optional` **onConnectWallet?**: (`family`) => `void`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L74)
+
+Connects a wallet of the payment's chain family, for apps without Nova Connect (the `onConnectWallet` of
+`NovaPaymentsProvider` otherwise). Inside `NovaConnectProvider` the refund opens its connect modal instead.
+
+#### Parameters
+
+##### family
+
+[`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs)
+
+The chain family of the payment.
+
+#### Returns
+
+`void`
+
+***
+
+### params?
+
+> `optional` **params?**: [`RefundParams`](?path=/docs/packages-quasar-sdk-server-interfaces-refundparams--docs)
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:63](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L63)
+
+The refund the app worked out: asked for at once, without the amount step.
+
+***
+
+### store
+
+> **store**: [`RefundStore`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-refundstore--docs)
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:57](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L57)
+
+The refund store (`createRefundStore` of `@tuwaio/quasar-sdk/checkout`).

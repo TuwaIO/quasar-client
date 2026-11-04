@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/cleanBuyer" />
+
+# cleanBuyer()
+
+> **cleanBuyer**(`buyer`): [`Buyer`](?path=/docs/packages-quasar-sdk-server-interfaces-buyer--docs)
+
+Defined in: [nova-payments/src/utils/buyer.ts:99](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/buyer.ts#L99)
+
+The details to send: trimmed, empty ones left out, the country in capitals.
+
+## Parameters
+
+### buyer
+
+`Partial`\<`Record`\<keyof [`Buyer`](?path=/docs/packages-quasar-sdk-server-interfaces-buyer--docs), `string`\>\>
+
+The details as typed.
+
+## Returns
+
+[`Buyer`](?path=/docs/packages-quasar-sdk-server-interfaces-buyer--docs)
+
+The `Buyer` for `setBuyer` of the checkout store.

@@ -1,0 +1,28 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/isPaymentOnTheWay" />
+
+# isPaymentOnTheWay()
+
+> **isPaymentOnTheWay**(`state`): `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:342](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L342)
+
+Whether a payment this page handed over is on its way: `paymentOnTheWay` of the checkout store of a current
+`@tuwaio/quasar-sdk` (`true` from a successful submit or relay, also a relay answered `sending`, which has no
+transaction key, until the payment settles or fails), else, with an older store without the field, whether the page
+handed over a transaction (`txKey` or `txHash`).
+
+## Parameters
+
+### state
+
+`Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"txKey"` \| `"txHash"`\> & `object`
+
+The state of the checkout store.
+
+## Returns
+
+`boolean`
+
+Whether a payment of this page may still arrive.

@@ -1,0 +1,37 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/shouldHandOver" />
+
+# shouldHandOver()
+
+> **shouldHandOver**(`state`): `boolean`
+
+Defined in: [nova-payments/src/utils/handOver.ts:57](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/handOver.ts#L57)
+
+Whether a sent payment still needs tracking when the checkout closes: Quasar has not settled it, and it did not
+fail on-chain or turn out not to pay the invoice.
+
+## Parameters
+
+### state
+
+The `phase` and `error` of the checkout store.
+
+#### error
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null`
+
+The last failure; `payment_failed` means the transaction failed on-chain, `payment_mismatch`
+that it succeeded without paying the invoice: Quasar already has the final word on both.
+
+#### phase
+
+[`CheckoutPhase`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutphase--docs)
+
+Where the payment stands.
+
+## Returns
+
+`boolean`
+
+`true` to hand it over.

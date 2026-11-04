@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/quoteRate" />
+
+# quoteRate()
+
+> **quoteRate**(`quote`, `totalMinor`): `number` \| `null`
+
+Defined in: [nova-payments/src/utils/pay.ts:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L74)
+
+The market price of one token in the invoice currency behind a quote. Quasar asks for
+`total × (1 + markup) × (1 − discount) / price` tokens, so the price is recovered without the method's markup or
+discount, which the checkout shows apart. For display only: amounts are never derived from it.
+
+## Parameters
+
+### quote
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+
+The locked quote.
+
+### totalMinor
+
+`string` \| `null`
+
+The invoice total in minor units (cents) the quote pays.
+
+## Returns
+
+`number` \| `null`
+
+The price, or `null` without a total or a token amount.

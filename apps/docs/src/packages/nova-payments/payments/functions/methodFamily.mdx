@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/methodFamily" />
+
+# methodFamily()
+
+> **methodFamily**(`method`): [`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs) \| `null`
+
+Defined in: [nova-payments/src/utils/methods.ts:172](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L172)
+
+The chain family of a payment method.
+
+## Parameters
+
+### method
+
+[`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+
+The method.
+
+## Returns
+
+[`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs) \| `null`
+
+`eip155` or `solana`; `null` for another namespace.

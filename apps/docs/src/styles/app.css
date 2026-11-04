@@ -1,0 +1,238 @@
+@import '@tuwaio/nova-core/dist/index.css';
+@import '@tuwaio/nova-transactions/dist/index.css';
+@import '@tuwaio/nova-connect/dist/index.css';
+@import '@tuwaio/nova-payments/dist/index.css';
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STORYBOOK DOCS PALETTE — Sapphire / Cobalt / Oceanic Azure (Light)
+                            & Sapphire / Glacial Sky (Dark)
+   Matches @tuwaio/docs-ui v0.5.5 while keeping Nova's --tuwa-button-gradient-*
+   variables untouched for the ConnectButton.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --tuwa-docs-primary: #0052ff;
+  --tuwa-docs-via: #1d4ed8;
+  --tuwa-docs-secondary: #0284c7;
+  --tuwa-docs-gradient: linear-gradient(135deg, #0052ff 0%, #1d4ed8 50%, #0284c7 100%);
+}
+
+.dark {
+  --tuwa-docs-primary: #38bdf8;
+  --tuwa-docs-via: #3b82f6;
+  --tuwa-docs-secondary: #7dd3fc;
+  --tuwa-docs-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #7dd3fc 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STORYBOOK DOCS HEADINGS — Geist Mono
+   Applies Geist Mono to all h1-h6 inside the Storybook docs container, 
+   but strictly EXCLUDES any heading that is inside a component preview 
+   (.sbdocs-preview or .docs-story) via CSS :not() selectors.
+   This guarantees zero leakage into the actual components!
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sbdocs-content h1:not(.sbdocs-preview h1):not(.docs-story h1),
+.sbdocs-content h2:not(.sbdocs-preview h2):not(.docs-story h2),
+.sbdocs-content h3:not(.sbdocs-preview h3):not(.docs-story h3),
+.sbdocs-content h4:not(.sbdocs-preview h4):not(.docs-story h4),
+.sbdocs-content h5:not(.sbdocs-preview h5):not(.docs-story h5),
+.sbdocs-content h6:not(.sbdocs-preview h6):not(.docs-story h6) {
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  letter-spacing: -0.02em !important;
+}
+
+.sbdocs-content a:not(.sbdocs-preview a):not(.docs-story a):not(.tuwa-docs-footer a) {
+  color: var(--tuwa-docs-primary);
+  text-decoration-color: rgba(0, 82, 255, 0.3);
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
+}
+
+.sbdocs-content a:not(.sbdocs-preview a):not(.docs-story a):not(.tuwa-docs-footer a):hover {
+  color: var(--tuwa-docs-secondary);
+  text-decoration-color: var(--tuwa-docs-secondary);
+}
+
+.dark .sbdocs-content a:not(.sbdocs-preview a):not(.docs-story a):not(.tuwa-docs-footer a) {
+  color: var(--tuwa-docs-primary);
+  text-decoration-color: rgba(56, 189, 248, 0.4);
+}
+
+.dark .sbdocs-content a:not(.sbdocs-preview a):not(.docs-story a):not(.tuwa-docs-footer a):hover {
+  color: var(--tuwa-docs-secondary);
+  text-decoration-color: var(--tuwa-docs-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DOCS FOOTER — .storybook/DocsFooter.tsx
+   Like the footer of the TUWA documentation sites (Footer of @tuwaio/docs-ui):
+   logo and links, a divider, the description and the policies, a divider,
+   the copyright. The footer has `sb-unstyled`, so the docs typography does not apply.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.tuwa-docs-footer {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--tuwa-border-primary);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tuwa-text-secondary);
+}
+
+.tuwa-docs-footer__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.tuwa-docs-footer__divided {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tuwa-border-primary);
+}
+
+.tuwa-docs-footer__row.tuwa-docs-footer__divided {
+  align-items: flex-start;
+}
+
+.tuwa-docs-footer__logo {
+  display: flex;
+  align-items: center;
+}
+
+.tuwa-docs-footer__logo img {
+  height: 24px;
+  width: auto;
+}
+
+.tuwa-docs-footer__logo-light {
+  display: block;
+}
+
+.tuwa-docs-footer__logo-dark {
+  display: none;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.45));
+}
+
+.dark .tuwa-docs-footer__logo-light {
+  display: none;
+}
+
+.dark .tuwa-docs-footer__logo-dark {
+  display: block;
+}
+
+.tuwa-docs-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.tuwa-docs-footer__policies {
+  flex: 1 1 320px;
+  justify-content: flex-end;
+}
+
+.tuwa-docs-footer__link {
+  color: var(--tuwa-text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.tuwa-docs-footer__link:hover,
+.tuwa-docs-footer__link:focus-visible {
+  color: var(--tuwa-docs-primary);
+}
+
+.tuwa-docs-footer__link--strong {
+  font-weight: 600;
+}
+
+.tuwa-docs-footer__social {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.tuwa-docs-footer__social--npm:hover,
+.tuwa-docs-footer__social--npm:focus-visible {
+  color: rgb(220 38 38);
+}
+
+.dark .tuwa-docs-footer__social--npm:hover,
+.dark .tuwa-docs-footer__social--npm:focus-visible {
+  color: rgb(248 113 113);
+}
+
+.tuwa-docs-footer__about {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.tuwa-docs-footer p {
+  margin: 0;
+}
+
+.tuwa-docs-footer__description {
+  font-size: 13px;
+  color: var(--tuwa-text-primary);
+}
+
+.tuwa-docs-footer .tuwa-docs-footer__license {
+  margin-top: 4px;
+}
+
+.tuwa-docs-footer__copyright {
+  text-align: center;
+  color: var(--tuwa-text-tertiary);
+}
+
+@media (max-width: 640px) {
+  .tuwa-docs-footer__row,
+  .tuwa-docs-footer__policies {
+    justify-content: center;
+  }
+
+  .tuwa-docs-footer__about {
+    text-align: center;
+  }
+
+  .tuwa-docs-footer__social span {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANGUAGE — the language tool of the toolbar (.storybook/manager.jsx, i18n/)
+   The note above docs pages that stay in English while Ukrainian or Chinese is
+   selected (.storybook/preview.tsx), and the wrapper that gives the component
+   previews the `lang` of their labels without taking part in the layout.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.tuwa-storybook-locale {
+  display: contents;
+}
+
+.tuwa-docs-note {
+  margin: 0 0 24px;
+  padding: 10px 14px;
+  border: 1px solid var(--tuwa-border-primary);
+  border-left: 3px solid var(--tuwa-docs-primary);
+  border-radius: var(--tuwa-rounded-corners);
+  background: var(--tuwa-bg-secondary);
+  color: var(--tuwa-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* A table wider than a narrow screen scrolls on its own, not with the page */
+.sbdocs-content table:not(.sbdocs-preview table):not(.docs-story table):not(.docblock-argstable) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}

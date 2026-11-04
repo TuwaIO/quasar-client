@@ -1,0 +1,39 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/PaymentCheckoutChildCustomizations" />
+
+# PaymentCheckoutChildCustomizations
+
+Defined in: [nova-payments/src/components/customization.ts:384](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L384)
+
+Customization of the Nova Transactions parts the confirm and paid steps show.
+
+## Properties
+
+### hashLink?
+
+> `optional` **hashLink?**: `Pick`\<`HashLinkProps`, `"className"` \| `"classNames"`\>
+
+Defined in: [nova-payments/src/components/customization.ts:390](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L390)
+
+The transaction with its explorer link (`HashLink` of `@tuwaio/nova-transactions`).
+
+***
+
+### progressIndicator?
+
+> `optional` **progressIndicator?**: `Pick`\<`TxProgressIndicatorProps`, `"className"` \| `"stepClassNames"` \| `"StepComponent"`\>
+
+Defined in: [nova-payments/src/components/customization.ts:388](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L388)
+
+The steps Sent, Confirming, Paid (`TxProgressIndicator` of `@tuwaio/nova-transactions`).
+
+***
+
+### statusVisual?
+
+> `optional` **statusVisual?**: `Pick`\<`TxStatusVisualProps`, `"className"` \| `"iconClassNames"`\>
+
+Defined in: [nova-payments/src/components/customization.ts:386](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L386)
+
+The status icon (`TxStatusVisual` of `@tuwaio/nova-transactions`).

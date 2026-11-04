@@ -1,0 +1,37 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/balanceShortfall" />
+
+# balanceShortfall()
+
+> **balanceShortfall**(`balance`, `quote`, `fee?`): [`BalanceShortfall`](?path=/docs/packages-nova-payments-payments-interfaces-balanceshortfall--docs) \| `null`
+
+Defined in: [nova-payments/src/utils/pay.ts:105](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L105)
+
+What a wallet lacks to pay a quote.
+
+## Parameters
+
+### balance
+
+`bigint`
+
+The wallet's balance of the quoted token, in base units.
+
+### quote
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+
+The locked quote.
+
+### fee?
+
+`bigint` = `0n`
+
+The network fee, when it is paid in the quoted token (the native coin); counted in what is needed.
+
+## Returns
+
+[`BalanceShortfall`](?path=/docs/packages-nova-payments-payments-interfaces-balanceshortfall--docs) \| `null`
+
+The shortfall, or `null` when the balance is enough.

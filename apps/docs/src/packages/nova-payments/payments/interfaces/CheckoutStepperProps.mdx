@@ -1,0 +1,69 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/CheckoutStepperProps" />
+
+# CheckoutStepperProps
+
+Defined in: [nova-payments/src/components/CheckoutStepper.tsx:10](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/CheckoutStepper.tsx#L10)
+
+Props of [CheckoutStepper](?path=/docs/packages-nova-payments-payments-functions-checkoutstepper--docs).
+
+## Properties
+
+### className?
+
+> `optional` **className?**: `string`
+
+Defined in: [nova-payments/src/components/CheckoutStepper.tsx:16](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/CheckoutStepper.tsx#L16)
+
+Classes added to the list.
+
+***
+
+### labels
+
+> **labels**: [`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+Defined in: [nova-payments/src/components/CheckoutStepper.tsx:14](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/CheckoutStepper.tsx#L14)
+
+The labels of the checkout language.
+
+***
+
+### stepClassName?
+
+> `optional` **stepClassName?**: (`step`, `index`) => `string` \| `undefined`
+
+Defined in: [nova-payments/src/components/CheckoutStepper.tsx:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/CheckoutStepper.tsx#L24)
+
+Classes added to a step (`customization.classNames.step` of `PaymentCheckout`).
+
+#### Parameters
+
+##### step
+
+[`CheckoutStep`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstep--docs)
+
+The step.
+
+##### index
+
+`number`
+
+Its position, from 0.
+
+#### Returns
+
+`string` \| `undefined`
+
+The classes, or nothing.
+
+***
+
+### steps
+
+> **steps**: [`CheckoutStep`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstep--docs)[]
+
+Defined in: [nova-payments/src/components/CheckoutStepper.tsx:12](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/CheckoutStepper.tsx#L12)
+
+The steps, from `checkoutSteps`.

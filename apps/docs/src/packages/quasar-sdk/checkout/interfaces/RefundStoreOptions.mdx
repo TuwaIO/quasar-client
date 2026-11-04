@@ -1,0 +1,111 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/RefundStoreOptions" />
+
+# RefundStoreOptions
+
+Defined in: [checkout/refundStore.ts:64](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L64)
+
+Options of [createRefundStore](?path=/docs/packages-quasar-sdk-checkout-functions-createrefundstore--docs): the three calls, which the app runs on its server with the secret key.
+
+## Properties
+
+### get
+
+> **get**: (`refundId`) => `Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>
+
+Defined in: [checkout/refundStore.ts:72](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L72)
+
+Reads the refund, for example through `quasar.payments.getRefund`.
+
+#### Parameters
+
+##### refundId
+
+`string`
+
+#### Returns
+
+`Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>
+
+***
+
+### pollMs?
+
+> `optional` **pollMs?**: `number`
+
+Defined in: [checkout/refundStore.ts:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L74)
+
+How often to read a refund being confirmed, in milliseconds. Defaults to `5000`.
+
+***
+
+### preview?
+
+> `optional` **preview?**: (`invoiceId`, `params`) => `Promise`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs)\>
+
+Defined in: [checkout/refundStore.ts:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L68)
+
+Shows what a refund would send, for example through `quasar.payments.previewRefund`. Optional.
+
+#### Parameters
+
+##### invoiceId
+
+`string`
+
+##### params
+
+[`RefundParams`](?path=/docs/packages-quasar-sdk-server-interfaces-refundparams--docs)
+
+#### Returns
+
+`Promise`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs)\>
+
+***
+
+### request
+
+> **request**: (`invoiceId`, `params`) => `Promise`\<[`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\>
+
+Defined in: [checkout/refundStore.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L66)
+
+Asks for the refund, for example a Server Action that calls `quasar.payments.refund`.
+
+#### Parameters
+
+##### invoiceId
+
+`string`
+
+##### params
+
+[`RefundParams`](?path=/docs/packages-quasar-sdk-server-interfaces-refundparams--docs)
+
+#### Returns
+
+`Promise`\<[`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\>
+
+***
+
+### submit
+
+> **submit**: (`refundId`, `params`) => `Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>
+
+Defined in: [checkout/refundStore.ts:70](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L70)
+
+Hands over its transaction, for example through `quasar.payments.submitRefund`.
+
+#### Parameters
+
+##### refundId
+
+`string`
+
+##### params
+
+[`SubmitRefundParams`](?path=/docs/packages-quasar-sdk-server-interfaces-submitrefundparams--docs)
+
+#### Returns
+
+`Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>

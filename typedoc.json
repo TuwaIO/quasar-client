@@ -1,0 +1,56 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Packages",
+  "entryPointStrategy": "packages",
+  "entryPoints": ["packages/nova-payments", "packages/quasar-sdk"],
+  "packageOptions": {
+    "entryPoints": ["src/index.ts"],
+    "tsconfig": "../../tsconfig.json",
+    "exclude": [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
+      "**/*.stories.tsx",
+      "**/__tests__/**",
+      "**/tests/**",
+      "**/testing/**"
+    ],
+    "excludeInternal": true,
+    "excludeExternals": true,
+    "gitRevision": "main",
+    "compilerOptions": {
+      "paths": {
+        "@tuwaio/nova-payments": ["./packages/nova-payments/src/index.ts"],
+        "@tuwaio/nova-payments/i18n": ["./packages/nova-payments/src/i18n/index.ts"],
+        "@tuwaio/nova-payments/evm": ["./packages/nova-payments/src/evm/index.ts"],
+        "@tuwaio/nova-payments/solana": ["./packages/nova-payments/src/solana/index.ts"],
+        "@tuwaio/quasar-sdk": ["./packages/quasar-sdk/src/index.ts"],
+        "@tuwaio/quasar-sdk/checkout": ["./packages/quasar-sdk/src/checkout/index.ts"],
+        "@tuwaio/quasar-sdk/react": ["./packages/quasar-sdk/src/react/index.ts"]
+      }
+    }
+  },
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "./apps/docs/typedoc/preserveTypeAnnotations.mjs",
+    "./apps/docs/typedoc/hideExternalMembers.mjs",
+    "./apps/docs/typedoc/storybookRoutes.mjs",
+    "./apps/docs/typedoc/stripBadges.mjs"
+  ],
+  "out": "apps/docs/src/packages",
+  "fileExtension": ".mdx",
+  "sanitizeComments": true,
+  "readme": "apps/docs/typedoc/packages-overview.md",
+  "mergeReadme": true,
+  "entryFileName": "index",
+  "excludeScopesInPaths": true,
+  "pageTitleTemplates": {
+    "member": "{name}"
+  },
+  "githubPages": false,
+  "hideGenerator": true,
+  "hideBreadcrumbs": true,
+  "hidePageHeader": true,
+  "cleanOutputDir": true
+}

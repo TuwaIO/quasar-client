@@ -1,0 +1,66 @@
+{
+  "name": "@tuwaio/quasar-client",
+  "version": "0.0.1",
+  "private": true,
+  "author": "Oleksandr Tkach",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@12.11.2",
+  "description": "Monorepo for Quasar Client: the client side of the Quasar engine. The Quasar API client, the Nova Payments wallet-to-wallet checkout for React, and the Payments module of the TUWA SDK.",
+  "scripts": {
+    "build": "pnpm --filter \"./packages/**\" build",
+    "postinstall": "pnpm build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --fix --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "test": "pnpm --filter \"./packages/**\" test",
+    "clean": "find . -name node_modules -type d -prune -exec rm -rf '{}' + && find . -name dist -type d -prune -exec rm -rf '{}' + && rm -rf .turbo",
+    "docs:gen": "typedoc && node apps/docs/i18n/checkTranslations.mjs",
+    "storybook": "pnpm docs:gen && pnpm --filter @tuwaio/quasar-client-docs storybook",
+    "prepare": "husky",
+    "openapi:gen": "tsx scripts/generate-openapi.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TuwaIO/quasar-client.git"
+  },
+  "homepage": "https://github.com/TuwaIO/quasar-client",
+  "bugs": {
+    "url": "https://github.com/TuwaIO/quasar-client/issues"
+  },
+  "contributors": [
+    {
+      "name": "Oleksandr Tkach",
+      "url": "https://github.com/Argeare5"
+    }
+  ],
+  "devDependencies": {
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@eslint/js": "^10.0.1",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "@tuwaio/orbit-core": "^0.6.0",
+    "@tuwaio/pulsar-core": "^0.11.1",
+    "@types/node": "^26.6.5",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.7",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "eslint-plugin-storybook": "10.6.5",
+    "globals": "^17.13.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "semantic-release": "^25.0.9",
+    "tsx": "^4.23.15",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.14.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  }
+}

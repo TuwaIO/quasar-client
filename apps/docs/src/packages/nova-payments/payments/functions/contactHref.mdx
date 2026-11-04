@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/contactHref" />
+
+# contactHref()
+
+> **contactHref**(`merchant`, `subject`): `string` \| `null`
+
+Defined in: [nova-payments/src/utils/outcome.ts:29](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L29)
+
+Where "Contact \<seller\>" leads: an email to the seller's support address about the invoice, else the seller's site.
+
+## Parameters
+
+### merchant
+
+`Pick`\<[`CheckoutMerchant`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmerchant--docs), `"supportEmail"` \| `"website"`\>
+
+The seller's support email and site.
+
+### subject
+
+`string`
+
+The subject of the email, for example `Invoice INV-2026-42`.
+
+## Returns
+
+`string` \| `null`
+
+The link, or `null` when the seller gave neither.

@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/instructionsChainId" />
+
+# instructionsChainId()
+
+> **instructionsChainId**(`instructions`): `string`
+
+Defined in: [nova-payments/src/utils/pay.ts:117](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L117)
+
+The CAIP-2 chain a quote is paid on.
+
+## Parameters
+
+### instructions
+
+[`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs)
+
+What the wallet sends.
+
+## Returns
+
+`string`
+
+For example `eip155:8453` or `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`.

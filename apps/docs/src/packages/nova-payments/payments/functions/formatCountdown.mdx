@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/formatCountdown" />
+
+# formatCountdown()
+
+> **formatCountdown**(`ms`): `string`
+
+Defined in: [nova-payments/src/utils/format.ts:91](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/format.ts#L91)
+
+Time left as a countdown: `mm:ss` under an hour, `hh:mm:ss` under a day, `Nd hh:mm:ss` beyond.
+
+## Parameters
+
+### ms
+
+`number`
+
+Milliseconds left; a negative value counts as zero.
+
+## Returns
+
+`string`
+
+The countdown.

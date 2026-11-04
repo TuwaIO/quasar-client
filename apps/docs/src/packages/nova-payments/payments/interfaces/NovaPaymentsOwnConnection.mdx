@@ -1,0 +1,89 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/NovaPaymentsOwnConnection" />
+
+# NovaPaymentsOwnConnection
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:45](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L45)
+
+The wallet connection Nova brings when the app has no `SatelliteConnectProvider` above [NovaPaymentsProvider](?path=/docs/packages-nova-payments-payments-functions-novapaymentsprovider--docs):
+a Satellite store, its watchers and a Nova Connect modal, all its own. Create it once, at module level: new adapter
+objects on every render would be passed to the store again.
+
+Nova keeps one store per Satellite adapter (the first of `adapter`) for the life of the page, since the wagmi config
+and the wallets keep their connections too: a checkout closed and opened again, another page, or a second
+`NovaPaymentsProvider` on the same adapters shows the wallet still connected. Nova's part of the package (its
+store and the Nova Connect modal) loads on demand, the first time a provider uses its own connection.
+
+## Properties
+
+### adapter
+
+> **adapter**: `SatelliteAdapter`\<`Connector`, `Connection`\> \| `SatelliteAdapter`\<`Connector`, `Connection`\>[]
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:50](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L50)
+
+The Satellite adapters of Nova's store: `satelliteEVMAdapter(wagmiConfig, chains)` of `@tuwaio/satellite-evm`,
+`satelliteSolanaAdapter({ rpcUrls })` of `@tuwaio/satellite-solana`.
+
+***
+
+### adapters
+
+> **adapters**: [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)[]
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L60)
+
+The payment adapters, on the same wagmi config as `adapter`: `paymentsEVMAdapter(wagmiConfig)`,
+`paymentsSolanaAdapter({ rpcUrls })`.
+
+***
+
+### autoConnect?
+
+> `optional` **autoConnect?**: `boolean`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L74)
+
+Whether to reconnect the last wallet after a page load (default `false`). With `true`, Satellite's start-up runs
+once per page load (`initializeAutoConnect` of the store): with `@tuwaio/satellite-core` 0.11.1 or later it
+reconnects only the last wallet, without a permission prompt, and disconnects only connections this page opened;
+earlier versions first disconnect every wallet of its adapters, which can drop the wallets of other tabs. Without it, Nova's connect modal hides "Remember this wallet", since nothing would reconnect the wallet, unless
+`novaConnect.customization` sets `hidden` of `modals.connectModal.childComponents.rememberWallet`.
+
+***
+
+### novaConnect
+
+> **novaConnect**: `Omit`\<`NovaConnectProviderPropsWithCustomization`, `"children"` \| `"siwx"`\>
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L66)
+
+The props of Nova's own connect modal (`NovaConnectProvider` of `@tuwaio/nova-connect`): `appChains` and/or
+`solanaRPCUrls` (the modals are rendered only with them), `labels`, `legal`, `withBalance`… Never `siwx`: Nova's
+own connection pays and refunds, it does not sign anyone in.
+
+***
+
+### rememberWallet?
+
+> `optional` **rememberWallet?**: `boolean`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:82](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L82)
+
+Whether to keep the connected wallet in `localStorage` after the tab closes (default `false`: in `sessionStorage`
+until the tab closes). See `rememberWallet` of `createSatelliteConnectStore` from `@tuwaio/satellite-core`. The
+keys are shared with every Satellite store of the site: connecting a wallet that is not remembered moves the last
+connection out of `localStorage`, and disconnecting removes it, so another Satellite app on the same origin
+forgets the wallet it remembered.
+
+***
+
+### watchers
+
+> **watchers**: `ReactNode`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:55](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L55)
+
+The watchers of that store, which follow the wallets: `<EVMConnectorsWatcher wagmiConfig={wagmiConfig} />` of
+`@tuwaio/nova-connect/evm`, `<SolanaConnectorsWatcher />` of `@tuwaio/nova-connect/solana` (without `siwx`).

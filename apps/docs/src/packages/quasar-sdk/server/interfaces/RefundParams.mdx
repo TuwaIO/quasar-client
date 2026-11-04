@@ -1,0 +1,39 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/RefundParams" />
+
+# RefundParams
+
+Defined in: [modules/payments/types.ts:574](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L574)
+
+What [PaymentsModule.refund](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#refund) takes.
+
+## Properties
+
+### amount?
+
+> `optional` **amount?**: `string`
+
+Defined in: [modules/payments/types.ts:576](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L576)
+
+Amount in the invoice currency; everything left when omitted. Leave it out with `exact_received`.
+
+***
+
+### mode?
+
+> `optional` **mode?**: [`RefundMode`](?path=/docs/packages-quasar-sdk-server-type-aliases-refundmode--docs)
+
+Defined in: [modules/payments/types.ts:578](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L578)
+
+`fiat_value` (default) or `exact_received`.
+
+***
+
+### reason?
+
+> `optional` **reason?**: `string`
+
+Defined in: [modules/payments/types.ts:580](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L580)
+
+Why; printed on the credit note.

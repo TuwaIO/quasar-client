@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/sentBeforeDeadline" />
+
+# sentBeforeDeadline()
+
+> **sentBeforeDeadline**(`params`): `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:400](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L400)
+
+Whether the payment on its way counts as sent before the invoice deadline. For a payment this page handed over that
+Quasar already reported on, Quasar's word on that payment decides (`paymentSentInTime` of the checkout store: its keys
+are among the `onTimeTxKeys` Quasar learned of before `dueAt`), whatever the clock of the page says. Otherwise Quasar
+says it for the invoice with `paymentCountsUntil` (it learned of a payment of the invoice before `dueAt` and waits for
+it): its word decides, except for a payment this page handed over at or after the deadline by its clock, which Quasar
+holds even while it waits for another one. A Quasar that does not report the field leaves the clock of the page: a
+payment this page handed over before the deadline.
+
+## Parameters
+
+### params
+
+[`SentBeforeDeadlineParams`](?path=/docs/packages-nova-payments-payments-interfaces-sentbeforedeadlineparams--docs)
+
+See [SentBeforeDeadlineParams](?path=/docs/packages-nova-payments-payments-interfaces-sentbeforedeadlineparams--docs).
+
+## Returns
+
+`boolean`
+
+`true` to say that the payment was sent in time and is being confirmed.

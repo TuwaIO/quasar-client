@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/useCheckoutEvents" />
+
+# useCheckoutEvents()
+
+> **useCheckoutEvents**(`params`): `void`
+
+Defined in: [nova-payments/src/hooks/useCheckoutEvents.ts:33](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutEvents.ts#L33)
+
+Tells the app what happened in a checkout through its handlers: `onStatusChange` with the first phase and invoice
+status and on every change, `onError` once per new error, and `onExpire` when the locked price runs out (at the
+tick that crosses its end) and when the invoice expires, with whether a payment is on its way (one this page handed
+over, one of the invoice Quasar reports, as on a reopened page, or one Quasar could not confirm yet and reads again).
+Handlers that change between renders are called in their latest version.
+
+## Parameters
+
+### params
+
+[`UseCheckoutEventsParams`](?path=/docs/packages-nova-payments-payments-interfaces-usecheckouteventsparams--docs)
+
+See [UseCheckoutEventsParams](?path=/docs/packages-nova-payments-payments-interfaces-usecheckouteventsparams--docs).
+
+## Returns
+
+`void`

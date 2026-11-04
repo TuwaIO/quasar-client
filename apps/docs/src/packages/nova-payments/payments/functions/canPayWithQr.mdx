@@ -1,0 +1,32 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/canPayWithQr" />
+
+# canPayWithQr()
+
+> **canPayWithQr**(`method`, `payUrl?`): `boolean`
+
+Defined in: [nova-payments/src/utils/methods.ts:197](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L197)
+
+Whether a method can be paid by scanning a QR code with a phone: Solana with Solana Pay, an EVM method only through
+the payment page opened on the phone.
+
+## Parameters
+
+### method
+
+[`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+
+The method.
+
+### payUrl?
+
+`string` \| `null`
+
+The payment page of the invoice (its `payUrl`), if the app has it.
+
+## Returns
+
+`boolean`
+
+Whether the QR option applies.

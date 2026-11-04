@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    "packages/nova-payments": {
+      "package-name": "@tuwaio/nova-payments",
+      "release-type": "node"
+    },
+    "packages/payments-sdk": {
+      "package-name": "@tuwaio/payments-sdk",
+      "release-type": "node"
+    },
+    "packages/quasar-sdk": {
+      "package-name": "@tuwaio/quasar-sdk",
+      "release-type": "node"
+    }
+  },
+  "initial-version": "0.0.1"
+}

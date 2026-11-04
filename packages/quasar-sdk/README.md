@@ -1,9 +1,9 @@
 # @tuwaio/quasar-sdk
 
 [![NPM Version](https://img.shields.io/npm/v/@tuwaio/quasar-sdk.svg)](https://www.npmjs.com/package/@tuwaio/quasar-sdk)
-[![License](https://img.shields.io/npm/l/@tuwaio/quasar-sdk.svg)](https://github.com/TuwaIO/sdk/blob/main/packages/quasar-sdk/LICENSE)
+[![License](https://img.shields.io/npm/l/@tuwaio/quasar-sdk.svg)](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/LICENSE)
 
-`@tuwaio/quasar-sdk` is the Layer 5 (L5) package of the **TUWA SDK**: the client of the API of **Quasar**, the TUWA backend that tracks the transactions of your app on the server, keeps their history and, for a Payments app, issues invoices paid in crypto straight to your wallets. It works with Quasar Cloud (`https://api.tuwa.io`) and with a self-hosted Quasar server. It has four parts: the `Quasar` client for your server (with webhook verification), the headless checkout for the browser (`@tuwaio/quasar-sdk/checkout`), a check for the browser (`@tuwaio/quasar-sdk/react`), and the `quasar-sdk` CLI that relays webhooks to `localhost`.
+`@tuwaio/quasar-sdk` is the client of the API of **Quasar**, the TUWA backend that tracks the transactions of your app on the server, keeps their history and, for a Payments app, issues invoices paid in crypto straight to your wallets. It works with Quasar Cloud (`https://api.tuwa.io`) and with a self-hosted Quasar server. It has four parts: the `Quasar` client for your server (with webhook verification), the headless checkout for the browser (`@tuwaio/quasar-sdk/checkout`), a check for the browser (`@tuwaio/quasar-sdk/react`), and the `quasar-sdk` CLI that relays webhooks to `localhost`.
 
 ---
 
@@ -202,8 +202,8 @@ The transactions you sync, with their `payload`, are stored by Quasar, and so ar
 
 ## 📚 API Reference
 
-Every export, with signatures and types generated from the source, is documented at **[sdk.docs.tuwa.io/packages/quasar-sdk](https://sdk.docs.tuwa.io/packages/quasar-sdk)**. The HTTP API is described in the **[Quasar API reference](https://docs.tuwa.io/quasar/api)**.
+Every export, with signatures and types generated from the source, is documented at **[payments.docs.tuwa.io](https://payments.docs.tuwa.io/?path=/docs/packages-quasar-sdk-overview--docs)**. The HTTP API is described in the **[Quasar API reference](https://docs.tuwa.io/quasar/api)**.
 
 ## 📄 License
 
-Licensed under the **Apache-2.0 License**. See the [LICENSE](https://github.com/TuwaIO/sdk/blob/main/packages/quasar-sdk/LICENSE) file for details.
+Licensed under the **Apache-2.0 License**. See the [LICENSE](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/LICENSE) file for details.

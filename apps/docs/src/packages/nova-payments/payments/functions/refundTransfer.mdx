@@ -1,0 +1,60 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/refundTransfer" />
+
+# refundTransfer()
+
+> **refundTransfer**(`instructions`): [`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs) \| `null`
+
+Defined in: [nova-payments/src/utils/refund.ts:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/refund.ts#L20)
+
+The transfer of a refund as a payments adapter sends it (`sendTransfer`): the asset of the payment to the payer, on
+the chain of the payment. The token is the contract or mint of the CAIP-19 asset, `native` for the coin of the chain.
+
+## Parameters
+
+### instructions
+
+What Quasar asks to send.
+
+#### amount
+
+`string`
+
+Amount in base units.
+
+#### assetId
+
+`string`
+
+CAIP-19 asset.
+
+#### chainId
+
+`string`
+
+CAIP-2 chain.
+
+#### decimals
+
+`number`
+
+Decimals of the token.
+
+#### symbol
+
+`string`
+
+Symbol of the token.
+
+#### to
+
+`string` \| `null`
+
+Recipient: the payer.
+
+## Returns
+
+[`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs) \| `null`
+
+The transfer, or `null` without a recipient or on a chain no adapter pays on.

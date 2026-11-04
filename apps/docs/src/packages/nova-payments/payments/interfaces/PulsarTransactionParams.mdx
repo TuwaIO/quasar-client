@@ -1,0 +1,79 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/PulsarTransactionParams" />
+
+# PulsarTransactionParams
+
+Defined in: [nova-payments/src/adapters/types.ts:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L22)
+
+A payment the wallet sent, with the texts of its transaction, for [PaymentsAdapter.pulsarTransaction](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs#pulsartransaction).
+
+## Properties
+
+### account
+
+> **account**: `string`
+
+Defined in: [nova-payments/src/adapters/types.ts:28](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L28)
+
+The sender.
+
+***
+
+### connectorType
+
+> **connectorType**: `string`
+
+Defined in: [nova-payments/src/adapters/types.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L30)
+
+The connector of the wallet (`evm:metamask`).
+
+***
+
+### description
+
+> **description**: `string`
+
+Defined in: [nova-payments/src/adapters/types.ts:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L34)
+
+Description of the transaction (at most 300 characters).
+
+***
+
+### instructions
+
+> **instructions**: [`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs)
+
+Defined in: [nova-payments/src/adapters/types.ts:26](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L26)
+
+What the wallet sent.
+
+***
+
+### payload
+
+> **payload**: `Record`\<`string`, `string`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:36](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L36)
+
+What the transaction pays: `quasarInvoice` is the invoice ID.
+
+***
+
+### title
+
+> **title**: `string`
+
+Defined in: [nova-payments/src/adapters/types.ts:32](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L32)
+
+Title of the transaction (at most 100 characters).
+
+***
+
+### txKey
+
+> **txKey**: `string`
+
+Defined in: [nova-payments/src/adapters/types.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L24)
+
+The transaction hash (EVM) or signature (Solana).

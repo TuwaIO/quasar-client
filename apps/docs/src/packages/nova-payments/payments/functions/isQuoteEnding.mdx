@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/isQuoteEnding" />
+
+# isQuoteEnding()
+
+> **isQuoteEnding**(`ms`): `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:313](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L313)
+
+Whether a locked price is in its last minute, when the checkout offers to keep it.
+
+## Parameters
+
+### ms
+
+`number`
+
+Time left of the price lock.
+
+## Returns
+
+`boolean`
+
+`true` from [QUOTE\_WARNING\_MS](?path=/docs/packages-nova-payments-payments-variables-quote-warning-ms--docs) down to the end.

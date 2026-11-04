@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/screensPayingWallets" />
+
+# screensPayingWallets()
+
+> **screensPayingWallets**(`checkout`): `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:325](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L325)
+
+Whether the merchant checks paying wallets before payment: `amlScreening` of the checkout, `true` when its AML mode
+is `block` or `flag`. The pay step says so only then. A checkout of a Quasar version without the field counts as
+checking, as the pay step always said before.
+
+## Parameters
+
+### checkout
+
+[`CheckoutView`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutview--docs)
+
+What the checkout token opens.
+
+## Returns
+
+`boolean`
+
+`false` only when the checkout says that the merchant does not check paying wallets.

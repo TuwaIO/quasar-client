@@ -1,0 +1,39 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/QuoteAmounts" />
+
+# QuoteAmounts
+
+Defined in: [nova-payments/src/utils/pay.ts:33](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L33)
+
+What a quote moves, in base units of its token.
+
+## Properties
+
+### fee
+
+> **fee**: \{ `amount`: `string`; `percent`: `string`; \} \| `null`
+
+Defined in: [nova-payments/src/utils/pay.ts:39](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L39)
+
+The token's transfer fee on top, with its percent; `null` when the token keeps none.
+
+***
+
+### receives
+
+> **receives**: `string`
+
+Defined in: [nova-payments/src/utils/pay.ts:37](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L37)
+
+What the merchant receives.
+
+***
+
+### send
+
+> **send**: `string`
+
+Defined in: [nova-payments/src/utils/pay.ts:35](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L35)
+
+What the buyer sends.

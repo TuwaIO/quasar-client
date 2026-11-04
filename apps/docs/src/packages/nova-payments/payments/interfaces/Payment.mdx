@@ -1,0 +1,72 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/Payment" />
+
+# Payment
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:37](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L37)
+
+What [usePayment](?path=/docs/packages-nova-payments-payments-functions-usepayment--docs) returns.
+
+## Properties
+
+### dismiss
+
+> **dismiss**: () => `void`
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:50](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L50)
+
+Closes the wallet window. A request the wallet still shows stays open there: a transaction it sends later is
+still handed to Quasar, a refusal is not shown.
+
+#### Returns
+
+`void`
+
+***
+
+### pay
+
+> **pay**: () => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:43](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L43)
+
+Pays the quote from the wallet; resolves when Quasar took it or the wallet refused.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### problem
+
+> **problem**: [`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:41](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L41)
+
+Why the wallet did not pay or switch, until the next try.
+
+***
+
+### status
+
+> **status**: [`PaymentStatus`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentstatus--docs)
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:39](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L39)
+
+Where the payment stands.
+
+***
+
+### switchNetwork
+
+> **switchNetwork**: () => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:45](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L45)
+
+Asks the wallet to switch to the quote's chain.
+
+#### Returns
+
+`Promise`\<`void`\>

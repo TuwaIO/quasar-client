@@ -1,0 +1,59 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Overview" />
+
+# checkout
+
+The headless checkout of Quasar Payments, imported from `@tuwaio/quasar-sdk/checkout`, for the browser: a vanilla
+Zustand store per invoice that the buyer pays, opened with its checkout token (no key), and a refund store for the
+merchant's wallet, whose calls run on the app's server. It needs `zustand` (5.x); it sends no transaction itself
+(Pulsar or the wallet does) and depends on no chain library. `@tuwaio/nova-payments` renders it.
+
+## Interfaces
+
+- [CheckoutApi](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutapi--docs)
+- [CheckoutConsent](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutconsent--docs)
+- [CheckoutError](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs)
+- [CheckoutHandOverStorage](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouthandoverstorage--docs)
+- [CheckoutInvoice](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs)
+- [CheckoutLine](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutline--docs)
+- [CheckoutMerchant](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmerchant--docs)
+- [CheckoutMethod](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+- [CheckoutPayerProof](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutpayerproof--docs)
+- [CheckoutQuote](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+- [CheckoutRejectedPayment](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutrejectedpayment--docs)
+- [CheckoutState](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs)
+- [CheckoutStatusEvent](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstatusevent--docs)
+- [CheckoutStoreOptions](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstoreoptions--docs)
+- [CheckoutSubscription](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutsubscription--docs)
+- [CheckoutTheme](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouttheme--docs)
+- [CheckoutView](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutview--docs)
+- [EventSourceLike](?path=/docs/packages-quasar-sdk-checkout-interfaces-eventsourcelike--docs)
+- [GaslessOffer](?path=/docs/packages-quasar-sdk-checkout-interfaces-gaslessoffer--docs)
+- [GrantPermissionParams](?path=/docs/packages-quasar-sdk-checkout-interfaces-grantpermissionparams--docs)
+- [PayerProofConfirmation](?path=/docs/packages-quasar-sdk-checkout-interfaces-payerproofconfirmation--docs)
+- [PayerProofMessage](?path=/docs/packages-quasar-sdk-checkout-interfaces-payerproofmessage--docs)
+- [PermissionRequest](?path=/docs/packages-quasar-sdk-checkout-interfaces-permissionrequest--docs)
+- [RefundState](?path=/docs/packages-quasar-sdk-checkout-interfaces-refundstate--docs)
+- [RefundStoreOptions](?path=/docs/packages-quasar-sdk-checkout-interfaces-refundstoreoptions--docs)
+- [TransferAuthorizationTypedData](?path=/docs/packages-quasar-sdk-checkout-interfaces-transferauthorizationtypeddata--docs)
+
+## Type Aliases
+
+- [AutoChargeOffer](?path=/docs/packages-quasar-sdk-checkout-type-aliases-autochargeoffer--docs)
+- [CheckoutPhase](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutphase--docs)
+- [CheckoutReview](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutreview--docs)
+- [CheckoutStore](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutstore--docs)
+- [EventSourceConstructor](?path=/docs/packages-quasar-sdk-checkout-type-aliases-eventsourceconstructor--docs)
+- [PayerProofKind](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payerproofkind--docs)
+- [PayerProofNeed](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payerproofneed--docs)
+- [PayerProofSigner](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payerproofsigner--docs)
+- [PayerProofStatus](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payerproofstatus--docs)
+- [PaymentInstructions](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs)
+- [RefundPhase](?path=/docs/packages-quasar-sdk-checkout-type-aliases-refundphase--docs)
+- [RefundStore](?path=/docs/packages-quasar-sdk-checkout-type-aliases-refundstore--docs)
+
+## Functions
+
+- [createCheckoutStore](?path=/docs/packages-quasar-sdk-checkout-functions-createcheckoutstore--docs)
+- [createRefundStore](?path=/docs/packages-quasar-sdk-checkout-functions-createrefundstore--docs)

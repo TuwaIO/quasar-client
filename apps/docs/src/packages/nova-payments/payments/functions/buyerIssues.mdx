@@ -1,0 +1,37 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/buyerIssues" />
+
+# buyerIssues()
+
+> **buyerIssues**(`buyer`, `collect`, `company`): `Partial`\<`Record`\<keyof [`Buyer`](?path=/docs/packages-quasar-sdk-server-interfaces-buyer--docs), [`BuyerIssue`](?path=/docs/packages-nova-payments-payments-type-aliases-buyerissue--docs)\>\>
+
+Defined in: [nova-payments/src/utils/buyer.ts:77](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/buyer.ts#L77)
+
+What is missing or invalid in the details, field by field.
+
+## Parameters
+
+### buyer
+
+`Partial`\<`Record`\<keyof [`Buyer`](?path=/docs/packages-quasar-sdk-server-interfaces-buyer--docs), `string`\>\>
+
+The details as typed.
+
+### collect
+
+[`BuyerCollect`](?path=/docs/packages-nova-payments-payments-type-aliases-buyercollect--docs)
+
+What the checkout collects.
+
+### company
+
+`boolean`
+
+Whether the buyer wants a company invoice.
+
+## Returns
+
+`Partial`\<`Record`\<keyof [`Buyer`](?path=/docs/packages-quasar-sdk-server-interfaces-buyer--docs), [`BuyerIssue`](?path=/docs/packages-nova-payments-payments-type-aliases-buyerissue--docs)\>\>
+
+The issue of each refused field; empty when the details can be sent.

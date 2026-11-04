@@ -1,0 +1,261 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/PaymentCheckoutHandlers" />
+
+# PaymentCheckoutHandlers
+
+Defined in: [nova-payments/src/components/customization.ts:277](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L277)
+
+Handlers of [PaymentCheckout](?path=/docs/packages-nova-payments-payments-functions-paymentcheckout--docs): some wrap an action of the buyer (call `proceed()` or `select()` to run it, or
+do something else instead), the others tell the app what happened. `onPaid`, `onClose` and `onContact` are props of
+the checkout.
+
+## Properties
+
+### onError?
+
+> `optional` **onError?**: (`params`) => `void`
+
+Defined in: [nova-payments/src/components/customization.ts:341](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L341)
+
+The checkout got a new error (Quasar refused an action, or did not answer); the screen shows it.
+
+#### Parameters
+
+##### params
+
+The error.
+
+###### error
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs)
+
+Its code and message.
+
+###### screen
+
+[`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
+
+The screen shown.
+
+#### Returns
+
+`void`
+
+***
+
+### onExpire?
+
+> `optional` **onExpire?**: (`params`) => `void`
+
+Defined in: [nova-payments/src/components/customization.ts:356](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L356)
+
+The locked price ran out (`quote`), or the invoice expired (`invoice`). Either can happen while a payment is on its
+way: the invoice can still close while it confirms (Quasar waits for a payment it learned of
+before the deadline only for a limited time, and holds a payment that lands later for the seller to accept or
+return), so do not offer a new invoice at once when `paymentOnTheWay` is `true`; the checkout keeps following the
+invoice and shows a paid or held outcome if it changes.
+
+#### Parameters
+
+##### params
+
+What expired.
+
+###### kind
+
+`"invoice"` \| `"quote"`
+
+`quote` or `invoice`.
+
+###### paymentOnTheWay
+
+`boolean`
+
+A payment is on its way: one this page handed over (`paymentOnTheWay` of the
+checkout store, or, with an older `@tuwaio/quasar-sdk`, a transaction handed over), one of the invoice Quasar
+reports (`invoicePaymentOnTheWay`: the page was reopened while it was on its way, another tab paid), or one Quasar
+could not confirm yet and reads again (`invoicePaymentUnresolved`).
+
+#### Returns
+
+`void`
+
+***
+
+### onLocaleChange?
+
+> `optional` **onLocaleChange?**: (`params`) => `void` \| `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/components/customization.ts:320](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L320)
+
+The buyer picked a language. Without the handler the checkout switches to it and saves it on the invoice.
+
+#### Parameters
+
+##### params
+
+The language.
+
+###### locale
+
+`"en"` \| `"uk"` \| `"zh-CN"` \| `"es"` \| `"it"` \| `"de"`
+
+The language picked.
+
+###### proceed
+
+() => `Promise`\<`void`\>
+
+Switches and saves it.
+
+#### Returns
+
+`void` \| `Promise`\<`void`\>
+
+***
+
+### onMethodSelect?
+
+> `optional` **onMethodSelect?**: (`params`) => `void`
+
+Defined in: [nova-payments/src/components/customization.ts:285](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L285)
+
+The buyer picked a token or a network. Without the handler the method is chosen.
+
+#### Parameters
+
+##### params
+
+The pick.
+
+###### method
+
+[`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+
+The method picked.
+
+###### select
+
+() => `void`
+
+Chooses it.
+
+#### Returns
+
+`void`
+
+***
+
+### onQuote?
+
+> `optional` **onQuote?**: (`params`) => `void` \| `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/components/customization.ts:295](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L295)
+
+The buyer pressed "Continue" on the method step. Without the handler the checkout locks the price for the
+connected wallet (or connects one first), or shows the QR code.
+
+#### Parameters
+
+##### params
+
+The step.
+
+###### method
+
+[`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+
+The chosen method.
+
+###### payWith
+
+`"qr"` \| `"wallet"`
+
+`wallet` or `qr`.
+
+###### proceed
+
+() => `Promise`\<`void`\>
+
+Goes on as the checkout would.
+
+#### Returns
+
+`void` \| `Promise`\<`void`\>
+
+***
+
+### onStatusChange?
+
+> `optional` **onStatusChange?**: (`params`) => `void`
+
+Defined in: [nova-payments/src/components/customization.ts:329](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L329)
+
+The phase of the checkout or the status of the invoice changed; also called once with the first ones.
+
+#### Parameters
+
+##### params
+
+The state.
+
+###### phase
+
+[`CheckoutPhase`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutphase--docs)
+
+The phase of the checkout store.
+
+###### screen
+
+[`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
+
+The screen shown.
+
+###### status
+
+[`InvoiceStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-invoicestatus--docs) \| `null`
+
+The invoice status, `null` before the invoice loads.
+
+#### Returns
+
+`void`
+
+***
+
+### onSubmit?
+
+> `optional` **onSubmit?**: (`params`) => `void` \| `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/components/customization.ts:308](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L308)
+
+The buyer pressed the pay button ("Pay", "Sign to pay"). Without the handler the wallet prompt opens.
+
+#### Parameters
+
+##### params
+
+The payment.
+
+###### method
+
+[`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+
+The method.
+
+###### proceed
+
+() => `Promise`\<`void`\>
+
+Opens the wallet prompt.
+
+###### quote
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+
+The locked price: amount, recipient, network.
+
+#### Returns
+
+`void` \| `Promise`\<`void`\>

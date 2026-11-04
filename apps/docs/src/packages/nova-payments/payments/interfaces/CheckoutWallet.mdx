@@ -1,0 +1,91 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/CheckoutWallet" />
+
+# CheckoutWallet
+
+Defined in: [nova-payments/src/utils/methods.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L24)
+
+The wallet connected through Satellite Connect, as the checkout uses it.
+
+## Properties
+
+### address
+
+> **address**: `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:26](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L26)
+
+The account address.
+
+***
+
+### chainId
+
+> **chainId**: `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:28](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L28)
+
+CAIP-2 chain the wallet is on (Solana clusters as their genesis-hash ID).
+
+***
+
+### connection
+
+> **connection**: `unknown`
+
+Defined in: [nova-payments/src/utils/methods.ts:44](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L44)
+
+The Satellite Connect connection itself, for the chain adapters (the Solana adapter signs with its account).
+
+***
+
+### connectorType
+
+> **connectorType**: `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:32](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L32)
+
+Connector type of Satellite Connect (`evm:metamask`).
+
+***
+
+### family
+
+> **family**: [`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs)
+
+Defined in: [nova-payments/src/utils/methods.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L30)
+
+Its chain family.
+
+***
+
+### icon?
+
+> `optional` **icon?**: `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L42)
+
+The icon the wallet gives itself, an image `data:` URI (EIP-6963, Wallet Standard) or an HTTPS URL: of the
+connection (the connector that connected), else of its wallet in the Satellite store; `undefined` when neither
+gives one the checkout can show, and the checkout shows the icon of `walletId`.
+
+***
+
+### name
+
+> **name**: `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:36](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L36)
+
+The wallet name to show: the name the wallet gives itself (`Switch Wallet`), see [walletLabel](?path=/docs/packages-nova-payments-payments-functions-walletlabel--docs).
+
+***
+
+### walletId
+
+> **walletId**: `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L34)
+
+The wallet id for `WalletIcon` of `@tuwaio/nova-core` (`metamask`).

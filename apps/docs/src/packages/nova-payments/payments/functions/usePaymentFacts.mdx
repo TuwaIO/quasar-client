@@ -1,0 +1,42 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/usePaymentFacts" />
+
+# usePaymentFacts()
+
+> **usePaymentFacts**(): `object`
+
+Defined in: [nova-payments/src/hooks/usePaymentFacts.ts:14](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentFacts.ts#L14)
+
+What the confirm and paid steps show of the payment: its network and amount (from the locked quote), the
+transaction (Quasar's hash, else the submitted key) with its explorer link from the chain adapter, and the sender.
+
+## Returns
+
+`object`
+
+The facts; each is `null` (or `undefined` for the link) when unknown.
+
+### amount
+
+> **amount**: `string` \| `null`
+
+### explorerUrl
+
+> **explorerUrl**: `string` \| `undefined`
+
+### from
+
+> **from**: `string` \| `null`
+
+### network
+
+> **network**: `string` \| `null`
+
+### paidAmount
+
+> **paidAmount**: `string` \| `null`
+
+### txKey
+
+> **txKey**: `string` \| `null`

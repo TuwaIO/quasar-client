@@ -1,0 +1,68 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/checkoutScreen" />
+
+# checkoutScreen()
+
+> **checkoutScreen**(`state`, `choices?`): [`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
+
+Defined in: [nova-payments/src/utils/checkout.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L88)
+
+The screen for the state of a checkout store.
+
+## Parameters
+
+### state
+
+The `phase`, `checkout` and `quote` of the store.
+
+#### checkout
+
+[`CheckoutView`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutview--docs) \| `null`
+
+What the checkout token opens; `null` until loaded.
+
+#### error?
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null`
+
+The store's last error: a price refused after the signature shows on the method step.
+
+#### payerProof?
+
+`string`
+
+Whether the connected wallet must confirm the invoice (`payerProof` of the checkout store;
+left out by older stores).
+
+#### phase
+
+[`CheckoutPhase`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutphase--docs)
+
+Where the payment stands.
+
+#### quote?
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs) \| `null`
+
+The locked price; while the first one is being locked the method screen stays, with its button
+busy, so a refused payer or a failed request is shown where the buyer chose (the step that confirms the wallet, when
+the price is locked after it).
+
+### choices?
+
+[`CheckoutScreenChoices`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutscreenchoices--docs) = `{}`
+
+What the buyer chose on the page.
+
+## Returns
+
+[`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
+
+The screen: `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
+confirm the invoice or confirms it, and after it until the price is locked (unless it was refused), also on an
+underpaid invoice whose rest another wallet pays, `qr` instead of `pay` when the buyer pays
+with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller
+corrected, `autoPay` after a paid subscription period while the automatic payments offer is open, `loading` until
+the labels of the invoice's language are loaded, `unconfirmed` in the phase of that name of a current
+`@tuwaio/quasar-sdk` (Quasar could not confirm the payment, which may still arrive).

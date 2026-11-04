@@ -1,0 +1,35 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/usePaidCallback" />
+
+# usePaidCallback()
+
+> **usePaidCallback**(`phase`, `invoice`, `onPaid`): `void`
+
+Defined in: [nova-payments/src/hooks/useOutcomeEffects.ts:11](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useOutcomeEffects.ts#L11)
+
+Tells the app once that the invoice is paid, when the checkout reaches the paid outcome.
+
+## Parameters
+
+### phase
+
+[`CheckoutPhase`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutphase--docs)
+
+Where the payment stands.
+
+### invoice
+
+[`CheckoutInvoice`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs) \| `undefined`
+
+The invoice of the checkout.
+
+### onPaid
+
+((`invoice`) => `void`) \| `undefined`
+
+The app's callback, if any.
+
+## Returns
+
+`void`

@@ -1,0 +1,72 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/SentBeforeDeadlineParams" />
+
+# SentBeforeDeadlineParams
+
+Defined in: [nova-payments/src/utils/checkout.ts:368](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L368)
+
+What [sentBeforeDeadline](?path=/docs/packages-nova-payments-payments-functions-sentbeforedeadline--docs) decides with.
+
+## Properties
+
+### checkout
+
+> **checkout**: [`CheckoutView`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutview--docs)
+
+Defined in: [nova-payments/src/utils/checkout.ts:381](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L381)
+
+The checkout: its invoice's `paymentCountsUntil` tells whether Quasar reports it, and is read with an older store.
+
+***
+
+### dueAt
+
+> **dueAt**: `number`
+
+Defined in: [nova-payments/src/utils/checkout.ts:385](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L385)
+
+The invoice deadline (`dueAt`) in milliseconds.
+
+***
+
+### handedOverAt
+
+> **handedOverAt**: `number` \| `null`
+
+Defined in: [nova-payments/src/utils/checkout.ts:383](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L383)
+
+When this page handed its payment over, by its clock; `null` when it does not know (a reload, another tab).
+
+***
+
+### state
+
+> **state**: `object` & `object`
+
+Defined in: [nova-payments/src/utils/checkout.ts:373](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L373)
+
+The state of the checkout store: `paymentCountsUntil`, `paymentSentInTime` and `paymentOnTheWay` of a current
+`@tuwaio/quasar-sdk` (`txKey`/`txHash` with an older one).
+
+#### Type Declaration
+
+##### paymentCountsUntil?
+
+> `readonly` `optional` **paymentCountsUntil?**: `string` \| `null`
+
+##### paymentOnTheWay?
+
+> `readonly` `optional` **paymentOnTheWay?**: `boolean`
+
+##### paymentSentInTime?
+
+> `readonly` `optional` **paymentSentInTime?**: `boolean` \| `null`
+
+##### txHash?
+
+> `readonly` `optional` **txHash?**: `string` \| `null`
+
+##### txKey?
+
+> `readonly` `optional` **txKey?**: `string` \| `null`

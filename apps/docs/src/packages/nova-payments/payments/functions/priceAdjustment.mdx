@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/priceAdjustment" />
+
+# priceAdjustment()
+
+> **priceAdjustment**(`method`): \{ `kind`: `"discount"` \| `"markup"`; `percent`: `string`; \} \| `null`
+
+Defined in: [nova-payments/src/utils/methods.ts:208](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L208)
+
+The discount or markup of a method, as the token and network options show it.
+
+## Parameters
+
+### method
+
+[`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+
+The method.
+
+## Returns
+
+\{ `kind`: `"discount"` \| `"markup"`; `percent`: `string`; \} \| `null`
+
+`discount` or `markup` with the percent (`'1.5'`), or `null` for neither.

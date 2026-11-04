@@ -1,0 +1,110 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Overview" />
+
+# server
+
+The Quasar API client, imported from `@tuwaio/quasar-sdk`. Use it on the server (Node.js, Next.js Server Actions and
+route handlers, Edge runtimes): it authenticates with the secret key of a Quasar app. It needs no React and no SIWX
+package; the browser helper for React apps is in `@tuwaio/quasar-sdk/react`.
+
+## Classes
+
+- [PaymentsModule](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs)
+- [PulsarModule](?path=/docs/packages-quasar-sdk-server-classes-pulsarmodule--docs)
+- [Quasar](?path=/docs/packages-quasar-sdk-server-classes-quasar--docs)
+- [QuasarSDKError](?path=/docs/packages-quasar-sdk-server-classes-quasarsdkerror--docs)
+- [QuasarWebhookError](?path=/docs/packages-quasar-sdk-server-classes-quasarwebhookerror--docs)
+
+## Interfaces
+
+- [Buyer](?path=/docs/packages-quasar-sdk-server-interfaces-buyer--docs)
+- [CancelSubscriptionParams](?path=/docs/packages-quasar-sdk-server-interfaces-cancelsubscriptionparams--docs)
+- [CorrectInvoiceParams](?path=/docs/packages-quasar-sdk-server-interfaces-correctinvoiceparams--docs)
+- [CreateOptions](?path=/docs/packages-quasar-sdk-server-interfaces-createoptions--docs)
+- [GetEventsParams](?path=/docs/packages-quasar-sdk-server-interfaces-geteventsparams--docs)
+- [HeldTransfer](?path=/docs/packages-quasar-sdk-server-interfaces-heldtransfer--docs)
+- [HistoryQuery](?path=/docs/packages-quasar-sdk-server-interfaces-historyquery--docs)
+- [Invoice](?path=/docs/packages-quasar-sdk-server-interfaces-invoice--docs)
+- [InvoiceAml](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceaml--docs)
+- [InvoiceAttempt](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceattempt--docs)
+- [InvoiceCorrection](?path=/docs/packages-quasar-sdk-server-interfaces-invoicecorrection--docs)
+- [InvoiceDetails](?path=/docs/packages-quasar-sdk-server-interfaces-invoicedetails--docs)
+- [InvoiceDocumentRef](?path=/docs/packages-quasar-sdk-server-interfaces-invoicedocumentref--docs)
+- [InvoiceLedger](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceledger--docs)
+- [InvoiceLine](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceline--docs)
+- [InvoiceLineInput](?path=/docs/packages-quasar-sdk-server-interfaces-invoicelineinput--docs)
+- [InvoicePayment](?path=/docs/packages-quasar-sdk-server-interfaces-invoicepayment--docs)
+- [InvoiceQuote](?path=/docs/packages-quasar-sdk-server-interfaces-invoicequote--docs)
+- [InvoiceSeller](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceseller--docs)
+- [InvoiceSettlement](?path=/docs/packages-quasar-sdk-server-interfaces-invoicesettlement--docs)
+- [InvoiceTermsInput](?path=/docs/packages-quasar-sdk-server-interfaces-invoicetermsinput--docs)
+- [InvoiceWalletConfirmation](?path=/docs/packages-quasar-sdk-server-interfaces-invoicewalletconfirmation--docs)
+- [InvoiceWithCheckout](?path=/docs/packages-quasar-sdk-server-interfaces-invoicewithcheckout--docs)
+- [LedgerEvent](?path=/docs/packages-quasar-sdk-server-interfaces-ledgerevent--docs)
+- [LedgerSummary](?path=/docs/packages-quasar-sdk-server-interfaces-ledgersummary--docs)
+- [ListHeldTransfersParams](?path=/docs/packages-quasar-sdk-server-interfaces-listheldtransfersparams--docs)
+- [ListInvoiceItemsParams](?path=/docs/packages-quasar-sdk-server-interfaces-listinvoiceitemsparams--docs)
+- [ListInvoicesParams](?path=/docs/packages-quasar-sdk-server-interfaces-listinvoicesparams--docs)
+- [ListSubscriptionItemsParams](?path=/docs/packages-quasar-sdk-server-interfaces-listsubscriptionitemsparams--docs)
+- [ListSubscriptionsParams](?path=/docs/packages-quasar-sdk-server-interfaces-listsubscriptionsparams--docs)
+- [PaginatedResult](?path=/docs/packages-quasar-sdk-server-interfaces-paginatedresult--docs)
+- [PaymentDocument](?path=/docs/packages-quasar-sdk-server-interfaces-paymentdocument--docs)
+- [PaymentMethod](?path=/docs/packages-quasar-sdk-server-interfaces-paymentmethod--docs)
+- [PaymentQuote](?path=/docs/packages-quasar-sdk-server-interfaces-paymentquote--docs)
+- [PaymentsList](?path=/docs/packages-quasar-sdk-server-interfaces-paymentslist--docs)
+- [PaymentWebhookEvent](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookevent--docs)
+- [PaymentWebhookHeldTransfer](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookheldtransfer--docs)
+- [PaymentWebhookHeldTransferVoided](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookheldtransfervoided--docs)
+- [PaymentWebhookHold](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookhold--docs)
+- [PulsarPoolStore](?path=/docs/packages-quasar-sdk-server-interfaces-pulsarpoolstore--docs)
+- [QuasarConfig](?path=/docs/packages-quasar-sdk-server-interfaces-quasarconfig--docs)
+- [QuasarRequestIssue](?path=/docs/packages-quasar-sdk-server-interfaces-quasarrequestissue--docs)
+- [QuoteParams](?path=/docs/packages-quasar-sdk-server-interfaces-quoteparams--docs)
+- [Refund](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)
+- [RefundParams](?path=/docs/packages-quasar-sdk-server-interfaces-refundparams--docs)
+- [RefundPreview](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs)
+- [RefundStart](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)
+- [SubmitRefundParams](?path=/docs/packages-quasar-sdk-server-interfaces-submitrefundparams--docs)
+- [Subscription](?path=/docs/packages-quasar-sdk-server-interfaces-subscription--docs)
+- [SubscriptionCharge](?path=/docs/packages-quasar-sdk-server-interfaces-subscriptioncharge--docs)
+- [SubscriptionPermission](?path=/docs/packages-quasar-sdk-server-interfaces-subscriptionpermission--docs)
+- [SubscriptionStart](?path=/docs/packages-quasar-sdk-server-interfaces-subscriptionstart--docs)
+- [TransactionWebhookEvent](?path=/docs/packages-quasar-sdk-server-interfaces-transactionwebhookevent--docs)
+- [VerifyWebhookParams](?path=/docs/packages-quasar-sdk-server-interfaces-verifywebhookparams--docs)
+
+## Type Aliases
+
+- [CreateInvoiceParams](?path=/docs/packages-quasar-sdk-server-type-aliases-createinvoiceparams--docs)
+- [CreateSubscriptionParams](?path=/docs/packages-quasar-sdk-server-type-aliases-createsubscriptionparams--docs)
+- [HeldTransferStatus](?path=/docs/packages-quasar-sdk-server-type-aliases-heldtransferstatus--docs)
+- [InvoiceLinesInput](?path=/docs/packages-quasar-sdk-server-type-aliases-invoicelinesinput--docs)
+- [InvoiceLocale](?path=/docs/packages-quasar-sdk-server-type-aliases-invoicelocale--docs)
+- [InvoiceStatus](?path=/docs/packages-quasar-sdk-server-type-aliases-invoicestatus--docs)
+- [LedgerVerification](?path=/docs/packages-quasar-sdk-server-type-aliases-ledgerverification--docs)
+- [PaymentDocumentKind](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentdocumentkind--docs)
+- [PaymentsCurrency](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentscurrency--docs)
+- [PaymentsEnvironment](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentsenvironment--docs)
+- [PaymentWebhookEventType](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentwebhookeventtype--docs)
+- [QuasarWebhook](?path=/docs/packages-quasar-sdk-server-type-aliases-quasarwebhook--docs)
+- [QuasarWebhookErrorCode](?path=/docs/packages-quasar-sdk-server-type-aliases-quasarwebhookerrorcode--docs)
+- [RefundMode](?path=/docs/packages-quasar-sdk-server-type-aliases-refundmode--docs)
+- [SubscriptionInterval](?path=/docs/packages-quasar-sdk-server-type-aliases-subscriptioninterval--docs)
+- [SubscriptionStatus](?path=/docs/packages-quasar-sdk-server-type-aliases-subscriptionstatus--docs)
+- [TaxCategory](?path=/docs/packages-quasar-sdk-server-type-aliases-taxcategory--docs)
+
+## Variables
+
+- [BASE\_API\_URL](?path=/docs/packages-quasar-sdk-server-variables-base-api-url--docs)
+- [PAYMENT\_WEBHOOK\_VERSION](?path=/docs/packages-quasar-sdk-server-variables-payment-webhook-version--docs)
+- [PAYMENTS\_ENDPOINT](?path=/docs/packages-quasar-sdk-server-variables-payments-endpoint--docs)
+- [PULSAR\_HISTORY\_ENDPOINT](?path=/docs/packages-quasar-sdk-server-variables-pulsar-history-endpoint--docs)
+- [PULSAR\_SYNC\_ENDPOINT](?path=/docs/packages-quasar-sdk-server-variables-pulsar-sync-endpoint--docs)
+- [WEBHOOK\_SIGNATURE\_HEADER](?path=/docs/packages-quasar-sdk-server-variables-webhook-signature-header--docs)
+
+## Functions
+
+- [isPaymentWebhookEvent](?path=/docs/packages-quasar-sdk-server-functions-ispaymentwebhookevent--docs)
+- [pulsarSyncHashEndpoint](?path=/docs/packages-quasar-sdk-server-functions-pulsarsynchashendpoint--docs)
+- [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebhook--docs)
+- [watchBatchHashes](?path=/docs/packages-quasar-sdk-server-functions-watchbatchhashes--docs)

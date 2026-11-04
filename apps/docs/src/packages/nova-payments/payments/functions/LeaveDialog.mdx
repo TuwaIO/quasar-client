@@ -1,0 +1,40 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/LeaveDialog" />
+
+# LeaveDialog()
+
+> **LeaveDialog**(`props`): `Element`
+
+Defined in: [nova-payments/src/components/LeaveDialog.tsx:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/LeaveDialog.tsx#L22)
+
+The question when the buyer closes the checkout before anything is sent: the invoice stays open until its deadline,
+reopened from the email or the seller's site, and the locked price is released. It is a Nova dialog of its own, over
+the checkout: one backdrop dims the whole screen, the checkout and its frame included (a layer inside the checkout
+left its frame sharp around the dimmed content); on a phone it slides up from the bottom like the other Nova dialogs.
+"Stay and pay", Escape or a click outside keep the checkout and give the focus back where it was, "Leave" closes it.
+The heading takes the focus.
+
+## Parameters
+
+### props
+
+The answers.
+
+#### onLeave
+
+() => `void`
+
+Closes it.
+
+#### onStay
+
+() => `void`
+
+Keeps the checkout open.
+
+## Returns
+
+`Element`
+
+The question, over the checkout.

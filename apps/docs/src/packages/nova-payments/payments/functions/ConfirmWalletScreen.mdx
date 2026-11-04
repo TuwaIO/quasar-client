@@ -1,0 +1,30 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/ConfirmWalletScreen" />
+
+# ConfirmWalletScreen()
+
+> **ConfirmWalletScreen**(): `Element` \| `null`
+
+Defined in: [nova-payments/src/components/ConfirmWalletScreen.tsx:43](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/ConfirmWalletScreen.tsx#L43)
+
+The step that confirms the paying wallet, right after the wallet and the method and before
+the price, for an EVM payment the buyer's wallet sends itself (`payerProof` of the checkout store is `required`): one
+sentence that it is free and moves no money, the summary of what the wallet signs (the invoice, the seller, the
+amount and the wallet), and the main button that opens the wallet's signature request. Meanwhile the window of the
+wallet covers the step, with the site the message names to check, a line that the wallet may show it as a sign-in
+request for that site, and "Try again" (signing again moves no money); a smart wallet is said to ask for its passkey.
+Once the window is closed the button works again, also while the wallet never answered. A refusal keeps the buyer
+on the step, with its reason and the same button to try again; "Back to methods" returns to the methods (or to the
+underpaid invoice whose rest another wallet pays). Once the wallet signed, the price is locked on this step and the
+pay step follows. One signature per invoice and wallet: a new price or token needs no new one, nor a new network for
+an ordinary wallet (a smart wallet's signature counts on its network only).
+
+Side effects: wallet prompts (a network switch, the signature); `POST payer-proof/message`, `POST payer-proof` and
+`POST quote` through the checkout store.
+
+## Returns
+
+`Element` \| `null`
+
+The step.

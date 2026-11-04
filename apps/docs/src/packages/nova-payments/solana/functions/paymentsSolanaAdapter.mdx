@@ -1,0 +1,47 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/solana/Functions/paymentsSolanaAdapter" />
+
+# paymentsSolanaAdapter()
+
+> **paymentsSolanaAdapter**(`options?`): [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)
+
+Defined in: [nova-payments/src/solana/paymentsSolanaAdapter.ts:127](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/solana/paymentsSolanaAdapter.ts#L127)
+
+The adapter that pays Solana methods of a Nova Payments checkout from the Wallet Standard wallet connected through
+Satellite Connect. It reads balances and estimates fees on the network, and sends SOL with a system transfer or a
+token with `transferChecked` to the merchant's associated token account (created when missing), in the token's own
+program (Token or Token-2022), with the Solana Pay reference key of the quote (a refund has none). A Token-2022
+mint with a transfer hook is refused: a Solana Pay wallet pays it with the QR code. A transfer the network refuses
+for an unknown blockhash, because the wallet sent it on another cluster (Solana wallets choose their network
+themselves), throws `PaymentWalletError` with the kind `wrongNetwork`: nothing was paid. Pass it in `adapters` of
+`NovaPaymentsProvider`.
+
+Side effects: RPC reads (the URLs of `rpcUrls`, else the public endpoints of the clusters); wallet prompts.
+
+## Parameters
+
+### options?
+
+[`PaymentsSolanaAdapterOptions`](?path=/docs/packages-nova-payments-solana-interfaces-paymentssolanaadapteroptions--docs) = `{}`
+
+See [PaymentsSolanaAdapterOptions](?path=/docs/packages-nova-payments-solana-interfaces-paymentssolanaadapteroptions--docs).
+
+## Returns
+
+[`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)
+
+The Solana adapter.
+
+## Example
+
+```tsx
+import { NovaPaymentsProvider } from '@tuwaio/nova-payments';
+import { paymentsSolanaAdapter } from '@tuwaio/nova-payments/solana';
+
+const adapters = [paymentsSolanaAdapter({ rpcUrls: { devnet: 'https://api.devnet.solana.com' } })];
+
+export function Payments({ children }: { children: React.ReactNode }) {
+  return <NovaPaymentsProvider adapters={adapters}>{children}</NovaPaymentsProvider>;
+}
+```

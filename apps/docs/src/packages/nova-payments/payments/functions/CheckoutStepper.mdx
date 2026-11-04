@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/CheckoutStepper" />
+
+# CheckoutStepper()
+
+> **CheckoutStepper**(`props`): `Element`
+
+Defined in: [nova-payments/src/components/CheckoutStepper.tsx:35](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/CheckoutStepper.tsx#L35)
+
+The steps of the payment, as an ordered list: done steps show a check, the current one is marked
+`aria-current="step"` and named "Step 2 of 3: Pay" to screen readers (WCAG 1.3.1). When the names of all steps do not
+fit (a phone, a long language), only the current step shows its name; screen readers still read every name.
+
+## Parameters
+
+### props
+
+[`CheckoutStepperProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstepperprops--docs)
+
+See [CheckoutStepperProps](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstepperprops--docs).
+
+## Returns
+
+`Element`
+
+The stepper.

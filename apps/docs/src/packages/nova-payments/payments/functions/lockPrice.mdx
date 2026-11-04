@@ -1,0 +1,36 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/lockPrice" />
+
+# lockPrice()
+
+> **lockPrice**(`store`, `showConfirmWallet`): `Promise`\<[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs) \| `null`\>
+
+Defined in: [nova-payments/src/utils/payerProof.ts:62](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payerProof.ts#L62)
+
+Locks the price for the wallet the buyer continued with, or turns to the step that confirms the wallet first: while
+the checkout store says the wallet must confirm the invoice (`payerProof` `required`), no price is asked; when Quasar
+refuses the price with `payer_proof_required` (a wallet it wants confirmed, which the checkout did not announce), the
+step shows too.
+
+Side effects: `POST quote` through the checkout store.
+
+## Parameters
+
+### store
+
+[`LockPriceStore`](?path=/docs/packages-nova-payments-payments-interfaces-lockpricestore--docs)
+
+The checkout store.
+
+### showConfirmWallet
+
+(`show`) => `void`
+
+Shows (`true`) or leaves (`false`) the step that confirms the wallet.
+
+## Returns
+
+`Promise`\<[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs) \| `null`\>
+
+The quote, or `null` when none was locked.

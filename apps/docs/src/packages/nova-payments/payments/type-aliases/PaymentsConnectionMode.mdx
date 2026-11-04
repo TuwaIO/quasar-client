@@ -1,0 +1,19 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Type Aliases/PaymentsConnectionMode" />
+
+# PaymentsConnectionMode
+
+> **PaymentsConnectionMode** = `"app"` \| `"appStore"` \| `"own"` \| `"none"`
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L20)
+
+Whose wallet connection the checkouts and refunds use, as `NovaPaymentsProvider` decided on its first render:
+
+- `app`: the app's. A Satellite store (`SatelliteConnectProvider` of `@tuwaio/satellite-react`) and
+  `NovaConnectProvider` of `@tuwaio/nova-connect` are above it: the wallet, its network, the connect modal and SIWX
+  are the app's, and Nova adds nothing.
+- `appStore`: the app's Satellite store without Nova Connect: "Connect wallet" calls `onConnectWallet`.
+- `own`: Nova's own. The app has no Satellite store and gave `ownConnection`: Nova runs its own store, watchers and
+  connect modal, without SIWX.
+- `none`: no connection. The buyer pays with a QR code, or connects through `onConnectWallet`.

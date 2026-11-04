@@ -1,0 +1,38 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/deadlineAnnouncement" />
+
+# deadlineAnnouncement()
+
+> **deadlineAnnouncement**(`previousMs`, `ms`, `announcements?`): `number` \| `null`
+
+Defined in: [nova-payments/src/utils/checkout.ts:272](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L272)
+
+Whether a tick of the invoice countdown crossed one of the announcement minutes ([DEADLINE\_ANNOUNCEMENTS](?path=/docs/packages-nova-payments-payments-variables-deadline-announcements--docs) by
+default): the checkout announces the time left then (WCAG 2.2.1), not every second.
+
+## Parameters
+
+### previousMs
+
+`number` \| `null`
+
+Time left at the previous tick; `null` on the first one.
+
+### ms
+
+`number`
+
+Time left now.
+
+### announcements?
+
+readonly `number`[] = `DEADLINE_ANNOUNCEMENTS`
+
+The minutes before the deadline to announce at.
+
+## Returns
+
+`number` \| `null`
+
+The minutes to announce (the nearest when several were crossed at once), or `null`.

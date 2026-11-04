@@ -1,0 +1,38 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/formatTokenAmount" />
+
+# formatTokenAmount()
+
+> **formatTokenAmount**(`baseUnits`, `decimals`, `locale`): `string`
+
+Defined in: [nova-payments/src/utils/format.ts:47](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/format.ts#L47)
+
+A token amount from base units, exact: every decimal the amount has (at least two), never rounded, with the
+grouping of the language. What the buyer sends must match the wallet to the last digit.
+
+## Parameters
+
+### baseUnits
+
+`string`
+
+Base units, as a decimal integer string.
+
+### decimals
+
+`number`
+
+Decimals of the token.
+
+### locale
+
+`string`
+
+BCP 47 language of the page.
+
+## Returns
+
+`string`
+
+The formatted amount, for example `89.54` for `89540000` with 6 decimals.

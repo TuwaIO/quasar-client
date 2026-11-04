@@ -1,0 +1,29 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/isFinalPaymentFailure" />
+
+# isFinalPaymentFailure()
+
+> **isFinalPaymentFailure**(`error`): `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:440](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L440)
+
+Whether the last error says that the payment can never pay the invoice: `payment_failed` (reverted, cancelled…) or
+`payment_mismatch` (it does not pay the invoice: a wrong amount or recipient…), with the reason Quasar gave. A failure
+without a reason comes from a Quasar or a `@tuwaio/quasar-sdk` that cannot tell a final failure from a payment that
+may still arrive, so it does not count, nor does `settlement_failed` (a payment the network confirmed that Quasar has
+not recorded yet, which an older store reports as `payment_mismatch`).
+
+## Parameters
+
+### error
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null` \| `undefined`
+
+The store's error.
+
+## Returns
+
+`boolean`
+
+`true` when the payment failed for good.

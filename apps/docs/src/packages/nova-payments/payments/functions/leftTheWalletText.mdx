@@ -1,0 +1,46 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/leftTheWalletText" />
+
+# leftTheWalletText()
+
+> **leftTheWalletText**(`error`, `labels`, `merchant?`): `string` \| `null`
+
+Defined in: [nova-payments/src/utils/outcome.ts:77](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L77)
+
+What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
+does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
+`pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
+`pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, `pay.mismatchOtherWalletHeld`
+when Quasar recorded it as a held transfer the seller returns, `held`; `pay.mismatchChargeHeld` for an automatic charge
+that landed after the buyer chose another way to pay), a payment Quasar closed after 24 hours without a result on chain
+(`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
+and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
+Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the
+network fee was spent" or "nothing was charged" for them.
+
+## Parameters
+
+### error
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null` \| `undefined`
+
+The store's error, if any.
+
+### labels
+
+[`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+The labels of the checkout language.
+
+### merchant?
+
+`string` = `''`
+
+The seller's name.
+
+## Returns
+
+`string` \| `null`
+
+The text, or `null` for any other error, or none.

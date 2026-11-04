@@ -1,0 +1,30 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/useCheckoutStore" />
+
+# useCheckoutStore()
+
+> **useCheckoutStore**(`options`): [`CheckoutStore`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutstore--docs)
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:54](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L54)
+
+The checkout store of an invoice (`createCheckoutStore` from `@tuwaio/quasar-sdk/checkout`): created and loaded
+after mount, destroyed on unmount or when `token` or `baseUrl` change. Until then it is a store in the `loading`
+phase that makes no requests.
+
+Side effects: the store reads the checkout and follows the invoice (an `EventSource` on its `events` route, or a
+request every `pollMs`) until the invoice is final.
+
+## Parameters
+
+### options
+
+[`UseCheckoutStoreOptions`](?path=/docs/packages-nova-payments-payments-interfaces-usecheckoutstoreoptions--docs)
+
+See [UseCheckoutStoreOptions](?path=/docs/packages-nova-payments-payments-interfaces-usecheckoutstoreoptions--docs).
+
+## Returns
+
+[`CheckoutStore`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutstore--docs)
+
+The store.

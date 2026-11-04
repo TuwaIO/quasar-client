@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/minorToDecimal" />
+
+# minorToDecimal()
+
+> **minorToDecimal**(`minor`, `digits?`): `string`
+
+Defined in: [nova-payments/src/utils/format.ts:12](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/format.ts#L12)
+
+A decimal string from an integer amount of minor units (cents), without floating point.
+
+## Parameters
+
+### minor
+
+`string`
+
+Minor units, as a decimal integer string (may be negative).
+
+### digits?
+
+`number` = `2`
+
+Minor digits of the currency (default `2`).
+
+## Returns
+
+`string`
+
+The decimal, for example `89.54` for `8954`.

@@ -1,0 +1,30 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/usePaymentsConnection" />
+
+# usePaymentsConnection()
+
+> **usePaymentsConnection**(): [`PaymentsConnectionMode`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentsconnectionmode--docs)
+
+Defined in: [nova-payments/src/hooks/usePaymentsConnection.ts:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentsConnection.ts#L22)
+
+Whose wallet connection the checkouts and refunds use: the choice of the nearest [NovaPaymentsProvider](?path=/docs/packages-nova-payments-payments-functions-novapaymentsprovider--docs)
+(made on its first render), or, without one, what the app's providers above give (`app`, `appStore` or `none`). See
+[PaymentsConnectionMode](?path=/docs/packages-nova-payments-payments-type-aliases-paymentsconnectionmode--docs).
+
+## Returns
+
+[`PaymentsConnectionMode`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentsconnectionmode--docs)
+
+The mode.
+
+## Example
+
+```tsx
+import { usePaymentsConnection } from '@tuwaio/nova-payments';
+
+export function WalletNote() {
+  const connection = usePaymentsConnection();
+  return connection === 'own' ? <p>The checkout connects its own wallet.</p> : null;
+}
+```

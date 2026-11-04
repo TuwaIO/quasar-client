@@ -1,9 +1,9 @@
 # @tuwaio/nova-payments
 
 [![NPM Version](https://img.shields.io/npm/v/@tuwaio/nova-payments.svg)](https://www.npmjs.com/package/@tuwaio/nova-payments)
-[![License](https://img.shields.io/npm/l/@tuwaio/nova-payments.svg)](https://github.com/TuwaIO/nova-uikit/blob/main/packages/nova-payments/LICENSE)
+[![License](https://img.shields.io/npm/l/@tuwaio/nova-payments.svg)](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/LICENSE)
 
-`@tuwaio/nova-payments` is the payments Layer 7 (L7) package of **Nova UI Kit**, the user interface project of TUWA Stage 4 ("User Interface"). It renders the checkout of a [Quasar Payments](https://docs.tuwa.io/quasar) invoice from its checkout token: the order with its lines, tax and deadline, the steps of the payment and its outcome, in a modal (a sheet from the bottom on a phone), in the page, or on a page of its own. It keeps no payment state of its own: the checkout store of [`@tuwaio/quasar-sdk/checkout`](https://docs.tuwa.io/quasar) reads the invoice and follows it, and no secret key reaches the browser.
+`@tuwaio/nova-payments` is the checkout of **Quasar Client**, built on [Nova UI Kit](https://stories.tuwa.io/). It renders the checkout of a [Quasar Payments](https://docs.tuwa.io/quasar) invoice from its checkout token: the order with its lines, tax and deadline, the steps of the payment and its outcome, in a modal (a sheet from the bottom on a phone), in the page, or on a page of its own. It keeps no payment state of its own: the checkout store of [`@tuwaio/quasar-sdk/checkout`](https://payments.docs.tuwa.io/?path=/docs/packages-quasar-sdk-overview--docs) reads the invoice and follows it, and no secret key reaches the browser.
 
 > [!NOTE]
 > The package is in development: native speakers review the translations of the checkout before the stable release.
@@ -236,4 +236,4 @@ Contributions are welcome! Please read our main **[Contribution Guidelines](http
 
 ## 📄 License
 
-This project is licensed under the **Apache-2.0 License** - see the [LICENSE](https://github.com/TuwaIO/nova-uikit/blob/main/packages/nova-payments/LICENSE) file for details.
+This project is licensed under the **Apache-2.0 License** - see the [LICENSE](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/LICENSE) file for details.

@@ -1,0 +1,37 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/useCheckoutState" />
+
+# useCheckoutState()
+
+> **useCheckoutState**\<`T`\>(`store`, `selector`): `T`
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:79](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L79)
+
+Reads a checkout store and re-renders when the selected part changes (`useStore` of `zustand`).
+
+## Type Parameters
+
+### T
+
+`T`
+
+## Parameters
+
+### store
+
+[`CheckoutStore`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutstore--docs)
+
+The store, from [useCheckoutStore](?path=/docs/packages-nova-payments-payments-functions-usecheckoutstore--docs).
+
+### selector
+
+(`state`) => `T`
+
+What to read.
+
+## Returns
+
+`T`
+
+The selected part of the state.

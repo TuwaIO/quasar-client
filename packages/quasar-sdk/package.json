@@ -62,12 +62,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TuwaIO/sdk.git",
+    "url": "git+https://github.com/TuwaIO/quasar-client.git",
     "directory": "packages/quasar-sdk"
   },
-  "homepage": "https://github.com/TuwaIO/sdk",
+  "homepage": "https://github.com/TuwaIO/quasar-client",
   "bugs": {
-    "url": "https://github.com/TuwaIO/sdk/issues"
+    "url": "https://github.com/TuwaIO/quasar-client/issues"
   },
   "contributors": [
     {

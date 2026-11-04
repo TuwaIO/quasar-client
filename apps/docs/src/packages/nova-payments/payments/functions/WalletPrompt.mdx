@@ -1,0 +1,35 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/WalletPrompt" />
+
+# WalletPrompt()
+
+> **WalletPrompt**(`props`): `Element`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:71](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L71)
+
+The window that stands for the pay step while the wallet asks the buyer: what to sign or confirm, and what to check
+in the wallet before — the amount, the recipient, the network and the time left of the price (WCAG 3.3.4); for the
+signature that confirms the paying wallet, the invoice, the seller and the site the message names. It sits in the
+flow of the screen, in place of the step: a screen that shows it (a custom screen of
+`customization.components.screens` too) hides its step while it shows, with `display: none` and `inert` (the step
+keeps its state), so the window fills the checkout pane, centered, without the scrollbar of a taller step, and
+passes the step's height as `stepHeight`, so a phone keeps the height of the sheet. The heading takes the focus, so
+screen readers say what happens; when the window closes and the step comes back, the focus returns to the button
+that opened it ("Pay", "Switch to …") from the page or the dialog frame it fell back to, unless the buyer moved it
+elsewhere. "Try again" re-asks only for a signature; for a transaction the buyer is sent to the wallet, where the
+request still waits, so it cannot be paid twice.
+
+## Parameters
+
+### props
+
+[`WalletPromptProps`](?path=/docs/packages-nova-payments-payments-interfaces-walletpromptprops--docs)
+
+See [WalletPromptProps](?path=/docs/packages-nova-payments-payments-interfaces-walletpromptprops--docs).
+
+## Returns
+
+`Element`
+
+The window.

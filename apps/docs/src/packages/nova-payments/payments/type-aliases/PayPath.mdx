@@ -1,0 +1,13 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Type Aliases/PayPath" />
+
+# PayPath
+
+> **PayPath** = `"relay"` \| `"paymaster"` \| `"transfer"`
+
+Defined in: [nova-payments/src/utils/pay.ts:13](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L13)
+
+How the wallet pays a quote: `relay` signs an EIP-3009 authorization that Quasar sends (the merchant pays the gas),
+`paymaster` sends the quoted calls with the checkout's ERC-7677 paymaster (a smart wallet; the merchant pays the
+gas), `transfer` sends the transfer and pays the gas.

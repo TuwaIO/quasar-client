@@ -1,0 +1,48 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/lockedPriceOnWallet" />
+
+# lockedPriceOnWallet()
+
+> **lockedPriceOnWallet**(`params`): `"keep"` \| `"lock"` \| `"release"`
+
+Defined in: [nova-payments/src/utils/checkout.ts:296](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L296)
+
+What the active wallet changing does to a locked price. A wallet connected to turn automatic payments off pays
+nothing, so it changes nothing while that screen is open; back on the payment, what follows applies.
+
+## Parameters
+
+### params
+
+What the change happens over.
+
+#### autoPayOffOpen
+
+`boolean`
+
+The screen that turns automatic payments off is open.
+
+#### payer
+
+`string` \| `null`
+
+The payer the active wallet gives for the method of that price, or `null`.
+
+#### phase
+
+`string`
+
+The phase of the payment; a price is locked only in `awaitingPayment`.
+
+#### quotePayer
+
+`string` \| `null` \| `undefined`
+
+The payer the price is locked for.
+
+## Returns
+
+`"keep"` \| `"lock"` \| `"release"`
+
+`keep`: nothing changes; `lock`: lock the price again for `payer`; `release`: release it, back to the methods.

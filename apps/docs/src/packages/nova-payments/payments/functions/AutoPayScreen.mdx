@@ -1,0 +1,22 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/AutoPayScreen" />
+
+# AutoPayScreen()
+
+> **AutoPayScreen**(): `Element` \| `null`
+
+Defined in: [nova-payments/src/components/AutoPayScreen.tsx:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/AutoPayScreen.tsx#L34)
+
+The automatic payments offer of a subscription, after a paid period: the limit the seller may take each period, the
+period, the paying wallet and the seller's wallet the charges are paid to, until when, that Quasar sends each charge
+for the seller, and how to turn it off. "Allow" asks the wallet for the ERC-7715 permission and hands it to Quasar
+(then the paid outcome says automatic payments are on); "Not now" keeps paying each invoice.
+
+Side effects: a wallet prompt; `POST permission` of the checkout.
+
+## Returns
+
+`Element` \| `null`
+
+The automatic payments step.

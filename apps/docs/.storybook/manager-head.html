@@ -1,0 +1,62 @@
+<script>
+  // Storybook writes its keyboard shortcuts and the recently viewed pages to localStorage as soon as
+  // the explorer opens. Keep both in memory only, so nothing is stored before the visitor acts
+  // (TUWA Cookie Policy), and drop what earlier versions of this site stored.
+  (function () {
+    var memoryKeys = ['@storybook/manager/store', 'lastViewedStoryIds'];
+    var memory = {};
+    var proto = Storage.prototype;
+    var getItem = proto.getItem;
+    var setItem = proto.setItem;
+    var removeItem = proto.removeItem;
+    var inMemory = function (storage, key) {
+      return storage === window.localStorage && memoryKeys.indexOf(String(key)) !== -1;
+    };
+    try {
+      memoryKeys.forEach(function (key) {
+        removeItem.call(window.localStorage, key);
+      });
+    } catch (e) {
+      // Storage unavailable: nothing to clean up
+    }
+    proto.setItem = function (key, value) {
+      if (inMemory(this, key)) {
+        memory[key] = String(value);
+        return;
+      }
+      return setItem.call(this, key, value);
+    };
+    proto.getItem = function (key) {
+      if (inMemory(this, key)) {
+        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
+      }
+      return getItem.call(this, key);
+    };
+    proto.removeItem = function (key) {
+      if (inMemory(this, key)) {
+        delete memory[key];
+        return;
+      }
+      return removeItem.call(this, key);
+    };
+  })();
+</script>
+<!-- Geist from this site (SIL Open Font License 1.1, public/fonts/OFL-Geist.txt); Geist Mono comes with @tuwaio/nova-core -->
+<link rel="stylesheet" href="/fonts/geist.css" />
+<link rel="icon" href="https://tuwa.io/brand/icon0.svg" />
+<link rel="shortcut icon" href="https://tuwa.io/brand/web-app-manifest-512x512.png" />
+<link rel="apple-touch-icon" href="https://tuwa.io/brand/web-app-manifest-512x512.png" />
+
+<style>
+  /* Sidebar brand logo: glacial sky drop-shadow glow in dark mode only */
+  html[data-tuwa-theme='dark'] .sidebar-header img,
+  html[data-tuwa-theme='dark'] a[title*='TUWA'] img,
+  html[data-tuwa-theme='dark'] [class*='sidebar'] img {
+    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.45));
+  }
+  html[data-tuwa-theme='light'] .sidebar-header img,
+  html[data-tuwa-theme='light'] a[title*='TUWA'] img,
+  html[data-tuwa-theme='light'] [class*='sidebar'] img {
+    filter: none;
+  }
+</style>

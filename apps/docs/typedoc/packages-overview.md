@@ -1,0 +1,5 @@
+# Packages
+
+Quasar Client has three packages. `@tuwaio/quasar-sdk` is the client of the Quasar API, for your server and for headless checkouts. `@tuwaio/nova-payments` renders the checkout and the refunds with Nova UI Kit. `@tuwaio/payments-sdk` brings both to an app that uses `@tuwaio/sdk`, with one copy of Nova.
+
+Each package page starts with the package README (the same text that is published to npm), followed by the full list of its exports. Every component, hook, function, type and constant page is generated from the TypeScript source and its JSDoc, so the reference always matches the released code. `@tuwaio/payments-sdk` only re-exports the other two, so its page is the README alone.

@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/walletErrorKind" />
+
+# walletErrorKind()
+
+> **walletErrorKind**(`error`): [`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:51](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L51)
+
+Why a wallet request failed, from the error the wallet library threw: EIP-1193 code `4001` and viem's
+`UserRejectedRequestError` (also as a `cause`), and the "user rejected" messages of Wallet Standard wallets, are
+`declined`. wagmi's `ChainNotConfiguredError` (the network of the payment is not in the wagmi config of
+`paymentsEVMAdapter`; the buyer can still pay with the QR code) and `ConnectorNotConnectedError` (that config has no
+connection of the wallet) are `unsupported`.
+
+Side effects: in development (`NODE_ENV` is `development`), a `ConnectorNotConnectedError` logs a `console.error`:
+the app gave `NovaPaymentsProvider` an EVM adapter built on another wagmi config than the one its wallet connection
+(its Satellite EVM adapter) uses.
+
+## Parameters
+
+### error
+
+`unknown`
+
+What the wallet library threw.
+
+## Returns
+
+[`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
+
+`declined`, `unsupported`, `wrongNetwork` or `failed`.

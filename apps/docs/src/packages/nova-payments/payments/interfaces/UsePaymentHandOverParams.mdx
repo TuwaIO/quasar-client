@@ -1,0 +1,91 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/UsePaymentHandOverParams" />
+
+# UsePaymentHandOverParams
+
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:11](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L11)
+
+What [usePaymentHandOver](?path=/docs/packages-nova-payments-payments-functions-usepaymenthandover--docs) needs.
+
+## Properties
+
+### adapterFor
+
+> **adapterFor**: (`family`) => [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs) \| `undefined`
+
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L22)
+
+The adapter of a chain family.
+
+#### Parameters
+
+##### family
+
+[`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs)
+
+The family.
+
+#### Returns
+
+[`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs) \| `undefined`
+
+The adapter, if any.
+
+***
+
+### labels
+
+> **labels**: [`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:26](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L26)
+
+The labels of the checkout language.
+
+***
+
+### locale
+
+> **locale**: `string`
+
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:28](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L28)
+
+The checkout language (a BCP 47 tag).
+
+***
+
+### open
+
+> **open**: `boolean`
+
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:15](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L15)
+
+Whether the checkout is open (a modal); an inline checkout stays open while it is shown.
+
+***
+
+### pulsar
+
+> **pulsar**: [`PaymentsPulsar`](?path=/docs/packages-nova-payments-payments-interfaces-paymentspulsar--docs) \| `undefined`
+
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L24)
+
+The app's Pulsar store, if any.
+
+***
+
+### store
+
+> **store**: `object`
+
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:13](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L13)
+
+The checkout store (its state is read when the payment is handed over).
+
+#### getState
+
+> **getState**: () => `Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"phase"` \| `"error"` \| `"checkout"`\>
+
+##### Returns
+
+`Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"phase"` \| `"error"` \| `"checkout"`\>

@@ -1,0 +1,178 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/WalletPromptProps" />
+
+# WalletPromptProps
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:17](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L17)
+
+Props of [WalletPrompt](?path=/docs/packages-nova-payments-payments-functions-walletprompt--docs).
+
+## Properties
+
+### amount
+
+> **amount**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:27](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L27)
+
+The amount with its symbol.
+
+***
+
+### details?
+
+> `optional` **details?**: `object`[]
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:41](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L41)
+
+The rows to check in the wallet instead of the payment's (the signature that confirms the wallet).
+
+#### name
+
+> **name**: `string`
+
+#### value
+
+> **value**: `string`
+
+***
+
+### hint?
+
+> `optional` **hint?**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:43](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L43)
+
+A line under the text: how the wallet may present the request (the signature that confirms the wallet).
+
+***
+
+### kind
+
+> **kind**: [`WalletPromptKind`](?path=/docs/packages-nova-payments-payments-type-aliases-walletpromptkind--docs)
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:19](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L19)
+
+What the wallet asks for.
+
+***
+
+### merchant
+
+> **merchant**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:29](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L29)
+
+The seller.
+
+***
+
+### network
+
+> **network**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:31](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L31)
+
+The network of the payment.
+
+***
+
+### onCancel
+
+> **onCancel**: () => `void`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:45](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L45)
+
+Closes the window.
+
+#### Returns
+
+`void`
+
+***
+
+### onRetry?
+
+> `optional` **onRetry?**: () => `void`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:37](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L37)
+
+Asks the wallet again; only where a second request cannot pay twice (a signature).
+
+#### Returns
+
+`void`
+
+***
+
+### priceTime
+
+> **priceTime**: `string` \| `null`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:35](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L35)
+
+The countdown of the price lock; `null` once it ended.
+
+***
+
+### stepHeight?
+
+> `optional` **stepHeight?**: `number` \| `null`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:52](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L52)
+
+The height in px of the step the window stands for, measured while the step showed and capped at the room of the
+checkout pane. Below 640 px, where the checkout has no fixed height, the window keeps it as its minimum height, so
+the sheet does not shrink while the wallet asks and grow back after. Wider screens have the fixed height of the
+checkout and ignore it.
+
+***
+
+### text?
+
+> `optional` **text?**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:39](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L39)
+
+What the window says instead of the text of its kind (the signature that confirms the wallet).
+
+***
+
+### to
+
+> **to**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:33](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L33)
+
+The recipient, shortened (not copyable: it is checked, never typed).
+
+***
+
+### walletIcon?
+
+> `optional` **walletIcon?**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:25](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L25)
+
+The icon the wallet gives itself (`icon` of the connected wallet), usually a `data:` URI.
+
+***
+
+### walletId
+
+> **walletId**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:23](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L23)
+
+The wallet's id, for the icon Nova has of it when the wallet gives none.
+
+***
+
+### walletName
+
+> **walletName**: `string`
+
+Defined in: [nova-payments/src/components/WalletPrompt.tsx:21](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/WalletPrompt.tsx#L21)
+
+The wallet's name, as it calls itself (`name` of the connected wallet).

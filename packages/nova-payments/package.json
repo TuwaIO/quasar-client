@@ -62,12 +62,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TuwaIO/nova-uikit.git",
+    "url": "git+https://github.com/TuwaIO/quasar-client.git",
     "directory": "packages/nova-payments"
   },
-  "homepage": "https://github.com/TuwaIO/nova-uikit",
+  "homepage": "https://github.com/TuwaIO/quasar-client",
   "bugs": {
-    "url": "https://github.com/TuwaIO/nova-uikit/issues"
+    "url": "https://github.com/TuwaIO/quasar-client/issues"
   },
   "contributors": [
     {
@@ -122,13 +122,13 @@
     "@solana-program/token": "^0.17.0",
     "@solana/kit": "^8.5.0",
     "@tailwindcss/postcss": "^4.3.3",
-    "@tuwaio/nova-connect": "workspace:^",
-    "@tuwaio/nova-core": "workspace:^",
-    "@tuwaio/nova-transactions": "workspace:^",
+    "@tuwaio/nova-connect": "1.0.0-feat-payments-alpha.40.d6a08cab",
+    "@tuwaio/nova-core": "1.0.0-feat-payments-alpha.40.d6a08cab",
+    "@tuwaio/nova-transactions": "1.0.0-feat-payments-alpha.40.d6a08cab",
     "@tuwaio/orbit-core": "0.6.0",
     "@tuwaio/orbit-solana": "0.7.2",
     "@tuwaio/pulsar-core": "0.11.1",
-    "@tuwaio/quasar-sdk": "1.0.0-feat-payments-alpha.45.f5b0fb7",
+    "@tuwaio/quasar-sdk": "workspace:^",
     "@tuwaio/satellite-core": "^0.11.2",
     "@tuwaio/satellite-react": "^0.10.2",
     "@types/react": "^19.3.0",

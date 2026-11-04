@@ -1,0 +1,38 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/useAsyncValue" />
+
+# useAsyncValue()
+
+> **useAsyncValue**\<`T`\>(`key`, `load`): `T` \| `null` \| `undefined`
+
+Defined in: [nova-payments/src/hooks/useAsyncValue.ts:11](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useAsyncValue.ts#L11)
+
+Reads a value once per key: again when the key changes, never for a `null` key. An answer for an old key is
+dropped. Used for the balances and fee estimates the pay step reads from the network.
+
+## Type Parameters
+
+### T
+
+`T`
+
+## Parameters
+
+### key
+
+`string` \| `null`
+
+What the value depends on, as a string; `null` to read nothing.
+
+### load
+
+() => `T` \| `Promise`\<`T`\>
+
+Reads the value for the current key.
+
+## Returns
+
+`T` \| `null` \| `undefined`
+
+The value; `undefined` while it is read (or without a key); `null` when the read failed.

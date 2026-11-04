@@ -1,0 +1,29 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/ConfirmScreen" />
+
+# ConfirmScreen()
+
+> **ConfirmScreen**(): `Element`
+
+Defined in: [nova-payments/src/components/ConfirmScreen.tsx:32](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/ConfirmScreen.tsx#L32)
+
+The confirm step: the transaction is on its way and Quasar follows it until it is final. It reuses the status and
+progress of Nova Transactions (Sent → Confirming → Paid, in the language of the checkout) and shows the network, the
+amount, the transaction with its explorer link and the sender. The buyer may close the window: the payment keeps
+going. It also shows a payment of the invoice that this page did not hand over while Quasar reports it on its way
+(the page was reopened or reloaded, another tab paid, Quasar found a Solana Pay transfer), instead of offering to pay
+again: its note asks the buyer to wait for it. When the invoice deadline passes while a payment is on its way (the
+countdown of the order stays at 00:00), and the invoice is still `open` or `underpaid`, the note follows the payment:
+sent before the deadline, it says that the payment was sent in time and is being confirmed (Quasar keeps the invoice
+open for a payment it learned of before the deadline while it confirms: for this page's payment Quasar's word on it
+decides, `paymentSentInTime` of the checkout store, whatever the clock of the page says; else `paymentCountsUntil`;
+with a Quasar that reports neither, a payment this page handed over before the deadline by its clock); otherwise it
+says that the seller accepts or returns a payment that arrives after the invoice closes. A payment that failed or settled is no
+longer on its way, and the usual note comes back.
+
+## Returns
+
+`Element`
+
+The confirm step.

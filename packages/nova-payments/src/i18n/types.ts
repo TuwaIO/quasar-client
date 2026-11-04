@@ -159,7 +159,7 @@ export type NovaPaymentsLabels = {
     changeWallet: string;
     /** Above the amount (default: `You send`) */
     youSend: string;
-    /** Instead of {@link youSend} on the quote of the rest of an underpaid invoice (default: `You send the rest`) */
+    /** Instead of `youSend` on the quote of the rest of an underpaid invoice (default: `You send the rest`) */
     youSendRest: string;
     /** Accessible name of the copy button (default: `Copy amount`) */
     copyAmount: string;
