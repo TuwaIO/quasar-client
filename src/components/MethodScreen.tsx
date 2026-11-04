@@ -157,7 +157,8 @@ export function MethodScreen() {
   // A method is chosen from the start: the connected wallet's network, else the first Popular one, else the first
   const selectDefault = useEffectEvent(() => {
     const first = groups[0]?.methods[0];
-    if (!state.methodId && first) store.getState().selectMethod(first.id);
+    // Chosen for the buyer, so what the page says about a payment that left the wallet stays
+    if (!state.methodId && first) store.getState().selectMethod(first.id, { keepError: true });
   });
   useEffect(() => selectDefault(), [groups]);
 
