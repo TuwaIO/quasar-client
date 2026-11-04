@@ -139,6 +139,27 @@ describe('turning off automatic payments', () => {
     expect(textOf(render(AutoPayOffScreen, {}))).toContain(en.error.generic);
   });
 
+  it('never says the network does not show it yet when Quasar could not be asked', async () => {
+    vi.useFakeTimers();
+    try {
+      const ask = async (answer: boolean | null) => {
+        const { primary, permissionRevoked } = screen(PAYER, {}, { revokeSent: true });
+        permissionRevoked.mockReset();
+        permissionRevoked.mockResolvedValue(answer);
+        (primary.props.onClick as () => void)();
+        await vi.advanceTimersByTimeAsync(10_000);
+        expect(permissionRevoked).toHaveBeenCalledTimes(5);
+        return textOf(render(AutoPayOffScreen, {}));
+      };
+      expect(await ask(false)).toContain(en.autoPayOff.notYet);
+      const refused = await ask(null);
+      expect(refused).not.toContain(en.autoPayOff.notYet);
+      expect(refused).toContain(en.error.generic);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('asks another wallet to connect that one: nothing else can revoke the permission', () => {
     const revokePermission = vi.fn();
     const { tree, primary, connectWallet, connectFamily } = screen('0x2222222222222222222222222222222222222222', {

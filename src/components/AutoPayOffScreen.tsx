@@ -61,11 +61,15 @@ export function AutoPayOffScreen() {
   /** Asks Quasar, which asks the chain; the screen closes when the permission has ended. */
   const check = async () => {
     setStep('network');
+    let answered = false;
     for (let i = 0; i < CHECKS; i++) {
-      if ((await store.getState().permissionRevoked()) === true) return setAutoPayOff('done');
+      const revoked = await store.getState().permissionRevoked();
+      if (revoked === true) return setAutoPayOff('done');
+      answered ||= revoked === false;
       if (i < CHECKS - 1) await pause(CHECK_EVERY_MS);
     }
-    setProblem('notYet');
+    // Quasar never answered: nobody asked the network, so it cannot be said what the network shows
+    setProblem(answered ? 'notYet' : 'notAsked');
   };
 
   const turnOff = async () => {
