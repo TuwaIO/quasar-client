@@ -1,0 +1,587 @@
+import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { cn } from '@tuwaio/nova-core';
+import type { CheckoutError, CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
+import { useState } from 'react';
+
+import { useAsyncValue } from '../hooks/useAsyncValue';
+import { useCheckoutContext } from '../hooks/useCheckoutContext';
+import { usePayerProof } from '../hooks/usePayerProof';
+import { usePayment } from '../hooks/usePayment';
+import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
+import { useStepHeight } from '../hooks/useStepHeight';
+import { formatLabel, type NovaPaymentsLabels } from '../i18n';
+import { isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/checkout';
+import {
+  baseUnitsToDecimal,
+  formatCountdown,
+  formatFiat,
+  formatTokenAmount,
+  minorToDecimal,
+  shortAddress,
+} from '../utils/format';
+import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
+import { leftTheWalletText, restRateText } from '../utils/outcome';
+import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
+import { isPayerProofError, isSmartWallet, needsPayerProof, payerProofErrorText } from '../utils/payerProof';
+import { solanaNetworkHint } from '../utils/solanaNetwork';
+import type { PaymentWalletErrorKind } from '../utils/walletErrors';
+import { AutoPayNote } from './AutoPayNote';
+import { focusRing, mono, screenHeading } from './classes';
+import {
+  CheckoutWalletIcon,
+  CopyButton,
+  DetailRow,
+  DetailsCard,
+  FooterAction,
+  FooterNote,
+  PrimaryButton,
+  ScreenError,
+  ScreenFooter,
+  SecondaryButton,
+} from './ScreenParts';
+import { WalletPrompt } from './WalletPrompt';
+
+/** A price shown with up to two decimals, or more significant digits under one unit of the currency. */
+function formatRate(rate: number, locale: string): string {
+  if (rate >= 1) return formatFiat(rate, locale);
+  return new Intl.NumberFormat(locale, { maximumSignificantDigits: 6 }).format(rate);
+}
+
+/** The text of a refusal of the wallet or of Quasar, with the action that follows it. */
+function problemText(
+  labels: NovaPaymentsLabels,
+  values: { wallet: string; network: string; merchant: string },
+  problem: PaymentWalletErrorKind | null,
+  error: CheckoutError | null | undefined,
+): string | null {
+  const errorCode = error?.code;
+  if (problem === 'declined') return formatLabel(labels.pay.declined, values);
+  if (problem === 'unsupported') return formatLabel(labels.pay.unsupported, values);
+  if (problem === 'wrongNetwork') return formatLabel(labels.pay.wrongCluster, values);
+  // The payment left the wallet, or may have (a transaction that does not pay the invoice or pays another one, closed
+  // after 24 hours without a result, taken by another invoice, confirmed and not recorded yet): never "it failed" or
+  // "only the fee"
+  const leftTheWallet = problem ? null : leftTheWalletText(error, labels, values.merchant);
+  if (leftTheWallet !== null) return leftTheWallet;
+  if (problem === 'failed' || errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
+  if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
+  if (errorCode === 'request_failed') return labels.pay.noAnswer;
+  // A new price was refused: the feed or the network of the method cannot be read now, or the seller set up no RPC
+  // for that network
+  if (errorCode === 'price_unavailable' || errorCode === 'price_no_rpc') return labels.method.priceUnavailable;
+  return null;
+}
+
+/** The sentences of one note: a space between them, none after a full-width stop (Chinese). */
+const sentences = (...parts: string[]) =>
+  parts.reduce((text, part) => (text && !/[。！？]$/.test(text) ? `${text} ${part}` : `${text}${part}`), '');
+
+/** The methods of the wallet's family it holds a balance of, for "Pay from what this wallet has". */
+function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null, short: boolean) {
+  const { wallet, adapterFor } = useCheckoutContext();
+  const family = quote?.instructions.family;
+  const adapter = family ? adapterFor(family) : undefined;
+  const others = methods.filter((method) => method.id !== quote?.methodId && methodFamily(method) === family);
+  const balances = useAsyncValue(
+    short && adapter && wallet && others.length
+      ? `${wallet.address}:${others.map((method) => method.id).join()}`
+      : null,
+    () =>
+      Promise.all(
+        others.map((method) =>
+          adapter!
+            .getBalance({ chainId: method.chainId, account: wallet!.address, token: methodToken(method) })
+            .catch(() => 0n),
+        ),
+      ),
+  );
+  return balances
+    ? others.map((method, i) => ({ method, balance: balances[i] })).filter((item) => item.balance > 0n)
+    : [];
+}
+
+/**
+ * The pay step: the connected wallet (with "Change"), the exact amount to send with its network and invoice value,
+ * the price lock with "Keep this price" in its last minute, the rate, the network fee (the merchant's or an estimate),
+ * the recipient, and the main action — "Sign to pay" when the merchant pays the gas, "Pay" otherwise, "Switch to …"
+ * on the wrong network, "Confirm this wallet to pay" before a transfer or a paymaster payment of a method the gasless
+ * relay could pay (the wallet signs Quasar's free confirmation of the invoice first; the relay's authorization needs
+ * none). Before the prompt it reads the wallet's balance (unless `config.balanceCheck` is `false`)
+ * and, when it is short, offers the methods the wallet can pay and the seller's top-up link. `handlers.onSubmit` wraps
+ * the pay button. A Solana payment off mainnet reminds the buyer to switch the wallet to its cluster (Solana wallets
+ * choose their network themselves), with the steps of Phantom and Solflare. The note under the buttons says that the
+ * payment goes straight to the merchant and, when the merchant checks paying wallets (`amlScreening` of the
+ * checkout), that it does.
+ *
+ * Side effects: balance, fee and wallet capability reads from the network through the chain adapter (no request to
+ * Quasar); wallet prompts; checkout requests to Quasar; on a Solana payment, `switchNetwork` of the Satellite store
+ * moves the app's Solana connection to the payment's cluster (no wallet request).
+ *
+ * @returns The pay step.
+ */
+export function PayScreen() {
+  const {
+    checkout,
+    state,
+    store,
+    labels,
+    locale,
+    now,
+    wallet,
+    adapterFor,
+    connectWallet,
+    backToMethods,
+    onPaymentSent,
+    customization,
+    lockPrice,
+  } = useCheckoutContext();
+  const balanceCheck = customization.config?.balanceCheck !== false;
+  const quote = state.quote;
+  const methods = checkout?.methods ?? [];
+  const method = methods.find((item) => item.id === quote?.methodId);
+  const family = quote?.instructions.family ?? 'eip155';
+  const adapter = adapterFor(family);
+  const chainId = quote ? instructionsChainId(quote.instructions) : '';
+  const account = wallet?.address ?? '';
+  const [withGas, setWithGas] = useState(false);
+
+  const sponsorable = useAsyncValue(
+    quote?.gasless?.paymaster && adapter?.canSponsorCalls && wallet ? `${chainId}:${account}` : null,
+    () => adapter!.canSponsorCalls!({ chainId, account }),
+  );
+  const path = quote ? payPath(quote, { withGas, canSponsorCalls: sponsorable === true }) : 'transfer';
+  const balance = useAsyncValue(
+    balanceCheck && quote && adapter && wallet ? `${chainId}:${account}:${quote.instructions.token}` : null,
+    () => adapter!.getBalance({ chainId, account, token: quote!.instructions.token }),
+  );
+  const fee = useAsyncValue(
+    quote && path === 'transfer' && adapter?.estimateFee && wallet
+      ? `${chainId}:${account}:${quote.amountToSend}`
+      : null,
+    () => adapter!.estimateFee!({ instructions: quote!.instructions, account }),
+  );
+  const payment = usePayment({
+    adapter,
+    store,
+    quote,
+    wallet,
+    path,
+    paymasterUrl: state.paymasterUrl,
+    onSent: onPaymentSent,
+  });
+  // A transfer or a paymaster payment of a method the gasless relay could pay: the wallet confirms the invoice first
+  const proof = usePayerProof({ adapter, store, wallet, chainId });
+  useSolanaClusterSync(chainId, wallet);
+  const native = quote?.instructions.token === 'native';
+  const shortfall =
+    quote && typeof balance === 'bigint' ? balanceShortfall(balance, quote, native && fee ? fee.amount : 0n) : null;
+  const alternatives = useAlternatives(methods, quote, balanceCheck && Boolean(shortfall));
+  // The wallet asks (the prompt below shows): on a phone the prompt keeps the height of the step
+  const prompting =
+    proof.step === 'switching' ||
+    proof.step === 'signing' ||
+    payment.status === 'switching' ||
+    payment.status === 'submitting' ||
+    payment.status === 'wallet' ||
+    state.phase === 'submitting';
+  const [stepRef, stepHeight] = useStepHeight(prompting);
+
+  if (!checkout || !quote || !method) return null;
+
+  const merchant = checkout.merchant.name;
+  const network = networkName(chainId);
+  const token = (amount: string) => `${formatTokenAmount(amount, quote.decimals, locale)} ${quote.instructions.symbol}`;
+  const amounts = quoteAmounts(quote);
+  const left = quote.expiresAt ? Date.parse(quote.expiresAt) - now : Number.POSITIVE_INFINITY;
+  const expired = left <= 0;
+  const ending = isQuoteEnding(left);
+  const quoting = state.phase === 'quoting';
+  const rate = checkout.invoice.amountPaid ? null : quoteRate(quote, checkout.invoice.totalMinor);
+  // The rest of an underpaid invoice: what is sent is not the total of the invoice
+  const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
+  const restRate = rest ? restRateText(quote, now, labels, merchant, locale) : null;
+  const total = checkout.invoice.totalMinor ? formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale) : null;
+  const walletMatches = Boolean(wallet && quote.payer && payerFor(wallet, method) === quote.payer);
+  const wrongNetwork = family === 'eip155' && wallet && wallet.chainId !== chainId && Boolean(adapter?.switchChain);
+  const busy =
+    payment.status !== 'idle' ||
+    state.phase === 'submitting' ||
+    quoting ||
+    // Busy only while the wallet window of the confirmation is open: once closed, the buyer can ask again
+    proof.step !== 'idle';
+  const problem = problemText(
+    labels,
+    { wallet: wallet?.name ?? '', network, merchant },
+    payment.problem,
+    state.phase === 'awaitingPayment' ? state.error : undefined,
+  );
+  const solanaNetwork = solanaNetworkHint(chainId, wallet, labels);
+  const renew = () => void store.getState().requestQuote();
+  // `payerProof` is newer than some `@tuwaio/quasar-sdk` alphas: read it as a string
+  const payerProof: string | undefined = state.payerProof;
+  const confirmFirst = needsPayerProof(payerProof, path);
+  const proofError = confirmFirst
+    ? payerProofErrorText(isPayerProofError(state.error) ? state.error : null, proof.problem, labels, {
+        wallet: wallet?.name ?? '',
+        network,
+        merchant,
+      })
+    : null;
+
+  let action: { label: string; run: () => void; disabled?: boolean };
+  if (expired) action = { label: rest ? labels.outcome.payRest : labels.pay.newPrice, run: renew };
+  else if (!walletMatches) action = { label: labels.pay.connect, run: () => void connectWallet(method) };
+  else if (wrongNetwork)
+    action = { label: formatLabel(labels.pay.switchTo, { network }), run: () => void payment.switchNetwork() };
+  else if (confirmFirst) action = { label: labels.payerProof.confirmToPay, run: () => void proof.confirm() };
+  else {
+    action = {
+      label: formatLabel(path === 'transfer' ? labels.pay.payAmount : labels.pay.signToPay, {
+        amount: token(amounts.send),
+      }),
+      // `onSubmit` of the app wraps the wallet prompt
+      run: () =>
+        void (customization.handlers?.onSubmit
+          ? customization.handlers.onSubmit({ quote, method, proceed: payment.pay })
+          : payment.pay()),
+      disabled: Boolean(shortfall),
+    };
+  }
+  const prompt =
+    proof.step === 'switching'
+      ? 'switch'
+      : proof.step === 'signing'
+        ? 'proof'
+        : payment.status === 'switching'
+          ? 'switch'
+          : payment.status === 'submitting' || state.phase === 'submitting'
+            ? 'submitting'
+            : payment.status === 'wallet'
+              ? path === 'transfer'
+                ? 'confirm'
+                : 'sign'
+              : null;
+  const invoice = checkout.invoice.number ?? checkout.invoice.id;
+  const proofValues = { wallet: wallet?.name ?? '', invoice, merchant };
+
+  return (
+    <div className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
+      {/* While the wallet asks, the step leaves the layout (keeping its state): the prompt takes its place */}
+      <div
+        ref={stepRef}
+        inert={prompting}
+        className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompting && 'novapay:hidden')}
+      >
+        <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-3 novapay:px-5 novapay:py-4">
+          <h2 {...screenHeading} className="novapay:sr-only">
+            {labels.pay.title}
+          </h2>
+
+          {wallet && (
+            <div className="novapay:flex novapay:items-center novapay:gap-2.5 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2">
+              <span className="novapay:h-7 novapay:w-7 novapay:shrink-0">
+                <CheckoutWalletIcon walletId={wallet.walletId} icon={wallet.icon} />
+              </span>
+              <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col">
+                <span className="novapay:text-[13px] novapay:font-semibold">{wallet.name}</span>
+                <span
+                  className={cn(mono, 'novapay:truncate novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}
+                >
+                  {formatLabel(labels.pay.walletLine, {
+                    address: shortAddress(wallet.address),
+                    network: networkName(wallet.chainId),
+                  })}
+                </span>
+              </span>
+              <button
+                type="button"
+                aria-label={labels.pay.changeWallet}
+                onClick={() => connectWallet(method)}
+                className={cn(
+                  'novapay:min-h-6 novapay:cursor-pointer novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-transparent novapay:px-2.5 novapay:py-1 novapay:text-xs novapay:font-semibold novapay:text-[var(--tuwa-text-primary)] novapay:hover:bg-[var(--tuwa-bg-muted)]',
+                  focusRing,
+                )}
+              >
+                {labels.pay.change}
+              </button>
+            </div>
+          )}
+
+          {wrongNetwork && walletMatches && !expired && (
+            <div
+              role="status"
+              className="novapay:flex novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-pending-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-pending-text)]"
+            >
+              <ExclamationTriangleIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:shrink-0" />
+              <span>
+                <strong className="novapay:block">{labels.pay.wrongNetwork}</strong>
+                {formatLabel(labels.pay.wrongNetworkText, { current: networkName(wallet!.chainId), network })}{' '}
+                {labels.pay.switchHint}
+              </span>
+            </div>
+          )}
+
+          {solanaNetwork && !expired && (
+            <div className="novapay:flex novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-xs">
+              <InformationCircleIcon
+                aria-hidden
+                className="novapay:h-4 novapay:w-4 novapay:shrink-0 novapay:text-[var(--tuwa-text-secondary)]"
+              />
+              <span className="novapay:flex novapay:flex-col novapay:gap-0.5">
+                <strong>{solanaNetwork.title}</strong>
+                <span>{solanaNetwork.text}</span>
+                {solanaNetwork.hint && (
+                  <span className="novapay:text-[var(--tuwa-text-secondary)]">{solanaNetwork.hint}</span>
+                )}
+              </span>
+            </div>
+          )}
+
+          <div>
+            <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+              {rest ? labels.pay.youSendRest : labels.pay.youSend}
+            </span>
+            <div className="novapay:flex novapay:items-baseline novapay:gap-2">
+              <span className={cn(mono, 'novapay:text-[28px] novapay:font-bold novapay:leading-tight')}>
+                {formatTokenAmount(amounts.send, quote.decimals, locale)}
+              </span>
+              <span className={cn(mono, 'novapay:text-sm novapay:font-semibold')}>{quote.instructions.symbol}</span>
+              <CopyButton
+                text={baseUnitsToDecimal(amounts.send, quote.decimals)}
+                label={labels.pay.copyAmount}
+                copiedLabel={labels.pay.copied}
+              />
+            </div>
+            <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+              {formatLabel(labels.pay.onNetwork, { network })}
+              {total && !amounts.fee && !rest && (
+                <> · {formatLabel(labels.pay.fiatValue, { amount: total, currency: checkout.invoice.currency })}</>
+              )}
+            </span>
+          </div>
+
+          {amounts.fee && (
+            <div className="novapay:flex novapay:flex-col novapay:gap-1.5">
+              <DetailsCard>
+                <DetailRow name={rest ? labels.pay.invoiceRest : labels.pay.invoiceTotal}>
+                  {formatTokenAmount(amounts.receives, quote.decimals, locale)}
+                </DetailRow>
+                <DetailRow name={formatLabel(labels.pay.transferFee, { percent: amounts.fee.percent })}>
+                  {formatTokenAmount(amounts.fee.amount, quote.decimals, locale)}
+                </DetailRow>
+                <DetailRow name={formatLabel(labels.pay.merchantReceives, { merchant })}>
+                  {token(amounts.receives)}
+                </DetailRow>
+              </DetailsCard>
+              <p className="novapay:m-0 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
+                {labels.pay.transferFeeNote}
+              </p>
+            </div>
+          )}
+
+          {!expired && (
+            <div className="novapay:flex novapay:items-center novapay:gap-2 novapay:text-xs">
+              <ClockIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:text-[var(--tuwa-text-secondary)]" />
+              <span role="timer" aria-live="off" className="novapay:flex-1">
+                {formatLabel(restRate ? labels.pay.restTimeLeft : labels.pay.priceLocked, {
+                  time: formatCountdown(left),
+                })}
+              </span>
+              {!rest && <FooterAction onClick={renew}>{labels.pay.refreshPrice}</FooterAction>}
+            </div>
+          )}
+
+          {ending && !restRate && (
+            <div className="novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-text-accent)] novapay:px-3 novapay:py-2">
+              <span aria-hidden className="novapay:text-xs">
+                {formatLabel(labels.pay.priceEnding, { time: formatCountdown(left) })}
+              </span>
+              {/* Announced once when the last minute starts, not every second */}
+              <span role="status" className="novapay:sr-only">
+                {formatLabel(labels.pay.priceEnding, { time: formatCountdown(QUOTE_WARNING_MS) })}
+              </span>
+              <button
+                type="button"
+                onClick={renew}
+                disabled={quoting}
+                className={cn(
+                  mono,
+                  'novapay:min-h-8 novapay:cursor-pointer novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border-0 novapay:bg-[var(--tuwa-button-primary-bg)] novapay:px-3 novapay:text-xs novapay:font-bold novapay:text-[var(--tuwa-text-on-accent)] novapay:disabled:opacity-70',
+                  focusRing,
+                )}
+              >
+                {formatLabel(labels.pay.keepPrice, { minutes: Math.round(checkout.quoteTtlSeconds / 60) })}
+              </button>
+            </div>
+          )}
+
+          {expired && <ScreenError>{labels.pay.priceExpired}</ScreenError>}
+          {restRate && (
+            <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{restRate}</p>
+          )}
+
+          {shortfall && !expired && (
+            <div className="novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-xs">
+              <div role="alert">
+                <strong className="novapay:block">{labels.pay.notEnough}</strong>
+                {formatLabel(labels.pay.walletHas, { amount: token(shortfall.have), network })}.{' '}
+                {formatLabel(labels.pay.shortBy, { short: token(shortfall.short), need: token(shortfall.need) })}
+              </div>
+              {alternatives.length > 0 && (
+                <div className="novapay:flex novapay:flex-col novapay:gap-1.5">
+                  <span className="novapay:text-[var(--tuwa-text-secondary)]">{labels.pay.payFromBalance}</span>
+                  {alternatives.map(({ method: other, balance: held }) => (
+                    <button
+                      key={other.id}
+                      type="button"
+                      onClick={() => {
+                        const payer = wallet ? payerFor(wallet, other) : null;
+                        store.getState().selectMethod(other.id);
+                        store.getState().setPayer(payer);
+                        // A smart wallet confirms the invoice again on another network, before the price
+                        void lockPrice();
+                      }}
+                      className={cn(
+                        'novapay:flex novapay:cursor-pointer novapay:items-center novapay:justify-between novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-transparent novapay:px-2.5 novapay:py-1.5 novapay:text-left novapay:text-xs novapay:text-[var(--tuwa-text-primary)] novapay:hover:bg-[var(--tuwa-bg-muted)]',
+                        focusRing,
+                      )}
+                    >
+                      <span className="novapay:font-semibold">
+                        {other.symbol} · {networkName(other.chainId)}
+                      </span>
+                      <span className={cn(mono, 'novapay:text-[var(--tuwa-text-secondary)]')}>
+                        {formatLabel(labels.pay.youHave, {
+                          amount: `${formatTokenAmount(String(held), other.decimals, locale)} ${other.symbol}`,
+                        })}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {checkout.merchant.fundingUrl && (
+                <span>
+                  {formatLabel(labels.pay.topUp, { symbol: quote.instructions.symbol })}{' '}
+                  <a
+                    href={checkout.merchant.fundingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn('novapay:text-[var(--tuwa-text-accent)] novapay:underline', focusRing)}
+                  >
+                    {formatLabel(labels.pay.getToken, { symbol: quote.instructions.symbol })} ↗
+                  </a>
+                </span>
+              )}
+            </div>
+          )}
+
+          <DetailsCard>
+            {rate !== null && (
+              <DetailRow name={labels.pay.rate}>
+                {formatLabel(labels.pay.rateValue, {
+                  symbol: quote.instructions.symbol,
+                  price: formatRate(rate, locale),
+                  currency: checkout.invoice.currency,
+                })}
+              </DetailRow>
+            )}
+            <DetailRow name={labels.pay.networkFee}>
+              <span className="novapay:inline-flex novapay:flex-col novapay:items-end novapay:gap-0.5">
+                {path !== 'transfer' ? (
+                  <span className="novapay:text-[var(--tuwa-success-text)]">
+                    {formatLabel(labels.pay.merchantPaysGas, { merchant })}
+                  </span>
+                ) : fee ? (
+                  formatLabel(labels.pay.gasEstimate, {
+                    amount: `${formatTokenAmount(String(fee.amount), fee.decimals, locale)} ${fee.symbol}`,
+                  })
+                ) : (
+                  labels.pay.gasFromWallet
+                )}
+                {/* Who pays the gas is chosen where the fee shows */}
+                {quote.gasless && (
+                  <FooterAction onClick={() => setWithGas(!withGas)}>
+                    {withGas ? formatLabel(labels.pay.payGasless, { merchant }) : labels.pay.payWithGas}
+                  </FooterAction>
+                )}
+              </span>
+            </DetailRow>
+            <DetailRow name={labels.pay.to}>
+              {shortAddress(quote.instructions.to)}{' '}
+              <span className="novapay:font-sans novapay:text-[var(--tuwa-text-secondary)]">{merchant}</span>
+            </DetailRow>
+          </DetailsCard>
+
+          {confirmFirst && !expired && (
+            <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+              {labels.payerProof.payNote}
+            </p>
+          )}
+          {proofError && <ScreenError>{proofError}</ScreenError>}
+          {problem && <ScreenError>{problem}</ScreenError>}
+        </section>
+
+        <ScreenFooter>
+          <PrimaryButton busy={busy} disabled={action.disabled} onClick={action.run}>
+            {action.label}
+          </PrimaryButton>
+          <SecondaryButton onClick={backToMethods}>{rest ? labels.pay.backFromRest : labels.pay.back}</SecondaryButton>
+          <FooterNote>
+            {sentences(
+              formatLabel(labels.pay.disclaimer, { merchant }),
+              // Only a merchant that checks paying wallets says so (an older Quasar always did)
+              ...(screensPayingWallets(checkout) ? [formatLabel(labels.pay.disclaimerScreening, { merchant })] : []),
+            )}
+          </FooterNote>
+          <AutoPayNote />
+        </ScreenFooter>
+      </div>
+
+      {prompt === 'proof' && (
+        <WalletPrompt
+          kind="proof"
+          walletName={wallet?.name ?? ''}
+          walletId={wallet?.walletId ?? ''}
+          walletIcon={wallet?.icon}
+          amount={token(amounts.send)}
+          merchant={merchant}
+          network={network}
+          to={shortAddress(quote.instructions.to)}
+          priceTime={null}
+          text={formatLabel(
+            isSmartWallet(wallet) ? labels.payerProof.promptPasskey : labels.payerProof.promptText,
+            proofValues,
+          )}
+          details={[
+            ...(proof.request ? [{ name: labels.payerProof.site, value: proof.request.domain }] : []),
+            { name: labels.payerProof.invoice, value: invoice },
+            { name: labels.payerProof.merchant, value: merchant },
+          ]}
+          hint={
+            proof.request
+              ? formatLabel(labels.payerProof.signInRequest, { wallet: wallet?.name ?? '', site: proof.request.domain })
+              : undefined
+          }
+          onRetry={() => void proof.confirm()}
+          onCancel={proof.dismiss}
+          stepHeight={stepHeight}
+        />
+      )}
+      {prompt && prompt !== 'proof' && (
+        <WalletPrompt
+          kind={prompt}
+          walletName={wallet?.name ?? ''}
+          walletId={wallet?.walletId ?? ''}
+          walletIcon={wallet?.icon}
+          amount={token(amounts.send)}
+          merchant={merchant}
+          network={network}
+          to={shortAddress(quote.instructions.to)}
+          priceTime={expired ? null : formatCountdown(left)}
+          onRetry={path === 'relay' ? () => void payment.pay() : undefined}
+          onCancel={proof.step === 'switching' ? proof.dismiss : payment.dismiss}
+          stepHeight={stepHeight}
+        />
+      )}
+    </div>
+  );
+}

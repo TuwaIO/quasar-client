@@ -1,0 +1,75 @@
+/**
+ * @file Why a wallet did not pay: the buyer declined, the wallet cannot do it, it is on another network, or it failed.
+ */
+
+/** Why a wallet request did not go through. */
+export type PaymentWalletErrorKind = 'declined' | 'unsupported' | 'wrongNetwork' | 'failed';
+
+/** The error a payments adapter throws when it knows why the wallet did not pay. */
+export class PaymentWalletError extends Error {
+  /**
+   * @param kind - Why: `declined` by the buyer, `unsupported` by the wallet, `wrongNetwork` when the wallet sent it on
+   * another network than the payment's (a Solana wallet, which chooses its network itself), or `failed`.
+   * @param message - What to log.
+   * @param options - The original error as `cause`.
+   */
+  constructor(
+    readonly kind: PaymentWalletErrorKind,
+    message: string,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+    this.name = 'PaymentWalletError';
+  }
+}
+
+// EIP-1193 `userRejectedRequest`
+const USER_REJECTED = 4001;
+const DECLINED_MESSAGE =
+  /user (rejected|denied|declined|cancell?ed)|(rejected|denied|declined|cancell?ed) by (the )?user/i;
+// wagmi's errors: the chain is not in the wagmi config of the adapter, or that config has no connection of the wallet
+const CHAIN_NOT_CONFIGURED = 'ChainNotConfiguredError';
+const CONNECTOR_NOT_CONNECTED = 'ConnectorNotConnectedError';
+
+const field = (value: unknown, key: string): unknown =>
+  typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[key] : undefined;
+
+/**
+ * Why a wallet request failed, from the error the wallet library threw: EIP-1193 code `4001` and viem's
+ * `UserRejectedRequestError` (also as a `cause`), and the "user rejected" messages of Wallet Standard wallets, are
+ * `declined`. wagmi's `ChainNotConfiguredError` (the network of the payment is not in the wagmi config of
+ * `paymentsEVMAdapter`; the buyer can still pay with the QR code) and `ConnectorNotConnectedError` (that config has no
+ * connection of the wallet) are `unsupported`.
+ *
+ * Side effects: in development (`NODE_ENV` is `development`), a `ConnectorNotConnectedError` logs a `console.error`:
+ * the app gave `NovaPaymentsProvider` an EVM adapter built on another wagmi config than the one its wallet connection
+ * (its Satellite EVM adapter) uses.
+ *
+ * @param error - What the wallet library threw.
+ * @returns `declined`, `unsupported`, `wrongNetwork` or `failed`.
+ */
+export function walletErrorKind(error: unknown): PaymentWalletErrorKind {
+  const seen = new Set<unknown>();
+  for (let current = error; current !== undefined && current !== null && !seen.has(current);) {
+    seen.add(current);
+    if (current instanceof PaymentWalletError) return current.kind;
+    if (field(current, 'code') === USER_REJECTED || field(current, 'name') === 'UserRejectedRequestError') {
+      return 'declined';
+    }
+    if (field(current, 'name') === CHAIN_NOT_CONFIGURED) return 'unsupported';
+    if (field(current, 'name') === CONNECTOR_NOT_CONNECTED) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error(
+          '[nova-payments] paymentsEVMAdapter is built on a wagmi config the connected wallet is not in: give ' +
+            'NovaPaymentsProvider `adapters` on the wagmi config of the Satellite EVM adapter that connects the wallet.',
+          current,
+        );
+      }
+      return 'unsupported';
+    }
+    const message = field(current, 'message');
+    if (typeof message === 'string' && DECLINED_MESSAGE.test(message)) return 'declined';
+    current = field(current, 'cause');
+  }
+  return 'failed';
+}
