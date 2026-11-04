@@ -36,6 +36,7 @@ const { defaultLabels } = await import('../i18n');
 const { PayScreen } = await import('./PayScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
 const { MethodScreen } = await import('./MethodScreen');
+const { QrScreen } = await import('./QrScreen');
 const { PrimaryButton, ScreenError } = await import('./ScreenParts');
 const { WalletPrompt } = await import('./WalletPrompt');
 
@@ -57,6 +58,7 @@ const quoteOf = (gasless: unknown) => ({
   methodId: 'usdc-base',
   payer: `${BASE}:${PAYER}`,
   cryptoAmountExpected: '89540000',
+  amountDue: '89540000',
   amountToSend: '89540000',
   transferFee: null,
   decimals: 6,
@@ -233,6 +235,89 @@ describe('the rest of an underpaid invoice', () => {
     expect(textOf(tree)).not.toContain('paid first');
     ((fixture.ofType(tree, PrimaryButton)[0] as ReactElement<Props>).props.onClick as () => void)();
     expect(ctx.lockPrice).toHaveBeenCalledOnce();
+  });
+
+  it('offers no rest once it cannot be paid, and says the merchant can refund what arrived', () => {
+    const closed = 'The rest of this invoice can no longer be paid here. Cosmos can refund what arrived.';
+    const received = { status: 'underpaid', amountPaid: '80000000' } as const;
+    const expectClosed = () => {
+      const tree = OutcomeScreen({ kind: 'underpaid' });
+      expect(textOf(tree)).toContain(closed);
+      expect(textOf(tree)).toContain('80.00 USDC of 89.54 USDC received.');
+      expect(textOf(tree)).not.toContain('Send the rest');
+      expect(textOf(tree)).not.toContain('It stays payable');
+      expect(fixture.ofType(tree, PrimaryButton)).toHaveLength(0);
+    };
+    // As the checkout reads it
+    show('underpaid', { phase: 'underpaid', quote: quoteOf(null) }, { ...received, restPayable: false });
+    expectClosed();
+    // Refused meanwhile, on a page read while the rate still held
+    show(
+      'underpaid',
+      { phase: 'underpaid', quote: quoteOf(null), error: { code: 'rest_rate_expired', message: '', status: 409 } },
+      { ...received, restPayable: true },
+    );
+    expectClosed();
+  });
+
+  it('names the rest on the payment step, without the total of the invoice', () => {
+    const rest = { ...quoteOf(null), amountDue: '9540000', amountToSend: '9540000' };
+    show(
+      'pay',
+      { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: rest },
+      { status: 'underpaid', amountPaid: '80000000', totalMinor: '8954' },
+    );
+    const text = textOf(render(PayScreen, {}));
+    expect(text).toContain('You send the rest');
+    expect(text).toContain('9.54');
+    expect(text).not.toContain('89.54');
+    expect(text).toContain('Back');
+    expect(text).not.toContain('Back to methods');
+  });
+
+  it('names the rest on the QR code of a rest too', () => {
+    const rest = {
+      ...quoteOf(null),
+      payer: null,
+      amountDue: '9540000',
+      amountToSend: '9540000',
+      instructions: {
+        family: 'solana',
+        chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+        to: 'x',
+        token: 'native',
+        amount: '9540000',
+        decimals: 6,
+        symbol: 'USDC',
+        reference: 'r',
+        solanaPayUrl: 'solana:x',
+      },
+    };
+    show(
+      'qr',
+      { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: rest },
+      { status: 'underpaid', amountPaid: '80000000' },
+    );
+    const text = textOf(render(QrScreen, {}));
+    expect(text).toContain('You send the rest');
+    expect(text).not.toContain('Back to methods');
+  });
+
+  it("adds the token's transfer fee to the rest as a rest of the invoice, not its total", () => {
+    const rest = {
+      ...quoteOf(null),
+      amountDue: '9540000',
+      amountToSend: '9559118',
+      transferFee: { bps: 20, maxFee: null, source: 'contract' },
+    };
+    show(
+      'pay',
+      { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: rest },
+      { status: 'underpaid', amountPaid: '80000000', totalMinor: '8954' },
+    );
+    const rows = fixture.elements(render(PayScreen, {})).map((element) => element.props.name);
+    expect(rows).toContain('Rest of the invoice');
+    expect(rows).not.toContain('Invoice total');
   });
 });
 

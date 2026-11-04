@@ -285,16 +285,28 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const paid = checkout.invoice.amountPaid;
       const rest = underpaidRest(quote, paid);
       title = labels.outcome.underpaidTitle;
+      // Its method is off or its rate no longer holds, as read or as Quasar refused it since
+      const restClosed = checkout.invoice.restPayable === false || state.error?.code === 'rest_rate_expired';
+      const received = quote && paid && (
+        <Text>
+          {formatLabel(labels.outcome.underpaidText, {
+            received: token(paid),
+            total: token(quote.cryptoAmountExpected),
+          })}
+        </Text>
+      );
+      if (restClosed) {
+        body = (
+          <>
+            {received}
+            <Text>{formatLabel(labels.outcome.underpaidClosed, { merchant })}</Text>
+          </>
+        );
+        break;
+      }
       body = (
         <>
-          {quote && paid && (
-            <Text>
-              {formatLabel(labels.outcome.underpaidText, {
-                received: token(paid),
-                total: token(quote.cryptoAmountExpected),
-              })}
-            </Text>
-          )}
+          {received}
           {quote && rest && (
             <Text>
               {formatLabel(labels.outcome.underpaidRest, {

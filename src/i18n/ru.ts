@@ -87,6 +87,7 @@ export const ruLabels: NovaPaymentsLabels = {
     change: 'Сменить',
     changeWallet: 'Сменить кошелёк',
     youSend: 'Вы отправляете',
+    youSendRest: 'Вы отправляете остаток',
     copyAmount: 'Скопировать сумму',
     copied: 'Скопировано',
     onNetwork: 'в сети {network}',
@@ -105,6 +106,8 @@ export const ruLabels: NovaPaymentsLabels = {
     gasFromWallet: 'Оплачивается с вашего кошелька',
     to: 'Получатель',
     invoiceTotal: 'Сумма счёта',
+    invoiceRest: 'Остаток счёта',
+    backFromRest: 'Назад',
     transferFee: 'Комиссия токена за перевод {percent}%',
     merchantReceives: '{merchant} получит',
     transferFeeNote:
@@ -285,6 +288,7 @@ export const ruLabels: NovaPaymentsLabels = {
     underpaidText: 'Получено {received} из {total}.',
     underpaidRest: 'Отправьте остаток, {rest}, с того же кошелька в сети {network}.',
     underpaidNote: 'Пока остаток не придёт, {merchant} видит счёт как недоплаченный. Его можно оплатить до {date}.',
+    underpaidClosed: 'Остаток этого счёта здесь больше нельзя оплатить. {merchant} может вернуть то, что пришло.',
     payRestFirstWallet:
       'Остаток можно оплатить только с кошелька, который платил первым: {wallet}. Подключите этот кошелёк, чтобы оплатить остаток.',
     payRest: 'Оплатить остаток',

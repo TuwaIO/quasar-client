@@ -55,6 +55,8 @@ export function QrScreen() {
   const left = quote.expiresAt ? Date.parse(quote.expiresAt) - now : Number.POSITIVE_INFINITY;
   const expired = left <= 0;
   const quoting = state.phase === 'quoting';
+  // The rest of an underpaid invoice: what is sent is not the total of the invoice
+  const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
 
   return (
     <>
@@ -72,6 +74,7 @@ export function QrScreen() {
               <li>{labels.qr.scanStep}</li>
               <li>{labels.qr.approveStep}</li>
             </ol>
+            {rest && <span className="novapay:text-[var(--tuwa-text-secondary)]">{labels.pay.youSendRest}</span>}
             <div className="novapay:flex novapay:items-baseline novapay:gap-2">
               <span className={cn(mono, 'novapay:text-2xl novapay:font-bold')}>
                 {formatTokenAmount(quote.amountToSend, quote.decimals, locale)}
@@ -120,7 +123,7 @@ export function QrScreen() {
             {labels.qr.openInWallet}
           </a>
         )}
-        <SecondaryButton onClick={backToMethods}>{labels.qr.back}</SecondaryButton>
+        <SecondaryButton onClick={backToMethods}>{rest ? labels.pay.backFromRest : labels.qr.back}</SecondaryButton>
       </ScreenFooter>
     </>
   );

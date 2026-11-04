@@ -196,6 +196,8 @@ export function PayScreen() {
   const ending = isQuoteEnding(left);
   const quoting = state.phase === 'quoting';
   const rate = checkout.invoice.amountPaid ? null : quoteRate(quote, checkout.invoice.totalMinor);
+  // The rest of an underpaid invoice: what is sent is not the total of the invoice
+  const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
   const total = checkout.invoice.totalMinor ? formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale) : null;
   const walletMatches = Boolean(wallet && quote.payer && payerFor(wallet, method) === quote.payer);
   const wrongNetwork = family === 'eip155' && wallet && wallet.chainId !== chainId && Boolean(adapter?.switchChain);
@@ -334,7 +336,9 @@ export function PayScreen() {
           )}
 
           <div>
-            <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{labels.pay.youSend}</span>
+            <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+              {rest ? labels.pay.youSendRest : labels.pay.youSend}
+            </span>
             <div className="novapay:flex novapay:items-baseline novapay:gap-2">
               <span className={cn(mono, 'novapay:text-[28px] novapay:font-bold novapay:leading-tight')}>
                 {formatTokenAmount(amounts.send, quote.decimals, locale)}
@@ -348,7 +352,7 @@ export function PayScreen() {
             </div>
             <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
               {formatLabel(labels.pay.onNetwork, { network })}
-              {total && !amounts.fee && (
+              {total && !amounts.fee && !rest && (
                 <> · {formatLabel(labels.pay.fiatValue, { amount: total, currency: checkout.invoice.currency })}</>
               )}
             </span>
@@ -357,7 +361,7 @@ export function PayScreen() {
           {amounts.fee && (
             <div className="novapay:flex novapay:flex-col novapay:gap-1.5">
               <DetailsCard>
-                <DetailRow name={labels.pay.invoiceTotal}>
+                <DetailRow name={rest ? labels.pay.invoiceRest : labels.pay.invoiceTotal}>
                   {formatTokenAmount(amounts.receives, quote.decimals, locale)}
                 </DetailRow>
                 <DetailRow name={formatLabel(labels.pay.transferFee, { percent: amounts.fee.percent })}>
@@ -513,7 +517,7 @@ export function PayScreen() {
           <PrimaryButton busy={busy} disabled={action.disabled} onClick={action.run}>
             {action.label}
           </PrimaryButton>
-          <SecondaryButton onClick={backToMethods}>{labels.pay.back}</SecondaryButton>
+          <SecondaryButton onClick={backToMethods}>{rest ? labels.pay.backFromRest : labels.pay.back}</SecondaryButton>
           <FooterNote>
             {sentences(
               formatLabel(labels.pay.disclaimer, { merchant }),

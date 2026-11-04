@@ -40,20 +40,21 @@ export interface QuoteAmounts {
 }
 
 /**
- * What the buyer sends and the merchant receives: the same amount, unless the token keeps a fee on every transfer.
+ * What the buyer sends and the merchant receives for this payment: the same amount, unless the token keeps a fee on
+ * every transfer. On the quote of a rest that is what is left of the invoice, not its total.
  *
  * @param quote - The locked quote.
  * @returns The amounts.
  */
 export function quoteAmounts(quote: CheckoutQuote): QuoteAmounts {
   const send = BigInt(quote.amountToSend);
-  const receives = BigInt(quote.cryptoAmountExpected);
+  const receives = BigInt(quote.amountDue);
   if (!quote.transferFee || send <= receives) {
-    return { send: quote.amountToSend, receives: quote.cryptoAmountExpected, fee: null };
+    return { send: quote.amountToSend, receives: quote.amountDue, fee: null };
   }
   return {
     send: quote.amountToSend,
-    receives: quote.cryptoAmountExpected,
+    receives: quote.amountDue,
     fee: { amount: String(send - receives), percent: String(quote.transferFee.bps / 100) },
   };
 }

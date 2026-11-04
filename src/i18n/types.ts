@@ -159,6 +159,8 @@ export type NovaPaymentsLabels = {
     changeWallet: string;
     /** Above the amount (default: `You send`) */
     youSend: string;
+    /** Instead of {@link youSend} on the quote of the rest of an underpaid invoice (default: `You send the rest`) */
+    youSendRest: string;
     /** Accessible name of the copy button (default: `Copy amount`) */
     copyAmount: string;
     /** After copying (default: `Copied`) */
@@ -195,6 +197,10 @@ export type NovaPaymentsLabels = {
     to: string;
     /** Row of the invoice total, with a token transfer fee (default: `Invoice total`) */
     invoiceTotal: string;
+    /** Instead of the invoice total on the quote of a rest (default: `Rest of the invoice`) */
+    invoiceRest: string;
+    /** Button back to the underpaid invoice from the quote of its rest (default: `Back`) */
+    backFromRest: string;
     /** Row of the token's transfer fee: `{percent}` (default: `Token transfer fee {percent}%`) */
     transferFee: string;
     /** Row of what the merchant receives: `{merchant}` (default: `{merchant} receives`) */
@@ -580,6 +586,12 @@ export type NovaPaymentsLabels = {
     underpaidRest: string;
     /** Until when: `{merchant}`, `{date}` */
     underpaidNote: string;
+    /**
+     * Instead of what is left and until when, once the rest cannot be paid (its method is off or its rate no longer
+     * holds): `{merchant}` (default: `The rest of this invoice can no longer be paid here. {merchant} can refund what
+     * arrived.`)
+     */
+    underpaidClosed: string;
     /**
      * Instead of paying the rest when another wallet than the one that paid first is connected, or Quasar refused the
      * rest from it (`payer_mismatch`): `{wallet}`, the first wallet's short address (default: `Only the wallet that paid

@@ -111,6 +111,7 @@ describe('the checkout names and shows the wallet as it calls itself', () => {
       },
       amountToSend: '2000000',
       cryptoAmountExpected: '2000000',
+      amountDue: '2000000',
       decimals: 6,
       markupBps: 0,
       discountBps: 0,

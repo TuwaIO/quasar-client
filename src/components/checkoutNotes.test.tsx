@@ -74,6 +74,7 @@ const quote = {
   methodId: 'usdc-base',
   payer: `${BASE}:${PAYER}`,
   cryptoAmountExpected: '89540000',
+  amountDue: '89540000',
   amountToSend: '89540000',
   transferFee: null,
   decimals: 6,

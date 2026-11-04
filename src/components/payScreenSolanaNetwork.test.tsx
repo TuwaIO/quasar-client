@@ -56,6 +56,7 @@ function solanaPay(chainId: string, walletChainId: string, error: { code: string
     },
     amountToSend: '1000000000',
     cryptoAmountExpected: '1000000000',
+    amountDue: '1000000000',
     decimals: 9,
     markupBps: 0,
     discountBps: 0,

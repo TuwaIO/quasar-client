@@ -87,6 +87,7 @@ export const itLabels: NovaPaymentsLabels = {
     change: 'Cambia',
     changeWallet: 'Cambia wallet',
     youSend: 'Invii',
+    youSendRest: 'Invii il resto',
     copyAmount: "Copia l'importo",
     copied: 'Copiato',
     onNetwork: 'su {network}',
@@ -105,6 +106,8 @@ export const itLabels: NovaPaymentsLabels = {
     gasFromWallet: 'Pagata dal tuo wallet',
     to: 'A',
     invoiceTotal: 'Totale fattura',
+    invoiceRest: 'Resto della fattura',
+    backFromRest: 'Indietro',
     transferFee: 'Commissione di trasferimento del token {percent}%',
     merchantReceives: '{merchant} riceve',
     transferFeeNote:
@@ -288,6 +291,8 @@ export const itLabels: NovaPaymentsLabels = {
     underpaidRest: 'Invia il resto, {rest}, dallo stesso wallet su {network}.',
     underpaidNote:
       'Finché non arriva il resto, {merchant} vede la fattura come pagata in parte. Si può pagare fino al {date}.',
+    underpaidClosed:
+      'Il resto di questa fattura non può più essere pagato qui. {merchant} può rimborsare quanto arrivato.',
     payRestFirstWallet:
       'Solo il wallet che ha pagato per primo, {wallet}, può pagare il resto. Collega quel wallet per pagarlo.',
     payRest: 'Paga il resto',

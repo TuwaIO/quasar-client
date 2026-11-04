@@ -9,6 +9,7 @@ const quote = (extra: Partial<CheckoutQuote> = {}): CheckoutQuote =>
     methodId: 'usdc-base',
     payer: 'eip155:8453:0x1111111111111111111111111111111111111111',
     cryptoAmountExpected: '89540000',
+    amountDue: '89540000',
     amountToSend: '89540000',
     transferFee: null,
     decimals: 6,
@@ -60,6 +61,18 @@ describe('payPath', () => {
 });
 
 describe('quoteAmounts', () => {
+  it('receives what is left on the quote of a rest, with the fee on that', () => {
+    expect(
+      quoteAmounts(
+        quote({
+          amountDue: '9540000',
+          amountToSend: '9559118',
+          transferFee: { bps: 20, maxFee: null, source: 'contract' },
+        }),
+      ),
+    ).toEqual({ send: '9559118', receives: '9540000', fee: { amount: '19118', percent: '0.2' } });
+  });
+
   it('sends what the merchant receives when the token keeps no fee', () => {
     expect(quoteAmounts(quote())).toEqual({ send: '89540000', receives: '89540000', fee: null });
   });

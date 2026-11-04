@@ -114,6 +114,7 @@ function payContext(customization: CheckoutContextValue['customization']) {
     instructions: { family: 'eip155', chainId: 8453, token: '0xusdc', symbol: 'USDC', to: `0x${'2'.repeat(40)}` },
     amountToSend: '2000000',
     cryptoAmountExpected: '2000000',
+    amountDue: '2000000',
     decimals: 6,
     markupBps: 0,
     discountBps: 0,

@@ -86,6 +86,7 @@ export const ukLabels: NovaPaymentsLabels = {
     change: 'Змінити',
     changeWallet: 'Змінити гаманець',
     youSend: 'Ви надсилаєте',
+    youSendRest: 'Ви надсилаєте решту',
     copyAmount: 'Скопіювати суму',
     copied: 'Скопійовано',
     onNetwork: 'у мережі {network}',
@@ -104,6 +105,8 @@ export const ukLabels: NovaPaymentsLabels = {
     gasFromWallet: 'Сплачується з вашого гаманця',
     to: 'Отримувач',
     invoiceTotal: 'Сума рахунку',
+    invoiceRest: 'Решта рахунку',
+    backFromRest: 'Назад',
     transferFee: 'Комісія токена за переказ {percent}%',
     merchantReceives: '{merchant} отримає',
     transferFeeNote:
@@ -283,6 +286,7 @@ export const ukLabels: NovaPaymentsLabels = {
     underpaidText: 'Отримано {received} з {total}.',
     underpaidRest: 'Надішліть решту, {rest}, з того самого гаманця в мережі {network}.',
     underpaidNote: 'Поки решта не надійде, {merchant} бачить рахунок як недоплачений. Його можна оплатити до {date}.',
+    underpaidClosed: 'Решту цього рахунку тут більше не можна оплатити. {merchant} може повернути те, що надійшло.',
     payRestFirstWallet:
       'Решту можна оплатити лише з гаманця, який платив першим: {wallet}. Підключіть цей гаманець, щоб оплатити решту.',
     payRest: 'Оплатити решту',
