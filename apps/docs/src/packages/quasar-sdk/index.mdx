@@ -93,7 +93,7 @@ export async function checkout(orderId: string, email: string) {
   const { payUrl } = await quasar.payments.createInvoice(
     {
       currency: 'EUR',
-      lineItems: [{ name: 'Pro plan, October', quantity: '1', unitPrice: '49.00', taxRate: '21' }],
+      lineItems: [{ name: 'Pro plan, October', quantity: '1', unitPrice: '49.00' }],
       buyer: { email },
       metadata: { orderId },
     },
