@@ -21,7 +21,7 @@ import { formatLabel, hasLabels } from '../i18n';
 import { checkoutScreen, deadlineAnnouncement, deadlineState } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
-import { needsLeaveConfirm } from '../utils/outcome';
+import { isSameWallet, needsLeaveConfirm } from '../utils/outcome';
 import { lockPrice } from '../utils/payerProof';
 import { AutoPayScreen } from './AutoPayScreen';
 import { BuyerScreen } from './BuyerScreen';
@@ -410,14 +410,19 @@ export function PaymentCheckout({
 
   const lockForWallet = useEffectEvent(() => {
     if (!wallet || !checkout) return;
-    const { quote, phase } = store.getState();
+    const { quote, phase, invoiceStatus } = store.getState();
+    // Only the wallet that paid an underpaid invoice first pays the rest: another one is not asked for anything, and the
+    // outcome names the first one
+    const firstWallet =
+      (invoiceStatus ?? checkout.invoice.status) === 'underpaid' ? checkout.invoice.originWallet : null;
+    const paysRest = (payer: string) => !firstWallet || isSameWallet(payer, firstWallet);
     if (connectingFor.current) {
       const method = checkout.methods.find((item) => item.id === connectingFor.current);
       const payer = method ? payerFor(wallet, method) : null;
       if (!payer) return;
       connectingFor.current = null;
       store.getState().setPayer(payer);
-      void lockStorePrice();
+      if (paysRest(payer)) void lockStorePrice();
       return;
     }
     // Another wallet became active over a locked price: lock it again for that wallet, or go back to the methods
@@ -427,7 +432,7 @@ export function PaymentCheckout({
     if (payer === quote.payer) return;
     if (!payer) return store.getState().releaseQuote();
     store.getState().setPayer(payer);
-    void lockStorePrice();
+    if (paysRest(payer)) void lockStorePrice();
   });
   useEffect(() => lockForWallet(), [wallet?.address, wallet?.chainId, wallet?.connectorType]);
   // The connect modal closed without a wallet of that family
@@ -445,7 +450,10 @@ export function PaymentCheckout({
   // Before anything is sent the checkout asks first; once a transaction is on its way it closes at once
   const close =
     closeNow &&
-    (() => (needsLeaveConfirm(store.getState().phase, store.getState().error) ? setAskLeave(true) : closeNow()));
+    (() =>
+      needsLeaveConfirm(store.getState().phase, store.getState().error, store.getState().invoiceStatus)
+        ? setAskLeave(true)
+        : closeNow());
   const leave = askLeave
     ? {
         onStay: () => setAskLeave(false),
@@ -526,7 +534,12 @@ export function PaymentCheckout({
           // Escape and a click outside ask first too, while nothing is sent
           // Escape on the question to leave answers "Stay"
           if (!next && askLeave) return setAskLeave(false);
-          if (!next && needsLeaveConfirm(store.getState().phase, store.getState().error)) return setAskLeave(true);
+          if (
+            !next &&
+            needsLeaveConfirm(store.getState().phase, store.getState().error, store.getState().invoiceStatus)
+          ) {
+            return setAskLeave(true);
+          }
           onOpenChange?.(next);
           if (!next) onClose?.();
         }}

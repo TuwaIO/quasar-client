@@ -5,6 +5,7 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
 import { baseUnitsToDecimal, formatCountdown, formatTokenAmount, shortAddress } from '../utils/format';
 import { networkName } from '../utils/methods';
+import { addressOfWallet, restRateText } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { mono, primaryAction } from './classes';
 import { checkoutClassName } from './customization';
@@ -57,10 +58,16 @@ export function QrScreen() {
   const quoting = state.phase === 'quoting';
   // The rest of an underpaid invoice: what is sent is not the total of the invoice
   const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
+  const restRate = rest ? restRateText(quote, now, labels, checkout.merchant.name, locale) : null;
+  // Another sender's transfer is held for a refund, so the hint names the wallet that paid first
+  const firstWallet = rest ? checkout.invoice.originWallet : null;
+  const hint = firstWallet
+    ? formatLabel(labels.qr.restHint, { wallet: shortAddress(addressOfWallet(firstWallet)) })
+    : labels.qr.solanaHint;
 
   return (
     <>
-      <ScreenContent title={labels.qr.solanaTitle} subtitle={labels.qr.solanaHint}>
+      <ScreenContent title={labels.qr.solanaTitle} subtitle={hint}>
         {/* Side by side when the screen area has the room (from 440 px), not by the width of the window */}
         <div className="novapay:flex novapay:flex-col novapay:items-center novapay:gap-4 novapay:@min-[440px]:flex-row novapay:@min-[440px]:items-start">
           <QrCode
@@ -105,6 +112,9 @@ export function QrScreen() {
           </div>
         </div>
         {expired && <ScreenError>{labels.pay.priceExpired}</ScreenError>}
+        {restRate && (
+          <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{restRate}</p>
+        )}
         <p className="novapay:m-0 novapay:flex novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-pending-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-pending-text)]">
           <ExclamationTriangleIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:shrink-0" />
           {labels.qr.exchangeWarning}
@@ -113,7 +123,7 @@ export function QrScreen() {
       <ScreenFooter>
         {expired ? (
           <PrimaryButton busy={quoting} onClick={() => void store.getState().requestQuote()}>
-            {labels.pay.newPrice}
+            {rest ? labels.outcome.payRest : labels.pay.newPrice}
           </PrimaryButton>
         ) : (
           <a

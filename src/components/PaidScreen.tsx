@@ -69,7 +69,7 @@ export function PaidScreen() {
         </h2>
         <div>
           <p className={cn(mono, 'novapay:m-0 novapay:text-2xl novapay:font-bold')}>
-            {facts.amount ?? (total && `${total} ${checkout.invoice.currency}`)}
+            {facts.paidAmount ?? (total && `${total} ${checkout.invoice.currency}`)}
           </p>
           <p className="novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
             {facts.network ? formatLabel(labels.paid.summary, { network: facts.network, date }) : date}

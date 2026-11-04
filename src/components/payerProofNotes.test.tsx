@@ -237,12 +237,12 @@ describe('the rest of an underpaid invoice', () => {
     expect(ctx.lockPrice).toHaveBeenCalledOnce();
   });
 
-  it('offers no rest once it cannot be paid, and says the merchant can refund what arrived', () => {
-    const closed = 'The rest of this invoice can no longer be paid here. Cosmos can refund what arrived.';
+  it('offers no rest once it cannot be paid, and says when the merchant can refund what arrived', () => {
     const received = { status: 'underpaid', amountPaid: '80000000' } as const;
     const expectClosed = () => {
       const tree = OutcomeScreen({ kind: 'underpaid' });
-      expect(textOf(tree)).toContain(closed);
+      expect(textOf(tree)).toContain('The rest of this invoice can no longer be paid here.');
+      expect(textOf(tree)).toMatch(/After .*2026.*, Cosmos can refund what arrived\./);
       expect(textOf(tree)).toContain('80.00 USDC of 89.54 USDC received.');
       expect(textOf(tree)).not.toContain('Send the rest');
       expect(textOf(tree)).not.toContain('It stays payable');
@@ -251,13 +251,136 @@ describe('the rest of an underpaid invoice', () => {
     // As the checkout reads it
     show('underpaid', { phase: 'underpaid', quote: quoteOf(null) }, { ...received, restPayable: false });
     expectClosed();
-    // Refused meanwhile, on a page read while the rate still held
+    // Refused meanwhile, on a page read while the method was on
     show(
       'underpaid',
-      { phase: 'underpaid', quote: quoteOf(null), error: { code: 'rest_rate_expired', message: '', status: 409 } },
+      { phase: 'underpaid', quote: quoteOf(null), error: { code: 'method_not_found', message: '', status: 404 } },
       { ...received, restPayable: true },
     );
     expectClosed();
+  });
+
+  it('keeps the rest open while the checkout on the page is the read from before the part arrived', () => {
+    show(
+      'underpaid',
+      { phase: 'underpaid', invoiceStatus: 'underpaid', quote: quoteOf(null) },
+      { status: 'open', amountPaid: '80000000', restPayable: false },
+    );
+    const tree = OutcomeScreen({ kind: 'underpaid' });
+    expect(textOf(tree)).toContain('Send the rest');
+    expect(fixture.ofType(tree, PrimaryButton)).toHaveLength(1);
+  });
+
+  it('says why "Pay the rest" did nothing, and keeps the button for another try', () => {
+    show(
+      'underpaid',
+      { phase: 'underpaid', quote: quoteOf(null), error: { code: 'rate_limited', message: '', status: 429 } },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    const tree = OutcomeScreen({ kind: 'underpaid' });
+    expect(fixture.ofType(tree, ScreenError).map((e) => (e as ReactElement<Props>).props.children)).toEqual([
+      defaultLabels.method.rateLimited,
+    ]);
+    expect(fixture.ofType(tree, PrimaryButton)).toHaveLength(1);
+  });
+
+  it('says what a rest that moved money without counting means, instead of only offering it again', () => {
+    show(
+      'underpaid',
+      {
+        phase: 'underpaid',
+        quote: quoteOf(null),
+        error: { code: 'payment_mismatch', message: '', reason: 'no_matching_transfer' },
+      },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    const errors = fixture
+      .ofType(OutcomeScreen({ kind: 'underpaid' }), ScreenError)
+      .map((e) => (e as ReactElement<Props>).props.children);
+    expect(errors).toEqual([defaultLabels.pay.mismatch.replace('{merchant}', 'Cosmos')]);
+  });
+
+  it('names the wallet that paid first from the checkout, as an address or an account, with no quote on the page', () => {
+    for (const originWallet of [FIRST, `${BASE}:${FIRST}`]) {
+      show(
+        'underpaid',
+        { phase: 'underpaid', quote: null },
+        { status: 'underpaid', amountPaid: '80000000', restPayable: true, originWallet },
+      );
+      expect(textOf(OutcomeScreen({ kind: 'underpaid' }))).toContain(REFUSAL);
+    }
+    // Quasar refuses it with the bare address it keeps
+    show(
+      'underpaid',
+      {
+        phase: 'underpaid',
+        quote: quoteOf(null),
+        error: { code: 'payer_mismatch', message: '', status: 409, originWallet: FIRST },
+      },
+      { status: 'underpaid', amountPaid: '80000000' },
+    );
+    expect(textOf(OutcomeScreen({ kind: 'underpaid' }))).toContain(REFUSAL);
+  });
+
+  it('reads the amounts from the checkout when the page holds no quote', () => {
+    show(
+      'underpaid',
+      { phase: 'underpaid', quote: null },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    ctx = { ...ctx, checkout: { ...ctx.checkout!, quote: quoteOf(null) } as CheckoutView };
+    expect(textOf(OutcomeScreen({ kind: 'underpaid' }))).toContain('80.00 USDC of 89.54 USDC received.');
+  });
+
+  it('says until when the rate of a moving asset holds, on the outcome and the payment step', () => {
+    const heldUntil = new Date(Date.now() + 300_000).toISOString();
+    const rest = { ...quoteOf(null), amountDue: '9540000', amountToSend: '9540000', rateHeldUntil: heldUntil };
+    const received = { status: 'underpaid', amountPaid: '80000000', restPayable: true } as const;
+    show('underpaid', { phase: 'underpaid', quote: rest }, received);
+    expect(textOf(OutcomeScreen({ kind: 'underpaid' }))).toMatch(
+      /This rate holds until .+\. A payment after that waits for Cosmos to accept it\./,
+    );
+    show('pay', { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: rest }, received);
+    expect(textOf(render(PayScreen, {}))).toContain('A payment after that waits for Cosmos to accept it.');
+    unmount();
+
+    // Past that time the buyer can still pay, and knows the merchant decides
+    const ended = { ...rest, rateHeldUntil: new Date(Date.now() - 60_000).toISOString() };
+    show('pay', { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: ended }, received);
+    expect(textOf(render(PayScreen, {}))).toContain(
+      'This rate was locked earlier, so this payment waits for Cosmos to accept it.',
+    );
+  });
+
+  it('says nothing of a rate on a rest in a stablecoin of the invoice currency', () => {
+    const rest = { ...quoteOf(null), amountDue: '9540000', amountToSend: '9540000', rateHeldUntil: null };
+    show(
+      'pay',
+      { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: rest },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    expect(textOf(render(PayScreen, {}))).not.toContain('This rate');
+  });
+
+  it('offers no new price on a rest: the amount stays, only its time runs out', () => {
+    const rest = { ...quoteOf(null), amountDue: '9540000', amountToSend: '9540000' };
+    show(
+      'pay',
+      { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: rest },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    expect(textOf(render(PayScreen, {}))).not.toContain(defaultLabels.pay.refreshPrice);
+    unmount();
+
+    const ended = { ...rest, expiresAt: new Date(Date.now() - 1_000).toISOString() };
+    show(
+      'pay',
+      { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: ended },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    const text = textOf(render(PayScreen, {}));
+    expect(text).toContain(defaultLabels.outcome.payRest);
+    expect(text).not.toContain(defaultLabels.pay.newPrice);
   });
 
   it('names the rest on the payment step, without the total of the invoice', () => {
@@ -296,11 +419,19 @@ describe('the rest of an underpaid invoice', () => {
     show(
       'qr',
       { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: rest },
-      { status: 'underpaid', amountPaid: '80000000' },
+      {
+        status: 'underpaid',
+        amountPaid: '80000000',
+        originWallet: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+      },
     );
-    const text = textOf(render(QrScreen, {}));
+    const tree = render(QrScreen, {});
+    const text = textOf(tree);
     expect(text).toContain('You send the rest');
     expect(text).not.toContain('Back to methods');
+    expect(fixture.elements(tree).map((element) => element.props.subtitle)).toContain(
+      'Scan with the wallet that paid first, 9WzD…AWWM.',
+    );
   });
 
   it("adds the token's transfer fee to the rest as a rest of the invoice, not its total", () => {

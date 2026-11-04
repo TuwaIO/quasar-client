@@ -57,6 +57,30 @@ afterEach(() => unmount());
 
 // After paying for quota in the dashboard, the checkout counted down and loaded the billing page again
 // (its successUrl), closing everything at once. A checkout opened as a modal belongs to the page under it
+describe('the amount of a paid invoice', () => {
+  const rest = {
+    methodId: 'usdc-base',
+    payer: null,
+    cryptoAmountExpected: '89540000',
+    amountDue: '9540000',
+    amountToSend: '9540000',
+    decimals: 6,
+    instructions: { family: 'eip155', chainId: 8453, symbol: 'USDC' },
+  };
+
+  it('is the whole invoice after a rest, not only the last transfer', () => {
+    paid('page', 0);
+    ctx = { ...ctx, state: { ...ctx.state, quote: rest } as never };
+    const text = fixture
+      .elements(render(PaidScreen, {}))
+      .flatMap((element) => [element.props.children].flat())
+      .filter((child): child is string => typeof child === 'string')
+      .join(' ');
+    expect(text).toContain('89.54 USDC');
+    expect(text).not.toMatch(/(^|\s)9\.54 USDC/);
+  });
+});
+
 describe('the way back after paying', () => {
   it('in a modal: Close, no countdown and no link that loads the page again', () => {
     const { tree, close, links } = paid('modal', 0);

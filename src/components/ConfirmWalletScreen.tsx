@@ -141,7 +141,11 @@ export function ConfirmWalletScreen() {
                 ? formatLabel(labels.payerProof.waiting, values)
                 : formatLabel(labels.payerProof.confirm, values)}
           </PrimaryButton>
-          <SecondaryButton onClick={() => setConfirmWallet(false)}>{labels.pay.back}</SecondaryButton>
+          <SecondaryButton onClick={() => setConfirmWallet(false)}>
+            {(state.invoiceStatus ?? checkout?.invoice.status) === 'underpaid'
+              ? labels.pay.backFromRest
+              : labels.pay.back}
+          </SecondaryButton>
           <FooterNote>{smart ? labels.payerProof.noteSmart : labels.payerProof.note}</FooterNote>
         </ScreenFooter>
       </div>

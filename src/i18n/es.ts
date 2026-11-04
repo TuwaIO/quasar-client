@@ -108,6 +108,8 @@ export const esLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Total de la factura',
     invoiceRest: 'Resto de la factura',
     backFromRest: 'Atrás',
+    restRateUntil: 'Este tipo de cambio es válido hasta {time}. Un pago posterior espera a que {merchant} lo acepte.',
+    restRateEnded: 'Este tipo de cambio se fijó antes, así que este pago espera a que {merchant} lo acepte.',
     transferFee: 'Comisión de transferencia del token {percent} %',
     merchantReceives: '{merchant} recibe',
     transferFeeNote:
@@ -215,6 +217,7 @@ export const esLabels: NovaPaymentsLabels = {
   qr: {
     solanaTitle: 'Escanea con una billetera de Solana',
     solanaHint: 'Abre Phantom, Solflare o Backpack',
+    restHint: 'Escanea con la billetera que pagó primero, {wallet}.',
     scanStep: 'Escanea el código (Solana Pay)',
     approveStep: 'Aprueba el importe de abajo',
     solanaCode: 'Código QR de una solicitud de Solana Pay por {amount}',
@@ -288,7 +291,8 @@ export const esLabels: NovaPaymentsLabels = {
     underpaidRest: 'Envía el resto, {rest}, desde la misma billetera en {network}.',
     underpaidNote:
       'Hasta que llegue el resto, {merchant} ve la factura como pagada en parte. Se puede pagar hasta el {date}.',
-    underpaidClosed: 'El resto de esta factura ya no se puede pagar aquí. {merchant} puede devolver lo que llegó.',
+    underpaidClosed: 'El resto de esta factura ya no se puede pagar aquí.',
+    underpaidClosedRefund: 'Después del {date}, {merchant} puede devolver lo que llegó.',
     payRestFirstWallet:
       'Solo la billetera que pagó primero, {wallet}, puede pagar el resto. Conecta esa billetera para pagarlo.',
     payRest: 'Pagar el resto',

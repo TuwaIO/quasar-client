@@ -108,6 +108,9 @@ export const itLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Totale fattura',
     invoiceRest: 'Resto della fattura',
     backFromRest: 'Indietro',
+    restRateUntil: 'Questo tasso vale fino a {time}. Un pagamento successivo attende che {merchant} lo accetti.',
+    restRateEnded:
+      'Questo tasso è stato bloccato in precedenza, quindi questo pagamento attende che {merchant} lo accetti.',
     transferFee: 'Commissione di trasferimento del token {percent}%',
     merchantReceives: '{merchant} riceve',
     transferFeeNote:
@@ -216,6 +219,7 @@ export const itLabels: NovaPaymentsLabels = {
   qr: {
     solanaTitle: 'Scansiona con un wallet Solana',
     solanaHint: 'Apri Phantom, Solflare o Backpack',
+    restHint: 'Scansiona con il wallet che ha pagato per primo, {wallet}.',
     scanStep: 'Scansiona il codice (Solana Pay)',
     approveStep: "Approva l'importo qui sotto",
     solanaCode: 'Codice QR di una richiesta Solana Pay per {amount}',
@@ -291,8 +295,8 @@ export const itLabels: NovaPaymentsLabels = {
     underpaidRest: 'Invia il resto, {rest}, dallo stesso wallet su {network}.',
     underpaidNote:
       'Finché non arriva il resto, {merchant} vede la fattura come pagata in parte. Si può pagare fino al {date}.',
-    underpaidClosed:
-      'Il resto di questa fattura non può più essere pagato qui. {merchant} può rimborsare quanto arrivato.',
+    underpaidClosed: 'Il resto di questa fattura non può più essere pagato qui.',
+    underpaidClosedRefund: 'Dopo il {date}, {merchant} può rimborsare quanto ricevuto.',
     payRestFirstWallet:
       'Solo il wallet che ha pagato per primo, {wallet}, può pagare il resto. Collega quel wallet per pagarlo.',
     payRest: 'Paga il resto',

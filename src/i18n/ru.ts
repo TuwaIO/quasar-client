@@ -108,6 +108,8 @@ export const ruLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Сумма счёта',
     invoiceRest: 'Остаток счёта',
     backFromRest: 'Назад',
+    restRateUntil: 'Этот курс действует до {time}. Платёж после этого ждёт, пока {merchant} его примет.',
+    restRateEnded: 'Этот курс зафиксирован раньше, поэтому этот платёж ждёт, пока {merchant} его примет.',
     transferFee: 'Комиссия токена за перевод {percent}%',
     merchantReceives: '{merchant} получит',
     transferFeeNote:
@@ -216,6 +218,7 @@ export const ruLabels: NovaPaymentsLabels = {
   qr: {
     solanaTitle: 'Отсканируйте кошельком Solana',
     solanaHint: 'Откройте Phantom, Solflare или Backpack',
+    restHint: 'Сканируйте кошельком, который платил первым, {wallet}.',
     scanStep: 'Отсканируйте код (Solana Pay)',
     approveStep: 'Подтвердите сумму ниже',
     solanaCode: 'QR-код запроса Solana Pay на {amount}',
@@ -288,7 +291,8 @@ export const ruLabels: NovaPaymentsLabels = {
     underpaidText: 'Получено {received} из {total}.',
     underpaidRest: 'Отправьте остаток, {rest}, с того же кошелька в сети {network}.',
     underpaidNote: 'Пока остаток не придёт, {merchant} видит счёт как недоплаченный. Его можно оплатить до {date}.',
-    underpaidClosed: 'Остаток этого счёта здесь больше нельзя оплатить. {merchant} может вернуть то, что пришло.',
+    underpaidClosed: 'Остаток этого счёта здесь больше нельзя оплатить.',
+    underpaidClosedRefund: 'После {date} {merchant} может вернуть то, что пришло.',
     payRestFirstWallet:
       'Остаток можно оплатить только с кошелька, который платил первым: {wallet}. Подключите этот кошелёк, чтобы оплатить остаток.',
     payRest: 'Оплатить остаток',

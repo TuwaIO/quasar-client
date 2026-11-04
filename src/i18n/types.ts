@@ -201,6 +201,13 @@ export type NovaPaymentsLabels = {
     invoiceRest: string;
     /** Button back to the underpaid invoice from the quote of its rest (default: `Back`) */
     backFromRest: string;
+    /**
+     * On a rest in an asset that moves against the invoice currency: `{time}`, `{merchant}` (default: `This rate holds until
+     * {time}. A payment after that waits for {merchant} to accept it.`)
+     */
+    restRateUntil: string;
+    /** The same, past that time: `{merchant}` (default: `This rate was locked earlier, so this payment waits for {merchant} to accept it.`) */
+    restRateEnded: string;
     /** Row of the token's transfer fee: `{percent}` (default: `Token transfer fee {percent}%`) */
     transferFee: string;
     /** Row of what the merchant receives: `{merchant}` (default: `{merchant} receives`) */
@@ -437,6 +444,8 @@ export type NovaPaymentsLabels = {
     solanaTitle: string;
     /** Under it (default: `Open Phantom, Solflare or Backpack`) */
     solanaHint: string;
+    /** Instead of it on the rest of an underpaid invoice: `{wallet}` (default: `Scan with the wallet that paid first, {wallet}.`) */
+    restHint: string;
     /** First step (default: `Scan the code (Solana Pay)`) */
     scanStep: string;
     /** Second step (default: `Approve the amount below`) */
@@ -587,11 +596,12 @@ export type NovaPaymentsLabels = {
     /** Until when: `{merchant}`, `{date}` */
     underpaidNote: string;
     /**
-     * Instead of what is left and until when, once the rest cannot be paid (its method is off or its rate no longer
-     * holds): `{merchant}` (default: `The rest of this invoice can no longer be paid here. {merchant} can refund what
-     * arrived.`)
+     * Instead of what is left and until when, once the rest cannot be paid: its method is off (default: `The rest of this
+     * invoice can no longer be paid here.`)
      */
     underpaidClosed: string;
+    /** With it, when the merchant can refund: `{date}`, `{merchant}` (default: `After {date}, {merchant} can refund what arrived.`) */
+    underpaidClosedRefund: string;
     /**
      * Instead of paying the rest when another wallet than the one that paid first is connected, or Quasar refused the
      * rest from it (`payer_mismatch`): `{wallet}`, the first wallet's short address (default: `Only the wallet that paid

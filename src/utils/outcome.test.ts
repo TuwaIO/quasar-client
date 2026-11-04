@@ -65,6 +65,14 @@ describe('needsLeaveConfirm', () => {
 });
 
 // A payment another invoice took or Quasar has not recorded yet left the wallet
+describe('needsLeaveConfirm on the rest of an underpaid invoice', () => {
+  it('closes without a question: part of the money was sent, and nothing about the price is released', () => {
+    expect(needsLeaveConfirm('awaitingPayment', null, 'underpaid')).toBe(false);
+    expect(needsLeaveConfirm('quoting', null, 'underpaid')).toBe(false);
+    expect(needsLeaveConfirm('awaitingPayment', null, 'open')).toBe(true);
+  });
+});
+
 describe('needsLeaveConfirm after a payment that left the wallet', () => {
   it('does not ask after a transaction another invoice took or a confirmed payment not recorded yet', () => {
     for (const error of [

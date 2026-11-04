@@ -3,6 +3,7 @@
  * terms of automatic payments, what an underpaid invoice still needs, and what arrived on an invoice.
  */
 
+import { parseCaip10AccountId } from '@tuwaio/orbit-core';
 import type {
   AutoChargeOffer,
   CheckoutError,
@@ -104,13 +105,16 @@ const NOTHING_SENT: CheckoutPhase[] = ['buyer', 'selectMethod', 'quoting', 'awai
  * invoice is settled, the checkout closes without a question; also after a payment that left the wallet, or may have
  * ({@link leftTheWalletText}: a transaction that does not pay the invoice, a payment Quasar closed without a result on
  * chain within 24 hours, a transaction another invoice handed over first, a confirmed payment Quasar has not recorded
- * yet), so the question's "Nothing is sent yet" would not be true.
+ * yet), so the question's "Nothing is sent yet" would not be true. Nor is it on the rest of an underpaid invoice, whose
+ * price stays as it is.
  *
  * @param phase - Where the payment stands.
  * @param error - The store's last error, if any.
+ * @param status - The state of the invoice, when known.
  * @returns `true` to ask.
  */
-export function needsLeaveConfirm(phase: CheckoutPhase, error?: CheckoutError | null): boolean {
+export function needsLeaveConfirm(phase: CheckoutPhase, error?: CheckoutError | null, status?: string | null): boolean {
+  if (status === 'underpaid') return false;
   const followUp = unconfirmedFollowUp(error);
   return NOTHING_SENT.includes(phase) && !isMovedMoneyFailure(error) && !(followUp && LEFT_THE_WALLET[followUp]);
 }
@@ -231,6 +235,54 @@ export function underpaidRest(
   if (!quote || amountPaid === null) return null;
   const rest = BigInt(quote.cryptoAmountExpected) - BigInt(amountPaid);
   return rest > 0n ? rest.toString() : null;
+}
+
+/**
+ * What the buyer is told about the rate of the rest of an underpaid invoice, in an asset that moves against the invoice
+ * currency (`rateHeldUntil` of the quote): until when a payment settles by itself, or that the seller now decides.
+ *
+ * @param quote - The locked quote.
+ * @param now - The time now, in milliseconds.
+ * @param labels - The labels of the checkout language.
+ * @param merchant - The seller's name.
+ * @param locale - The language of the checkout.
+ * @returns The text, or `null` when the rate holds until the due date.
+ */
+export function restRateText(
+  quote: Pick<CheckoutQuote, 'rateHeldUntil'> | null,
+  now: number,
+  labels: NovaPaymentsLabels,
+  merchant: string,
+  locale: string,
+): string | null {
+  const heldUntil = quote?.rateHeldUntil ? Date.parse(quote.rateHeldUntil) : null;
+  if (heldUntil === null) return null;
+  if (heldUntil <= now) return formatLabel(labels.pay.restRateEnded, { merchant });
+  const time = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(heldUntil);
+  return formatLabel(labels.pay.restRateUntil, { time, merchant });
+}
+
+/**
+ * The address of a wallet Quasar names: it keeps the wallet that paid first as an address or as a CAIP-10 account.
+ *
+ * @param wallet - The wallet, in either form.
+ * @returns The address.
+ */
+export function addressOfWallet(wallet: string): string {
+  return parseCaip10AccountId(wallet)?.address ?? wallet;
+}
+
+/**
+ * Whether two wallets Quasar names are one: an EVM address in any letter case, any other exactly.
+ *
+ * @param a - A wallet, as an address or an account.
+ * @param b - Another one.
+ * @returns `true` for the same wallet.
+ */
+export function isSameWallet(a: string, b: string): boolean {
+  const left = addressOfWallet(a);
+  const right = addressOfWallet(b);
+  return left.startsWith('0x') ? left.toLowerCase() === right.toLowerCase() : left === right;
 }
 
 /**

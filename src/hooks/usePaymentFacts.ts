@@ -22,6 +22,10 @@ export function usePaymentFacts() {
     amount: quote
       ? `${formatTokenAmount(quote.amountToSend, quote.decimals, locale)} ${quote.instructions.symbol}`
       : null,
+    // What the whole invoice came to, when this payment was its rest: `amount` is only the last transfer
+    paidAmount: quote
+      ? `${formatTokenAmount(quote.amountDue === quote.cryptoAmountExpected ? quote.amountToSend : quote.cryptoAmountExpected, quote.decimals, locale)} ${quote.instructions.symbol}`
+      : null,
     txKey,
     explorerUrl:
       quote && chainId && txKey ? adapterFor(quote.instructions.family)?.explorerUrl?.({ chainId, txKey }) : undefined,

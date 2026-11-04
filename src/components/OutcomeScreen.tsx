@@ -26,11 +26,20 @@ import {
 } from '../utils/checkout';
 import { formatFiat, formatTokenAmount, minorToDecimal, shortAddress } from '../utils/format';
 import { networkName, payerFor } from '../utils/methods';
-import { contactHref, leftTheWalletText, receivedAmount, underpaidRest } from '../utils/outcome';
+import {
+  addressOfWallet,
+  contactHref,
+  isSameWallet,
+  leftTheWalletText,
+  methodErrorText,
+  receivedAmount,
+  restRateText,
+  underpaidRest,
+} from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { mono, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
-import { DetailRow, DetailsCard, PrimaryButton, ScreenFooter, SecondaryButton } from './ScreenParts';
+import { DetailRow, DetailsCard, PrimaryButton, ScreenError, ScreenFooter, SecondaryButton } from './ScreenParts';
 import { TxLabels } from './TxLabels';
 
 /** The outcomes this screen shows. */
@@ -79,7 +88,6 @@ const LEFT_THE_WALLET: ReadonlySet<UnconfirmedFollowUp> = new Set([
 ]);
 
 /** Whether two account addresses are one: EVM ones in any case, Solana (base58) ones exactly. */
-const sameAddress = (a: string, b: string) => (a.startsWith('0x') ? a.toLowerCase() === b.toLowerCase() : a === b);
 
 /** The icon and tone of each outcome. */
 const LOOK: Record<OutcomeKind, { Icon: ComponentType<SVGProps<SVGSVGElement>>; tone: string }> = {
@@ -174,6 +182,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
     store,
     labels,
     locale,
+    now,
     wallet,
     connectWallet,
     openInvoice,
@@ -282,62 +291,77 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       break;
     }
     case 'underpaid': {
+      const locked = quote ?? checkout.quote;
       const paid = checkout.invoice.amountPaid;
-      const rest = underpaidRest(quote, paid);
+      const rest = underpaidRest(locked, paid);
       title = labels.outcome.underpaidTitle;
-      // Its method is off or its rate no longer holds, as read or as Quasar refused it since
-      const restClosed = checkout.invoice.restPayable === false || state.error?.code === 'rest_rate_expired';
-      const received = quote && paid && (
+      const received = locked && paid && (
         <Text>
           {formatLabel(labels.outcome.underpaidText, {
-            received: token(paid),
-            total: token(quote.cryptoAmountExpected),
+            received: token(paid, locked),
+            total: token(locked.cryptoAmountExpected, locked),
           })}
         </Text>
       );
+      // Its method is off or nothing is left, as read or as Quasar refused it since. A first part that just arrived leaves
+      // the earlier read of the open invoice here until the next read, which says nothing of a rest
+      const restClosed =
+        (checkout.invoice.status === 'underpaid' && checkout.invoice.restPayable === false) ||
+        state.error?.code === 'method_not_found';
       if (restClosed) {
         body = (
           <>
             {received}
-            <Text>{formatLabel(labels.outcome.underpaidClosed, { merchant })}</Text>
+            <Text>{labels.outcome.underpaidClosed}</Text>
+            {due && <Text>{formatLabel(labels.outcome.underpaidClosedRefund, { merchant, date: due })}</Text>}
           </>
         );
         break;
       }
+      const rateNote = restRateText(locked, now, labels, merchant, locale);
+      // The rest of an underpaid invoice has one method, whatever the page chose before the part arrived
+      const restMethod = method ?? checkout.methods[0];
+      // Why the last attempt did nothing, or what happens to a transfer that moved money without counting. A refused
+      // wallet has its own sentence below
+      const problem =
+        state.error && state.error.code !== 'payer_mismatch' ? methodErrorText(state.error, labels, merchant) : null;
       body = (
         <>
           {received}
-          {quote && rest && (
+          {locked && rest && (
             <Text>
               {formatLabel(labels.outcome.underpaidRest, {
-                rest: token(rest),
-                network: networkName(instructionsChainId(quote.instructions)),
+                rest: token(rest, locked),
+                network: networkName(instructionsChainId(locked.instructions)),
               })}
             </Text>
           )}
           {due && <Text muted>{formatLabel(labels.outcome.underpaidNote, { merchant, date: due })}</Text>}
+          {rateNote && <Text muted>{rateNote}</Text>}
+          {problem && <ScreenError>{problem}</ScreenError>}
         </>
       );
       // Only the wallet that paid first pays the rest; Quasar refuses another one (`payer_mismatch`)
-      const connected = method && wallet ? payerFor(wallet, method) : null;
+      const connected = restMethod && wallet ? payerFor(wallet, restMethod) : null;
       const refusedFrom =
         (state.error as { code?: string; originWallet?: string } | null)?.code === 'payer_mismatch'
           ? ((state.error as { originWallet?: string }).originWallet ?? null)
           : null;
-      const first = refusedFrom ?? quote?.payer ?? null;
-      const firstAddress = first ? parseCaip10AccountId(first)?.address : undefined;
+      const first = refusedFrom ?? checkout.invoice.originWallet ?? locked?.payer ?? null;
+      const firstAddress = first ? addressOfWallet(first) : undefined;
       // The connected wallet decides once it is known (the buyer may have switched to the first one since a refusal)
       const connectedAddress = connected ? parseCaip10AccountId(connected)?.address : undefined;
       const otherWallet = Boolean(
-        firstAddress && (connectedAddress ? !sameAddress(connectedAddress, firstAddress) : refusedFrom),
+        firstAddress && (connectedAddress ? !isSameWallet(connectedAddress, firstAddress) : refusedFrom),
       );
       const payRest = () => {
-        if (!method) return;
+        if (!restMethod) return;
         // Another wallet is connected: the buyer connects the one that paid first
-        if (otherWallet) return void connectWallet(method);
+        if (otherWallet) return void connectWallet(restMethod);
         // The same wallet pays the rest: Quasar quotes what is left for it
-        const payer = quote?.payer === null ? null : connected;
-        if (quote?.payer !== null && !payer) return void connectWallet(method);
+        const payer = locked?.payer === null ? null : connected;
+        if (locked?.payer !== null && !payer) return void connectWallet(restMethod);
+        if (state.methodId !== restMethod.id) store.getState().selectMethod(restMethod.id);
         store.getState().setPayer(payer);
         // Another wallet confirms the invoice first; the wallet that paid confirmed it already
         void lockPrice();

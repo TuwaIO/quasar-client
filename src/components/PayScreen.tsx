@@ -20,7 +20,7 @@ import {
   shortAddress,
 } from '../utils/format';
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
-import { leftTheWalletText } from '../utils/outcome';
+import { leftTheWalletText, restRateText } from '../utils/outcome';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
 import { isPayerProofError, isSmartWallet, needsPayerProof, payerProofErrorText } from '../utils/payerProof';
 import { solanaNetworkHint } from '../utils/solanaNetwork';
@@ -198,6 +198,7 @@ export function PayScreen() {
   const rate = checkout.invoice.amountPaid ? null : quoteRate(quote, checkout.invoice.totalMinor);
   // The rest of an underpaid invoice: what is sent is not the total of the invoice
   const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
+  const restRate = rest ? restRateText(quote, now, labels, merchant, locale) : null;
   const total = checkout.invoice.totalMinor ? formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale) : null;
   const walletMatches = Boolean(wallet && quote.payer && payerFor(wallet, method) === quote.payer);
   const wrongNetwork = family === 'eip155' && wallet && wallet.chainId !== chainId && Boolean(adapter?.switchChain);
@@ -227,7 +228,7 @@ export function PayScreen() {
     : null;
 
   let action: { label: string; run: () => void; disabled?: boolean };
-  if (expired) action = { label: labels.pay.newPrice, run: renew };
+  if (expired) action = { label: rest ? labels.outcome.payRest : labels.pay.newPrice, run: renew };
   else if (!walletMatches) action = { label: labels.pay.connect, run: () => void connectWallet(method) };
   else if (wrongNetwork)
     action = { label: formatLabel(labels.pay.switchTo, { network }), run: () => void payment.switchNetwork() };
@@ -383,7 +384,7 @@ export function PayScreen() {
               <span role="timer" aria-live="off" className="novapay:flex-1">
                 {formatLabel(labels.pay.priceLocked, { time: formatCountdown(left) })}
               </span>
-              <FooterAction onClick={renew}>{labels.pay.refreshPrice}</FooterAction>
+              {!rest && <FooterAction onClick={renew}>{labels.pay.refreshPrice}</FooterAction>}
             </div>
           )}
 
@@ -412,6 +413,9 @@ export function PayScreen() {
           )}
 
           {expired && <ScreenError>{labels.pay.priceExpired}</ScreenError>}
+          {restRate && (
+            <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{restRate}</p>
+          )}
 
           {shortfall && !expired && (
             <div className="novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-xs">

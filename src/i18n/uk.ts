@@ -107,6 +107,8 @@ export const ukLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Сума рахунку',
     invoiceRest: 'Решта рахунку',
     backFromRest: 'Назад',
+    restRateUntil: 'Цей курс діє до {time}. Платіж після цього чекатиме, поки {merchant} його прийме.',
+    restRateEnded: 'Цей курс зафіксовано раніше, тому цей платіж чекатиме, поки {merchant} його прийме.',
     transferFee: 'Комісія токена за переказ {percent}%',
     merchantReceives: '{merchant} отримає',
     transferFeeNote:
@@ -214,6 +216,7 @@ export const ukLabels: NovaPaymentsLabels = {
   qr: {
     solanaTitle: 'Відскануйте гаманцем Solana',
     solanaHint: 'Відкрийте Phantom, Solflare або Backpack',
+    restHint: 'Скануйте гаманцем, який платив першим, {wallet}.',
     scanStep: 'Відскануйте код (Solana Pay)',
     approveStep: 'Підтвердьте суму нижче',
     solanaCode: 'QR-код запиту Solana Pay на {amount}',
@@ -286,7 +289,8 @@ export const ukLabels: NovaPaymentsLabels = {
     underpaidText: 'Отримано {received} з {total}.',
     underpaidRest: 'Надішліть решту, {rest}, з того самого гаманця в мережі {network}.',
     underpaidNote: 'Поки решта не надійде, {merchant} бачить рахунок як недоплачений. Його можна оплатити до {date}.',
-    underpaidClosed: 'Решту цього рахунку тут більше не можна оплатити. {merchant} може повернути те, що надійшло.',
+    underpaidClosed: 'Решту цього рахунку тут більше не можна оплатити.',
+    underpaidClosedRefund: 'Після {date} {merchant} може повернути те, що надійшло.',
     payRestFirstWallet:
       'Решту можна оплатити лише з гаманця, який платив першим: {wallet}. Підключіть цей гаманець, щоб оплатити решту.',
     payRest: 'Оплатити решту',
