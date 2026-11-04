@@ -9,7 +9,7 @@ export const deLabels: NovaPaymentsLabels = {
     close: 'Schließen',
     retry: 'Erneut versuchen',
     loading: 'Der Checkout wird geladen…',
-    dialogTitle: 'An {merchant} bezahlen',
+    dialogTitle: 'An {merchant} zahlen',
   },
   error: {
     title: 'Der Checkout kann nicht geöffnet werden',
@@ -41,8 +41,8 @@ export const deLabels: NovaPaymentsLabels = {
     popular: 'Beliebt',
     noGasFee: 'Keine Gasgebühr',
     buyerPaysGas: 'Sie zahlen die Netzwerkgebühr',
-    discount: '−{percent}%',
-    markup: '+{percent}%',
+    discount: '−{percent} %',
+    markup: '+{percent} %',
     payWith: 'Zahlen mit',
     wallet: 'Wallet',
     walletHint: 'MetaMask, Rabby, Phantom…',
@@ -56,10 +56,10 @@ export const deLabels: NovaPaymentsLabels = {
     noMethods: 'Diese Rechnung kann derzeit mit keiner Methode bezahlt werden. Wenden Sie sich an den Verkäufer.',
     methodUnavailable: 'Diese Seite kann diese Methode nicht annehmen. Wählen Sie eine andere.',
     payerNotExpected:
-      'Der Verkäufer möchte, dass diese Rechnung von einem anderen Wallet bezahlt wird. Verbinden Sie dieses Wallet.',
+      'Der Verkäufer möchte, dass diese Rechnung von einem anderen Wallet bezahlt wird. Verbinden Sie das gewünschte Wallet.',
     rateLimited: 'Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es erneut.',
     priceUnavailable:
-      'Der Preis dieser Methode kann gerade nicht gelesen werden. Wählen Sie eine andere Methode oder versuchen Sie es in einer Minute erneut.',
+      'Der Preis dieser Methode kann gerade nicht ermittelt werden. Wählen Sie eine andere Methode oder versuchen Sie es in einer Minute erneut.',
   },
   buyer: {
     title: 'Ihre Angaben',
@@ -74,7 +74,7 @@ export const deLabels: NovaPaymentsLabels = {
     country: 'Land',
     chooseCountry: 'Land wählen',
     taxId: 'USt-IdNr. oder Steuernummer',
-    registrationNumber: 'Handelsregisternummer',
+    registrationNumber: 'Registernummer',
     optional: 'optional',
     companyInvoice: 'Ich benötige eine Rechnung für mein Unternehmen',
     required: 'Pflichtfeld',
@@ -95,14 +95,14 @@ export const deLabels: NovaPaymentsLabels = {
     fiatValue: '= {amount} {currency}',
     priceLocked: 'Preis festgelegt für {time}',
     refreshPrice: 'Preis aktualisieren',
-    priceEnding: 'Dieser Preis endet in {time}. Beibehalten?',
+    priceEnding: 'Dieser Preis läuft in {time} ab. Beibehalten?',
     keepPrice: 'Preis beibehalten · +{minutes} Min.',
     priceExpired: 'Die Preisbindung ist abgelaufen.',
     newPrice: 'Neuen Preis abrufen',
     rate: 'Kurs',
     rateValue: '1 {symbol} = {price} {currency}',
     networkFee: 'Netzwerkgebühr',
-    merchantPaysGas: '{merchant} zahlt · Sie unterschreiben nur',
+    merchantPaysGas: '{merchant} zahlt · Sie signieren nur',
     gasEstimate: '≈ {amount} · aus Ihrem Wallet',
     gasFromWallet: 'Wird aus Ihrem Wallet bezahlt',
     to: 'An',
@@ -113,11 +113,11 @@ export const deLabels: NovaPaymentsLabels = {
     restRateEnded:
       'Dieser Kurs wurde früher festgelegt, daher wartet diese Zahlung darauf, dass {merchant} sie annimmt.',
     restTimeLeft: 'Verbleibende Zeit zum Senden: {time}',
-    transferFee: 'Token-Transfergebühr {percent}%',
+    transferFee: 'Token-Transfergebühr {percent} %',
     merchantReceives: '{merchant} erhält',
     transferFeeNote:
-      'Der Vertrag des Tokens behält bei jedem Transfer eine Gebühr ein. Deshalb senden Sie etwas mehr, damit die Rechnung vollständig bezahlt ist.',
-    signToPay: 'Unterschreiben und {amount} zahlen',
+      'Der Smart Contract des Tokens behält bei jedem Transfer eine Gebühr ein. Deshalb senden Sie etwas mehr, damit die Rechnung vollständig bezahlt ist.',
+    signToPay: 'Signieren und {amount} zahlen',
     payAmount: '{amount} zahlen',
     switchTo: 'Zu {network} wechseln',
     connect: 'Wallet verbinden',
@@ -127,7 +127,7 @@ export const deLabels: NovaPaymentsLabels = {
     disclaimer:
       'Zahlungen gehen direkt an {merchant} und können nicht rückgängig gemacht werden; Erstattungen kommen vom Verkäufer.',
     disclaimerScreening:
-      '{merchant} prüft zahlende Wallets anhand von Sanktionslisten und, soweit verfügbar, anderer Risikosignale.',
+      '{merchant} prüft zahlende Wallets anhand von Sanktionslisten und, soweit verfügbar, anderen Risikosignalen.',
     wrongNetwork: 'Falsches Netzwerk',
     wrongNetworkText: 'Ihr Wallet ist im Netzwerk {current}. Diese Zahlung läuft über {network}.',
     switchHint: 'Ihr Wallet bittet Sie, den Wechsel zu bestätigen.',
@@ -154,7 +154,7 @@ export const deLabels: NovaPaymentsLabels = {
     mismatchTakenElsewhere:
       'Diese Transaktion bezahlt eine andere Rechnung. Wenn es Ihre Zahlung für diese Rechnung war, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     mismatchHeldElsewhere:
-      'Diese Transaktion ist einer anderen Rechnung zugeordnet, die sie für eine Rückzahlung an das sendende Wallet zurückhält. Für diese Rechnung zählt sie nicht. Wenn es Ihre Zahlung für diese Rechnung war, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
+      'Diese Transaktion ist einer anderen Rechnung zugeordnet, die sie für eine Erstattung an das sendende Wallet zurückhält. Für diese Rechnung zählt sie nicht. Wenn es Ihre Zahlung für diese Rechnung war, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     mismatchOtherWallet:
       'Dieser Transfer kam von einem Wallet, das diese Rechnung nicht bestätigt hat, und bezahlt sie daher nicht. Wenn Geld Ihr Wallet verlassen hat, wenden Sie sich an {merchant}.',
     mismatchOtherWalletHeld:
@@ -170,13 +170,13 @@ export const deLabels: NovaPaymentsLabels = {
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {
-    signIn: 'In {wallet} unterschreiben',
+    signIn: 'In {wallet} signieren',
     confirmIn: 'In {wallet} bestätigen',
     switchIn: 'Wechsel in {wallet} bestätigen',
     signText:
-      'Unterschreiben Sie den Transfer von {amount} an {merchant} im Netzwerk {network}. Kein Gas: {merchant} zahlt die Netzwerkgebühr.',
+      'Signieren Sie den Transfer von {amount} an {merchant} im Netzwerk {network}. Kein Gas: {merchant} zahlt die Netzwerkgebühr.',
     confirmText: 'Bestätigen Sie den Transfer von {amount} an {merchant} im Netzwerk {network}.',
-    check: 'Vor dem Unterschreiben in {wallet} prüfen',
+    check: 'Vor dem Signieren in {wallet} prüfen',
     amount: 'Betrag',
     to: 'An',
     network: 'Netzwerk',
@@ -189,39 +189,39 @@ export const deLabels: NovaPaymentsLabels = {
   },
   payerProof: {
     title: 'Wallet bestätigen',
-    text: 'Bestätigen Sie dieses Wallet: Es ist kostenlos und bewegt kein Geld.',
-    summary: 'Was Sie unterschreiben',
+    text: 'Bestätigen Sie dieses Wallet: Das ist kostenlos und bewegt kein Geld.',
+    summary: 'Was Sie signieren',
     invoice: 'Rechnung',
     merchant: 'Verkäufer',
     amount: 'Betrag',
     wallet: 'Wallet',
     site: 'Website',
-    why: 'Zahlungen von diesem Wallet zählen für diese Rechnung, sobald es unterschrieben hat. Ihr Wallet zeigt eine Nachricht zum Unterschreiben, keine Zahlung: keine Gebühr, nichts verlässt das Wallet.',
-    passkey: '{wallet} fragt zum Unterschreiben eventuell nach Ihrem Passkey oder Fingerabdruck.',
+    why: 'Zahlungen von diesem Wallet zählen für diese Rechnung, sobald es signiert hat. Ihr Wallet zeigt eine Nachricht zum Signieren, keine Zahlung: keine Gebühr, nichts verlässt das Wallet.',
+    passkey: '{wallet} fragt zum Signieren eventuell nach Ihrem Passkey oder Fingerabdruck.',
     confirm: 'In {wallet} bestätigen',
     waiting: 'Warten auf {wallet}…',
-    note: 'Eine Unterschrift pro Wallet für diese Rechnung: Ein neuer Preis, Token oder ein neues Netzwerk braucht keine weitere.',
+    note: 'Eine Signatur pro Wallet für diese Rechnung: Ein neuer Preis, Token oder ein neues Netzwerk braucht keine weitere.',
     noteSmart:
-      'Eine Unterschrift pro Wallet für diese Rechnung: Ein neuer Preis oder Token braucht keine weitere; ein anderes Netzwerk fragt erneut.',
+      'Eine Signatur pro Wallet für diese Rechnung: Ein neuer Preis oder Token braucht keine weitere; ein anderes Netzwerk braucht eine neue.',
     promptText:
-      'Unterschreiben Sie die Nachricht, die bestätigt, dass dieses Wallet die Rechnung {invoice} von {merchant} bezahlt. Es ist kostenlos und bewegt kein Geld.',
+      'Signieren Sie die Nachricht, die bestätigt, dass dieses Wallet die Rechnung {invoice} von {merchant} bezahlt. Das ist kostenlos und bewegt kein Geld.',
     promptPasskey:
-      'Bestätigen Sie mit Ihrem Passkey in {wallet}. Damit wird die Nachricht unterschrieben, die bestätigt, dass dieses Wallet die Rechnung {invoice} von {merchant} bezahlt; es ist kostenlos und bewegt kein Geld.',
+      'Bestätigen Sie mit Ihrem Passkey in {wallet}. Damit wird die Nachricht signiert, die bestätigt, dass dieses Wallet die Rechnung {invoice} von {merchant} bezahlt; das ist kostenlos und bewegt kein Geld.',
     declined:
-      'Sie haben die Unterschrift in {wallet} abgelehnt. Sie ist kostenlos und bewegt kein Geld: Unterschreiben Sie, um mit diesem Wallet zu zahlen, oder wählen Sie ein anderes Wallet oder eine andere Methode.',
+      'Sie haben die Signatur in {wallet} abgelehnt. Sie ist kostenlos und bewegt kein Geld: Signieren Sie, um mit diesem Wallet zu zahlen, oder wählen Sie ein anderes Wallet oder eine andere Methode.',
     unsupported:
-      '{wallet} kann diese Bestätigung nicht unterschreiben. Wählen Sie ein anderes Wallet oder eine andere Methode.',
-    failed: '{wallet} hat die Bestätigung nicht unterschrieben. Versuchen Sie es erneut.',
+      '{wallet} kann diese Bestätigung nicht signieren. Wählen Sie ein anderes Wallet oder eine andere Methode.',
+    failed: '{wallet} hat die Bestätigung nicht signiert. Versuchen Sie es erneut.',
     invalid:
-      'Die Unterschrift konnte nicht geprüft werden. Versuchen Sie es erneut oder zahlen Sie mit einem anderen Wallet.',
+      'Die Signatur konnte nicht geprüft werden. Versuchen Sie es erneut oder zahlen Sie mit einem anderen Wallet.',
     unavailable:
-      'Das Netzwerk kann die Unterschrift dieses Wallets gerade nicht prüfen. Versuchen Sie es in einer Minute erneut.',
+      'Das Netzwerk kann die Signatur dieses Wallets gerade nicht prüfen. Versuchen Sie es in einer Minute erneut.',
     wrongNetwork: 'Wechseln Sie in {wallet} zu {network} und bestätigen Sie dann erneut.',
     tooManyWallets:
       'Zu viele Wallets haben diese Rechnung bestätigt. Zahlen Sie mit einem davon oder bitten Sie {merchant} um eine neue Rechnung.',
     confirmToPay: 'Wallet bestätigen, um zu zahlen',
     payNote:
-      'Für die Zahlung mit diesem Wallet ist zuerst eine kostenlose Unterschrift nötig: Sie bestätigt, dass das Wallet diese Rechnung bezahlt, und bewegt kein Geld.',
+      'Für die Zahlung mit diesem Wallet ist zuerst eine kostenlose Signatur nötig: Sie bestätigt, dass das Wallet diese Rechnung bezahlt, und bewegt kein Geld.',
     signInRequest: '{wallet} zeigt dies möglicherweise als Anmeldeanfrage für {site} an.',
   },
   qr: {
@@ -279,7 +279,7 @@ export const deLabels: NovaPaymentsLabels = {
   },
   autoPay: {
     title: 'Die nächsten Zeiträume automatisch bezahlen?',
-    subtitle: 'Optional. Ohne sie erhalten Sie in jedem Zeitraum eine Rechnung und bezahlen sie selbst.',
+    subtitle: 'Optional. Ohne automatische Zahlung erhalten Sie in jedem Zeitraum eine Rechnung und bezahlen sie selbst.',
     allow: 'Sie erlauben {merchant} den Einzug von',
     limit: 'bis zu {amount}',
     every: 'alle {period}',
@@ -304,7 +304,7 @@ export const deLabels: NovaPaymentsLabels = {
     underpaidText: '{received} von {total} eingegangen.',
     underpaidRest: 'Senden Sie den Rest, {rest}, vom selben Wallet im Netzwerk {network}.',
     underpaidNote:
-      'Bis der Rest eingeht, sieht {merchant} die Rechnung als unterbezahlt. Sie kann bis {date} bezahlt werden.',
+      'Bis der Rest eingeht, gilt die Rechnung für {merchant} als nicht vollständig bezahlt. Sie kann bis {date} bezahlt werden.',
     underpaidClosed: 'Der Rest dieser Rechnung kann hier nicht mehr bezahlt werden.',
     underpaidClosedRefund: 'Nach {date} kann {merchant} den eingegangenen Betrag erstatten.',
     underpaidRateEnded:
@@ -322,7 +322,7 @@ export const deLabels: NovaPaymentsLabels = {
     heldQuoteExpired: 'Die Zahlung ging nach Ablauf der Preisbindung ein. {merchant} nimmt sie an oder erstattet sie.',
     heldNote: 'Der Verkäufer meldet sich, falls etwas benötigt wird.',
     refundedTitle: 'Erstattet',
-    refundedText: '{merchant} hat diese Rechnung erstattet: {amount} {currency}.',
+    refundedText: '{merchant} hat für diese Rechnung {amount} {currency} erstattet.',
     expiredTitle: 'Diese Rechnung ist abgelaufen',
     expiredText: 'Sie konnte bis {date} bezahlt werden. Bitten Sie {merchant} um eine neue; es wurde nichts berechnet.',
     expiredPartText: 'Sie konnte bis {date} bezahlt werden. Ein Teil der Zahlung ist eingegangen: {amount}.',
@@ -386,13 +386,13 @@ export const deLabels: NovaPaymentsLabels = {
     test: 'Test',
     testHint: 'Testrechnung: Sie wird in einem Testnetzwerk bezahlt.',
     sellerDetails: 'Angaben zum Verkäufer',
-    registration: 'Handelsregisternummer',
-    taxId: 'USt-IdNr.',
+    registration: 'Registernummer',
+    taxId: 'USt-IdNr. / Steuernummer',
     terms: 'AGB',
     refundPolicy: 'Erstattungsrichtlinie',
     privacy: 'Datenschutz',
     sellerRole:
-      '{seller} ist der Verkäufer. Quasar ist die Zahlungssoftware: Es verwahrt Ihre Mittel nie und ist nicht Partei dieses Kaufs.',
+      '{seller} ist der Verkäufer. Quasar ist die Zahlungssoftware: Quasar verwahrt Ihre Mittel nie und ist nicht Partei dieses Kaufvertrags.',
     payWithin: 'Zahlungsfrist',
     refundAfter: 'Erstattung möglich nach',
     until: 'bis {date}',
@@ -401,7 +401,7 @@ export const deLabels: NovaPaymentsLabels = {
     invoice: 'Rechnung',
     quantity: '{quantity} × {price}',
     subtotal: 'Zwischensumme',
-    taxRate: 'USt. {rate}%',
+    taxRate: 'USt. {rate} %',
     tax: 'USt.',
     total: 'Gesamt',
     secured: 'Gesichert durch Quasar',
@@ -412,7 +412,7 @@ export const deLabels: NovaPaymentsLabels = {
   },
   refund: {
     button: 'Erstatten',
-    title: '{invoice} erstatten',
+    title: 'Erstattung für {invoice}',
     amountTitle: 'Was erstattet werden soll',
     modeFiat: 'Ein Betrag',
     modeFiatText: 'In {currency}, zum aktuellen Kurs umgerechnet',
@@ -475,7 +475,7 @@ export const deLabels: NovaPaymentsLabels = {
     recordHint:
       'Auf anderem Weg gesendet? Erfassen Sie die Erstattung mit ihrer Transaktion: Quasar prüft sie on-chain.',
     close: 'Schließen',
-    txTitle: 'Erstattung von {invoice}',
+    txTitle: 'Erstattung für {invoice}',
     txDescription: '{amount} an den Zahler',
     txDescriptionSender: '{amount} an den Absender des Transfers',
   },
