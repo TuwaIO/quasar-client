@@ -453,7 +453,7 @@ export const deLabels: NovaPaymentsLabels = {
     waiting: '{network} · Warten auf Bestätigung',
     canClose: 'Sie können dieses Fenster schließen: Die Rechnung zeigt, wie die Erstattung verläuft.',
     refunded: 'Erstattet',
-    creditNote: 'Gutschrift',
+    creditNote: 'Rechnungskorrektur',
     done: 'Fertig',
     failedTitle: 'Die Erstattung ist fehlgeschlagen',
     failedText:
