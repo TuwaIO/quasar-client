@@ -208,6 +208,8 @@ export type NovaPaymentsLabels = {
     restRateUntil: string;
     /** The same, past that time: `{merchant}` (default: `This rate was locked earlier, so this payment waits for {merchant} to accept it.`) */
     restRateEnded: string;
+    /** Instead of the price lock on a rest in such an asset: `{time}` (default: `Time left to send: {time}`) */
+    restTimeLeft: string;
     /** Row of the token's transfer fee: `{percent}` (default: `Token transfer fee {percent}%`) */
     transferFee: string;
     /** Row of what the merchant receives: `{merchant}` (default: `{merchant} receives`) */
@@ -602,6 +604,16 @@ export type NovaPaymentsLabels = {
     underpaidClosed: string;
     /** With it, when the merchant can refund: `{date}`, `{merchant}` (default: `After {date}, {merchant} can refund what arrived.`) */
     underpaidClosedRefund: string;
+    /**
+     * In an asset that moves against the invoice currency, once the rate ended: `{merchant}` (default: `The rate of this
+     * invoice has ended, so a rest paid now waits for {merchant} to accept it.`)
+     */
+    underpaidRateEnded: string;
+    /**
+     * The first wallet failed the wallet check at the quote of the rest: `{merchant}` (default: `This wallet did not pass
+     * the wallet check, so it cannot pay the rest. Contact {merchant}.`)
+     */
+    underpaidBlocked: string;
     /**
      * Instead of paying the rest when another wallet than the one that paid first is connected, or Quasar refused the
      * rest from it (`payer_mismatch`): `{wallet}`, the first wallet's short address (default: `Only the wallet that paid

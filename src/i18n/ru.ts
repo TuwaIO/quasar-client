@@ -110,6 +110,7 @@ export const ruLabels: NovaPaymentsLabels = {
     backFromRest: 'Назад',
     restRateUntil: 'Этот курс действует до {time}. Платёж после этого ждёт, пока {merchant} его примет.',
     restRateEnded: 'Этот курс зафиксирован раньше, поэтому этот платёж ждёт, пока {merchant} его примет.',
+    restTimeLeft: 'Осталось времени на отправку: {time}',
     transferFee: 'Комиссия токена за перевод {percent}%',
     merchantReceives: '{merchant} получит',
     transferFeeNote:
@@ -293,6 +294,9 @@ export const ruLabels: NovaPaymentsLabels = {
     underpaidNote: 'Пока остаток не придёт, {merchant} видит счёт как недоплаченный. Его можно оплатить до {date}.',
     underpaidClosed: 'Остаток этого счёта здесь больше нельзя оплатить.',
     underpaidClosedRefund: 'После {date} {merchant} может вернуть то, что пришло.',
+    underpaidRateEnded:
+      'Курс этого счёта больше не действует, поэтому остаток, оплаченный сейчас, ждёт, пока {merchant} его примет.',
+    underpaidBlocked: 'Этот кошелёк не прошёл проверку, поэтому не может оплатить остаток. Свяжитесь с {merchant}.',
     payRestFirstWallet:
       'Остаток можно оплатить только с кошелька, который платил первым: {wallet}. Подключите этот кошелёк, чтобы оплатить остаток.',
     payRest: 'Оплатить остаток',

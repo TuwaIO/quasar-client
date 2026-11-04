@@ -111,6 +111,7 @@ export const itLabels: NovaPaymentsLabels = {
     restRateUntil: 'Questo tasso vale fino a {time}. Un pagamento successivo attende che {merchant} lo accetti.',
     restRateEnded:
       'Questo tasso è stato bloccato in precedenza, quindi questo pagamento attende che {merchant} lo accetti.',
+    restTimeLeft: "Tempo rimasto per l'invio: {time}",
     transferFee: 'Commissione di trasferimento del token {percent}%',
     merchantReceives: '{merchant} riceve',
     transferFeeNote:
@@ -297,6 +298,10 @@ export const itLabels: NovaPaymentsLabels = {
       'Finché non arriva il resto, {merchant} vede la fattura come pagata in parte. Si può pagare fino al {date}.',
     underpaidClosed: 'Il resto di questa fattura non può più essere pagato qui.',
     underpaidClosedRefund: 'Dopo il {date}, {merchant} può rimborsare quanto ricevuto.',
+    underpaidRateEnded:
+      'Il tasso di questa fattura è terminato, quindi il resto pagato ora attende che {merchant} lo accetti.',
+    underpaidBlocked:
+      'Questo wallet non ha superato il controllo, quindi non può pagare il resto. Contatta {merchant}.',
     payRestFirstWallet:
       'Solo il wallet che ha pagato per primo, {wallet}, può pagare il resto. Collega quel wallet per pagarlo.',
     payRest: 'Paga il resto',

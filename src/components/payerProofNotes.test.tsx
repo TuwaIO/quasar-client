@@ -383,6 +383,65 @@ describe('the rest of an underpaid invoice', () => {
     expect(text).not.toContain(defaultLabels.pay.newPrice);
   });
 
+  it('gets the QR of the rest of a QR payment with another wallet connected: the first wallet is on a phone', () => {
+    const qr = { ...quoteOf(null), payer: null, amountDue: '9540000', amountToSend: '9540000' };
+    show(
+      'underpaid',
+      { phase: 'underpaid', quote: qr },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true, originWallet: FIRST },
+    );
+    ctx = { ...ctx, lockPrice: vi.fn(async () => undefined) };
+    const tree = OutcomeScreen({ kind: 'underpaid' });
+    expect(textOf(tree)).not.toContain('paid first');
+    ((fixture.ofType(tree, PrimaryButton)[0] as ReactElement<Props>).props.onClick as () => void)();
+    expect(ctx.connectWallet).not.toHaveBeenCalled();
+    expect(ctx.lockPrice).toHaveBeenCalledOnce();
+  });
+
+  it('says the first wallet did not pass the check, not that nothing was sent', () => {
+    show(
+      'underpaid',
+      { phase: 'underpaid', quote: quoteOf(null), error: { code: 'payer_blocked', message: '', status: 403 } },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    const errors = fixture
+      .ofType(OutcomeScreen({ kind: 'underpaid' }), ScreenError)
+      .map((e) => (e as ReactElement<Props>).props.children);
+    expect(errors).toEqual(['This wallet did not pass the wallet check, so it cannot pay the rest. Contact Cosmos.']);
+  });
+
+  it('says a rest paid now waits for the merchant, not the part that arrived, on the outcome', () => {
+    const late = { ...quoteOf(null), rateHeldUntil: new Date(Date.now() - 60_000).toISOString() };
+    show(
+      'underpaid',
+      { phase: 'underpaid', quote: late },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    const text = textOf(OutcomeScreen({ kind: 'underpaid' }));
+    expect(text).toContain('The rate of this invoice has ended, so a rest paid now waits for Cosmos to accept it.');
+    expect(text).not.toContain('this payment waits');
+  });
+
+  it('promises no locked price on a rest in a moving asset: it counts the time to send and says what the rate does', () => {
+    const rest = {
+      ...quoteOf(null),
+      amountDue: '9540000',
+      amountToSend: '9540000',
+      rateHeldUntil: new Date(Date.now() - 60_000).toISOString(),
+      expiresAt: new Date(Date.now() + 30_000).toISOString(),
+    };
+    show(
+      'pay',
+      { phase: 'awaitingPayment', invoiceStatus: 'underpaid', quote: rest },
+      { status: 'underpaid', amountPaid: '80000000', restPayable: true },
+    );
+    const text = textOf(render(PayScreen, {}));
+    expect(text).toMatch(/Time left to send: /);
+    expect(text).not.toMatch(/Price locked for/);
+    expect(text).not.toMatch(/Keep this price/);
+    expect(text).not.toMatch(/This price ends/);
+  });
+
   it('names the rest on the payment step, without the total of the invoice', () => {
     const rest = { ...quoteOf(null), amountDue: '9540000', amountToSend: '9540000' };
     show(

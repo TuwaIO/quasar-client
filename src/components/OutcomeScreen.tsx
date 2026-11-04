@@ -318,13 +318,17 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         );
         break;
       }
-      const rateNote = restRateText(locked, now, labels, merchant, locale);
+      const rateNote = restRateText(locked, now, labels, merchant, locale, labels.outcome.underpaidRateEnded);
       // The rest of an underpaid invoice has one method, whatever the page chose before the part arrived
       const restMethod = method ?? checkout.methods[0];
       // Why the last attempt did nothing, or what happens to a transfer that moved money without counting. A refused
       // wallet has its own sentence below
       const problem =
-        state.error && state.error.code !== 'payer_mismatch' ? methodErrorText(state.error, labels, merchant) : null;
+        state.error?.code === 'payer_blocked'
+          ? formatLabel(labels.outcome.underpaidBlocked, { merchant })
+          : state.error && state.error.code !== 'payer_mismatch'
+            ? methodErrorText(state.error, labels, merchant)
+            : null;
       body = (
         <>
           {received}
@@ -351,9 +355,10 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const firstAddress = first ? addressOfWallet(first) : undefined;
       // The connected wallet decides once it is known (the buyer may have switched to the first one since a refusal)
       const connectedAddress = connected ? parseCaip10AccountId(connected)?.address : undefined;
-      const otherWallet = Boolean(
-        firstAddress && (connectedAddress ? !isSameWallet(connectedAddress, firstAddress) : refusedFrom),
-      );
+      // A quote bound to no wallet is a Solana Pay QR: its first wallet is on a phone, and the QR of the rest names it
+      const otherWallet =
+        locked?.payer !== null &&
+        Boolean(firstAddress && (connectedAddress ? !isSameWallet(connectedAddress, firstAddress) : refusedFrom));
       const payRest = () => {
         if (!restMethod) return;
         // Another wallet is connected: the buyer connects the one that paid first

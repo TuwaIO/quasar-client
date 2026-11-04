@@ -109,6 +109,7 @@ export const ukLabels: NovaPaymentsLabels = {
     backFromRest: 'Назад',
     restRateUntil: 'Цей курс діє до {time}. Платіж після цього чекатиме, поки {merchant} його прийме.',
     restRateEnded: 'Цей курс зафіксовано раніше, тому цей платіж чекатиме, поки {merchant} його прийме.',
+    restTimeLeft: 'Залишилося часу на відправлення: {time}',
     transferFee: 'Комісія токена за переказ {percent}%',
     merchantReceives: '{merchant} отримає',
     transferFeeNote:
@@ -291,6 +292,9 @@ export const ukLabels: NovaPaymentsLabels = {
     underpaidNote: 'Поки решта не надійде, {merchant} бачить рахунок як недоплачений. Його можна оплатити до {date}.',
     underpaidClosed: 'Решту цього рахунку тут більше не можна оплатити.',
     underpaidClosedRefund: 'Після {date} {merchant} може повернути те, що надійшло.',
+    underpaidRateEnded:
+      'Курс цього рахунку більше не діє, тому решта, сплачена зараз, чекатиме, поки {merchant} її прийме.',
+    underpaidBlocked: 'Цей гаманець не пройшов перевірку, тому не може сплатити решту. Зверніться до {merchant}.',
     payRestFirstWallet:
       'Решту можна оплатити лише з гаманця, який платив першим: {wallet}. Підключіть цей гаманець, щоб оплатити решту.',
     payRest: 'Оплатити решту',

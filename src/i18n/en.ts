@@ -109,6 +109,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     backFromRest: 'Back',
     restRateUntil: 'This rate holds until {time}. A payment after that waits for {merchant} to accept it.',
     restRateEnded: 'This rate was locked earlier, so this payment waits for {merchant} to accept it.',
+    restTimeLeft: 'Time left to send: {time}',
     transferFee: 'Token transfer fee {percent}%',
     merchantReceives: '{merchant} receives',
     transferFeeNote:
@@ -289,6 +290,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     underpaidNote: 'Until the rest arrives, {merchant} sees the invoice as underpaid. It stays payable until {date}.',
     underpaidClosed: 'The rest of this invoice can no longer be paid here.',
     underpaidClosedRefund: 'After {date}, {merchant} can refund what arrived.',
+    underpaidRateEnded: 'The rate of this invoice has ended, so a rest paid now waits for {merchant} to accept it.',
+    underpaidBlocked: 'This wallet did not pass the wallet check, so it cannot pay the rest. Contact {merchant}.',
     payRestFirstWallet: 'Only the wallet that paid first, {wallet}, can pay the rest. Connect that wallet to pay it.',
     payRest: 'Pay the rest',
     heldTitle: 'Payment received, {merchant} is checking it',

@@ -105,7 +105,9 @@ export function QrScreen() {
                   {labels.qr.waiting}
                 </span>
                 <span role="timer" aria-live="off" className="novapay:text-[var(--tuwa-text-secondary)]">
-                  {formatLabel(labels.pay.priceLocked, { time: formatCountdown(left) })}
+                  {formatLabel(restRate ? labels.pay.restTimeLeft : labels.pay.priceLocked, {
+                    time: formatCountdown(left),
+                  })}
                 </span>
               </>
             )}

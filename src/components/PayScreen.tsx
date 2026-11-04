@@ -382,13 +382,15 @@ export function PayScreen() {
             <div className="novapay:flex novapay:items-center novapay:gap-2 novapay:text-xs">
               <ClockIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:text-[var(--tuwa-text-secondary)]" />
               <span role="timer" aria-live="off" className="novapay:flex-1">
-                {formatLabel(labels.pay.priceLocked, { time: formatCountdown(left) })}
+                {formatLabel(restRate ? labels.pay.restTimeLeft : labels.pay.priceLocked, {
+                  time: formatCountdown(left),
+                })}
               </span>
               {!rest && <FooterAction onClick={renew}>{labels.pay.refreshPrice}</FooterAction>}
             </div>
           )}
 
-          {ending && (
+          {ending && !restRate && (
             <div className="novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-text-accent)] novapay:px-3 novapay:py-2">
               <span aria-hidden className="novapay:text-xs">
                 {formatLabel(labels.pay.priceEnding, { time: formatCountdown(left) })}

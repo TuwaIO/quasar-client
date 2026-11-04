@@ -361,7 +361,9 @@ export function PaymentCheckout({
   }
   // The price is locked, or refused after the signature: the step that confirms the wallet is done
   const priceRefused = (state.payerProof as string | undefined) === 'confirmed' && Boolean(state.error);
-  if (confirmWallet && (state.phase === 'awaitingPayment' || priceRefused)) setConfirmWallet(false);
+  // So is it when Quasar refuses the wallet: the rest of an underpaid invoice comes from the wallet that paid first
+  const walletRefused = state.error?.code === 'payer_mismatch';
+  if (confirmWallet && (state.phase === 'awaitingPayment' || priceRefused || walletRefused)) setConfirmWallet(false);
   // The method a wallet is being connected for: its price is locked once the wallet arrives
   const connectingFor = useRef<string | null>(null);
   // The first screen waits for the labels of the invoice's language (a file of their own), so it never flashes in

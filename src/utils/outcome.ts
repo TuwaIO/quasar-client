@@ -246,6 +246,7 @@ export function underpaidRest(
  * @param labels - The labels of the checkout language.
  * @param merchant - The seller's name.
  * @param locale - The language of the checkout.
+ * @param ended - What is said past that time; the payment step's `pay.restRateEnded` speaks of the payment being made.
  * @returns The text, or `null` when the rate holds until the due date.
  */
 export function restRateText(
@@ -254,10 +255,11 @@ export function restRateText(
   labels: NovaPaymentsLabels,
   merchant: string,
   locale: string,
+  ended: string = labels.pay.restRateEnded,
 ): string | null {
   const heldUntil = quote?.rateHeldUntil ? Date.parse(quote.rateHeldUntil) : null;
   if (heldUntil === null) return null;
-  if (heldUntil <= now) return formatLabel(labels.pay.restRateEnded, { merchant });
+  if (heldUntil <= now) return formatLabel(ended, { merchant });
   const time = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(heldUntil);
   return formatLabel(labels.pay.restRateUntil, { time, merchant });
 }

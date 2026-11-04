@@ -110,6 +110,7 @@ export const esLabels: NovaPaymentsLabels = {
     backFromRest: 'Atrás',
     restRateUntil: 'Este tipo de cambio es válido hasta {time}. Un pago posterior espera a que {merchant} lo acepte.',
     restRateEnded: 'Este tipo de cambio se fijó antes, así que este pago espera a que {merchant} lo acepte.',
+    restTimeLeft: 'Tiempo restante para enviar: {time}',
     transferFee: 'Comisión de transferencia del token {percent} %',
     merchantReceives: '{merchant} recibe',
     transferFeeNote:
@@ -293,6 +294,10 @@ export const esLabels: NovaPaymentsLabels = {
       'Hasta que llegue el resto, {merchant} ve la factura como pagada en parte. Se puede pagar hasta el {date}.',
     underpaidClosed: 'El resto de esta factura ya no se puede pagar aquí.',
     underpaidClosedRefund: 'Después del {date}, {merchant} puede devolver lo que llegó.',
+    underpaidRateEnded:
+      'El tipo de cambio de esta factura ha terminado, así que el resto pagado ahora espera a que {merchant} lo acepte.',
+    underpaidBlocked:
+      'Esta billetera no superó la comprobación, así que no puede pagar el resto. Contacta con {merchant}.',
     payRestFirstWallet:
       'Solo la billetera que pagó primero, {wallet}, puede pagar el resto. Conecta esa billetera para pagarlo.',
     payRest: 'Pagar el resto',
