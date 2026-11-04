@@ -159,6 +159,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Dieser Transfer kam von einem Wallet, das diese Rechnung nicht bestätigt hat, und bezahlt sie daher nicht. Wenn Geld Ihr Wallet verlassen hat, wenden Sie sich an {merchant}.',
     mismatchOtherWalletHeld:
       'Dieser Transfer kam von einem Wallet, das diese Rechnung nicht bestätigt hat, und bezahlt sie daher nicht. {merchant} erstattet ihn an das sendende Wallet, und Sie können diese Rechnung weiterhin mit dem Wallet bezahlen, das sie bestätigt hat.',
+    mismatchChargeHeld:
+      'Eine automatische Abbuchung ist bei {merchant} eingegangen, nachdem Sie eine andere Zahlungsart gewählt hatten, und bezahlt diese Rechnung daher nicht. {merchant} erstattet sie an Ihr Wallet, und Sie können diese Rechnung weiterhin bezahlen.',
     payAgain: 'Erneut zahlen',
     unsupported: '{wallet} kann diese Zahlung nicht ausführen.',
     wrongCluster:
@@ -488,6 +490,8 @@ export const deLabels: NovaPaymentsLabels = {
     failedTitle: 'Die Erstattung ist fehlgeschlagen',
     failedText:
       'Die Transaktion ist im Netzwerk {network} fehlgeschlagen; es wurde nur die Netzwerkgebühr verbraucht. Senden Sie die Erstattung erneut.',
+    failedHeldNote:
+      'Der Transfer bleibt einbehalten. Schließen Sie dieses Fenster: In seiner Zeile steht, wie es weitergeht.',
     notSent: 'Nicht gesendet',
     notEnough: 'Nicht genug {symbol} auf {address}: Das Guthaben beträgt {balance}.',
     declined: 'Sie haben die Anfrage in {wallet} abgelehnt.',

@@ -156,6 +156,8 @@ export const itLabels: NovaPaymentsLabels = {
       'Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     mismatchOtherWalletHeld:
       "Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. {merchant} lo restituisce al wallet che l'ha inviato, e puoi ancora pagare questa fattura dal wallet che l'ha confermata.",
+    mismatchChargeHeld:
+      'Un addebito automatico è arrivato a {merchant} dopo che hai scelto un altro modo di pagamento, quindi non paga questa fattura. {merchant} lo restituisce al tuo wallet e puoi ancora pagare questa fattura.',
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
     wrongCluster: "{wallet} è su un'altra rete, quindi non è stato pagato nulla. Passalo a {network} e paga di nuovo.",
@@ -477,6 +479,7 @@ export const itLabels: NovaPaymentsLabels = {
     failedTitle: 'Il rimborso non è riuscito',
     failedText:
       'La transazione non è riuscita su {network}; è stata spesa solo la commissione di rete. Invia di nuovo il rimborso.',
+    failedHeldNote: 'Il trasferimento resta trattenuto. Chiudi questa finestra: la sua riga indica cosa fare dopo.',
     notSent: 'Non inviato',
     notEnough: '{symbol} insufficienti su {address}: contiene {balance}.',
     declined: 'Hai rifiutato la richiesta in {wallet}.',

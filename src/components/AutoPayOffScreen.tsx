@@ -32,10 +32,20 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * @returns The screen, or nothing while automatic payments are not on.
  */
 export function AutoPayOffScreen() {
-  const { checkout, store, labels, locale, wallet, adapterFor, connectFamily, setAutoPayOff } = useCheckoutContext();
+  const {
+    checkout,
+    store,
+    labels,
+    locale,
+    wallet,
+    adapterFor,
+    connectFamily,
+    setAutoPayOff,
+    revokeSent: sent,
+    setRevokeSent,
+  } = useCheckoutContext();
   const [step, setStep] = useState<'idle' | 'wallet' | 'network'>('idle');
-  const [sent, setSent] = useState(false);
-  const [problem, setProblem] = useState<PaymentWalletErrorKind | 'notYet' | null>(null);
+  const [problem, setProblem] = useState<PaymentWalletErrorKind | 'notYet' | 'notAsked' | null>(null);
   const offer = checkout?.autoCharge;
   if (!checkout || offer?.status !== 'active' || !offer.permission || !offer.revocation) return null;
 
@@ -52,7 +62,7 @@ export function AutoPayOffScreen() {
   const check = async () => {
     setStep('network');
     for (let i = 0; i < CHECKS; i++) {
-      if (await store.getState().permissionRevoked()) return setAutoPayOff('done');
+      if ((await store.getState().permissionRevoked()) === true) return setAutoPayOff('done');
       if (i < CHECKS - 1) await pause(CHECK_EVERY_MS);
     }
     setProblem('notYet');
@@ -65,14 +75,17 @@ export function AutoPayOffScreen() {
       if (!sent) {
         // Revoked already, from another tab or the wallet's own page: a second transaction reverts at the buyer's cost
         setStep('network');
-        if (await store.getState().permissionRevoked()) return setAutoPayOff('done');
+        const revoked = await store.getState().permissionRevoked();
+        if (revoked === true) return setAutoPayOff('done');
+        // Quasar could not be asked: nothing goes to the wallet on a guess
+        if (revoked === null) return setProblem('notAsked');
         if (!adapter?.revokePermission) return setProblem('unsupported');
         setStep('wallet');
         await adapter.revokePermission({
           revocation,
           chainId,
           account: wallet.address,
-          onSent: () => setSent(true),
+          onSent: () => setRevokeSent(true),
         });
       }
       await check();

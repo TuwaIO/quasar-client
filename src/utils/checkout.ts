@@ -434,6 +434,7 @@ const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
   'tx_already_used',
   'payer_mismatch',
   'payer_unconfirmed',
+  'quote_changed',
   'native_from_contract_unverifiable',
   'invoice_not_payable',
 ]);

@@ -306,6 +306,12 @@ export type NovaPaymentsLabels = {
      * confirmed it.`)
      */
     mismatchOtherWalletHeld: string;
+    /**
+     * An automatic charge landed after the buyer chose another way to pay; `{merchant}` (default: `An automatic charge
+     * reached {merchant} after you chose another way to pay, so it does not pay this invoice. {merchant} returns it to your
+     * wallet, and you can still pay the invoice.`)
+     */
+    mismatchChargeHeld: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
@@ -1000,6 +1006,8 @@ export type NovaPaymentsLabels = {
     failedTitle: string;
     /** Under it; `{network}` (default: `The transaction failed on {network}; only the network fee was spent. Send the refund again.`) */
     failedText: string;
+    /** After the failure of a held transfer's refund (default: `The transfer stays held. Close this window: its row says what to do next.`) */
+    failedHeldNote: string;
     /** Heading of a refund the wallet did not send (default: `Not sent`) */
     notSent: string;
     /** The wallet holds too little; `{symbol}`, `{address}`, `{balance}` (default: `Not enough {symbol} on {address}: it holds {balance}.`) */

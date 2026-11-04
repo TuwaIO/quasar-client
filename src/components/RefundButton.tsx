@@ -285,7 +285,16 @@ export function RefundSteps({
         </>
       );
     case 'failed':
-      return <FailedStep flow={flow} labels={labels} locale={locale} values={values} recordAction={recordAction} />;
+      return (
+        <FailedStep
+          flow={flow}
+          labels={labels}
+          locale={locale}
+          values={values}
+          recordAction={recordAction}
+          close={close}
+        />
+      );
   }
 }
 
@@ -338,8 +347,11 @@ function useAskRefund(flow: RefundFlow) {
 function movedScreen(
   { preview, request }: { preview: RefundPreview; request: RefundRequest },
   ask: ReturnType<typeof useAskRefund>,
+  flow: RefundFlow,
   labels: NovaPaymentsLabels,
   locale: string,
+  /** The amount step is what "back" returns to: its choice of the exact mode can be offered. */
+  exactBehind: boolean,
 ) {
   const text = labels.refund;
   const tokens = (units: string) => `${formatTokenAmount(units, preview.decimals, locale)} ${preview.symbol}`;
@@ -354,13 +366,18 @@ function movedScreen(
           {preview.atPaymentRate && <DetailRow name={text.movedAtPayment}>{tokens(preview.atPaymentRate)}</DetailRow>}
           {preview.received && <DetailRow name={text.movedReceived}>{tokens(preview.received)}</DetailRow>}
         </DetailsCard>
-        {preview.exactPossible && <FooterNote>{formatLabel(text.movedExact, { exact: text.modeExact })}</FooterNote>}
+        {exactBehind && preview.exactPossible && (
+          <FooterNote>{formatLabel(text.movedExact, { exact: text.modeExact })}</FooterNote>
+        )}
+        {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
         <PrimaryButton busy={ask.checking} onClick={() => void ask.ask(request, preview)}>
           {text.movedContinue}
         </PrimaryButton>
-        <SecondaryButton onClick={ask.back}>{text.movedBack}</SecondaryButton>
+        <SecondaryButton disabled={ask.checking} onClick={ask.back}>
+          {text.movedBack}
+        </SecondaryButton>
       </ScreenFooter>
     </>
   );
@@ -377,20 +394,37 @@ export function FailedStep({
   locale,
   values,
   recordAction,
+  close,
 }: {
   flow: RefundFlow;
   labels: NovaPaymentsLabels;
   locale: string;
   values: Record<string, string>;
   recordAction: ReactNode;
+  close: () => void;
 }) {
   const text = labels.refund;
   const ask = useAskRefund(flow);
-  if (ask.moved) return movedScreen(ask.moved, ask, labels, locale);
+  // A held transfer's refund is settled on the transfer's row: asked again from here it would refund the whole invoice
+  if (flow.refund?.heldTransfer) {
+    return (
+      <>
+        <ScreenContent title={text.failedTitle}>
+          <ScreenError>{flow.refund.failureReason ?? formatLabel(text.failedText, values)}</ScreenError>
+          <FooterNote>{text.failedHeldNote}</FooterNote>
+        </ScreenContent>
+        <ScreenFooter>
+          <PrimaryButton onClick={close}>{text.close}</PrimaryButton>
+        </ScreenFooter>
+      </>
+    );
+  }
+  if (ask.moved) return movedScreen(ask.moved, ask, flow, labels, locale, false);
   return (
     <>
       <ScreenContent title={text.failedTitle}>
         <ScreenError>{flow.refund?.failureReason ?? formatLabel(text.failedText, values)}</ScreenError>
+        {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
         <PrimaryButton busy={ask.checking} onClick={() => flow.refund && void ask.ask(requestOf(flow.refund))}>
@@ -464,7 +498,7 @@ export function AmountStep({
     ...(mode === 'fiat_value' && amount.trim() && { amount: amount.trim() }),
     ...(reason.trim() && { reason: reason.trim() }),
   };
-  if (ask.moved) return movedScreen(ask.moved, ask, labels, locale);
+  if (ask.moved) return movedScreen(ask.moved, ask, flow, labels, locale, true);
   return (
     <>
       <ScreenContent title={text.amountTitle}>

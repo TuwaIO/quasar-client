@@ -125,6 +125,14 @@ export interface CheckoutContextValue {
    * @param autoPayOff - The new state.
    */
   setAutoPayOff: (autoPayOff: 'open' | 'done' | null) => void;
+  /** Whether the wallet has sent the transaction that revokes the permission of this invoice's subscription. */
+  revokeSent: boolean;
+  /**
+   * Keeps that for as long as the page shows the invoice, so the buyer leaving the screen does not send it twice.
+   *
+   * @param sent - Whether it was sent.
+   */
+  setRevokeSent: (sent: boolean) => void;
   /**
    * Opens another invoice in this checkout: the one that replaced a corrected invoice.
    *

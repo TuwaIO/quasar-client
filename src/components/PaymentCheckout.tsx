@@ -355,9 +355,13 @@ export function PaymentCheckout({
   const [handoff, setHandoff] = useState(false);
   const [autoPay, setAutoPay] = useState(false);
   const [autoPayOff, setAutoPayOff] = useState<'open' | 'done' | null>(null);
-  // What the invoice was when the page first read it: a link opened on a paid invoice shows its receipt, it just was not paid
-  const [openedPaid, setOpenedPaid] = useState<boolean | null>(null);
-  if (openedPaid === null && checkout) setOpenedPaid(PAID_ON_OPEN.has(checkout.invoice.status));
+  const [revokeSent, setRevokeSent] = useState(false);
+  // What the invoice was when the page first read it: a link opened on a paid invoice shows its receipt, it just was not
+  // paid. Per store: another invoice has its own first read
+  const [firstRead, setFirstRead] = useState<{ store: typeof store; paid: boolean } | null>(null);
+  if (checkout && firstRead?.store !== store) {
+    setFirstRead({ store, paid: PAID_ON_OPEN.has(checkout.invoice.status) });
+  }
   const [askLeave, setAskLeave] = useState(false);
   // The buyer continued with a wallet that confirms the invoice before the price
   const [confirmWallet, setConfirmWallet] = useState(false);
@@ -368,6 +372,7 @@ export function PaymentCheckout({
     setHandoff(false);
     setAutoPay(false);
     setAutoPayOff(null);
+    setRevokeSent(false);
     setPayWith('wallet');
     setConfirmWallet(false);
   }
@@ -440,6 +445,8 @@ export function PaymentCheckout({
       if (paysRest(payer)) void lockStorePrice();
       return;
     }
+    // A wallet connected to turn automatic payments off pays nothing; back on the payment, what follows applies
+    if (autoPayOff === 'open') return;
     // Another wallet became active over a locked price: lock it again for that wallet, or go back to the methods
     if (phase !== 'awaitingPayment' || !quote?.payer) return;
     const method = checkout.methods.find((item) => item.id === quote.methodId);
@@ -449,7 +456,7 @@ export function PaymentCheckout({
     store.getState().setPayer(payer);
     if (paysRest(payer)) void lockStorePrice();
   });
-  useEffect(() => lockForWallet(), [wallet?.address, wallet?.chainId, wallet?.connectorType]);
+  useEffect(() => lockForWallet(), [wallet?.address, wallet?.chainId, wallet?.connectorType, autoPayOff]);
   // The connect modal closed without a wallet of that family
   useEffect(() => {
     if (!connection.connecting) connectingFor.current = null;
@@ -505,7 +512,9 @@ export function PaymentCheckout({
       return asked;
     },
     connectFamily: (family) => connection.connect(family),
-    openedPaid: Boolean(openedPaid),
+    openedPaid: firstRead?.store === store && firstRead.paid,
+    revokeSent,
+    setRevokeSent,
     adapterFor,
     handoff,
     setHandoff,

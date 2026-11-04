@@ -154,6 +154,8 @@ export const esLabels: NovaPaymentsLabels = {
       'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. Si salió dinero de tu billetera, contacta con {merchant}.',
     mismatchOtherWalletHeld:
       'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. {merchant} la devuelve a la billetera que la envió, y aún puedes pagar esta factura desde la billetera que la confirmó.',
+    mismatchChargeHeld:
+      'Un cargo automático llegó a {merchant} después de que eligieras otra forma de pago, así que no paga esta factura. {merchant} lo devuelve a tu billetera y aún puedes pagar la factura.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',
@@ -470,6 +472,7 @@ export const esLabels: NovaPaymentsLabels = {
     done: 'Listo',
     failedTitle: 'El reembolso falló',
     failedText: 'La transacción falló en {network}; solo se gastó la comisión de red. Envía el reembolso de nuevo.',
+    failedHeldNote: 'La transferencia sigue retenida. Cierra esta ventana: su fila indica qué hacer a continuación.',
     notSent: 'No enviado',
     notEnough: 'No hay suficiente {symbol} en {address}: tiene {balance}.',
     declined: 'Rechazaste la solicitud en {wallet}.',

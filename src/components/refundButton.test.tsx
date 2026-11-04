@@ -220,6 +220,34 @@ describe('RefundButton', () => {
       answer(null);
     });
 
+    it('goes back only when nothing is being asked: a look under way would ask for what was left behind', async () => {
+      let answer: (preview: unknown) => void = () => undefined;
+      const preview = vi
+        .fn()
+        .mockResolvedValueOnce({ ...PREVIEW, cryptoAmount: '52000000000000000' })
+        .mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)));
+      const flow = flowOf({ step: 'amount', preview });
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(preview).toHaveBeenCalledTimes(1));
+      await Promise.resolve();
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(preview).toHaveBeenCalledTimes(2));
+      expect(button(amountStep(flow), SecondaryButton).props.disabled).toBe(true);
+      answer({ ...PREVIEW, cryptoAmount: '52000000000000000' });
+    });
+
+    it('says why when Quasar refused what was asked after the look', async () => {
+      const flow = flowOf({
+        step: 'amount',
+        preview: vi.fn(async () => ({ ...PREVIEW, cryptoAmount: '52000000000000000' })),
+        error: { code: 'refund_may_have_landed', message: 'Check the wallet first' } as never,
+      });
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(flow.preview).toHaveBeenCalled());
+      await Promise.resolve();
+      expect(textOf(amountStep(flow))).toContain('Check the wallet first');
+    });
+
     it('asks nothing when the price held: a stablecoin at par goes straight on', async () => {
       const flow = flowOf({
         step: 'amount',
@@ -343,7 +371,39 @@ describe('RefundButton', () => {
 
   describe('after its transaction failed on-chain', () => {
     const failed = (flow: RefundFlow) =>
-      render(FailedStep, { flow, labels: defaultLabels, locale: 'en', values: {}, recordAction: null });
+      render(FailedStep, { flow, labels: defaultLabels, locale: 'en', values: {}, recordAction: null, close: vi.fn() });
+
+    it("sends a held transfer's refund back to its row: asked again here it would refund the whole invoice", () => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        refund: { id: 'rf_2', mode: 'exact_received', heldTransfer: 'ht_1', creditNoteNumber: null } as never,
+      });
+      const close = vi.fn();
+      const tree = render(FailedStep, {
+        flow,
+        labels: defaultLabels,
+        locale: 'en',
+        values: {},
+        recordAction: 'record',
+        close,
+      });
+      expect(textOf(tree)).toContain(defaultLabels.refund.failedHeldNote);
+      expect(fixture.ofType(tree, SecondaryButton)).toHaveLength(0);
+      (button(tree, PrimaryButton).props.onClick as () => void)();
+      expect(close).toHaveBeenCalledOnce();
+      expect(flow.start).not.toHaveBeenCalled();
+      expect(flow.preview).not.toHaveBeenCalled();
+    });
+
+    it('says why when Quasar refused the refund asked again', () => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        error: { code: 'refund_may_have_landed', message: 'Check the wallet first' } as never,
+      });
+      expect(textOf(failed(flow))).toContain('Check the wallet first');
+    });
 
     it('asks for the same refund again', async () => {
       const flow = flowOf({ step: 'failed', phase: 'failed' });
@@ -368,7 +428,10 @@ describe('RefundButton', () => {
       await vi.waitFor(() => expect(flow.preview).toHaveBeenCalled());
       await Promise.resolve();
       expect(flow.start).not.toHaveBeenCalled();
-      expect(textOf(failed(flow))).toContain(defaultLabels.refund.movedTitle);
+      const tree = failed(flow);
+      expect(textOf(tree)).toContain(defaultLabels.refund.movedTitle);
+      // That way there is no choice of the exact mode to go back to
+      expect(textOf(tree)).not.toContain(defaultLabels.refund.modeExact);
     });
   });
 });

@@ -62,7 +62,8 @@ const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'pay
  * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
  * `pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
  * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, `pay.mismatchOtherWalletHeld`
- * when Quasar recorded it as a held transfer the seller returns, `held`), a payment Quasar closed after 24 hours without a result on chain
+ * when Quasar recorded it as a held transfer the seller returns, `held`; `pay.mismatchChargeHeld` for an automatic charge
+ * that landed after the buyer chose another way to pay), a payment Quasar closed after 24 hours without a result on chain
  * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
  * and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
  * Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the
@@ -82,6 +83,7 @@ export function leftTheWalletText(
     const reason = (error as { reason?: string }).reason ?? '';
     // `held`: Quasar recorded the transfer as a held transfer, here or at another invoice; it pays neither
     const held = (error as { held?: boolean }).held === true;
+    if (reason === 'quote_changed') return formatLabel(labels.pay.mismatchChargeHeld, { merchant });
     const text = FROM_ANOTHER_WALLET.has(reason)
       ? held
         ? labels.pay.mismatchOtherWalletHeld

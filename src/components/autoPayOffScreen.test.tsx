@@ -33,7 +33,7 @@ const CHAIN = 'eip155:84532';
 const REVOCATION = { to: '0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3', data: '0x3ed01015' };
 
 /** The screen with automatic payments on, and `address` connected. */
-function screen(address: string | null, adapter: object = {}) {
+function screen(address: string | null, adapter: object = {}, extra: object = {}) {
   const autoCharge = {
     status: 'active',
     permission: {
@@ -48,7 +48,8 @@ function screen(address: string | null, adapter: object = {}) {
   };
   const checkout = { ...fixture.checkout, autoCharge } as never;
   // Not revoked when the screen looks first, revoked once the wallet sent the transaction
-  const permissionRevoked = vi.fn<() => Promise<boolean>>().mockResolvedValueOnce(false).mockResolvedValue(true);
+  const permissionRevoked = vi.fn<() => Promise<boolean | null>>().mockResolvedValueOnce(false).mockResolvedValue(true);
+  const setRevokeSent = vi.fn();
   const setAutoPayOff = vi.fn();
   const connectWallet = vi.fn(() => true);
   const connectFamily = vi.fn(() => true);
@@ -62,12 +63,14 @@ function screen(address: string | null, adapter: object = {}) {
       setAutoPayOff,
       connectWallet,
       connectFamily,
+      setRevokeSent,
+      ...extra,
     },
   );
   const tree = render(AutoPayOffScreen, {});
   const primary = fixture.elements(tree).find((element) => element.type === PrimaryButton)!;
   const secondary = fixture.elements(tree).find((element) => element.type === SecondaryButton)!;
-  return { tree, primary, secondary, permissionRevoked, setAutoPayOff, connectWallet, connectFamily };
+  return { tree, primary, secondary, permissionRevoked, setAutoPayOff, setRevokeSent, connectWallet, connectFamily };
 }
 
 afterEach(() => unmount());
@@ -106,21 +109,34 @@ describe('turning off automatic payments', () => {
     expect(revokePermission).not.toHaveBeenCalled();
   });
 
-  it('remembers a transaction that went out even when waiting for it fails: it is not sent again', async () => {
+  it('remembers a transaction that went out, also after leaving the screen: it is not sent again', async () => {
     const revokePermission = vi.fn(async ({ onSent }: { onSent: () => void }) => {
       onSent();
       throw new Error('timed out waiting for the receipt');
     });
-    const { primary, permissionRevoked } = screen(PAYER, { revokePermission });
+    const { primary, setRevokeSent } = screen(PAYER, { revokePermission });
     (primary.props.onClick as () => void)();
-    await vi.waitFor(() => expect(revokePermission).toHaveBeenCalledOnce());
-    await Promise.resolve();
-    await Promise.resolve();
-    permissionRevoked.mockResolvedValue(true);
-    const again = fixture.elements(render(AutoPayOffScreen, {})).find((element) => element.type === PrimaryButton)!;
+    await vi.waitFor(() => expect(setRevokeSent).toHaveBeenCalledWith(true));
+
+    // The page keeps it: the screen opened again only asks
+    revokePermission.mockClear();
+    const { primary: again, permissionRevoked } = screen(PAYER, { revokePermission }, { revokeSent: true });
     (again.props.onClick as () => void)();
-    await vi.waitFor(() => expect(permissionRevoked.mock.calls.length).toBeGreaterThan(1));
-    expect(revokePermission).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(permissionRevoked).toHaveBeenCalled());
+    expect(revokePermission).not.toHaveBeenCalled();
+  });
+
+  it('prompts nothing when Quasar could not be asked: the permission may have ended already', async () => {
+    const revokePermission = vi.fn(async () => undefined);
+    const { primary, permissionRevoked } = screen(PAYER, { revokePermission });
+    permissionRevoked.mockReset();
+    permissionRevoked.mockResolvedValue(null);
+    (primary.props.onClick as () => void)();
+    await vi.waitFor(() => expect(permissionRevoked).toHaveBeenCalled());
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(revokePermission).not.toHaveBeenCalled();
+    expect(textOf(render(AutoPayOffScreen, {}))).toContain(en.error.generic);
   });
 
   it('asks another wallet to connect that one: nothing else can revoke the permission', () => {

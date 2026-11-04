@@ -149,6 +149,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
       '此转账来自未确认此发票的钱包，因此不支付此发票。如果有款项从您的钱包转出，请联系 {merchant}。',
     mismatchOtherWalletHeld:
       '此转账来自未确认此发票的钱包，因此不支付此发票。{merchant} 会将其退回到发送它的钱包，您仍可使用已确认此发票的钱包支付此发票。',
+    mismatchChargeHeld:
+      '自动扣款在您选择其他付款方式后才到达 {merchant}，因此不计入此发票。{merchant} 会将其退回您的钱包，您仍可支付此发票。',
     payAgain: '再次付款',
     unsupported: '{wallet} 无法完成此笔付款。',
     wrongCluster: '{wallet} 处于其他网络，因此未完成任何付款。请将其切换到 {network} 后重新付款。',
@@ -440,6 +442,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     done: '完成',
     failedTitle: '退款失败',
     failedText: '交易在 {network} 上失败，只花费了网络费用。请重新发送退款。',
+    failedHeldNote: '该转账仍被暂扣。请关闭此窗口，其所在行会说明下一步操作。',
     notSent: '未发送',
     notEnough: '{address} 上的 {symbol} 不足：余额为 {balance}。',
     declined: '您在 {wallet} 中拒绝了请求。',
