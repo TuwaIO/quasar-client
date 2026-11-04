@@ -47,9 +47,11 @@ function screen(address: string | null, adapter: object = {}) {
     revocation: REVOCATION,
   };
   const checkout = { ...fixture.checkout, autoCharge } as never;
-  const permissionRevoked = vi.fn(async () => true);
+  // Not revoked when the screen looks first, revoked once the wallet sent the transaction
+  const permissionRevoked = vi.fn<() => Promise<boolean>>().mockResolvedValueOnce(false).mockResolvedValue(true);
   const setAutoPayOff = vi.fn();
   const connectWallet = vi.fn(() => true);
+  const connectFamily = vi.fn(() => true);
   ctx = fixture.checkoutContextValue(
     {},
     {
@@ -59,12 +61,13 @@ function screen(address: string | null, adapter: object = {}) {
       adapterFor: () => ({ family: 'eip155', ...adapter }) as never,
       setAutoPayOff,
       connectWallet,
+      connectFamily,
     },
   );
   const tree = render(AutoPayOffScreen, {});
   const primary = fixture.elements(tree).find((element) => element.type === PrimaryButton)!;
   const secondary = fixture.elements(tree).find((element) => element.type === SecondaryButton)!;
-  return { tree, primary, secondary, permissionRevoked, setAutoPayOff, connectWallet };
+  return { tree, primary, secondary, permissionRevoked, setAutoPayOff, connectWallet, connectFamily };
 }
 
 afterEach(() => unmount());
@@ -84,18 +87,52 @@ describe('turning off automatic payments', () => {
     const { primary, permissionRevoked, setAutoPayOff } = screen(PAYER, { revokePermission });
     (primary.props.onClick as () => void)();
     await vi.waitFor(() => expect(setAutoPayOff).toHaveBeenCalledWith('done'));
-    expect(revokePermission).toHaveBeenCalledWith({ revocation: REVOCATION, chainId: CHAIN, account: PAYER });
-    expect(permissionRevoked).toHaveBeenCalledOnce();
+    expect(revokePermission).toHaveBeenCalledWith({
+      revocation: REVOCATION,
+      chainId: CHAIN,
+      account: PAYER,
+      onSent: expect.any(Function),
+    });
+    expect(permissionRevoked).toHaveBeenCalledTimes(2);
+  });
+
+  it('asks the chain first: a permission already revoked costs no second transaction', async () => {
+    const revokePermission = vi.fn(async () => undefined);
+    const { primary, permissionRevoked, setAutoPayOff } = screen(PAYER, { revokePermission });
+    permissionRevoked.mockReset();
+    permissionRevoked.mockResolvedValue(true);
+    (primary.props.onClick as () => void)();
+    await vi.waitFor(() => expect(setAutoPayOff).toHaveBeenCalledWith('done'));
+    expect(revokePermission).not.toHaveBeenCalled();
+  });
+
+  it('remembers a transaction that went out even when waiting for it fails: it is not sent again', async () => {
+    const revokePermission = vi.fn(async ({ onSent }: { onSent: () => void }) => {
+      onSent();
+      throw new Error('timed out waiting for the receipt');
+    });
+    const { primary, permissionRevoked } = screen(PAYER, { revokePermission });
+    (primary.props.onClick as () => void)();
+    await vi.waitFor(() => expect(revokePermission).toHaveBeenCalledOnce());
+    await Promise.resolve();
+    await Promise.resolve();
+    permissionRevoked.mockResolvedValue(true);
+    const again = fixture.elements(render(AutoPayOffScreen, {})).find((element) => element.type === PrimaryButton)!;
+    (again.props.onClick as () => void)();
+    await vi.waitFor(() => expect(permissionRevoked.mock.calls.length).toBeGreaterThan(1));
+    expect(revokePermission).toHaveBeenCalledOnce();
   });
 
   it('asks another wallet to connect that one: nothing else can revoke the permission', () => {
     const revokePermission = vi.fn();
-    const { tree, primary, connectWallet } = screen('0x2222222222222222222222222222222222222222', {
+    const { tree, primary, connectWallet, connectFamily } = screen('0x2222222222222222222222222222222222222222', {
       revokePermission,
     });
     expect(primary.props.children).toBe(en.autoPayOff.connect);
     (primary.props.onClick as () => void)();
-    expect(connectWallet).toHaveBeenCalledOnce();
+    // Only a wallet: connecting it for a method would lock a price and start a payment
+    expect(connectFamily).toHaveBeenCalledWith('eip155');
+    expect(connectWallet).not.toHaveBeenCalled();
     expect(revokePermission).not.toHaveBeenCalled();
     expect(textOf(tree)).toContain('0x1111');
   });

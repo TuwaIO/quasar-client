@@ -29,7 +29,7 @@ const fixture = await import('../testing/checkoutFixture');
 const { defaultLabels } = await import('../i18n');
 const { PrimaryButton, SecondaryButton, ScreenContent, ScreenError } = await import('./ScreenParts');
 const { RadioCards } = await import('./RadioCards');
-const { AmountStep, ConfirmStep, RefundButton, RefundDialog, RefundSteps } = await import('./RefundButton');
+const { AmountStep, ConfirmStep, FailedStep, RefundButton, RefundDialog, RefundSteps } = await import('./RefundButton');
 const { refundRateMoved } = await import('../utils/outcome');
 
 type Props = Record<string, unknown>;
@@ -108,6 +108,17 @@ afterEach(() => {
   refundHook.params.length = 0;
 });
 
+// What Quasar answers about a refund of 100.00 USD paid with 0.04 ETH
+const PREVIEW = {
+  amount: '100.00',
+  currency: 'USD',
+  symbol: 'ETH',
+  decimals: 18,
+  received: '40000000000000000',
+  atPaymentRate: '40000000000000000',
+  exactPossible: true,
+};
+
 // Board RefundSendStates of the dashboard sketch: the steps of a refund from the merchant's wallet
 describe('RefundButton', () => {
   it('asks what to refund: an amount of the invoice currency (everything left when empty) or everything received', async () => {
@@ -133,14 +144,6 @@ describe('RefundButton', () => {
   });
 
   describe('before a refund is asked for, since it then holds its amount', () => {
-    const PREVIEW = {
-      amount: '100.00',
-      currency: 'USD',
-      symbol: 'ETH',
-      decimals: 18,
-      received: '40000000000000000',
-      atPaymentRate: '40000000000000000',
-    };
     const amountStep = (flow: ReturnType<typeof flowOf>) =>
       render(AmountStep, { flow, labels: defaultLabels, locale: 'en', currency: 'USD' });
     const proceed = (tree: unknown) => (button(tree as never, PrimaryButton).props.onClick as () => void)();
@@ -159,7 +162,62 @@ describe('RefundButton', () => {
       expect(textOf(tree)).toContain('0.052 ETH');
       expect(textOf(tree)).toContain('0.04 ETH');
       proceed(tree);
-      expect(flow.start).toHaveBeenCalledOnce();
+      await vi.waitFor(() => expect(flow.start).toHaveBeenCalledOnce());
+    });
+
+    it('prices it again before it goes on: a price that moved meanwhile shows its new amount first', async () => {
+      const preview = vi
+        .fn()
+        .mockResolvedValueOnce({ ...PREVIEW, cryptoAmount: '52000000000000000' })
+        .mockResolvedValueOnce({ ...PREVIEW, cryptoAmount: '60000000000000000' })
+        .mockResolvedValueOnce({ ...PREVIEW, cryptoAmount: '60000000000000000' });
+      const flow = flowOf({ step: 'amount', preview });
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(preview).toHaveBeenCalledTimes(1));
+      await Promise.resolve();
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(preview).toHaveBeenCalledTimes(2));
+      await Promise.resolve();
+      expect(flow.start).not.toHaveBeenCalled();
+      const tree = amountStep(flow);
+      expect(textOf(tree)).toContain('0.06 ETH');
+      proceed(tree);
+      await vi.waitFor(() => expect(flow.start).toHaveBeenCalledOnce());
+    });
+
+    it('asks for nothing when the window closed while it looked: nothing could cancel the refund', async () => {
+      let answer: (preview: unknown) => void = () => undefined;
+      const preview = vi.fn(() => new Promise((resolve) => (answer = resolve)));
+      const flow = flowOf({ step: 'amount', preview: preview as never });
+      proceed(amountStep(flow));
+      unmount();
+      answer({ ...PREVIEW, cryptoAmount: '40100000000000000' });
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(flow.start).not.toHaveBeenCalled();
+    });
+
+    it('offers the tokens as they came only while nothing was refunded: the engine refuses them after that', async () => {
+      const flow = flowOf({
+        step: 'amount',
+        preview: vi.fn(async () => ({ ...PREVIEW, cryptoAmount: '52000000000000000', exactPossible: false })),
+      });
+      proceed(amountStep(flow));
+      await vi.waitFor(() => expect(flow.preview).toHaveBeenCalled());
+      await Promise.resolve();
+      expect(textOf(amountStep(flow))).not.toContain(defaultLabels.refund.modeExact);
+    });
+
+    it('holds the fields while it looks: what is asked for is what was typed', async () => {
+      let answer: (preview: unknown) => void = () => undefined;
+      const flow = flowOf({
+        step: 'amount',
+        preview: vi.fn(() => new Promise((resolve) => (answer = resolve))) as never,
+      });
+      proceed(amountStep(flow));
+      const fieldset = fixture.elements(amountStep(flow)).find((element) => element.type === 'fieldset');
+      expect(fieldset?.props.disabled).toBe(true);
+      answer(null);
     });
 
     it('asks nothing when the price held: a stablecoin at par goes straight on', async () => {
@@ -283,11 +341,34 @@ describe('RefundButton', () => {
     expect(close).toHaveBeenCalled();
   });
 
-  it('asks for the same refund again after its transaction failed on-chain', () => {
-    const flow = flowOf({ step: 'failed', phase: 'failed' });
-    const tree = render(RefundSteps, { flow, labels: defaultLabels, locale: 'en', close: vi.fn() });
-    expect(button(tree, ScreenContent).props.title).toBe('The refund failed');
-    (button(tree, PrimaryButton).props.onClick as () => void)();
-    expect(flow.start).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '15.89', reason: 'Order cancelled' });
+  describe('after its transaction failed on-chain', () => {
+    const failed = (flow: RefundFlow) =>
+      render(FailedStep, { flow, labels: defaultLabels, locale: 'en', values: {}, recordAction: null });
+
+    it('asks for the same refund again', async () => {
+      const flow = flowOf({ step: 'failed', phase: 'failed' });
+      const steps = render(RefundSteps, { flow, labels: defaultLabels, locale: 'en', close: vi.fn() });
+      expect(fixture.ofType(steps, FailedStep)).toHaveLength(1);
+      unmount();
+      const tree = failed(flow);
+      expect(button(tree, ScreenContent).props.title).toBe('The refund failed');
+      (button(tree, PrimaryButton).props.onClick as () => void)();
+      await vi.waitFor(() =>
+        expect(flow.start).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '15.89', reason: 'Order cancelled' }),
+      );
+    });
+
+    it('shows what goes out first when the price moved since it was asked for', async () => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        preview: vi.fn(async () => ({ ...PREVIEW, cryptoAmount: '52000000000000000' })),
+      });
+      (button(failed(flow), PrimaryButton).props.onClick as () => void)();
+      await vi.waitFor(() => expect(flow.preview).toHaveBeenCalled());
+      await Promise.resolve();
+      expect(flow.start).not.toHaveBeenCalled();
+      expect(textOf(failed(flow))).toContain(defaultLabels.refund.movedTitle);
+    });
   });
 });

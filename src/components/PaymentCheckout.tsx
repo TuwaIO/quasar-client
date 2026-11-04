@@ -153,6 +153,9 @@ function ErrorScreen() {
   );
 }
 
+/** The statuses of an invoice already paid when its page opens. */
+const PAID_ON_OPEN: ReadonlySet<string> = new Set(['paid', 'partially_refunded', 'refunded']);
+
 /** The screen of the current step or outcome, or its replacement (`customization.components.screens`). @internal */
 export function ScreenBody() {
   const { screen, customization } = useCheckoutContext();
@@ -352,6 +355,9 @@ export function PaymentCheckout({
   const [handoff, setHandoff] = useState(false);
   const [autoPay, setAutoPay] = useState(false);
   const [autoPayOff, setAutoPayOff] = useState<'open' | 'done' | null>(null);
+  // What the invoice was when the page first read it: a link opened on a paid invoice shows its receipt, it just was not paid
+  const [openedPaid, setOpenedPaid] = useState<boolean | null>(null);
+  if (openedPaid === null && checkout) setOpenedPaid(PAID_ON_OPEN.has(checkout.invoice.status));
   const [askLeave, setAskLeave] = useState(false);
   // The buyer continued with a wallet that confirms the invoice before the price
   const [confirmWallet, setConfirmWallet] = useState(false);
@@ -498,6 +504,8 @@ export function PaymentCheckout({
       if (!asked) connectingFor.current = null;
       return asked;
     },
+    connectFamily: (family) => connection.connect(family),
+    openedPaid: Boolean(openedPaid),
     adapterFor,
     handoff,
     setHandoff,

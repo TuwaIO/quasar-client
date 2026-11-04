@@ -47,6 +47,7 @@ export function PaidScreen() {
     autoPayOff,
     setAutoPayOff,
     autoReturnSeconds,
+    openedPaid,
     display,
   } = context;
   const child = context.customization.childCustomizations;
@@ -61,9 +62,13 @@ export function PaidScreen() {
   const offerMethod =
     offer?.status === 'available' ? checkout?.methods.find((item) => item.id === offer.methodId) : undefined;
   const offerFamily = offerMethod ? methodFamily(offerMethod) : null;
-  const canAutoPay = Boolean(wallet && offerFamily && adapterFor(offerFamily)?.requestPermission);
-  // No automatic return while the automatic payments offer waits for an answer
-  const countdown = useAutoReturn({ url: successUrl, seconds: canAutoPay ? 0 : autoReturnSeconds, now });
+  // Just turned off: the same page does not ask for them again
+  const canAutoPay =
+    autoPayOff !== 'done' && Boolean(wallet && offerFamily && adapterFor(offerFamily)?.requestPermission);
+  // The return belongs to the moment of payment: not while the offer waits for an answer, not over the control that turns
+  // automatic payments off, and not on a receipt opened from its link long after
+  const stays = canAutoPay || openedPaid || offer?.status === 'active';
+  const countdown = useAutoReturn({ url: successUrl, seconds: stays ? 0 : autoReturnSeconds, now });
   if (!checkout) return null;
 
   const total = checkout.invoice.totalMinor ? formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale) : null;

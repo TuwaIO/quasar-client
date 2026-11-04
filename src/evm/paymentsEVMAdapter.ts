@@ -210,7 +210,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       };
     },
 
-    revokePermission: async ({ revocation, chainId, account }) => {
+    revokePermission: async ({ revocation, chainId, account, onSent }) => {
       refuseSafe();
       const chain = evmChainId(chainId);
       await switchChain(config, { chainId: chain });
@@ -220,6 +220,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         to: revocation.to as Address,
         data: revocation.data as Hex,
       });
+      onSent?.();
       await waitForTransactionReceipt(config, { chainId: chain, hash });
     },
 

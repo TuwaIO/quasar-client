@@ -2,7 +2,7 @@ import { ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
 import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type { RefundState, RefundStore } from '@tuwaio/quasar-sdk/checkout';
-import { type ReactNode, useEffect, useEffectEvent, useId, useState } from 'react';
+import { type ReactNode, useEffect, useEffectEvent, useId, useRef, useState } from 'react';
 
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { type RefundFlow, type RefundRequest, useRefund } from '../hooks/useRefund';
@@ -285,19 +285,7 @@ export function RefundSteps({
         </>
       );
     case 'failed':
-      return (
-        <>
-          <ScreenContent title={text.failedTitle}>
-            <ScreenError>{flow.refund?.failureReason ?? formatLabel(text.failedText, values)}</ScreenError>
-          </ScreenContent>
-          <ScreenFooter>
-            <PrimaryButton onClick={() => flow.refund && void flow.start(requestOf(flow.refund))}>
-              {text.sendRefund}
-            </PrimaryButton>
-            {recordAction}
-          </ScreenFooter>
-        </>
-      );
+      return <FailedStep flow={flow} labels={labels} locale={locale} values={values} recordAction={recordAction} />;
   }
 }
 
@@ -307,6 +295,112 @@ const requestOf = (refund: Refund): RefundRequest => ({
   ...(refund.mode === 'fiat_value' && { amount: refund.amount }),
   ...(refund.reason && { reason: refund.reason }),
 });
+
+/**
+ * Asks for a refund after looking at what it would send: once asked for, it holds its amount and nothing cancels it. A
+ * refund that would send a noticeably different number of tokens than its amount took at the payment waits on a screen
+ * of its own, and going on looks again, so the merchant never sends another number than the one read. Nothing is asked
+ * for once the step is gone.
+ */
+function useAskRefund(flow: RefundFlow) {
+  const [checking, setChecking] = useState(false);
+  const [moved, setMoved] = useState<{ preview: RefundPreview; request: RefundRequest } | null>(null);
+  const gone = useRef(false);
+  useEffect(() => {
+    gone.current = false;
+    return () => {
+      gone.current = true;
+    };
+  }, []);
+  const ask = async (request: RefundRequest, read?: RefundPreview) => {
+    if (request?.mode === 'fiat_value') {
+      setChecking(true);
+      const preview = await flow.preview(request);
+      if (gone.current) return;
+      setChecking(false);
+      // Refused as the refund would be: the error shows
+      if (preview === 'refused') return;
+      // Against what the screen showed once it showed something, else against the rate of the payment
+      if (
+        preview &&
+        refundRateMoved(read ? { cryptoAmount: preview.cryptoAmount, atPaymentRate: read.cryptoAmount } : preview)
+      ) {
+        return setMoved({ preview, request });
+      }
+    }
+    setMoved(null);
+    void flow.start(request);
+  };
+  return { ask, checking, moved, back: () => setMoved(null) };
+}
+
+/** The screen of a refund whose price moved: what goes out against what came in, and going on or back. */
+function movedScreen(
+  { preview, request }: { preview: RefundPreview; request: RefundRequest },
+  ask: ReturnType<typeof useAskRefund>,
+  labels: NovaPaymentsLabels,
+  locale: string,
+) {
+  const text = labels.refund;
+  const tokens = (units: string) => `${formatTokenAmount(units, preview.decimals, locale)} ${preview.symbol}`;
+  return (
+    <>
+      <ScreenContent title={text.movedTitle}>
+        <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+          {formatLabel(text.movedText, { symbol: preview.symbol })}
+        </p>
+        <DetailsCard>
+          <DetailRow name={text.movedSend}>{tokens(preview.cryptoAmount)}</DetailRow>
+          {preview.atPaymentRate && <DetailRow name={text.movedAtPayment}>{tokens(preview.atPaymentRate)}</DetailRow>}
+          {preview.received && <DetailRow name={text.movedReceived}>{tokens(preview.received)}</DetailRow>}
+        </DetailsCard>
+        {preview.exactPossible && <FooterNote>{formatLabel(text.movedExact, { exact: text.modeExact })}</FooterNote>}
+      </ScreenContent>
+      <ScreenFooter>
+        <PrimaryButton busy={ask.checking} onClick={() => void ask.ask(request, preview)}>
+          {text.movedContinue}
+        </PrimaryButton>
+        <SecondaryButton onClick={ask.back}>{text.movedBack}</SecondaryButton>
+      </ScreenFooter>
+    </>
+  );
+}
+
+/**
+ * A refund whose transaction failed on-chain: why, then the same refund asked for again, priced now, or recorded.
+ *
+ * @internal
+ */
+export function FailedStep({
+  flow,
+  labels,
+  locale,
+  values,
+  recordAction,
+}: {
+  flow: RefundFlow;
+  labels: NovaPaymentsLabels;
+  locale: string;
+  values: Record<string, string>;
+  recordAction: ReactNode;
+}) {
+  const text = labels.refund;
+  const ask = useAskRefund(flow);
+  if (ask.moved) return movedScreen(ask.moved, ask, labels, locale);
+  return (
+    <>
+      <ScreenContent title={text.failedTitle}>
+        <ScreenError>{flow.refund?.failureReason ?? formatLabel(text.failedText, values)}</ScreenError>
+      </ScreenContent>
+      <ScreenFooter>
+        <PrimaryButton busy={ask.checking} onClick={() => flow.refund && void ask.ask(requestOf(flow.refund))}>
+          {text.sendRefund}
+        </PrimaryButton>
+        {recordAction}
+      </ScreenFooter>
+    </>
+  );
+}
 
 /** A step that waits: the wallet's prompt (with its icon) or Quasar. */
 function Waiting({ walletId, walletIcon, children }: { walletId?: string; walletIcon?: string; children: ReactNode }) {
@@ -357,9 +451,7 @@ export function AmountStep({
   const [mode, setMode] = useState<'fiat_value' | 'exact_received'>('fiat_value');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
-  const [checking, setChecking] = useState(false);
-  // What the refund would send, when the price moved so that it sends another number of tokens than the payment took
-  const [moved, setMoved] = useState<RefundPreview | null>(null);
+  const ask = useAskRefund(flow);
   const valid = mode === 'exact_received' || amount.trim() === '' || /^\d{1,12}(\.\d{1,2})?$/.test(amount.trim());
   const modes = [
     { key: 'fiat_value', title: text.modeFiat, hint: formatLabel(text.modeFiatText, { currency }) },
@@ -372,92 +464,62 @@ export function AmountStep({
     ...(mode === 'fiat_value' && amount.trim() && { amount: amount.trim() }),
     ...(reason.trim() && { reason: reason.trim() }),
   };
-  /** Looks at what the refund would send first: asked for, it holds its amount until it is sent. */
-  const onContinue = async () => {
-    if (mode === 'fiat_value') {
-      setChecking(true);
-      const preview = await flow.preview(request);
-      setChecking(false);
-      // Refused as the refund would be: the error shows
-      if (preview === 'refused') return;
-      if (preview && refundRateMoved(preview)) return setMoved(preview);
-    }
-    void flow.start(request);
-  };
-  if (moved) {
-    const tokens = (units: string) => `${formatTokenAmount(units, moved.decimals, locale)} ${moved.symbol}`;
-    return (
-      <>
-        <ScreenContent title={text.movedTitle}>
-          <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
-            {formatLabel(text.movedText, { symbol: moved.symbol })}
-          </p>
-          <DetailsCard>
-            <DetailRow name={text.movedSend}>{tokens(moved.cryptoAmount)}</DetailRow>
-            {moved.atPaymentRate && <DetailRow name={text.movedAtPayment}>{tokens(moved.atPaymentRate)}</DetailRow>}
-            {moved.received && <DetailRow name={text.movedReceived}>{tokens(moved.received)}</DetailRow>}
-          </DetailsCard>
-          <FooterNote>{formatLabel(text.movedExact, { exact: text.modeExact })}</FooterNote>
-        </ScreenContent>
-        <ScreenFooter>
-          <PrimaryButton onClick={() => void flow.start(request)}>{text.movedContinue}</PrimaryButton>
-          <SecondaryButton onClick={() => setMoved(null)}>{text.movedBack}</SecondaryButton>
-        </ScreenFooter>
-      </>
-    );
-  }
+  if (ask.moved) return movedScreen(ask.moved, ask, labels, locale);
   return (
     <>
       <ScreenContent title={text.amountTitle}>
-        <RadioCards
-          label={text.amountTitle}
-          items={[...modes]}
-          value={mode}
-          getKey={(item) => item.key}
-          onChange={(key) => setMode(key as typeof mode)}
-          className="novapay:flex novapay:flex-col novapay:gap-2"
-          itemClassName={() => 'novapay:flex novapay:flex-col novapay:gap-0.5 novapay:px-3 novapay:py-2.5'}
-        >
-          {(item) => (
-            <>
-              <span className="novapay:text-sm novapay:font-semibold">{item.title}</span>
-              <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{item.hint}</span>
-            </>
-          )}
-        </RadioCards>
-        {mode === 'fiat_value' && (
-          <label htmlFor={amountId} className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-xs">
-            <span>{formatLabel(text.amount, { currency })}</span>
-            <input
-              id={amountId}
-              inputMode="decimal"
-              value={amount}
-              placeholder="0.00"
-              aria-invalid={!valid || undefined}
-              onChange={(event) => setAmount(event.target.value.replace(',', '.'))}
-              className={cn(mono, field)}
-            />
-            {refundable && (
-              <span className="novapay:text-[var(--tuwa-text-secondary)]">
-                {formatLabel(text.amountHint, { amount: refundable })}
-              </span>
+        {/* Held while it looks: what is asked for is what was typed */}
+        <fieldset disabled={ask.checking} className="novapay:contents">
+          <RadioCards
+            label={text.amountTitle}
+            items={[...modes]}
+            value={mode}
+            getKey={(item) => item.key}
+            onChange={(key) => setMode(key as typeof mode)}
+            className="novapay:flex novapay:flex-col novapay:gap-2"
+            itemClassName={() => 'novapay:flex novapay:flex-col novapay:gap-0.5 novapay:px-3 novapay:py-2.5'}
+          >
+            {(item) => (
+              <>
+                <span className="novapay:text-sm novapay:font-semibold">{item.title}</span>
+                <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{item.hint}</span>
+              </>
             )}
+          </RadioCards>
+          {mode === 'fiat_value' && (
+            <label htmlFor={amountId} className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-xs">
+              <span>{formatLabel(text.amount, { currency })}</span>
+              <input
+                id={amountId}
+                inputMode="decimal"
+                value={amount}
+                placeholder="0.00"
+                aria-invalid={!valid || undefined}
+                onChange={(event) => setAmount(event.target.value.replace(',', '.'))}
+                className={cn(mono, field)}
+              />
+              {refundable && (
+                <span className="novapay:text-[var(--tuwa-text-secondary)]">
+                  {formatLabel(text.amountHint, { amount: refundable })}
+                </span>
+              )}
+            </label>
+          )}
+          <label htmlFor={reasonId} className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-xs">
+            <span>{text.reason}</span>
+            <input
+              id={reasonId}
+              value={reason}
+              maxLength={500}
+              onChange={(event) => setReason(event.target.value)}
+              className={field}
+            />
           </label>
-        )}
-        <label htmlFor={reasonId} className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-xs">
-          <span>{text.reason}</span>
-          <input
-            id={reasonId}
-            value={reason}
-            maxLength={500}
-            onChange={(event) => setReason(event.target.value)}
-            className={field}
-          />
-        </label>
+        </fieldset>
         {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
-        <PrimaryButton busy={checking} disabled={!valid} onClick={() => void onContinue()}>
+        <PrimaryButton busy={ask.checking} disabled={!valid} onClick={() => void ask.ask(request)}>
           {text.continue}
         </PrimaryButton>
       </ScreenFooter>

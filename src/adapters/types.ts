@@ -136,13 +136,14 @@ export interface PaymentsAdapter {
    * Sends the transaction that revokes the permission of a subscription's automatic payments, with the wallet's prompt,
    * and waits until the network includes it. The wallet pays its network fee.
    *
-   * @param params - The transaction of the checkout's auto-charge offer, its CAIP-2 chain and the account that granted
-   * the permission.
+   * @param params - The transaction of the checkout's auto-charge offer, its CAIP-2 chain, the account that granted the
+   * permission and what to call once the wallet has sent it: a failure while waiting must not send it again.
    */
   revokePermission?: (params: {
     revocation: { to: string; data: string };
     chainId: string;
     account: string;
+    onSent?: () => void;
   }) => Promise<void>;
   /**
    * Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks

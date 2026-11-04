@@ -25,6 +25,7 @@ import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate
 import { isPayerProofError, isSmartWallet, needsPayerProof, payerProofErrorText } from '../utils/payerProof';
 import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
+import { AutoPayNote } from './AutoPayNote';
 import { focusRing, mono, screenHeading } from './classes';
 import {
   CheckoutWalletIcon,
@@ -531,6 +532,7 @@ export function PayScreen() {
               ...(screensPayingWallets(checkout) ? [formatLabel(labels.pay.disclaimerScreening, { merchant })] : []),
             )}
           </FooterNote>
+          <AutoPayNote />
         </ScreenFooter>
       </div>
 

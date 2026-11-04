@@ -105,6 +105,8 @@ export function checkoutContextValue(
     setPayWith: vi.fn(),
     payUrl: null,
     connectWallet: vi.fn(() => true),
+    connectFamily: vi.fn(() => true),
+    openedPaid: false,
     adapterFor: () => ({ family: 'eip155' }) as never,
     handoff: false,
     setHandoff: vi.fn(),

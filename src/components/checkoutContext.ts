@@ -59,6 +59,15 @@ export interface CheckoutContextValue {
    */
   connectWallet: (method: CheckoutMethod) => boolean;
   /**
+   * Asks the buyer to connect a wallet of a chain family and nothing more: no price is locked for it.
+   *
+   * @param family - The chain family.
+   * @returns Whether the page can connect a wallet.
+   */
+  connectFamily: (family: 'eip155' | 'solana') => boolean;
+  /** Whether the page opened on an invoice already paid: the buyer reads its receipt, nothing was just paid. */
+  openedPaid: boolean;
+  /**
    * The adapter that pays a chain family from the connected wallet.
    *
    * @param family - The family.

@@ -32,7 +32,7 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * @returns The screen, or nothing while automatic payments are not on.
  */
 export function AutoPayOffScreen() {
-  const { checkout, store, labels, locale, wallet, adapterFor, connectWallet, setAutoPayOff } = useCheckoutContext();
+  const { checkout, store, labels, locale, wallet, adapterFor, connectFamily, setAutoPayOff } = useCheckoutContext();
   const [step, setStep] = useState<'idle' | 'wallet' | 'network'>('idle');
   const [sent, setSent] = useState(false);
   const [problem, setProblem] = useState<PaymentWalletErrorKind | 'notYet' | null>(null);
@@ -60,13 +60,20 @@ export function AutoPayOffScreen() {
 
   const turnOff = async () => {
     if (!wallet) return;
-    if (!adapter?.revokePermission) return setProblem('unsupported');
     setProblem(null);
     try {
       if (!sent) {
+        // Revoked already, from another tab or the wallet's own page: a second transaction reverts at the buyer's cost
+        setStep('network');
+        if (await store.getState().permissionRevoked()) return setAutoPayOff('done');
+        if (!adapter?.revokePermission) return setProblem('unsupported');
         setStep('wallet');
-        await adapter.revokePermission({ revocation, chainId, account: wallet.address });
-        setSent(true);
+        await adapter.revokePermission({
+          revocation,
+          chainId,
+          account: wallet.address,
+          onSent: () => setSent(true),
+        });
       }
       await check();
     } catch (error) {
@@ -124,9 +131,7 @@ export function AutoPayOffScreen() {
                   : formatLabel(labels.autoPayOff.confirm, values)}
           </PrimaryButton>
         ) : (
-          <PrimaryButton disabled={!method} onClick={() => method && void connectWallet(method)}>
-            {labels.autoPayOff.connect}
-          </PrimaryButton>
+          <PrimaryButton onClick={() => void connectFamily('eip155')}>{labels.autoPayOff.connect}</PrimaryButton>
         )}
         <SecondaryButton onClick={() => setAutoPayOff(null)}>{labels.autoPayOff.keep}</SecondaryButton>
       </ScreenFooter>
