@@ -309,11 +309,15 @@ const failureText = (
     : (refund?.failureReason ?? formatLabel(text.failedText, values));
 
 // The same refund asked for again, after its transaction failed on-chain
-const requestOf = (refund: Refund): RefundRequest => ({
-  mode: refund.mode,
-  ...(refund.mode === 'fiat_value' && { amount: refund.amount }),
-  ...(refund.reason && { reason: refund.reason }),
-});
+const requestOf = (refund: Refund): RefundRequest => {
+  // The rest of a refund that arrived short is asked for by its amount, whatever it asked for first
+  const byAmount = refund.mode === 'fiat_value' || refund.failureReason === 'amount_short';
+  return {
+    mode: byAmount ? 'fiat_value' : refund.mode,
+    ...(byAmount && { amount: refund.amount }),
+    ...(refund.reason && { reason: refund.reason }),
+  };
+};
 
 /**
  * Asks for a refund after looking at what it would send: once asked for, it holds its amount and nothing cancels it. A

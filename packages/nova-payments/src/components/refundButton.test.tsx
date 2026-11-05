@@ -266,6 +266,9 @@ describe('RefundButton', () => {
     });
 
     it('takes half a percent as a move', () => {
+      // More goes out than came in, whatever the rate says: the discount of a method, an accepted underpayment
+      expect(refundRateMoved({ cryptoAmount: '1000', atPaymentRate: '1000', received: '980' })).toBe(true);
+      expect(refundRateMoved({ cryptoAmount: '980', atPaymentRate: '980', received: '980' })).toBe(false);
       expect(refundRateMoved({ cryptoAmount: '1005', atPaymentRate: '1000' })).toBe(true);
       expect(refundRateMoved({ cryptoAmount: '995', atPaymentRate: '1000' })).toBe(true);
       expect(refundRateMoved({ cryptoAmount: '1004', atPaymentRate: '1000' })).toBe(false);

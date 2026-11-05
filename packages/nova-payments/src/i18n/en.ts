@@ -154,7 +154,9 @@ export const defaultLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. {merchant} returns it to the wallet that sent it, and you can still pay this invoice from the wallet that confirmed it.',
     mismatchChargeHeld:
-      'An automatic charge reached {merchant} after you chose another way to pay, so it does not pay this invoice. {merchant} returns it to your wallet, and you can still pay the invoice.',
+      'This payment was sent or charged under an earlier price of this invoice, so it does not pay it. {merchant} returns it to your wallet, and you can still pay the invoice.',
+    mismatchTooManyParts:
+      'This invoice has taken as many parts as it can, so this transfer does not pay it. {merchant} returns it to your wallet; send the whole rest at once.',
     payAgain: 'Pay again',
     unsupported: "{wallet} can't make this payment.",
     wrongCluster: '{wallet} is on another network, so nothing was paid. Switch it to {network} and pay again.',
@@ -330,6 +332,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     expiredText: 'It was payable until {date}. Ask {merchant} for a new one; nothing was charged.',
     expiredPartText: 'It was payable until {date}. Part of the payment arrived: {amount}.',
     expiredPartNoAmount: 'It was payable until {date}. Part of the payment arrived.',
+    closedPartText: '{merchant} closed this invoice. {amount} of the payment arrived.',
     expiredPartRefund: '{merchant} can refund it to the wallet that paid; contact {merchant}.',
     expiredNote: 'A payment sent after the deadline is held for the seller to refund or accept.',
     expiredWhileConfirming:

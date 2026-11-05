@@ -17,7 +17,7 @@ checkout. Pass a partial object as `labels` of `NovaPaymentsProvider` to overrid
 
 > **autoPay**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:595](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L595)
+Defined in: [nova-payments/src/i18n/types.ts:598](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L598)
 
 The automatic payments offer of a subscription (ERC-7715), after a paid period.
 
@@ -135,7 +135,7 @@ Under the buttons (default: `Your wallet shows this permission (ERC-7715) before
 
 > **autoPayOff**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:564](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L564)
+Defined in: [nova-payments/src/i18n/types.ts:567](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L567)
 
 Turning off automatic payments: the wallet that allowed them sends the transaction that revokes the permission.
 
@@ -387,7 +387,7 @@ Retry buttons (default: `Try again`)
 
 > **confirm**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:485](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L485)
+Defined in: [nova-payments/src/i18n/types.ts:488](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L488)
 
 The confirm step: the transaction is on its way.
 
@@ -568,7 +568,7 @@ Title of the menu (default: `Language`)
 
 > **leave**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:829](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L829)
+Defined in: [nova-payments/src/i18n/types.ts:834](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L834)
 
 The question when the buyer closes the checkout before a transaction is sent.
 
@@ -786,7 +786,7 @@ Badge of the connected wallet's network (default: `Your wallet`)
 
 > **outcome**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:634](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L634)
+Defined in: [nova-payments/src/i18n/types.ts:637](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L637)
 
 The outcomes other than paid.
 
@@ -829,6 +829,12 @@ Heading of a cancelled invoice (default: `This invoice was cancelled`)
 Instead of `cancelledText` while a payment may still arrive (on its way, not confirmed yet, read again by Quasar),
 which Quasar records and holds for the seller: `{merchant}` (default: `{merchant} cancelled it. If your payment
 arrives, it is recorded and shown to {merchant}, who accepts it or returns it.`)
+
+#### closedPartText
+
+> **closedPartText**: `string`
+
+The seller closed an invoice that received part of its payment: `{merchant}`, `{amount}`.
 
 #### contact
 
@@ -1156,7 +1162,7 @@ Button that connects another wallet (default: `Use another wallet`)
 
 > **paid**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:535](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L535)
+Defined in: [nova-payments/src/i18n/types.ts:538](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L538)
 
 The paid outcome.
 
@@ -1387,9 +1393,7 @@ transaction does not pay the invoice. If money left your wallet, contact {mercha
 
 > **mismatchChargeHeld**: `string`
 
-An automatic charge landed after the buyer chose another way to pay; `{merchant}` (default: `An automatic charge
-reached {merchant} after you chose another way to pay, so it does not pay this invoice. {merchant} returns it to your
-wallet, and you can still pay the invoice.`)
+A payment sent or charged under an earlier price of the invoice: `{merchant}`.
 
 #### mismatchHeldElsewhere
 
@@ -1425,6 +1429,12 @@ confirmed it.`)
 Instead of `mismatch` when Quasar credited the transaction to another invoice of the seller, the one whose quoted
 wallet sent it (`tx_already_used`): `{merchant}` (default: `This transaction pays another invoice. If it was your
 payment for this one, contact {merchant} with the transaction hash.`)
+
+#### mismatchTooManyParts
+
+> **mismatchTooManyParts**: `string`
+
+A part past what the invoice takes: `{merchant}`.
 
 #### networkFee
 
@@ -1715,7 +1725,7 @@ Instead of `youSend` on the quote of the rest of an underpaid invoice (default: 
 
 > **payerProof**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:372](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L372)
+Defined in: [nova-payments/src/i18n/types.ts:375](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L375)
 
 The step that confirms the paying wallet: right after the wallet and the method, before the price, the wallet signs
 Quasar's message (a free signature that moves no money) for an EVM payment it sends itself; one signature per
@@ -1892,7 +1902,7 @@ The wallet is on another network than the method's (`payer_chain_mismatch`): `{w
 
 > **qr**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:452](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L452)
+Defined in: [nova-payments/src/i18n/types.ts:455](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L455)
 
 The QR code step: Solana Pay, or this checkout on a phone.
 
@@ -1992,7 +2002,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:906](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L906)
+Defined in: [nova-payments/src/i18n/types.ts:911](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L911)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2472,7 +2482,7 @@ Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: 
 
 > **summary**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:844](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L844)
+Defined in: [nova-payments/src/i18n/types.ts:849](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L849)
 
 The order panel: the seller, the deadline, the lines and the total.
 
@@ -2635,7 +2645,7 @@ Under the countdown; `{date}` is the deadline (default: `until {date}`)
 
 > **walletPrompt**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:335](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L335)
+Defined in: [nova-payments/src/i18n/types.ts:338](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L338)
 
 The window while the wallet asks the buyer.
 

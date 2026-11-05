@@ -262,7 +262,8 @@ export function useRefund({
   const awaiting: RefundStep = status !== 'idle' ? status : wallet ? 'confirm' : 'connect';
   const step: RefundStep =
     state.phase === 'idle'
-      ? params
+      ? // A refund the page asked for by itself that was refused: the buyer's page says why, instead of waiting for ever
+        params && !state.error
         ? 'requesting'
         : 'amount'
       : state.phase === 'awaitingTransfer'

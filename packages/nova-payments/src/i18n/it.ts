@@ -158,7 +158,9 @@ export const itLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       "Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. {merchant} lo restituisce al wallet che l'ha inviato, e puoi ancora pagare questa fattura dal wallet che l'ha confermata.",
     mismatchChargeHeld:
-      'Un addebito automatico è arrivato a {merchant} dopo che hai scelto un altro modo di pagamento, quindi non paga questa fattura. {merchant} lo restituisce al tuo wallet e puoi ancora pagare questa fattura.',
+      'Questo pagamento è stato inviato o addebitato a un prezzo precedente di questa fattura, quindi non la paga. {merchant} lo restituisce al tuo wallet e puoi ancora pagare la fattura.',
+    mismatchTooManyParts:
+      'Questa fattura ha ricevuto tutti i pagamenti parziali che accetta, quindi questo trasferimento non la paga. {merchant} lo restituisce al tuo wallet; invia tutto il resto in una volta.',
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
     wrongCluster: "{wallet} è su un'altra rete, quindi non è stato pagato nulla. Passalo a {network} e paga di nuovo.",
@@ -342,6 +344,7 @@ export const itLabels: NovaPaymentsLabels = {
     expiredText: 'Si poteva pagare fino al {date}. Chiedine una nuova a {merchant}; non ti è stato addebitato nulla.',
     expiredPartText: 'Si poteva pagare fino al {date}. È arrivata una parte del pagamento: {amount}.',
     expiredPartNoAmount: 'Si poteva pagare fino al {date}. È arrivata una parte del pagamento.',
+    closedPartText: '{merchant} ha chiuso questa fattura. Sono arrivati {amount} del pagamento.',
     expiredPartRefund: '{merchant} può rimborsarla al wallet che ha pagato; contatta {merchant}.',
     expiredNote:
       'Un pagamento inviato dopo la scadenza resta in sospeso finché il venditore non lo rimborsa o lo accetta.',

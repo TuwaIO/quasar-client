@@ -156,7 +156,9 @@ export const esLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. {merchant} la devuelve a la billetera que la envió, y aún puedes pagar esta factura desde la billetera que la confirmó.',
     mismatchChargeHeld:
-      'Un cargo automático llegó a {merchant} después de que eligieras otra forma de pago, así que no paga esta factura. {merchant} lo devuelve a tu billetera y aún puedes pagar la factura.',
+      'Este pago se envió o se cargó con un precio anterior de esta factura, así que no la paga. {merchant} lo devuelve a tu billetera y aún puedes pagar la factura.',
+    mismatchTooManyParts:
+      'Esta factura ya recibió todos los pagos parciales que admite, así que esta transferencia no la paga. {merchant} la devuelve a tu billetera; envía todo el resto de una vez.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',
@@ -337,6 +339,7 @@ export const esLabels: NovaPaymentsLabels = {
     expiredText: 'Se podía pagar hasta el {date}. Pide una nueva a {merchant}; no se te cobró nada.',
     expiredPartText: 'Se podía pagar hasta el {date}. Llegó parte del pago: {amount}.',
     expiredPartNoAmount: 'Se podía pagar hasta el {date}. Llegó parte del pago.',
+    closedPartText: '{merchant} cerró esta factura. Llegaron {amount} del pago.',
     expiredPartRefund: '{merchant} puede reembolsarla a la billetera que pagó; contacta con {merchant}.',
     expiredNote: 'Un pago enviado después del plazo queda retenido hasta que el vendedor lo reembolse o lo acepte.',
     expiredWhileConfirming:

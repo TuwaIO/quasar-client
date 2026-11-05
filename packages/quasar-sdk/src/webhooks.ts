@@ -54,7 +54,8 @@ export type PaymentWebhookEventType =
 /**
  * What a hold is about (`data.hold` of `invoice.held`): an invoice paid in a way that waits for your decision. `reason`
  * (`late`, `aml`, `quote_expired`), its transaction (`txHash`), the wallets that sent it (`senders`) and whether it came
- * late (`late`). Release it with {@link PaymentsModule.releaseInvoice} or refund it.
+ * late (`late`). Release it with {@link PaymentsModule.releaseInvoice} or refund it; a refund to a wallet AML blocks now
+ * is refused (`sender_blocked`).
  */
 export interface PaymentWebhookHold {
   /** Why the payment is held; `null` when Quasar did not record why. */
@@ -149,6 +150,8 @@ export interface PaymentWebhookEvent {
      * it in `refund.heldTransfer`.
      */
     heldTransfer?: PaymentWebhookHeldTransfer | PaymentWebhookHeldTransferVoided;
+    /** The transaction to check, in `payment.reverted` and `payment.unverified`. */
+    transaction?: { txHash: string | null; chainId: string | null };
     /** The subscription of a subscription event. */
     subscription?: Subscription;
   };

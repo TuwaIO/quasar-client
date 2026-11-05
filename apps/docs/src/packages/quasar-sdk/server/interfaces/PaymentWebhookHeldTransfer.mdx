@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentWebhookHeldTransfer
 
-Defined in: [webhooks.ts:77](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L77)
+Defined in: [webhooks.ts:78](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L78)
 
 A transfer that reached the invoice's address without being tied to it by proof (`data.heldTransfer` of
 `invoice.transfer_held`): it paid nothing and the invoice stays as it was. It is a record of its own, which you
@@ -18,7 +18,7 @@ confirmed the invoice).
 
 > **amount**: `string` \| `null`
 
-Defined in: [webhooks.ts:85](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L85)
+Defined in: [webhooks.ts:86](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L86)
 
 What it carried, in base units of its token.
 
@@ -28,7 +28,7 @@ What it carried, in base units of its token.
 
 > **id**: `string` \| `null`
 
-Defined in: [webhooks.ts:81](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L81)
+Defined in: [webhooks.ts:82](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L82)
 
 The held transfer ([HeldTransfer](?path=/docs/packages-quasar-sdk-server-interfaces-heldtransfer--docs)).
 
@@ -38,7 +38,7 @@ The held transfer ([HeldTransfer](?path=/docs/packages-quasar-sdk-server-interfa
 
 > `optional` **late?**: `true`
 
-Defined in: [webhooks.ts:91](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L91)
+Defined in: [webhooks.ts:92](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L92)
 
 It arrived after the invoice expired or was cancelled.
 
@@ -48,7 +48,7 @@ It arrived after the invoice expired or was cancelled.
 
 > **reason**: `"payer_mismatch"` \| `"payer_unconfirmed"` \| `"already_paid"` \| `"quote_changed"` \| `"too_many_parts"` \| `null`
 
-Defined in: [webhooks.ts:89](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L89)
+Defined in: [webhooks.ts:90](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L90)
 
 Why it is tied to no invoice.
 
@@ -58,7 +58,7 @@ Why it is tied to no invoice.
 
 > `optional` **screening?**: `object`
 
-Defined in: [webhooks.ts:93](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L93)
+Defined in: [webhooks.ts:94](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L94)
 
 Set when AML blocked its sender: Quasar refunds it to no one.
 
@@ -76,7 +76,7 @@ Set when AML blocked its sender: Quasar refunds it to no one.
 
 > **senders**: `string`[]
 
-Defined in: [webhooks.ts:87](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L87)
+Defined in: [webhooks.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L88)
 
 The wallets that sent it.
 
@@ -86,7 +86,7 @@ The wallets that sent it.
 
 > **txHash**: `string` \| `null`
 
-Defined in: [webhooks.ts:83](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L83)
+Defined in: [webhooks.ts:84](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L84)
 
 Its transaction.
 
@@ -96,6 +96,6 @@ Its transaction.
 
 > `optional` **voided?**: `undefined`
 
-Defined in: [webhooks.ts:79](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L79)
+Defined in: [webhooks.ts:80](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L80)
 
 Not set: the transfer is held.

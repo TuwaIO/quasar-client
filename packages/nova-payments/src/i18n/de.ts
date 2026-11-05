@@ -161,7 +161,9 @@ export const deLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       'Dieser Transfer kam von einem Wallet, das diese Rechnung nicht bestätigt hat, und bezahlt sie daher nicht. {merchant} erstattet ihn an das sendende Wallet, und Sie können diese Rechnung weiterhin mit dem Wallet bezahlen, das sie bestätigt hat.',
     mismatchChargeHeld:
-      'Eine automatische Abbuchung ist bei {merchant} eingegangen, nachdem Sie eine andere Zahlungsart gewählt hatten, und bezahlt diese Rechnung daher nicht. {merchant} erstattet sie an Ihr Wallet, und Sie können diese Rechnung weiterhin bezahlen.',
+      'Diese Zahlung wurde zu einem früheren Preis dieser Rechnung gesendet oder abgebucht und bezahlt sie daher nicht. {merchant} erstattet sie an Ihr Wallet, und Sie können die Rechnung weiterhin bezahlen.',
+    mismatchTooManyParts:
+      'Diese Rechnung hat so viele Teilzahlungen erhalten, wie sie annimmt, daher bezahlt diese Überweisung sie nicht. {merchant} erstattet sie an Ihr Wallet; senden Sie den gesamten Rest auf einmal.',
     payAgain: 'Erneut zahlen',
     unsupported: '{wallet} kann diese Zahlung nicht ausführen.',
     wrongCluster:
@@ -351,6 +353,7 @@ export const deLabels: NovaPaymentsLabels = {
     expiredText: 'Sie konnte bis {date} bezahlt werden. Bitten Sie {merchant} um eine neue; es wurde nichts berechnet.',
     expiredPartText: 'Sie konnte bis {date} bezahlt werden. Ein Teil der Zahlung ist eingegangen: {amount}.',
     expiredPartNoAmount: 'Sie konnte bis {date} bezahlt werden. Ein Teil der Zahlung ist eingegangen.',
+    closedPartText: '{merchant} hat diese Rechnung geschlossen. {amount} der Zahlung sind eingegangen.',
     expiredPartRefund: '{merchant} kann ihn an das zahlende Wallet erstatten; wenden Sie sich an {merchant}.',
     expiredNote:
       'Eine nach Fristende gesendete Zahlung wird für den Verkäufer zurückgehalten, der sie erstattet oder annimmt.',

@@ -84,6 +84,7 @@ export function leftTheWalletText(
     // `held`: Quasar recorded the transfer as a held transfer, here or at another invoice; it pays neither
     const held = (error as { held?: boolean }).held === true;
     if (reason === 'quote_changed') return formatLabel(labels.pay.mismatchChargeHeld, { merchant });
+    if (reason === 'too_many_parts') return formatLabel(labels.pay.mismatchTooManyParts, { merchant });
     const text = FROM_ANOTHER_WALLET.has(reason)
       ? held
         ? labels.pay.mismatchOtherWalletHeld
@@ -303,15 +304,20 @@ export function receivedAmount(amountPaid: string | null): string | null {
 }
 
 /**
- * Whether a refund sends a noticeably different number of tokens than its amount took at the rate of the payment: half a
+ * Whether a refund sends more tokens than came in, or a noticeably different number of tokens than its amount took at the rate of the payment: half a
  * percent or more, so a stablecoin at par never asks.
  *
  * @param preview - What the refund would send.
  * @returns Whether the merchant should look first.
  */
-export function refundRateMoved(preview: Pick<RefundPreview, 'cryptoAmount' | 'atPaymentRate'>): boolean {
-  if (!preview.atPaymentRate) return false;
+export function refundRateMoved(
+  preview: Pick<RefundPreview, 'cryptoAmount' | 'atPaymentRate'> & Partial<Pick<RefundPreview, 'received'>>,
+): boolean {
   const now = BigInt(preview.cryptoAmount);
+  // Noticeably more goes out than came in, whatever the rate says: a discount of the method, an accepted underpayment
+  const received = preview.received ? BigInt(preview.received) : null;
+  if (received && now > received && (now - received) * 200n >= received) return true;
+  if (!preview.atPaymentRate) return false;
   const then = BigInt(preview.atPaymentRate);
   if (then === 0n) return false;
   return (now > then ? now - then : then - now) * 200n >= then;

@@ -579,6 +579,7 @@ const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
   'already_paid',
   'quote_changed',
   'too_many_parts',
+  'too_many_transfers',
   'below_minimum',
   'native_from_contract_unverifiable',
   'invoice_not_payable',
@@ -622,7 +623,7 @@ interface KeptHandOver {
  * it was; a rejection without `held` promises no refund.
  */
 const REFUND_ONLY_REASONS: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
-/** An automatic charge that landed after the buyer chose another way to pay: held for a refund, the invoice still open. */
+/** A payment sent or charged under an earlier price of the invoice: held for a refund, the invoice still open. */
 const CHARGE_AFTER_REQUOTE = 'quote_changed';
 
 /** Kinds of payer proof that count on every EVM network: the key behind the address signs for it everywhere. */
@@ -806,7 +807,16 @@ function endedError(ended: Ending): CheckoutError {
     return {
       code: 'payment_mismatch',
       message:
-        'An automatic charge reached the merchant after another way to pay was chosen, so it does not pay this invoice. The merchant returns it to the wallet that sent it, and the invoice can still be paid.',
+        'This payment was sent or charged under an earlier price of this invoice, so it does not pay it. The merchant holds it to return it to the wallet that sent it, and the invoice can still be paid.',
+      ...reason,
+      held: true,
+    };
+  }
+  if (ended.reason === 'too_many_parts') {
+    return {
+      code: 'payment_mismatch',
+      message:
+        'This invoice has taken as many parts as it can, so this transfer does not pay it. The merchant holds it to return it to the wallet that sent it; send the whole rest at once.',
       ...reason,
       held: true,
     };
@@ -1800,6 +1810,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           }
           if (settledMeanwhile()) return outcomeStands();
           const refusal = errorOf(error);
+          // Quasar follows a payment of the invoice this page did not hand over: so does the page, and it says how it ended
+          if (refusal.code === 'payment_on_its_way') adopt();
           // The rest has no methods to go back to, and its outcome says why, what the payment step has no text for
           if (rest && !LEAVES_REST.has(refusal.code)) update({ error: refusal, phase: 'underpaid' });
           else fail(error, phase === 'quoting' ? 'selectMethod' : phase);

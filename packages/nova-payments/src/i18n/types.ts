@@ -313,7 +313,10 @@ export type NovaPaymentsLabels = {
      * reached {merchant} after you chose another way to pay, so it does not pay this invoice. {merchant} returns it to your
      * wallet, and you can still pay the invoice.`)
      */
+    /** A payment sent or charged under an earlier price of the invoice: `{merchant}`. */
     mismatchChargeHeld: string;
+    /** A part past what the invoice takes: `{merchant}`. */
+    mismatchTooManyParts: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
@@ -689,6 +692,8 @@ export type NovaPaymentsLabels = {
     expiredPartText: string;
     /** The same without the amount, when no locked quote tells its token: `{date}` (default: `It was payable until {date}. Part of the payment arrived.`) */
     expiredPartNoAmount: string;
+    /** The seller closed an invoice that received part of its payment: `{merchant}`, `{amount}`. */
+    closedPartText: string;
     /** Under it: `{merchant}` (default: `{merchant} can refund it to the wallet that paid; contact {merchant}.`) */
     expiredPartRefund: string;
     /** Under it */

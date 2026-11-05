@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # deadlineState()
 
-> **deadlineState**(`status`, `screen`, `restPayable?`): `"confirming"` \| `"paying"` \| `"closed"` \| `null`
+> **deadlineState**(`status`, `screen`, `restPayable?`): `"confirming"` \| `"closed"` \| `"paying"` \| `null`
 
 Defined in: [nova-payments/src/utils/checkout.ts:249](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L249)
 
@@ -37,7 +37,7 @@ Whether the rest of an underpaid invoice can be paid (`invoice.restPayable`).
 
 ## Returns
 
-`"confirming"` \| `"paying"` \| `"closed"` \| `null`
+`"confirming"` \| `"closed"` \| `"paying"` \| `null`
 
 `paying` while the buyer can still pay (the countdown shows and screen readers hear the minutes left),
 `confirming` while the payment is on its way (the countdown shows; at zero the confirm step says that the payment

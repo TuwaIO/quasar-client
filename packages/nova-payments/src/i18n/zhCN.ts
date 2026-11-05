@@ -151,7 +151,9 @@ export const zhCNLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       '此转账来自未确认此发票的钱包，因此不支付此发票。{merchant} 会将其退回到发送它的钱包，您仍可使用已确认此发票的钱包支付此发票。',
     mismatchChargeHeld:
-      '自动扣款在您选择其他付款方式后才到达 {merchant}，因此不计入此发票。{merchant} 会将其退回您的钱包，您仍可支付此发票。',
+      '此付款是按此发票先前的价格发送或扣取的，因此不计入此发票。{merchant} 会将其退回您的钱包，您仍可支付此发票。',
+    mismatchTooManyParts:
+      '此发票接受的部分付款已达上限，因此这笔转账不计入此发票。{merchant} 会将其退回您的钱包；请一次发送全部余额。',
     payAgain: '再次付款',
     unsupported: '{wallet} 无法完成此笔付款。',
     wrongCluster: '{wallet} 处于其他网络，因此未完成任何付款。请将其切换到 {network} 后重新付款。',
@@ -318,6 +320,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     expiredText: '付款截止时间为 {date}。请向 {merchant} 索取新发票；您没有被扣款。',
     expiredPartText: '付款截止时间为 {date}。已收到部分付款：{amount}。',
     expiredPartNoAmount: '付款截止时间为 {date}。已收到部分付款。',
+    closedPartText: '{merchant} 已关闭此发票。已收到 {amount} 付款。',
     expiredPartRefund: '{merchant} 可以将这笔款项退回付款钱包；请联系 {merchant}。',
     expiredNote: '截止时间之后发送的付款会被保留，由卖方退款或接受。',
     expiredWhileConfirming:

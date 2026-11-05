@@ -65,6 +65,8 @@ export interface CheckoutInvoice {
    * something is left and it is not past the due date. `false` for an invoice in any other state.
    */
   restPayable: boolean;
+  /** The seller closed the invoice before its due date, with part of its payment received. */
+  closed?: boolean;
   /**
    * The wallet that paid an underpaid invoice first, the only one that pays the rest: an address, or a CAIP-10 account.
    * `null` for an invoice in any other state.

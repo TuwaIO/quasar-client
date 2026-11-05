@@ -86,6 +86,23 @@ describe('needsLeaveConfirm after a payment that left the wallet', () => {
 });
 
 describe('methodErrorText', () => {
+  it('tells a transfer past the parts of an invoice, and one sent under an earlier price, for what they are', () => {
+    expect(
+      methodErrorText(
+        { code: 'payment_mismatch', message: 'raw', reason: 'too_many_parts', held: true } as never,
+        defaultLabels,
+        'Cosmos',
+      ),
+    ).toMatch(/as many parts as it can/);
+    expect(
+      methodErrorText(
+        { code: 'payment_mismatch', message: 'raw', reason: 'quote_changed', held: true } as never,
+        defaultLabels,
+        'Cosmos',
+      ),
+    ).toMatch(/earlier price of this invoice/);
+  });
+
   it('asks a smart wallet for a token instead of a native coin', () => {
     expect(methodErrorText({ code: 'native_from_contract', message: 'raw' } as never, defaultLabels, 'Cosmos')).toBe(
       defaultLabels.method.nativeFromSmartWallet,

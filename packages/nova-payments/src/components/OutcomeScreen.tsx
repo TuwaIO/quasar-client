@@ -199,11 +199,13 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
   const iconClassName = checkoutClassName(context, 'statusIcon', { kind });
   const quote = state.quote;
   const method = checkout.methods.find((item) => item.id === (state.methodId ?? quote?.methodId));
-  const due = checkout.invoice.dueAt
-    ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
-        Date.parse(checkout.invoice.dueAt),
-      )
-    : null;
+  // Closed by the seller before its due date: that date says nothing any more
+  const due =
+    checkout.invoice.dueAt && !checkout.invoice.closed
+      ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
+          Date.parse(checkout.invoice.dueAt),
+        )
+      : null;
   const token = (amount: string, locked = quote) =>
     locked ? `${formatTokenAmount(amount, locked.decimals, locale)} ${locked.instructions.symbol}` : amount;
   // What Quasar does with a payment it did not confirm, the note that says it, and the transaction to name to the seller
@@ -457,6 +459,9 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
                     ? formatLabel(labels.outcome.expiredPartText, { date: due, amount: token(received, locked) })
                     : formatLabel(labels.outcome.expiredPartNoAmount, { date: due })}
                 </Text>
+              )}
+              {!due && locked && (
+                <Text>{formatLabel(labels.outcome.closedPartText, { merchant, amount: token(received, locked) })}</Text>
               )}
               <Text>{formatLabel(labels.outcome.expiredPartRefund, { merchant })}</Text>
             </>

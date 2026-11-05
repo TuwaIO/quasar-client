@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # TransactionWebhookEvent
 
-Defined in: [webhooks.ts:158](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L158)
+Defined in: [webhooks.ts:161](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L161)
 
 The body of a transaction webhook: a synced Pulsar transaction reached a final status.
 
@@ -14,7 +14,7 @@ The body of a transaction webhook: a synced Pulsar transaction reached a final s
 
 > **action**: `string`
 
-Defined in: [webhooks.ts:166](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L166)
+Defined in: [webhooks.ts:169](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L169)
 
 The same as `status`; also sent in the `x-quasar-event` header.
 
@@ -24,7 +24,7 @@ The same as `status`; also sent in the `x-quasar-event` header.
 
 > **chainId**: `string`
 
-Defined in: [webhooks.ts:170](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L170)
+Defined in: [webhooks.ts:173](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L173)
 
 Its chain: the EVM chain ID (`"1"`) or the Solana CAIP-2 chain ID.
 
@@ -34,7 +34,7 @@ Its chain: the EVM chain ID (`"1"`) or the Solana CAIP-2 chain ID.
 
 > `optional` **hash?**: `string`
 
-Defined in: [webhooks.ts:162](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L162)
+Defined in: [webhooks.ts:165](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L165)
 
 Its on-chain hash, when it has one.
 
@@ -44,7 +44,7 @@ Its on-chain hash, when it has one.
 
 > `optional` **metadata?**: `unknown`
 
-Defined in: [webhooks.ts:179](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L179)
+Defined in: [webhooks.ts:182](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L182)
 
 The `payload` of the Pulsar transaction.
 
@@ -54,7 +54,7 @@ The `payload` of the Pulsar transaction.
 
 > `optional` **sentAt?**: `string`
 
-Defined in: [webhooks.ts:177](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L177)
+Defined in: [webhooks.ts:180](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L180)
 
 When this delivery attempt was sent (ISO 8601), signed with the body. Quasar engines released before Payments omit
 it; [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebhook--docs) then checks `timestamp`.
@@ -65,7 +65,7 @@ it; [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebho
 
 > **status**: `string`
 
-Defined in: [webhooks.ts:164](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L164)
+Defined in: [webhooks.ts:167](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L167)
 
 Final status: `Success`, `Failed` or `Replaced`.
 
@@ -75,7 +75,7 @@ Final status: `Success`, `Failed` or `Replaced`.
 
 > **timestamp**: `number`
 
-Defined in: [webhooks.ts:172](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L172)
+Defined in: [webhooks.ts:175](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L175)
 
 Unix time in seconds when the webhook was created.
 
@@ -85,7 +85,7 @@ Unix time in seconds when the webhook was created.
 
 > **txKey**: `string`
 
-Defined in: [webhooks.ts:160](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L160)
+Defined in: [webhooks.ts:163](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L163)
 
 Key of the Pulsar transaction.
 
@@ -95,6 +95,6 @@ Key of the Pulsar transaction.
 
 > `optional` **txType?**: `string`
 
-Defined in: [webhooks.ts:168](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L168)
+Defined in: [webhooks.ts:171](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L171)
 
 The `type` of the Pulsar transaction.
