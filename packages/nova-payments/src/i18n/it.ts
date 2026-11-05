@@ -55,6 +55,7 @@ export const itLabels: NovaPaymentsLabels = {
     consentRequired: 'Obbligatorio per continuare.',
     noMethods: 'Al momento questa fattura non si può pagare con nessun metodo. Contatta il venditore.',
     methodUnavailable: 'Questa pagina non accetta questo metodo. Scegline un altro.',
+    tooManyPayments: 'Questa fattura non può più ricevere un pagamento qui. Contatta {merchant}.',
     nativeFromSmartWallet: 'Uno smart wallet non può pagare con questa moneta: scegli un token.',
     payerNotExpected: 'Il venditore ha chiesto di pagare questa fattura da un altro wallet. Collega quel wallet.',
     rateLimited: 'Troppi tentativi. Attendi un minuto e riprova.',

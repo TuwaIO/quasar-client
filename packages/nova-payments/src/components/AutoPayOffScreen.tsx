@@ -152,7 +152,7 @@ export function AutoPayOffScreen() {
         ) : (
           <PrimaryButton onClick={() => void connectFamily('eip155')}>{labels.autoPayOff.connect}</PrimaryButton>
         )}
-        {/* It never charged anything, or ran out of funds: this wallet may take over, with its own permission */}
+        {/* Its last charge moved nothing, or it expired: this wallet may take over, with its own permission */}
         {!payerConnected && wallet && replaceable && (
           <SecondaryButton
             onClick={() => {

@@ -54,6 +54,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     consentRequired: 'Required to continue.',
     noMethods: 'This invoice cannot be paid with any method right now. Contact the seller.',
     methodUnavailable: 'This page cannot take this method. Choose another one.',
+    tooManyPayments: 'This invoice can no longer take a payment here. Contact {merchant}.',
     nativeFromSmartWallet: 'A smart wallet cannot pay in this coin: choose a token.',
     payerNotExpected: 'The seller asked for this invoice to be paid from another wallet. Connect that wallet.',
     rateLimited: 'Too many tries. Wait a minute and try again.',

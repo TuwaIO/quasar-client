@@ -104,6 +104,31 @@ describe('checkoutScreen', () => {
     expect(checkoutScreen({ phase: 'paid', checkout: offer }, { autoPay: true })).toBe('autoPay');
     expect(checkoutScreen({ phase: 'paid', checkout: view() }, { autoPay: true })).toBe('paid');
   });
+
+  // "Use this wallet" on a permission that holds nothing: the only way to reach the screen that gives a new one
+  it('opens the permission screen when another wallet takes over one that holds nothing', () => {
+    const request = {} as never;
+    const replaceable = view(
+      {},
+      {
+        autoCharge: {
+          status: 'active',
+          permission: null,
+          revocation: null,
+          replacement: { methodId: 'usdc', request },
+        } as CheckoutView['autoCharge'],
+      },
+    );
+    const paying = view(
+      {},
+      { autoCharge: { status: 'active', permission: null, revocation: null } as CheckoutView['autoCharge'] },
+    );
+    for (const phase of ['selectMethod', 'awaitingPayment'] as const) {
+      expect(checkoutScreen({ phase, checkout: replaceable }, { autoPay: true })).toBe('autoPay');
+      expect(checkoutScreen({ phase, checkout: replaceable })).not.toBe('autoPay');
+      expect(checkoutScreen({ phase, checkout: paying }, { autoPay: true })).not.toBe('autoPay');
+    }
+  });
 });
 
 // The buyer is never invited to pay twice. A store of a current `@tuwaio/quasar-sdk` has the phase

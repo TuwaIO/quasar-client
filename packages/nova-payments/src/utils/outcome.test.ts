@@ -86,6 +86,13 @@ describe('needsLeaveConfirm after a payment that left the wallet', () => {
 });
 
 describe('methodErrorText', () => {
+  // The quote is refused before money moves: the buyer must hear whom to ask, not "try again"
+  it('sends the buyer to the merchant when the invoice took all the transactions it follows', () => {
+    const text = methodErrorText({ code: 'too_many_payments', message: 'raw' } as never, defaultLabels, 'Shop');
+    expect(text).toBe(defaultLabels.method.tooManyPayments.replace('{merchant}', 'Shop'));
+    expect(text).not.toContain('raw');
+  });
+
   it('tells a transfer past the parts of an invoice, and one sent under an earlier price, for what they are', () => {
     expect(
       methodErrorText(

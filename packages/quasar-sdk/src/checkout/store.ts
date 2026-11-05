@@ -667,6 +667,7 @@ const SUBMIT_RETRY_FOR_MS = 60 * 60_000;
 const RETRYABLE_REFUSALS: ReadonlySet<string> = new Set(['too_many_pending']);
 
 /** Whether `/submit` refused the transaction because Quasar tracks it for another invoice of the app. */
+const tooManyPayments = (error: unknown) => error instanceof QuasarSDKError && error.code === 'too_many_payments';
 const takenElsewhere = (error: unknown) => error instanceof QuasarSDKError && error.code === TAKEN_ELSEWHERE;
 
 /** Whether a failed hand-over got no answer about the transaction (the network, a busy or failing server). */
@@ -1550,6 +1551,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       const quiet = () => SETTLED.has(get().invoiceStatus ?? '');
       // An expired or cancelled one keeps it too, and follows the payment once Quasar takes it
       const closed = () => CLOSED.has(get().invoiceStatus ?? '');
+      // The invoice took all the transactions it follows, and the wallet has sent this one: it may have paid, so no second
+      // payment. Quasar keeps its hash for the merchant, and the buyer contacts the merchant
+      const refusedForGood = (txKey: string) => {
+        forgetHandOver(txKey);
+        if (!quiet()) {
+          update({ txKey, error: submitFailedError(), ...(closed() ? {} : { phase: 'unconfirmed' as const }) });
+        }
+      };
       if (!quiet() && !closed()) update({ phase: 'submitting', error: null });
       // The same transaction handed over again: this hand-over replaces its retries
       clearTimeout(submitRetries.get(body.txKey));
@@ -1566,16 +1575,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           handOver([body.txKey], body.txKey, undefined, true);
           return false;
         }
-        // The invoice took all the transactions it follows, and the wallet has sent this one: it may have paid, so no
-        // second payment. Quasar keeps its hash for the merchant, and the buyer contacts the merchant
-        if (error instanceof QuasarSDKError && error.code === 'too_many_payments') {
-          if (!quiet()) {
-            update({
-              txKey: body.txKey,
-              error: submitFailedError(),
-              ...(closed() ? {} : { phase: 'unconfirmed' as const }),
-            });
-          }
+        if (tooManyPayments(error)) {
+          refusedForGood(body.txKey);
           return false;
         }
         if (!retryable(error)) {
@@ -1611,6 +1612,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
               .catch((again: unknown) => {
                 if (destroyed) return;
                 if (retryable(again)) return retry(attempt + 1);
+                if (tooManyPayments(again)) return refusedForGood(body.txKey);
                 forgetHandOver(body.txKey);
                 // Another invoice handed it over first: followed while the page still waits for this hand-over
                 if (takenElsewhere(again)) {

@@ -147,6 +147,8 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.method.methodUnavailable;
     case 'payer_not_expected':
       return labels.method.payerNotExpected;
+    case 'too_many_payments':
+      return formatLabel(labels.method.tooManyPayments, { merchant });
     case 'native_from_contract':
       return labels.method.nativeFromSmartWallet;
     case 'rate_limited':

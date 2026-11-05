@@ -698,7 +698,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     }),
     replacement: z.object({ methodId: z.string(), request: AutoChargeRequest }).optional().openapi({
       description:
-        'What another wallet asks for to take over, when the permission never charged anything or its wallet ran out of funds: it confirms the invoice and gives its own.',
+        'What another wallet asks for to take over, when the last charge under the permission failed and moved nothing, or it expired; only on an open invoice of a scheduled subscription. It confirms the invoice and gives its own.',
     }),
   });
   registry.register('Subscription', Subscription);
@@ -1920,10 +1920,10 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           ...json(z.object({ permission: Subscription.shape.permission, autoCharge: ActiveAutoCharge })),
         },
         400: invalid(
-          "`payer_chain_mismatch`, `permission_invalid`: the context does not grant the requested terms, or the wallet is not one of the delegation framework's (`details.reason`: `wallet_unknown`)",
+          "`payer_chain_mismatch`, `permission_invalid`: the context does not grant the requested terms, or the wallet is not one of the delegation framework's (`details.reason`: `wallet_unknown`), or this delegation was ended (`details.reason`: `delegation_ended`: give a new one)",
         ),
         409: refused(
-          '`subscription_not_active`, `auto_charge_unavailable`, `payer_proof_required`, `permission_active`: a permission that pays stays with its wallet, unless it never charged anything or ran out of funds (`replacement` in the offer).',
+          '`subscription_not_active`, `auto_charge_unavailable`, `payer_proof_required`, `permission_active`: a permission stays with its wallet, unless the last charge under it failed and moved nothing, or it expired (`replacement` in the offer).',
         ),
         ...checkoutErrors,
       },

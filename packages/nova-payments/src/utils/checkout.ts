@@ -64,6 +64,9 @@ export interface CheckoutScreenChoices {
   confirmWallet?: boolean;
 }
 
+const replaceablePermission = (offer: CheckoutView['autoCharge'] | undefined) =>
+  offer?.status === 'active' && Boolean(offer.replacement);
+
 /**
  * The screen for the state of a checkout store.
  *
@@ -108,6 +111,8 @@ export function checkoutScreen(
   const confirmingWallet = Boolean(choices.confirmWallet && proving);
   switch (state.phase) {
     case 'selectMethod':
+      // Another wallet takes over a permission that holds nothing: from an invoice that still takes one
+      if (choices.autoPay && replaceablePermission(state.checkout?.autoCharge)) return 'autoPay';
       if (confirmingWallet && !(choices.handoff && choices.payWith === 'qr')) return 'confirmWallet';
       return choices.handoff && choices.payWith === 'qr' ? 'qr' : 'method';
     case 'underpaid':
@@ -117,6 +122,8 @@ export function checkoutScreen(
       if (!state.quote) return choices.confirmWallet ? 'confirmWallet' : 'method';
       return choices.payWith === 'qr' || state.quote.payer === null ? 'qr' : 'pay';
     case 'awaitingPayment':
+      if (choices.autoPay && replaceablePermission(state.checkout?.autoCharge)) return 'autoPay';
+    // falls through
     case 'submitting':
       // A price locked without a payer is a Solana Pay QR code, also when the page was reloaded
       return choices.payWith === 'qr' || state.quote?.payer === null ? 'qr' : 'pay';

@@ -532,8 +532,9 @@ export type AutoChargeOffer =
        */
       revocation: { to: string; data: string } | null;
       /**
-       * What another wallet asks for to take over, when the permission never charged anything or its wallet ran out of
-       * funds: it confirms the invoice and gives its own (`POST permission`).
+       * What another wallet asks for to take over, when the last charge under the permission failed and moved nothing, or
+       * it expired: it confirms the invoice and gives its own (`POST permission`). Only on an open invoice of a scheduled
+       * subscription.
        */
       replacement?: { methodId: string; request: PermissionRequest };
     }

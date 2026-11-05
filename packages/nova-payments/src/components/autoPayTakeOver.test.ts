@@ -11,7 +11,7 @@ describe('what the connected wallet may ask for', () => {
     expect(grantableOffer(offer)).toBe(offer);
   });
 
-  // A permission that never charged anything or ran out of funds must not keep the subscription from the buyer
+  // A permission whose last charge moved nothing, or that expired, must not keep the subscription from the buyer
   it('is taking over a permission that holds nothing', () => {
     const replacement = { methodId: 'usdc', request };
     const offer = { status: 'active', permission: null, revocation: null, replacement } as AutoChargeOffer;
