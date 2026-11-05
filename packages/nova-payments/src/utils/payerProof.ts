@@ -63,7 +63,8 @@ export async function lockPrice(
   store: LockPriceStore,
   showConfirmWallet: (show: boolean) => void,
 ): Promise<CheckoutQuote | null> {
-  if (store.getState().payerProof === 'required') {
+  const { payerProof } = store.getState();
+  if (payerProof === 'required' || payerProof === 'confirming') {
     showConfirmWallet(true);
     return null;
   }

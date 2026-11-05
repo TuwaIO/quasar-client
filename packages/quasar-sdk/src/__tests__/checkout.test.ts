@@ -3327,4 +3327,72 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
     expect(checkout.getState()).toMatchObject({ phase: 'expired', paymentOnTheWay: false, followingUntil: null });
     checkout.getState().destroy();
   });
+  // The page shows one wallet at a time: what another wallet answered, or refused, is not about it
+  describe('while the buyer changes wallets', () => {
+    const ready = async (overrides: Partial<CheckoutView> = {}) => {
+      answer(overrides);
+      const checkout = store();
+      await checkout.getState().load();
+      checkout.getState().selectMethod('ap_evm');
+      checkout.getState().setPayer(PAYER);
+      return checkout;
+    };
+
+    it('says nothing of a refusal by the wallet the buyer left', async () => {
+      const checkout = await ready();
+      let refuse: ((error: Error) => void) | undefined;
+      const pending = checkout.getState().confirmPayer(() => new Promise((_, reject) => (refuse = reject)));
+      await vi.waitFor(() => expect(refuse).toBeDefined());
+      checkout.getState().setPayer(OTHER);
+      refuse!(new Error('User rejected'));
+      expect(await pending).toBe(false);
+      expect(checkout.getState()).toMatchObject({ payer: OTHER, payerProof: 'required', error: null });
+    });
+
+    it('forgets the refusal of a wallet once another one is connected', async () => {
+      const checkout = await ready();
+      await checkout.getState().confirmPayer(async () => Promise.reject(new Error('User rejected')));
+      expect(checkout.getState().error).toMatchObject({ code: 'payer_proof_declined' });
+      checkout.getState().setPayer(OTHER);
+      expect(checkout.getState().error).toBeNull();
+    });
+
+    it('keeps a refusal while the wallet stays', async () => {
+      const checkout = await ready();
+      await checkout.getState().confirmPayer(async () => Promise.reject(new Error('User rejected')));
+      checkout.getState().setPayer(PAYER);
+      expect(checkout.getState().error).toMatchObject({ code: 'payer_proof_declined' });
+    });
+
+    it('needs no second signature from a wallet that already confirmed, after another one refused', async () => {
+      const checkout = await ready();
+      await checkout.getState().confirmPayer(async () => '0xsig');
+      checkout.getState().setPayer(OTHER);
+      expect(checkout.getState().payerProof).toBe('required');
+      await checkout.getState().confirmPayer(async () => Promise.reject(new Error('User rejected')));
+      checkout.getState().setPayer(PAYER);
+      expect(checkout.getState()).toMatchObject({ payerProof: 'confirmed', error: null });
+      expect(await checkout.getState().requestQuote()).toMatchObject({ payer: PAYER });
+    });
+
+    it('names the wallets that confirmed the invoice, on this page or before it', async () => {
+      const checkout = await ready({ payerProofs: [proofOf(OTHER)] as never });
+      expect(checkout.getState().confirmedWallets).toEqual([OTHER]);
+      await checkout.getState().confirmPayer(async () => '0xsig');
+      expect(checkout.getState().confirmedWallets).toEqual([OTHER, PAYER]);
+    });
+
+    it('names no wallet whose signature counts on another network only', async () => {
+      const elsewhere = { ...proofOf(OTHER.replace('eip155:8453', 'eip155:1'), 'eip1271') };
+      const checkout = await ready({ payerProofs: [elsewhere] as never });
+      expect(checkout.getState().confirmedWallets).toEqual([]);
+    });
+
+    it('clears an error on request', async () => {
+      const checkout = await ready();
+      await checkout.getState().confirmPayer(async () => Promise.reject(new Error('User rejected')));
+      checkout.getState().clearError();
+      expect(checkout.getState().error).toBeNull();
+    });
+  });
 });

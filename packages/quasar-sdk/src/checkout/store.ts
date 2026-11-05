@@ -202,6 +202,12 @@ export interface CheckoutState {
    * Read-only: the store sets it from the method, the wallet and the confirmations Quasar and this page know of.
    */
   readonly payerProof: PayerProofStatus;
+  /**
+   * The wallets known to have confirmed the invoice in a way that counts for the chosen method, as CAIP-10 accounts: from
+   * Quasar (`checkout.payerProofs`), this page and the locked quote. Read-only: a buyer who changed wallets can be told
+   * which one needs no new signature.
+   */
+  readonly confirmedWallets: readonly string[];
   /** The locked quote. */
   quote: CheckoutQuote | null;
   /** Language of the page and the documents still to be issued. */
@@ -321,6 +327,8 @@ export interface CheckoutState {
    *   QR payment from another device.
    */
   setPayer: (payer: string | null) => void;
+  /** Forgets the last error: the buyer left what it was about. */
+  clearError: () => void;
   /**
    * Ticks or clears the merchant's consent (`checkout.consent`): a required one must be ticked before
    * {@link CheckoutState.requestQuote}, which sends it with the quote.
@@ -651,6 +659,15 @@ function accountOf(account: string): { namespace: string; chainId: string; addre
  * Whether `payer` confirmed the invoice for a payment from its network: an ordinary wallet's confirmation (or a relay's
  * authorization) counts on every EVM network, a smart wallet's (or one of unknown kind) only on its own.
  */
+/** Whether an error is a refusal of the wallet's confirmation: it says nothing about another wallet. */
+function isRefusalOfWallet(error: CheckoutError | null): boolean {
+  const code: string | undefined = error?.code;
+  return (
+    code !== undefined &&
+    (code.startsWith('payer_proof_') || code === 'payer_chain_mismatch' || code === 'too_many_payers')
+  );
+}
+
 function confirmedBy(proofs: readonly KnownProof[], payer: string): boolean {
   const wallet = accountOf(payer);
   if (!wallet) return false;
@@ -1133,28 +1150,45 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
     if (kept.some(({ txKey }) => txKey === key)) keepHandOvers(kept.filter(({ txKey }) => txKey !== key));
   };
 
+  /** What is known of who confirmed the invoice: Quasar's list, this page, and the quote (the relay's authorization, too). */
+  const knownProofsOf = ({ quote, checkout }: CheckoutState): KnownProof[] => [
+    ...(checkout?.payerProofs ?? []),
+    ...confirmedHere,
+    ...(quote?.payerProof?.proven === true && quote.payer !== null
+      ? [
+          {
+            payer: quote.payer,
+            chainId: accountOf(quote.payer)?.chainId ?? '',
+            kind: quote.payerProof.kind ?? undefined,
+          },
+        ]
+      : []),
+  ];
+
+  /** The wallets whose confirmation counts on the network of the chosen method, each once. */
+  const confirmedWalletsOf = (state: CheckoutState): string[] => {
+    const chainId = state.checkout?.methods.find(({ id }) => id === state.methodId)?.chainId;
+    const here = chainId?.split(':')[0];
+    if (!chainId) return [];
+    const wallets = new Map<string, string>();
+    for (const proof of knownProofsOf(state)) {
+      const known = accountOf(proof.payer);
+      if (!known || known.namespace !== here) continue;
+      if (!((proof.kind && ANY_NETWORK_PROOFS.has(proof.kind)) || proof.chainId === chainId)) continue;
+      if (!wallets.has(known.address)) wallets.set(known.address, proof.payer);
+    }
+    return [...wallets.values()];
+  };
+
   /** Whether the connected wallet must confirm the invoice for the chosen method ({@link PayerProofStatus}). */
   const payerProofOf = (state: CheckoutState): PayerProofStatus => {
-    const { payer, quote } = state;
+    const { payer } = state;
     const method = state.checkout?.methods.find(({ id }) => id === state.methodId);
     const demanded = payer !== null && proofDemanded.has(payer);
     // Quasar's `409 payer_proof_required` wins over a checkout read before the merchant changed the method
     const need = demanded ? 'before_quote' : (method?.payerProof ?? 'none');
     if (need === 'none' || !method) return 'not_needed';
-    // The quote says whether its wallet confirmed the invoice (the relay's authorization, too)
-    const quoted: KnownProof[] =
-      quote?.payerProof?.proven === true && quote.payer !== null
-        ? [
-            {
-              payer: quote.payer,
-              chainId: accountOf(quote.payer)?.chainId ?? '',
-              kind: quote.payerProof.kind ?? undefined,
-            },
-          ]
-        : [];
-    if (payer && confirmedBy([...(state.checkout?.payerProofs ?? []), ...confirmedHere, ...quoted], payer)) {
-      return 'confirmed';
-    }
+    if (payer && confirmedBy(knownProofsOf(state), payer)) return 'confirmed';
     // Only the wallet the latest attempt asks to sign waits for it: another one confirms on its own
     // `unless_relayed` stays: the relay confirms the wallet, so a prompt that never answers blocks no new price
     if (payer !== null && payer === signingPayer && need === 'before_quote') return 'confirming';
@@ -1171,6 +1205,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         paymasterUrl: next.quote?.gasless?.paymaster ? api.url('paymaster') : null,
         logoUrl: next.checkout?.merchant.logo ? api.url('logo') : null,
         payerProof: payerProofOf(next),
+        confirmedWallets: confirmedWalletsOf(next),
       });
     };
 
@@ -1707,6 +1742,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       payer: null,
       consentGiven: false,
       payerProof: 'not_needed',
+      confirmedWallets: [],
       quote: null,
       locale: null,
       txKey: null,
@@ -1789,19 +1825,24 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       },
 
       setPayer: (payer) => {
-        const { quote, phase, invoiceStatus, checkout } = get();
+        const { quote, phase, invoiceStatus, checkout, error } = get();
         const drop = quote && quote.payer !== payer;
+        // What the last wallet refused is not about this one
+        const forget = payer !== get().payer && isRefusalOfWallet(error) ? { error: null } : {};
         // The rest of an underpaid invoice has no methods to go back to, and its outcome reads the amounts of the quote
         const rest = (invoiceStatus ?? checkout?.invoice.status) === 'underpaid';
         if (drop && rest) {
-          update({ payer, phase: phase === 'awaitingPayment' ? 'underpaid' : phase });
+          update({ payer, ...forget, phase: phase === 'awaitingPayment' ? 'underpaid' : phase });
           return;
         }
         update({
           payer,
+          ...forget,
           ...(drop ? { quote: null, phase: phase === 'awaitingPayment' ? 'selectMethod' : phase } : {}),
         });
       },
+
+      clearError: () => update({ error: null }),
 
       setConsentGiven: (given) => update({ consentGiven: given, error: null }),
 
@@ -1904,7 +1945,9 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           if (destroyed) return;
           // A replaced attempt's late answer only records the proof: the page belongs to the latest one
           // So does a failure of a wallet confirmed meanwhile (an earlier prompt's late signature): nothing is wrong
-          if (failure === undefined || !latest || payerProofOf(get()) === 'confirmed') update({});
+          // And a failure of a wallet the buyer left: the page shows another one by now
+          if (failure === undefined || !latest || get().payer !== payer || payerProofOf(get()) === 'confirmed')
+            update({});
           else if (failure instanceof Error && failure.name === 'PayerProofDeclined') {
             update({
               error: {

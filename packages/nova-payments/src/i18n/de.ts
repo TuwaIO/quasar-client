@@ -203,6 +203,8 @@ export const deLabels: NovaPaymentsLabels = {
     amount: 'Betrag',
     wallet: 'Wallet',
     site: 'Website',
+    alreadyConfirmed:
+      'Diese Rechnung wurde bereits von {wallet} bestätigt. Wechseln Sie in Ihrem Wallet zu diesem Konto, dann entfällt die Signatur.',
     why: 'Zahlungen von diesem Wallet zählen für diese Rechnung, sobald es signiert hat. Ihr Wallet zeigt eine Nachricht zum Signieren, keine Zahlung: keine Gebühr, nichts verlässt das Wallet.',
     passkey: '{wallet} fragt zum Signieren eventuell nach Ihrem Passkey oder Fingerabdruck.',
     confirm: 'In {wallet} bestätigen',

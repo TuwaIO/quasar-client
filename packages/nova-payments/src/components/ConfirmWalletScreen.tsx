@@ -7,7 +7,8 @@ import { usePayerProof } from '../hooks/usePayerProof';
 import { useStepHeight } from '../hooks/useStepHeight';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal, shortAddress } from '../utils/format';
-import { methodFamily, networkName } from '../utils/methods';
+import { methodFamily, networkName, payerFor } from '../utils/methods';
+import { isSameWallet } from '../utils/outcome';
 import { isSmartWallet, payerProofErrorText } from '../utils/payerProof';
 import { focusRing, mono } from './classes';
 import {
@@ -83,7 +84,18 @@ export function ConfirmWalletScreen() {
     merchant,
   });
   const values = { wallet: walletName, invoice, merchant };
-  const retry = () => void proof.confirm({ quote: true });
+  const asked = payerFor(wallet, method);
+  const retry = () => {
+    // The message Quasar issues names a wallet, and only that wallet's signature counts
+    if (asked && state.payer !== asked) store.getState().setPayer(asked);
+    void proof.confirm({ quote: true });
+  };
+  const back = () => {
+    setConfirmWallet(false);
+    store.getState().clearError();
+  };
+  // Another wallet already confirmed: the buyer may have only meant to change back to it
+  const confirmedOther = asked ? state.confirmedWallets?.find((item) => !isSameWallet(item, asked)) : undefined;
 
   return (
     <div ref={area} className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
@@ -137,6 +149,13 @@ export function ConfirmWalletScreen() {
               <span>{formatLabel(labels.payerProof.passkey, values)}</span>
             </p>
           )}
+          {confirmedOther && (
+            <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-primary)]">
+              {formatLabel(labels.payerProof.alreadyConfirmed, {
+                wallet: shortAddress(confirmedOther.split(':').pop() ?? confirmedOther),
+              })}
+            </p>
+          )}
           {error && <ScreenError>{error}</ScreenError>}
         </ScreenContent>
 
@@ -148,7 +167,7 @@ export function ConfirmWalletScreen() {
                 ? formatLabel(labels.payerProof.waiting, values)
                 : formatLabel(labels.payerProof.confirm, values)}
           </PrimaryButton>
-          <SecondaryButton onClick={() => setConfirmWallet(false)}>
+          <SecondaryButton onClick={back}>
             {(state.invoiceStatus ?? checkout?.invoice.status) === 'underpaid'
               ? labels.pay.backFromRest
               : labels.pay.back}

@@ -45,6 +45,8 @@ function step(
     phase?: string;
     error?: { code: string; message: string; reason?: string } | null;
     connectorType?: string;
+    confirmedWallets?: string[];
+    storePayer?: string;
   } = {},
 ) {
   flow = {
@@ -69,8 +71,9 @@ function step(
         phase: options.phase ?? 'selectMethod',
         checkout,
         methodId: 'usdc-base',
-        payer: `${BASE}:${PAYER}`,
+        payer: options.storePayer ?? `${BASE}:${PAYER}`,
         payerProof: options.payerProof ?? 'required',
+        confirmedWallets: options.confirmedWallets ?? [],
         quote: null,
         error: options.error ?? null,
       } as never,
@@ -140,6 +143,33 @@ describe('the step that confirms the paying wallet', () => {
     expect(hidden.props.className).toContain('novapay:hidden');
     (prompt.props.onCancel as () => void)();
     expect(flow.dismiss).toHaveBeenCalled();
+  });
+
+  // The buyer signed with another wallet, and may not want to sign again
+  it('names a wallet that already confirmed the invoice, to switch to it', () => {
+    const other = '0x2222222222222222222222222222222222222222';
+    const { text } = step({ confirmedWallets: [`${BASE}:${PAYER}`, `${BASE}:${other}`] });
+    expect(text).toContain('Already confirmed for this invoice: 0x2222…2222.');
+  });
+
+  it('names nothing when only this wallet is known, or none', () => {
+    expect(step({ confirmedWallets: [`${BASE}:${PAYER}`] }).text).not.toContain('Already confirmed');
+    expect(step().text).not.toContain('Already confirmed');
+  });
+
+  it('asks for the wallet connected, also when the store still holds another one', () => {
+    const { button } = step({ storePayer: `${BASE}:0x2222222222222222222222222222222222222222` });
+    (button.props.onClick as () => void)();
+    expect(vi.mocked(ctx.store.getState().setPayer)).toHaveBeenCalledWith(`${BASE}:${PAYER}`);
+    expect(flow.confirm).toHaveBeenCalledWith({ quote: true });
+  });
+
+  it('leaves no refusal behind when the buyer goes back', () => {
+    const { tree } = step({ error: { code: 'payer_proof_declined', message: '' } });
+    const back = fixture.ofType(tree, SecondaryButton)[0] as ReactElement<Props>;
+    (back.props.onClick as () => void)();
+    expect(ctx.setConfirmWallet).toHaveBeenCalledWith(false);
+    expect(vi.mocked(ctx.store.getState().clearError)).toHaveBeenCalled();
   });
 
   it('asks for the passkey of a smart wallet', () => {

@@ -1,5 +1,5 @@
 import type { CheckoutState, PayerProofMessage } from '@tuwaio/quasar-sdk/checkout';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import type { CheckoutWallet } from '../utils/methods';
@@ -13,7 +13,7 @@ export interface UsePayerProofParams {
   /** The adapter of the method's chain family; without `signMessage` the wallet cannot confirm the invoice. */
   adapter: PaymentsAdapter | undefined;
   /** The checkout store. */
-  store: { getState: () => Pick<CheckoutState, 'confirmPayer' | 'requestQuote'> };
+  store: { getState: () => Pick<CheckoutState, 'confirmPayer' | 'requestQuote' | 'payer'> };
   /** The connected wallet. */
   wallet: CheckoutWallet | null;
   /** The CAIP-2 network of the method: a smart wallet's signature counts there only. */
@@ -62,6 +62,25 @@ export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProof
   const [request, setRequest] = useState<PayerProofMessage | null>(null);
   // Each try gets a number; a dismissed one no longer changes the page
   const attempt = useRef(0);
+  // Another wallet: what the last one refused or was asked is not about this one
+  const address = wallet?.address;
+  const shownAddress = useRef(address);
+  useEffect(() => {
+    if (shownAddress.current === address) return;
+    shownAddress.current = address;
+    attempt.current++;
+    setStep('idle');
+    setProblem(null);
+    setRequest(null);
+  }, [address]);
+  // The buyer left the step: a late signature still counts, but moves nothing on the page
+  const left = useRef(false);
+  useEffect(() => {
+    left.current = false;
+    return () => {
+      left.current = true;
+    };
+  }, []);
 
   const confirm = async ({ quote = false }: { quote?: boolean } = {}) => {
     const id = ++attempt.current;
@@ -88,6 +107,7 @@ export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProof
       if (!isCurrent()) return false;
     }
     if (isCurrent()) setStep('signing');
+    const askedFor = store.getState().payer;
     // Why the wallet did not sign: the store reports it as `payer_proof_declined` only
     let refusal: PaymentWalletErrorKind | null = null;
     const confirmed = await store.getState().confirmPayer(async (message, issued) => {
@@ -103,8 +123,9 @@ export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProof
       setProblem(refusal);
       setStep('idle');
     }
-    // The buyer signed, also after closing the window: the price follows
-    if (confirmed && quote) await store.getState().requestQuote();
+    // The buyer signed, also after closing the window: the price follows, unless the buyer left this step or this wallet
+    if (confirmed && quote && !left.current && store.getState().payer === askedFor)
+      await store.getState().requestQuote();
     return confirmed;
   };
 

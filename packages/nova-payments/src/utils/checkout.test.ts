@@ -19,6 +19,7 @@ import {
   takeOverOpens,
   unconfirmedFollowUp,
   unconfirmedTxKey,
+  walletOnConfirmStep,
 } from './checkout';
 import { lockPrice } from './payerProof';
 
@@ -650,6 +651,25 @@ describe('payments Quasar ties to no invoice, and the 30 days of settlement retr
 });
 
 // Another wallet becoming active over a locked price
+// The step asks one wallet to sign: it must be the one connected, whatever happened on the way here
+describe('walletOnConfirmStep', () => {
+  const on = { open: true, storePayer: '0xb', paysRest: true } as const;
+
+  it('does nothing while the step is closed, or for the wallet it already asks', () => {
+    expect(walletOnConfirmStep({ ...on, open: false, payer: '0xa' })).toBe('keep');
+    expect(walletOnConfirmStep({ ...on, payer: '0xb' })).toBe('keep');
+  });
+
+  it('follows another wallet: it signs, or goes on to the price if it already did', () => {
+    expect(walletOnConfirmStep({ ...on, payer: '0xa' })).toBe('follow');
+  });
+
+  it('closes the step without a wallet for this method, and for one that may not pay the rest', () => {
+    expect(walletOnConfirmStep({ ...on, payer: null })).toBe('leave');
+    expect(walletOnConfirmStep({ ...on, payer: '0xa', paysRest: false })).toBe('leave');
+  });
+});
+
 describe('lockedPriceOnWallet', () => {
   const locked = { autoPayOffOpen: false, phase: 'awaitingPayment', quotePayer: '0xa' } as const;
 

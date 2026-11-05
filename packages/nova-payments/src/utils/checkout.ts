@@ -343,6 +343,29 @@ export function lockedPriceOnWallet(params: {
 }
 
 /**
+ * What the active wallet changing does on the step that confirms the wallet, where no new price is locked yet: the step
+ * asks the wallet connected to sign, never the one the store last held.
+ *
+ * @param params - What the change happens over.
+ * @param params.open - The step shows.
+ * @param params.storePayer - The payer the store holds, which the step would ask to sign for.
+ * @param params.payer - The payer the active wallet gives for the chosen method, or `null`.
+ * @param params.paysRest - That wallet may pay: only the first wallet pays the rest of an underpaid invoice.
+ * @returns `keep`: nothing changes; `follow`: this wallet signs, or goes on to the price if it confirmed already; `leave`:
+ * the step closes, with no wallet to ask.
+ */
+export function walletOnConfirmStep(params: {
+  open: boolean;
+  storePayer: string | null;
+  payer: string | null;
+  paysRest: boolean;
+}): 'keep' | 'follow' | 'leave' {
+  const { open, storePayer, payer, paysRest } = params;
+  if (!open || payer === storePayer) return 'keep';
+  return payer && paysRest ? 'follow' : 'leave';
+}
+
+/**
  * Whether a locked price is in its last minute, when the checkout offers to keep it.
  *
  * @param ms - Time left of the price lock.

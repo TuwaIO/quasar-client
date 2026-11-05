@@ -18,7 +18,13 @@ import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useQrShown } from '../hooks/useQrShown';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { formatLabel, hasLabels } from '../i18n';
-import { checkoutScreen, deadlineAnnouncement, deadlineState, lockedPriceOnWallet } from '../utils/checkout';
+import {
+  checkoutScreen,
+  deadlineAnnouncement,
+  deadlineState,
+  lockedPriceOnWallet,
+  walletOnConfirmStep,
+} from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm } from '../utils/outcome';
@@ -378,6 +384,22 @@ export function PaymentCheckout({
   // So is it when Quasar refuses the wallet: the rest of an underpaid invoice comes from the wallet that paid first
   const walletRefused = state.error?.code === 'payer_mismatch';
   if (confirmWallet && (state.phase === 'awaitingPayment' || priceRefused || walletRefused)) setConfirmWallet(false);
+  // Only the wallet that paid an underpaid invoice first pays the rest: another one is not asked for anything, and the
+  // outcome names the first one
+  const firstWallet =
+    (state.invoiceStatus ?? checkout?.invoice.status) === 'underpaid' ? (checkout?.invoice.originWallet ?? null) : null;
+  const paysInvoice = (payer: string) => !firstWallet || isSameWallet(payer, firstWallet);
+  // The wallet the step that confirms the wallet asks: the one connected, for the chosen method
+  const methodOfStep = checkout?.methods.find((item) => item.id === state.methodId);
+  const payerOfStep = methodOfStep ? payerFor(wallet, methodOfStep) : null;
+  const walletStep = walletOnConfirmStep({
+    open: confirmWallet,
+    storePayer: state.payer,
+    payer: payerOfStep,
+    paysRest: !payerOfStep || paysInvoice(payerOfStep),
+  });
+  // Nobody is left to ask: the wallet is gone, or it may not pay this invoice
+  if (walletStep === 'leave') setConfirmWallet(false);
   // The method a wallet is being connected for: its price is locked once the wallet arrives
   const connectingFor = useRef<string | null>(null);
   // The first screen waits for the labels of the invoice's language (a file of their own), so it never flashes in
@@ -426,22 +448,27 @@ export function PaymentCheckout({
   );
 
   const lockForWallet = useEffectEvent(() => {
-    if (!wallet || !checkout) return;
-    const { quote, phase, invoiceStatus } = store.getState();
-    // Only the wallet that paid an underpaid invoice first pays the rest: another one is not asked for anything, and the
-    // outcome names the first one
-    const firstWallet =
-      (invoiceStatus ?? checkout.invoice.status) === 'underpaid' ? checkout.invoice.originWallet : null;
-    const paysRest = (payer: string) => !firstWallet || isSameWallet(payer, firstWallet);
-    if (connectingFor.current) {
+    if (!checkout) return;
+    const { quote, phase } = store.getState();
+    if (wallet && connectingFor.current) {
       const method = checkout.methods.find((item) => item.id === connectingFor.current);
       const payer = method ? payerFor(wallet, method) : null;
       if (!payer) return;
       connectingFor.current = null;
       store.getState().setPayer(payer);
-      if (paysRest(payer)) void lockStorePrice();
+      if (paysInvoice(payer)) void lockStorePrice();
       return;
     }
+    // No price is locked: the store still follows the wallet, or the step that confirms the wallet would ask this wallet
+    // to sign the last one's message, which Quasar refuses again and again until the buyer reconnects
+    if (phase === 'selectMethod' || phase === 'underpaid') {
+      if (state.payer === null || payerOfStep === state.payer) return;
+      store.getState().setPayer(payerOfStep);
+      // It signs, or goes on to the price if it confirmed already
+      if (walletStep === 'follow') void lockStorePrice();
+      return;
+    }
+    if (!wallet) return;
     const method = checkout.methods.find((item) => item.id === quote?.methodId);
     const payer = method ? payerFor(wallet, method) : null;
     const next = lockedPriceOnWallet({
@@ -453,7 +480,7 @@ export function PaymentCheckout({
     if (next === 'release') return store.getState().releaseQuote();
     if (next === 'keep' || !payer) return;
     store.getState().setPayer(payer);
-    if (paysRest(payer)) void lockStorePrice();
+    if (paysInvoice(payer)) void lockStorePrice();
   });
   useEffect(() => lockForWallet(), [wallet?.address, wallet?.chainId, wallet?.connectorType, autoPayOff]);
   // The connect modal closed without a wallet of that family

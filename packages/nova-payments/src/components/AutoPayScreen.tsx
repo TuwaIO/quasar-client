@@ -74,11 +74,13 @@ export function AutoPayScreen() {
       ? formatLabel(labels.pay.declined, values)
       : problem === 'unsupported'
         ? formatLabel(labels.autoPay.unavailable, values)
-        : problem
-          ? labels.error.generic
-          : state.error
-            ? methodErrorText(state.error, labels, merchant)
-            : null;
+        : problem === 'wrongNetwork'
+          ? formatLabel(labels.payerProof.wrongNetwork, values)
+          : problem
+            ? labels.error.generic
+            : state.error
+              ? methodErrorText(state.error, labels, merchant)
+              : null;
 
   return (
     <div className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">

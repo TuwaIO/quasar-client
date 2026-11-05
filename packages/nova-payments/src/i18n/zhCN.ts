@@ -191,6 +191,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     amount: '金额',
     wallet: '钱包',
     site: '网站',
+    alreadyConfirmed: '此发票已由 {wallet} 确认。在钱包中切换到它即可跳过此签名。',
     why: '此钱包签名后，来自它的付款才会计入此发票。钱包显示的是待签名的消息，而不是付款：没有手续费，钱包中的资金不会转出。',
     passkey: '{wallet} 可能会要求使用通行密钥或指纹进行签名。',
     confirm: '在 {wallet} 中确认',

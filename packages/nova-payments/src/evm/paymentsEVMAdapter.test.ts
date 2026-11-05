@@ -255,6 +255,11 @@ describe('paymentsEVMAdapter', () => {
       delegationManager: '0xmanager',
       dependencies: [],
     });
+    // wagmi refuses a client on another network than the wallet's: the first payment may have been on another one
+    expect(wagmi.switchChain).toHaveBeenCalledWith(config, { chainId: 84532 });
+    expect(wagmi.switchChain.mock.invocationCallOrder[0]).toBeLessThan(
+      wagmi.getConnectorClient.mock.invocationCallOrder[0],
+    );
     expect(wagmi.getConnectorClient).toHaveBeenCalledWith(config, { chainId: 84532 });
     expect(request).toHaveBeenCalledWith({
       method: 'wallet_requestExecutionPermissions',

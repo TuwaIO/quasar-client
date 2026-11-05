@@ -13,6 +13,16 @@ describe('walletErrorKind', () => {
     expect(walletErrorKind(new Error('Transaction cancelled by user'))).toBe('declined');
   });
 
+  // A wallet that does not know the request says so, instead of "something went wrong"
+  it.each([4200, -32601, -32004])('knows a wallet that does not support the request (%i)', (code) => {
+    expect(walletErrorKind({ code, message: 'Method not supported' })).toBe('unsupported');
+    expect(walletErrorKind({ message: 'wrapped', cause: { code } })).toBe('unsupported');
+  });
+
+  it('knows a wallet on another network than the request', () => {
+    expect(walletErrorKind({ name: 'ConnectorChainMismatchError' })).toBe('wrongNetwork');
+  });
+
   it('keeps the kind an adapter gave, and calls anything else a failure', () => {
     expect(walletErrorKind(new PaymentWalletError('unsupported', 'No paymaster support'))).toBe('unsupported');
     expect(walletErrorKind(new PaymentWalletError('declined', 'Declined'))).toBe('declined');

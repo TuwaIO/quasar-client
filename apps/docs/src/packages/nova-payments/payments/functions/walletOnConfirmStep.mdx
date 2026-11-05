@@ -1,0 +1,49 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/walletOnConfirmStep" />
+
+# walletOnConfirmStep()
+
+> **walletOnConfirmStep**(`params`): `"leave"` \| `"keep"` \| `"follow"`
+
+Defined in: [nova-payments/src/utils/checkout.ts:357](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L357)
+
+What the active wallet changing does on the step that confirms the wallet, where no new price is locked yet: the step
+asks the wallet connected to sign, never the one the store last held.
+
+## Parameters
+
+### params
+
+What the change happens over.
+
+#### open
+
+`boolean`
+
+The step shows.
+
+#### payer
+
+`string` \| `null`
+
+The payer the active wallet gives for the chosen method, or `null`.
+
+#### paysRest
+
+`boolean`
+
+That wallet may pay: only the first wallet pays the rest of an underpaid invoice.
+
+#### storePayer
+
+`string` \| `null`
+
+The payer the store holds, which the step would ask to sign for.
+
+## Returns
+
+`"leave"` \| `"keep"` \| `"follow"`
+
+`keep`: nothing changes; `follow`: this wallet signs, or goes on to the price if it confirmed already; `leave`:
+the step closes, with no wallet to ask.

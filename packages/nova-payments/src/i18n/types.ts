@@ -391,6 +391,8 @@ export type NovaPaymentsLabels = {
     wallet: string;
     /** Row of the site the message names, in the wallet's window (default: `Site`) */
     site: string;
+    /** Another wallet already confirmed the invoice, and needs no new signature; `{wallet}` */
+    alreadyConfirmed: string;
     /**
      * Why it is asked (default: `Payments from this wallet count for this invoice once it signs. Your wallet shows a
      * message to sign, not a payment: no fee, nothing leaves the wallet.`)

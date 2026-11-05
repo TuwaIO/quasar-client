@@ -199,6 +199,8 @@ export const itLabels: NovaPaymentsLabels = {
     amount: 'Importo',
     wallet: 'Wallet',
     site: 'Sito',
+    alreadyConfirmed:
+      "Questa fattura è già confermata da {wallet}. Passa a quell'account nel tuo wallet per saltare la firma.",
     why: 'I pagamenti da questo wallet contano per questa fattura appena firma. Il wallet mostra un messaggio da firmare, non un pagamento: nessuna commissione, nulla esce dal wallet.',
     passkey: '{wallet} potrebbe chiederti la passkey o l’impronta per firmare.',
     confirm: 'Conferma in {wallet}',

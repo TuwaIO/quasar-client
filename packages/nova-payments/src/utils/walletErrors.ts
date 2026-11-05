@@ -30,6 +30,9 @@ const DECLINED_MESSAGE =
 // wagmi's errors: the chain is not in the wagmi config of the adapter, or that config has no connection of the wallet
 const CHAIN_NOT_CONFIGURED = 'ChainNotConfiguredError';
 const CONNECTOR_NOT_CONNECTED = 'ConnectorNotConnectedError';
+const CHAIN_MISMATCH = 'ConnectorChainMismatchError';
+/** EIP-1193 `unsupported method`, and JSON-RPC `method not found` and `method not supported`. */
+const UNSUPPORTED_CODES: ReadonlySet<unknown> = new Set([4200, -32601, -32004]);
 
 const field = (value: unknown, key: string): unknown =>
   typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[key] : undefined;
@@ -39,9 +42,11 @@ const field = (value: unknown, key: string): unknown =>
  * `UserRejectedRequestError` (also as a `cause`), and the "user rejected" messages of Wallet Standard wallets, are
  * `declined`. wagmi's `ChainNotConfiguredError` (the network of the payment is not in the wagmi config of
  * `paymentsEVMAdapter`; the buyer can still pay with the QR code) and `ConnectorNotConnectedError` (that config has no
- * connection of the wallet) are `unsupported`.
+ * connection of the wallet) are `unsupported`, as is a wallet that does not know the request (codes 4200, -32601, -32004).
+ * wagmi's `ConnectorChainMismatchError` is `wrongNetwork`.
  *
- * Side effects: in development (`NODE_ENV` is `development`), a `ConnectorNotConnectedError` logs a `console.error`:
+ * Side effects: in development (`NODE_ENV` is `development`), a failure it cannot name logs to the console, and a
+ * `ConnectorNotConnectedError` logs a `console.error`:
  * the app gave `NovaPaymentsProvider` an EVM adapter built on another wagmi config than the one its wallet connection
  * (its Satellite EVM adapter) uses.
  *
@@ -56,7 +61,10 @@ export function walletErrorKind(error: unknown): PaymentWalletErrorKind {
     if (field(current, 'code') === USER_REJECTED || field(current, 'name') === 'UserRejectedRequestError') {
       return 'declined';
     }
-    if (field(current, 'name') === CHAIN_NOT_CONFIGURED) return 'unsupported';
+    if (field(current, 'name') === CHAIN_NOT_CONFIGURED || UNSUPPORTED_CODES.has(field(current, 'code'))) {
+      return 'unsupported';
+    }
+    if (field(current, 'name') === CHAIN_MISMATCH) return 'wrongNetwork';
     if (field(current, 'name') === CONNECTOR_NOT_CONNECTED) {
       if (process.env.NODE_ENV === 'development') {
         console.error(
@@ -71,5 +79,7 @@ export function walletErrorKind(error: unknown): PaymentWalletErrorKind {
     if (typeof message === 'string' && DECLINED_MESSAGE.test(message)) return 'declined';
     current = field(current, 'cause');
   }
+  // Nothing on the screen says what went wrong: a developer finds it here
+  if (process.env.NODE_ENV === 'development') console.error('[nova-payments] The wallet failed:', error);
   return 'failed';
 }

@@ -194,6 +194,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     amount: 'Amount',
     wallet: 'Wallet',
     site: 'Site',
+    alreadyConfirmed:
+      'Already confirmed for this invoice: {wallet}. Switch to it in your wallet to skip this signature.',
     why: 'Payments from this wallet count for this invoice once it signs. Your wallet shows a message to sign, not a payment: no fee, nothing leaves the wallet.',
     passkey: '{wallet} may ask for your passkey or fingerprint to sign.',
     confirm: 'Confirm in {wallet}',

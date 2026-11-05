@@ -195,8 +195,12 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     },
 
     requestPermission: async ({ request, account }) => {
+      const chainId = Number.parseInt(request.chainId, 16);
+      // The permission's network may not be the wallet's: the first payment may have gone on another one, and wagmi gives
+      // no client until the wallet is on it
+      await switchChain(config, { chainId });
       // The ERC-7715 request as MetaMask takes it (checked live with the Quasar engine), from the granting account
-      const client = await getConnectorClient(config, { chainId: Number.parseInt(request.chainId, 16) });
+      const client = await getConnectorClient(config, { chainId });
       const response = (await client.request({
         method: 'wallet_requestExecutionPermissions',
         params: [{ ...request, from: account }],

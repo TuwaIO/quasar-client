@@ -54,7 +54,7 @@ const setup = (options: { walletChainId?: string; signMessage?: PaymentsAdapter[
     switchChain: vi.fn(async () => undefined),
     ...(options.signMessage === null ? {} : { signMessage: options.signMessage ?? signMessage }),
   };
-  const state = { error: null as { code: string } | null };
+  const state = { error: null as { code: string } | null, payer: `${BASE}:${ACCOUNT}` as string | null };
   // The SDK asks for the message, has it signed and records the signature: a refused signature is payer_proof_declined
   const confirmPayer = vi.fn(async (sign: PayerProofSigner) => {
     try {
@@ -74,7 +74,7 @@ const setup = (options: { walletChainId?: string; signMessage?: PaymentsAdapter[
     chainId: BASE,
   };
   const renderHook = () => render(usePayerProof, props) as ReturnType<typeof usePayerProof>;
-  return { adapter, signMessage, signature, confirmPayer, requestQuote, renderHook };
+  return { adapter, signMessage, signature, confirmPayer, requestQuote, renderHook, props, state };
 };
 
 afterEach(unmount);
@@ -116,6 +116,48 @@ describe('usePayerProof', () => {
     signature.reject(new PaymentWalletError('declined', 'User rejected'));
     await expect(confirming).resolves.toBe(false);
     expect(renderHook()).toMatchObject({ step: 'idle', problem: 'declined' });
+    expect(requestQuote).not.toHaveBeenCalled();
+  });
+
+  // The buyer changed the wallet: what the last one refused or asked is not about this one
+  it('forgets the refusal and the open prompt of the wallet the buyer left', async () => {
+    const { signature, props, renderHook } = setup();
+    const confirming = renderHook().confirm({ quote: true });
+    signature.reject(new PaymentWalletError('declined', 'User rejected'));
+    await confirming;
+    expect(renderHook().problem).toBe('declined');
+    props.wallet = { ...wallet, address: '0x2222222222222222222222222222222222222222' };
+    render(usePayerProof, props);
+    expect(renderHook()).toMatchObject({ step: 'idle', problem: null, request: null });
+  });
+
+  it('closes the prompt of a wallet the buyer left while it signs', async () => {
+    const { signMessage, props, renderHook } = setup();
+    void renderHook().confirm({ quote: true });
+    await vi.waitFor(() => expect(signMessage).toHaveBeenCalled());
+    expect(renderHook().step).toBe('signing');
+    props.wallet = { ...wallet, address: '0x2222222222222222222222222222222222222222' };
+    render(usePayerProof, props);
+    expect(renderHook().step).toBe('idle');
+  });
+
+  it('locks no price for a late signature of a wallet the buyer left', async () => {
+    const { signMessage, signature, requestQuote, renderHook, state } = setup();
+    const confirming = renderHook().confirm({ quote: true });
+    await vi.waitFor(() => expect(signMessage).toHaveBeenCalled());
+    state.payer = `${BASE}:0x2222222222222222222222222222222222222222`;
+    signature.resolve('0xlate');
+    await expect(confirming).resolves.toBe(true);
+    expect(requestQuote).not.toHaveBeenCalled();
+  });
+
+  it('locks no price for a late signature once the buyer went back from the step', async () => {
+    const { signMessage, signature, requestQuote, renderHook } = setup();
+    const confirming = renderHook().confirm({ quote: true });
+    await vi.waitFor(() => expect(signMessage).toHaveBeenCalled());
+    unmount();
+    signature.resolve('0xlate');
+    await expect(confirming).resolves.toBe(true);
     expect(requestQuote).not.toHaveBeenCalled();
   });
 

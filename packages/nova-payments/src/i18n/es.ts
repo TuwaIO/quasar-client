@@ -197,6 +197,8 @@ export const esLabels: NovaPaymentsLabels = {
     amount: 'Importe',
     wallet: 'Billetera',
     site: 'Sitio',
+    alreadyConfirmed:
+      'La factura ya está confirmada por {wallet}. Cambia a esa cuenta en tu billetera y no hará falta firmar.',
     why: 'Los pagos desde esta billetera cuentan para esta factura en cuanto la firma. Tu billetera muestra un mensaje para firmar, no un pago: sin comisión, no sale nada de la billetera.',
     passkey: '{wallet} puede pedirte tu llave de acceso (passkey) o tu huella para firmar.',
     confirm: 'Confirmar en {wallet}',
