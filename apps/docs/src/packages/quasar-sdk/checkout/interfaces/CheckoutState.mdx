@@ -73,7 +73,7 @@ Whether the buyer ticked the merchant's consent (`checkout.consent`).
 
 > **destroy**: () => `void`
 
-Defined in: [checkout/store.ts:455](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L455)
+Defined in: [checkout/store.ts:459](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L459)
 
 Stops following the invoice (closes the event stream or the reads). Call it when the page goes away.
 
@@ -113,11 +113,14 @@ whenever it comes; a reloaded page reads the outcome. Read-only: the store sets 
 
 ### grantPermission
 
-> **grantPermission**: (`params`) => `Promise`\<`boolean`\>
+> **grantPermission**: (`params`, `sign?`) => `Promise`\<`boolean`\>
 
-Defined in: [checkout/store.ts:436](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L436)
+Defined in: [checkout/store.ts:440](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L440)
 
 Passes the wallet's answer to `wallet_grantPermissions` for a subscription's automatic charges (`POST permission`).
+
+Quasar takes a permission only from a wallet that confirmed the invoice: with `sign`, a refusal for that has the
+wallet sign the free confirmation and the permission is passed again.
 
 #### Parameters
 
@@ -126,6 +129,12 @@ Passes the wallet's answer to `wallet_grantPermissions` for a subscription's aut
 [`GrantPermissionParams`](?path=/docs/packages-quasar-sdk-checkout-interfaces-grantpermissionparams--docs)
 
 The granting account, the permission context, its delegation manager and dependencies.
+
+##### sign?
+
+[`PayerProofSigner`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payerproofsigner--docs)
+
+Has the wallet sign Quasar's message, as for [CheckoutState.confirmPayer](#confirmpayer).
 
 #### Returns
 
@@ -243,7 +252,7 @@ The chosen payment method.
 
 > **payAgain**: () => `void`
 
-Defined in: [checkout/store.ts:453](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L453)
+Defined in: [checkout/store.ts:457](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L457)
 
 Goes back to the payment from `unconfirmed`, once the buyer checked that the payment did not leave the wallet:
 `awaitingPayment` while the locked quote is valid, `underpaid` for the rest of an underpaid invoice, otherwise
@@ -340,7 +349,7 @@ Read-only: the store sets it.
 
 > **permissionRevoked**: () => `Promise`\<`boolean` \| `null`\>
 
-Defined in: [checkout/store.ts:445](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L445)
+Defined in: [checkout/store.ts:449](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L449)
 
 Tells Quasar that the wallet sent the transaction that revokes the permission (`autoCharge.revocation`): Quasar asks
 the chain (`POST permission/revoked`), and `checkout.autoCharge` follows what it finds. Neither the phase nor the

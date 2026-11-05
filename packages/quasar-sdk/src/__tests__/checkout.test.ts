@@ -853,6 +853,37 @@ describe('createCheckoutStore', () => {
     expect(checkout.getState().phase).toBe('expired');
   });
 
+  // Quasar takes a permission only from a wallet that confirmed the invoice: a delegation is public once it was charged
+  it('has the wallet confirm the invoice when Quasar asks, and passes the permission again', async () => {
+    const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
+    fetchMock
+      .mockResolvedValueOnce(json(view()))
+      .mockResolvedValueOnce(json(refusal, 409))
+      .mockResolvedValueOnce(json({ message: 'sign me', payer: QUOTE.payer, chainId: 'eip155:8453', proven: false }))
+      .mockResolvedValueOnce(json({ payer: QUOTE.payer, chainId: 'eip155:8453', kind: 'eoa' }))
+      .mockResolvedValueOnce(json({ autoCharge: { status: 'active', permission: {}, revocation: null } }));
+    const checkout = store();
+    await checkout.getState().load();
+
+    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
+    const sign = vi.fn().mockResolvedValue('0xsig');
+    expect(await checkout.getState().grantPermission(granted, sign)).toBe(true);
+
+    expect(sign).toHaveBeenCalledWith('sign me', expect.objectContaining({ message: 'sign me' }));
+    expect(await sent(4)).toMatchObject({ path: '/v1/payments/checkout/tok_1/permission', body: granted });
+    expect(checkout.getState().error).toBeNull();
+  });
+
+  it('leaves the refusal without a way to sign', async () => {
+    const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
+    fetchMock.mockResolvedValueOnce(json(view())).mockResolvedValueOnce(json(refusal, 409));
+    const checkout = store();
+    await checkout.getState().load();
+    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
+    expect(await checkout.getState().grantPermission(granted)).toBe(false);
+    expect(checkout.getState().error).toMatchObject({ code: 'payer_proof_required' });
+  });
+
   it('pays without gas through the relay, and grants the automatic charges of a subscription', async () => {
     const autoCharge = {
       status: 'available',

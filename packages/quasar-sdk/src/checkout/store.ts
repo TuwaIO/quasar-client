@@ -430,10 +430,14 @@ export interface CheckoutState {
   /**
    * Passes the wallet's answer to `wallet_grantPermissions` for a subscription's automatic charges (`POST permission`).
    *
+   * Quasar takes a permission only from a wallet that confirmed the invoice: with `sign`, a refusal for that has the
+   * wallet sign the free confirmation and the permission is passed again.
+   *
    * @param params - The granting account, the permission context, its delegation manager and dependencies.
+   * @param sign - Has the wallet sign Quasar's message, as for {@link CheckoutState.confirmPayer}.
    * @returns Whether Quasar accepted it; `checkout.autoCharge` is then `active`.
    */
-  grantPermission: (params: GrantPermissionParams) => Promise<boolean>;
+  grantPermission: (params: GrantPermissionParams, sign?: PayerProofSigner) => Promise<boolean>;
   /**
    * Tells Quasar that the wallet sent the transaction that revokes the permission (`autoCharge.revocation`): Quasar asks
    * the chain (`POST permission/revoked`), and `checkout.autoCharge` follows what it finds. Neither the phase nor the
@@ -1907,13 +1911,28 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         }
       },
 
-      grantPermission: async (params) => {
+      grantPermission: async (params, sign) => {
         update({ error: null });
-        try {
+        const grant = async () => {
           const { autoCharge } = await api.permission(params);
           const checkout = get().checkout;
           if (checkout) update({ checkout: { ...checkout, autoCharge } });
           return true;
+        };
+        try {
+          try {
+            return await grant();
+          } catch (error) {
+            const { payerProofMessage, payerProof } = api;
+            const unproven = error instanceof QuasarSDKError && error.code === 'payer_proof_required';
+            if (!unproven || !sign || !payerProofMessage || !payerProof) throw error;
+            const request = await payerProofMessage({ payer: params.payer });
+            if (!request.proven) {
+              const signature = await sign(request.message, request);
+              await payerProof({ payer: params.payer, message: request.message, signature });
+            }
+            return await grant();
+          }
         } catch (error) {
           fail(error, get().phase);
           return false;

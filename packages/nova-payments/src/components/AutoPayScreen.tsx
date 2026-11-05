@@ -55,9 +55,14 @@ export function AutoPayScreen() {
     try {
       const permission = await adapter.requestPermission({ request: offer.request, account: wallet.address });
       // Quasar takes it: the offer turns active and the paid outcome says automatic payments are on
-      if (await store.getState().grantPermission({ payer: `${terms.chainId}:${wallet.address}`, ...permission })) {
-        setAutoPay(false);
-      }
+      const signMessage = adapter.signMessage;
+      const account = wallet.address;
+      const granted = await store.getState().grantPermission(
+        { payer: `${terms.chainId}:${account}`, ...permission },
+        // Quasar takes it only from a wallet that confirmed the invoice: free, and only if it has not yet
+        signMessage && ((message, issued) => signMessage({ message, account, chainId: issued.chainId })),
+      );
+      if (granted) setAutoPay(false);
     } catch (error) {
       setProblem(walletErrorKind(error));
     } finally {
