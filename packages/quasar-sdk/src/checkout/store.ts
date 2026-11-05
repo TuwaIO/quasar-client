@@ -378,6 +378,11 @@ export interface CheckoutState {
    */
   confirmPayer: (sign: PayerProofSigner) => Promise<boolean>;
   /**
+   * The buyer closed the wallet's window of the confirmation: the request stays open in the wallet, and a signature it
+   * gives later still counts, while a refusal it gives later changes nothing on the page, wherever the buyer went.
+   */
+  abandonConfirmation: () => void;
+  /**
    * Sends the buyer details the checkout collects (`POST buyer`); the invoice document is issued with them.
    *
    * @param buyer - The details.
@@ -659,13 +664,23 @@ function accountOf(account: string): { namespace: string; chainId: string; addre
  * Whether `payer` confirmed the invoice for a payment from its network: an ordinary wallet's confirmation (or a relay's
  * authorization) counts on every EVM network, a smart wallet's (or one of unknown kind) only on its own.
  */
-/** Whether an error is a refusal of the wallet's confirmation: it says nothing about another wallet. */
+/** Why the store says `payer_proof_declined`. */
+const PROOF_DECLINED =
+  'The wallet did not sign the confirmation. It is free and moves no funds: sign it to pay from this wallet, or choose another wallet or method.';
+
+/** Refusals of one wallet, besides those of its confirmation: they say nothing about another wallet. */
+const REFUSALS_OF_WALLET: ReadonlySet<string> = new Set([
+  'payer_chain_mismatch',
+  'too_many_payers',
+  'native_from_contract',
+  'payer_blocked',
+  'payer_not_expected',
+]);
+
+/** Whether an error is about the wallet it was given to: another wallet starts clean. */
 function isRefusalOfWallet(error: CheckoutError | null): boolean {
   const code: string | undefined = error?.code;
-  return (
-    code !== undefined &&
-    (code.startsWith('payer_proof_') || code === 'payer_chain_mismatch' || code === 'too_many_payers')
-  );
+  return code !== undefined && (code.startsWith('payer_proof_') || REFUSALS_OF_WALLET.has(code));
 }
 
 function confirmedBy(proofs: readonly KnownProof[], payer: string): boolean {
@@ -1831,14 +1846,21 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         const forget = payer !== get().payer && isRefusalOfWallet(error) ? { error: null } : {};
         // The rest of an underpaid invoice has no methods to go back to, and its outcome reads the amounts of the quote
         const rest = (invoiceStatus ?? checkout?.invoice.status) === 'underpaid';
+        // Refused wallets are refused one by one: nothing else leaves `blocked`, whose screen would go on naming this
+        // wallet under the refusal of the last one, and only a reload got out
+        const unblocked =
+          phase === 'blocked' && payer !== null && payer !== get().payer
+            ? { phase: (rest ? 'underpaid' : 'selectMethod') as CheckoutPhase, quote: rest ? quote : null }
+            : {};
         if (drop && rest) {
-          update({ payer, ...forget, phase: phase === 'awaitingPayment' ? 'underpaid' : phase });
+          update({ payer, ...forget, phase: phase === 'awaitingPayment' ? 'underpaid' : phase, ...unblocked });
           return;
         }
         update({
           payer,
           ...forget,
           ...(drop ? { quote: null, phase: phase === 'awaitingPayment' ? 'selectMethod' : phase } : {}),
+          ...unblocked,
         });
       },
 
@@ -1895,6 +1917,11 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           });
           // The invoice settled meanwhile: its outcome stands, and nothing follows it any more
           if (settledMeanwhile()) return outcomeStands();
+          // The buyer changed wallets meanwhile: this price is locked for the last one, whose page is gone
+          if (get().payer !== payer) {
+            update({ phase: rest ? 'underpaid' : 'selectMethod' });
+            return null;
+          }
           update({ quote, phase: get().invoicePaymentOnTheWay ? 'confirming' : 'awaitingPayment' });
           return quote;
         } catch (error) {
@@ -1949,13 +1976,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           if (failure === undefined || !latest || get().payer !== payer || payerProofOf(get()) === 'confirmed')
             update({});
           else if (failure instanceof Error && failure.name === 'PayerProofDeclined') {
-            update({
-              error: {
-                code: 'payer_proof_declined',
-                message:
-                  'The wallet did not sign the confirmation. It is free and moves no funds: sign it to pay from this wallet, or choose another wallet or method.',
-              },
-            });
+            update({ error: { code: 'payer_proof_declined', message: PROOF_DECLINED } });
           } else fail(failure, get().phase);
         };
         try {
@@ -1980,6 +2001,13 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           end(null, error);
           return false;
         }
+      },
+
+      abandonConfirmation: () => {
+        // The attempt under way is no longer the latest: its late signature still counts, its late refusal says nothing
+        proofAttempt++;
+        signingPayer = null;
+        update({});
       },
 
       setBuyer: async (buyer, buyerOptions = {}) => {
@@ -2038,9 +2066,18 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
             const unproven = error instanceof QuasarSDKError && error.code === 'payer_proof_required';
             if (!unproven || !sign || !payerProofMessage || !payerProof) throw error;
             const request = await payerProofMessage({ payer: params.payer });
-            if (!request.proven) {
-              const signature = await sign(request.message, request);
-              await payerProof({ payer: params.payer, message: request.message, signature });
+            if (request.proven) confirmedHere.push({ payer: request.payer, chainId: request.chainId });
+            else {
+              let signature: string;
+              try {
+                signature = await sign(request.message, request);
+              } catch {
+                // The wallet's own error says nothing to Quasar's codes: it would read as a server that did not answer
+                update({ error: { code: 'payer_proof_declined', message: PROOF_DECLINED } });
+                return false;
+              }
+              // Remembered: this wallet is not asked to confirm the invoice again before it pays
+              confirmedHere.push(await payerProof({ payer: params.payer, message: request.message, signature }));
             }
             return await grant();
           }

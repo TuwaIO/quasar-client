@@ -1,0 +1,47 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/useRereadValue" />
+
+# useRereadValue()
+
+> **useRereadValue**\<`T`\>(`key`, `load`, `refresh?`): `T` \| `null` \| `undefined`
+
+Defined in: [nova-payments/src/hooks/useAsyncValue.ts:48](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useAsyncValue.ts#L48)
+
+Reads a value like [useAsyncValue](?path=/docs/packages-nova-payments-payments-functions-useasyncvalue--docs), and again when the buyer comes back to the page (focus, visibility) or
+`refresh` changes, keeping the last answer meanwhile: a balance the buyer tops up in the wallet opens the pay button
+without a reload, and a read under way does not open it before the answer.
+
+Side effects: `focus` and `visibilitychange` listeners while there is a key.
+
+## Type Parameters
+
+### T
+
+`T`
+
+## Parameters
+
+### key
+
+`string` \| `null`
+
+What the value depends on, as a string; `null` to read nothing.
+
+### load
+
+() => `T` \| `Promise`\<`T`\>
+
+Reads the value for the current key.
+
+### refresh?
+
+`unknown`
+
+Reads again when it changes, for the same key.
+
+## Returns
+
+`T` \| `null` \| `undefined`
+
+The value; `undefined` until the first answer for this key (or without a key); `null` when the read failed.

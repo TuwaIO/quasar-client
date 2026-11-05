@@ -874,6 +874,39 @@ describe('createCheckoutStore', () => {
     expect(checkout.getState().error).toBeNull();
   });
 
+  // The raw wallet error became "The payment server did not answer"
+  it('says that the wallet declined the free confirmation asked for a permission', async () => {
+    const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
+    fetchMock
+      .mockResolvedValueOnce(json(view()))
+      .mockResolvedValueOnce(json(refusal, 409))
+      .mockResolvedValueOnce(json({ message: 'sign me', payer: QUOTE.payer, chainId: 'eip155:8453', proven: false }));
+    const checkout = store();
+    await checkout.getState().load();
+    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
+    const sign = vi.fn().mockRejectedValue(new Error('User rejected'));
+    expect(await checkout.getState().grantPermission(granted, sign)).toBe(false);
+    expect(checkout.getState().error).toMatchObject({ code: 'payer_proof_declined' });
+  });
+
+  // "Confirm your wallet" showed next for a wallet that had just signed
+  it('remembers the wallet that confirmed the invoice for a permission', async () => {
+    const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
+    fetchMock
+      .mockResolvedValueOnce(json(view()))
+      .mockResolvedValueOnce(json(refusal, 409))
+      .mockResolvedValueOnce(json({ message: 'sign me', payer: QUOTE.payer, chainId: 'eip155:8453', proven: false }))
+      .mockResolvedValueOnce(json({ payer: QUOTE.payer, chainId: 'eip155:8453', kind: 'eoa' }))
+      .mockResolvedValueOnce(json({ autoCharge: { status: 'active', permission: {}, revocation: null } }));
+    const checkout = store();
+    await checkout.getState().load();
+    checkout.getState().selectMethod('ap_1');
+    checkout.getState().setPayer(QUOTE.payer);
+    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
+    expect(await checkout.getState().grantPermission(granted, async () => '0xsig')).toBe(true);
+    expect(checkout.getState().confirmedWallets).toContain(QUOTE.payer);
+  });
+
   it('leaves the refusal without a way to sign', async () => {
     const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
     fetchMock.mockResolvedValueOnce(json(view())).mockResolvedValueOnce(json(refusal, 409));
@@ -3347,6 +3380,68 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
       refuse!(new Error('User rejected'));
       expect(await pending).toBe(false);
       expect(checkout.getState()).toMatchObject({ payer: OTHER, payerProof: 'required', error: null });
+    });
+
+    // The buyer pressed Cancel and went back: a refusal the wallet gives later must not appear on another screen
+    it('says nothing of a refusal that comes after the buyer closed the window', async () => {
+      const checkout = await ready();
+      let refuse: ((error: Error) => void) | undefined;
+      const pending = checkout.getState().confirmPayer(() => new Promise((_, reject) => (refuse = reject)));
+      await vi.waitFor(() => expect(refuse).toBeDefined());
+      checkout.getState().abandonConfirmation();
+      expect(checkout.getState().payerProof).toBe('required');
+      refuse!(new Error('User rejected'));
+      expect(await pending).toBe(false);
+      expect(checkout.getState().error).toBeNull();
+    });
+
+    it('keeps a signature that comes after the buyer closed the window', async () => {
+      const checkout = await ready();
+      let signed: ((signature: string) => void) | undefined;
+      const pending = checkout.getState().confirmPayer(() => new Promise((resolve) => (signed = resolve)));
+      await vi.waitFor(() => expect(signed).toBeDefined());
+      checkout.getState().abandonConfirmation();
+      signed!('0xsig');
+      expect(await pending).toBe(true);
+      expect(checkout.getState().payerProof).toBe('confirmed');
+    });
+
+    // The screen named the old wallet, and only a reload got out
+    it.each(['payer_blocked', 'payer_not_expected'])('leaves %s when another wallet is connected', async (code) => {
+      const checkout = await ready();
+      answer({}, { 'payer-proof': () => json({ error: { code, message: 'No' } }, 403) });
+      await checkout.getState().confirmPayer(async () => '0xsig');
+      expect(checkout.getState()).toMatchObject({ phase: 'blocked', error: { code } });
+      checkout.getState().setPayer(OTHER);
+      expect(checkout.getState()).toMatchObject({ phase: 'selectMethod', payer: OTHER, error: null });
+    });
+
+    it('stays on the refusal while no wallet is connected', async () => {
+      const checkout = await ready();
+      answer({}, { 'payer-proof': () => json({ error: { code: 'payer_blocked', message: 'No' } }, 403) });
+      await checkout.getState().confirmPayer(async () => '0xsig');
+      checkout.getState().setPayer(null);
+      expect(checkout.getState().phase).toBe('blocked');
+    });
+
+    it('forgets that a smart wallet cannot pay in this coin once another wallet is connected', async () => {
+      const checkout = await ready();
+      checkout.setState({ error: { code: 'native_from_contract', message: 'No' } });
+      checkout.getState().setPayer(OTHER);
+      expect(checkout.getState().error).toBeNull();
+    });
+
+    it('drops a price that arrives for a wallet the buyer left', async () => {
+      const checkout = await ready();
+      await checkout.getState().confirmPayer(async () => '0xsig');
+      let release: ((response: Response) => void) | undefined;
+      answer({}, { quote: () => new Promise<Response>((resolve) => (release = resolve)) });
+      const asked = checkout.getState().requestQuote();
+      await vi.waitFor(() => expect(release).toBeDefined());
+      checkout.getState().setPayer(OTHER);
+      release!(json({ ...QUOTE, payer: PAYER }));
+      expect(await asked).toBeNull();
+      expect(checkout.getState()).toMatchObject({ quote: null, phase: 'selectMethod', payer: OTHER });
     });
 
     it('forgets the refusal of a wallet once another one is connected', async () => {

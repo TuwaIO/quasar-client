@@ -4,8 +4,11 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentWalletErrorKind
 
-> **PaymentWalletErrorKind** = `"declined"` \| `"unsupported"` \| `"wrongNetwork"` \| `"failed"`
+> **PaymentWalletErrorKind** = `"declined"` \| `"unsupported"` \| `"wrongNetwork"` \| `"switchFailed"` \| `"notAuthorized"` \| `"alreadyPending"` \| `"sentUnconfirmed"` \| `"failed"`
 
-Defined in: [nova-payments/src/utils/walletErrors.ts:6](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L6)
+Defined in: [nova-payments/src/utils/walletErrors.ts:11](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L11)
 
-Why a wallet request did not go through.
+Why a wallet request did not go through: `declined` by the buyer, `unsupported` by the wallet, `wrongNetwork` when it
+was on another network than the request, `switchFailed` when it did not switch, `notAuthorized` when it has not allowed
+the account for the site (EIP-1193 4100), `alreadyPending` when another request of the site still waits in it,
+`sentUnconfirmed` when it sent a payment that is not confirmed yet (it may still land), or `failed`.

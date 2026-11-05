@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # UsePayerProofParams
 
-Defined in: [nova-payments/src/hooks/usePayerProof.ts:12](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L12)
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:15](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L15)
 
 What [usePayerProof](?path=/docs/packages-nova-payments-payments-functions-usepayerproof--docs) needs.
 
@@ -14,7 +14,7 @@ What [usePayerProof](?path=/docs/packages-nova-payments-payments-functions-usepa
 
 > **adapter**: [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs) \| `undefined`
 
-Defined in: [nova-payments/src/hooks/usePayerProof.ts:14](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L14)
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:17](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L17)
 
 The adapter of the method's chain family; without `signMessage` the wallet cannot confirm the invoice.
 
@@ -24,7 +24,7 @@ The adapter of the method's chain family; without `signMessage` the wallet canno
 
 > **chainId**: `string`
 
-Defined in: [nova-payments/src/hooks/usePayerProof.ts:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L20)
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:23](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L23)
 
 The CAIP-2 network of the method: a smart wallet's signature counts there only.
 
@@ -34,17 +34,17 @@ The CAIP-2 network of the method: a smart wallet's signature counts there only.
 
 > **store**: `object`
 
-Defined in: [nova-payments/src/hooks/usePayerProof.ts:16](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L16)
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:19](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L19)
 
 The checkout store.
 
 #### getState
 
-> **getState**: () => `Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"confirmPayer"` \| `"requestQuote"` \| `"payer"`\>
+> **getState**: () => `Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"confirmPayer"` \| `"requestQuote"` \| `"payer"` \| `"abandonConfirmation"`\>
 
 ##### Returns
 
-`Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"confirmPayer"` \| `"requestQuote"` \| `"payer"`\>
+`Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"confirmPayer"` \| `"requestQuote"` \| `"payer"` \| `"abandonConfirmation"`\>
 
 ***
 
@@ -52,6 +52,6 @@ The checkout store.
 
 > **wallet**: [`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs) \| `null`
 
-Defined in: [nova-payments/src/hooks/usePayerProof.ts:18](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L18)
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:21](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L21)
 
 The connected wallet.

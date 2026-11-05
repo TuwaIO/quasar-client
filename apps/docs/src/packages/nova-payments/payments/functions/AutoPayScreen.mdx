@@ -6,14 +6,22 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **AutoPayScreen**(): `Element` \| `null`
 
-Defined in: [nova-payments/src/components/AutoPayScreen.tsx:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/AutoPayScreen.tsx#L34)
+Defined in: [nova-payments/src/components/AutoPayScreen.tsx:57](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/AutoPayScreen.tsx#L57)
 
 The automatic payments offer of a subscription, after a paid period: the limit the seller may take each period, the
 period, the paying wallet and the seller's wallet the charges are paid to, until when, that Quasar sends each charge
-for the seller, and how to turn it off. "Allow" asks the wallet for the ERC-7715 permission and hands it to Quasar
-(then the paid outcome says automatic payments are on); "Not now" keeps paying each invoice.
+for the seller, and how to turn it off. "Allow" takes the wallet through what it needs: to the network of the
+permission, from a plain account to its smart account (see `smartAccountStatus`: the offer says so first, and MetaMask
+asks only then), then the ERC-7715 permission, which Quasar takes (the paid outcome then says automatic payments are
+on); "Not now" keeps paying each invoice. Without a wallet the main button connects one.
 
-Side effects: a wallet prompt; `POST permission` of the checkout.
+Each press is a try with a number: Cancel closes the window, and an answer the wallet gives later changes nothing on
+the page, except that a permission it grants still reaches Quasar. A request still open in the wallet is not asked
+again, so the buyer never approves two; what the wallet already granted is not asked again after a refusal of the free
+confirmation.
+
+Side effects: wallet prompts and, for a plain account, a transaction whose fee the buyer pays; `POST permission` of
+the checkout; network and wallet reads for the kind of account.
 
 ## Returns
 

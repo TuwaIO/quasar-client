@@ -182,7 +182,7 @@ The balance, in base units.
 
 > `optional` **pulsarTransaction?**: (`params`) => `Transaction`
 
-Defined in: [nova-payments/src/adapters/types.ts:162](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L162)
+Defined in: [nova-payments/src/adapters/types.ts:178](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L178)
 
 Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
 it (and Nova Transactions shows its toast) once the checkout closes.
@@ -207,7 +207,7 @@ The pending transaction, for `injectExternalPendingTxs` of the Pulsar store.
 
 > `optional` **requestPermission?**: (`params`) => `Promise`\<`Omit`\<[`GrantPermissionParams`](?path=/docs/packages-quasar-sdk-checkout-interfaces-grantpermissionparams--docs), `"payer"`\>\>
 
-Defined in: [nova-payments/src/adapters/types.ts:138](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L138)
+Defined in: [nova-payments/src/adapters/types.ts:154](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L154)
 
 Asks the wallet for the ERC-7715 permission of a subscription's automatic payments, with the wallet's prompt.
 
@@ -237,7 +237,7 @@ What the wallet granted, for `grantPermission` of the checkout store (without th
 
 > `optional` **revokePermission?**: (`params`) => `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:149](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L149)
+Defined in: [nova-payments/src/adapters/types.ts:165](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L165)
 
 Sends the transaction that revokes the permission of a subscription's automatic payments, with the wallet's prompt,
 and waits until the network includes it. The wallet pays its network fee.
@@ -283,7 +283,7 @@ permission and what to call once the wallet has sent it: a failure while waiting
 
 > `optional` **sendSponsoredCalls?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:163](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L163)
+Defined in: [nova-payments/src/adapters/types.ts:179](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L179)
 
 #### Parameters
 
@@ -300,6 +300,12 @@ Defined in: [nova-payments/src/adapters/types.ts:163](https://github.com/TuwaIO/
 ###### chainId
 
 `string`
+
+###### onLate?
+
+(`txKey`) => `void`
+
+Called with the transaction of a batch that landed after the adapter gave up waiting (`sentUnconfirmed`).
 
 ###### onSent?
 
@@ -419,6 +425,38 @@ The 65-byte signature.
 
 ***
 
+### smartAccountStatus?
+
+> `optional` **smartAccountStatus?**: (`params`) => `Promise`\<`"smart"` \| `"upgradable"` \| `"unknown"`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:140](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L140)
+
+What the account is for automatic payments, read before asking for the permission: `smart` has code on the network,
+`upgradable` is a plain account its wallet can switch to a smart account, `unknown` says nothing either way. Quasar
+decides in the end: it refuses a wallet that could never be charged.
+
+#### Parameters
+
+##### params
+
+The network and the account.
+
+###### account
+
+`string`
+
+###### chainId
+
+`string`
+
+#### Returns
+
+`Promise`\<`"smart"` \| `"upgradable"` \| `"unknown"`\>
+
+The kind.
+
+***
+
 ### switchChain?
 
 > `optional` **switchChain?**: (`chainId`) => `Promise`\<`void`\>
@@ -434,6 +472,35 @@ Asks the wallet to switch to the chain of the payment.
 `string`
 
 The chain.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### upgradeToSmartAccount?
+
+> `optional` **upgradeToSmartAccount?**: (`params`) => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:147](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L147)
+
+Has the wallet switch a plain account to its smart account (`upgradable` of [PaymentsAdapter.smartAccountStatus](#smartaccountstatus))
+and waits until the network includes it. The wallet asks the buyer and the buyer pays the network fee.
+
+#### Parameters
+
+##### params
+
+The network and the account.
+
+###### account
+
+`string`
+
+###### chainId
+
+`string`
 
 #### Returns
 
