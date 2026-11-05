@@ -1566,6 +1566,18 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           handOver([body.txKey], body.txKey, undefined, true);
           return false;
         }
+        // The invoice took all the transactions it follows, and the wallet has sent this one: it may have paid, so no
+        // second payment. Quasar keeps its hash for the merchant, and the buyer contacts the merchant
+        if (error instanceof QuasarSDKError && error.code === 'too_many_payments') {
+          if (!quiet()) {
+            update({
+              txKey: body.txKey,
+              error: submitFailedError(),
+              ...(closed() ? {} : { phase: 'unconfirmed' as const }),
+            });
+          }
+          return false;
+        }
         if (!retryable(error)) {
           forgetHandOver(body.txKey);
           if (!quiet()) fail(error, before === 'submitting' ? 'awaitingPayment' : before);

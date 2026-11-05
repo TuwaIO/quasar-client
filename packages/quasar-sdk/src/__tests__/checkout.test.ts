@@ -1574,6 +1574,25 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
     refused.getState().destroy();
   });
 
+  // The wallet has sent it: it may have paid, and Quasar follows it no more
+  it('offers no second payment when the invoice took all the transactions it follows', async () => {
+    answer(
+      { pendingPayments: 0, rejectedPayments: [] },
+      {
+        submit: async () => json({ error: { code: 'too_many_payments', message: 'Contact the seller' } }, 409),
+      },
+    );
+    const checkout = store();
+    await checkout.getState().load();
+    expect(await checkout.getState().submit({ txKey: '0xfeed', connectorType: 'evm:metamask' })).toBe(false);
+    expect(checkout.getState()).toMatchObject({
+      phase: 'unconfirmed',
+      txKey: '0xfeed',
+      error: { code: 'payment_unconfirmed', reason: 'submit_failed' },
+    });
+    checkout.getState().destroy();
+  });
+
   it('does not retry a hand-over Quasar refuses, and stops retrying when the page goes away', async () => {
     vi.useFakeTimers();
     answer(

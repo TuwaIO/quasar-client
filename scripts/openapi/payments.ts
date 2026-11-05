@@ -1717,7 +1717,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         200: { description: 'The quote and its payment instructions.', ...json(CheckoutQuote) },
         400: invalid('`payer_required`, `payer_chain_mismatch`'),
         409: refused(
-          '`payer_mismatch` (the rest of an underpaid invoice is paid from the wallet that paid first; `originWallet` names it), `rest_method_mismatch` (and with the method that paid first; `methodId` names it), `buyer_required`, `consent_required` (a required consent without `consentGiven: true`), `payer_proof_required` (the EVM wallet has not confirmed the invoice: `payer-proof` first; `payer` names it), `invoice_expired`, `invoice_processing`, `invoice_not_payable`, `amount_out_of_range`, `method_not_priced`, `payment_on_its_way` (a payment of the invoice is being followed: wait for it, the quote it pays stays), `native_from_contract` (a smart wallet cannot pay in this coin: choose a token).',
+          '`payer_mismatch` (the rest of an underpaid invoice is paid from the wallet that paid first; `originWallet` names it), `rest_method_mismatch` (and with the method that paid first; `methodId` names it), `buyer_required`, `consent_required` (a required consent without `consentGiven: true`), `payer_proof_required` (the EVM wallet has not confirmed the invoice: `payer-proof` first; `payer` names it), `invoice_expired`, `invoice_processing`, `invoice_not_payable`, `amount_out_of_range`, `method_not_priced`, `payment_on_its_way` (a payment of the invoice is being followed: wait for it, the quote it pays stays), `native_from_contract` (a smart wallet cannot pay in this coin: choose a token), `too_many_payments` (the invoice was handed 50 transactions already: the buyer contacts the seller, before any money moves).',
         ),
         503: refused('`screening_unavailable` (AML in `block` mode while a source is down), `price_unavailable`.'),
         ...checkoutErrors,
@@ -1843,7 +1843,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         },
         400: invalid('`invalid_transaction`, `sender_required`'),
         409: refused(
-          "`quote_required`; `too_many_pending`: the invoice already has 3 unconfirmed transactions, wait until one is confirmed or fails; `tx_already_used`: Quasar tracks the transaction for another invoice of the app (this invoice's claim is recorded, see above): not a refusal of the payment, so never offer a second one for it; `too_many_payments`: the invoice was handed 50 transactions already, the buyer contacts the seller.",
+          "`quote_required`; `too_many_pending`: the invoice already has 3 unconfirmed transactions, wait until one is confirmed or fails; `tx_already_used`: Quasar tracks the transaction for another invoice of the app (this invoice's claim is recorded, see above): not a refusal of the payment, so never offer a second one for it; `too_many_payments`: the invoice was handed 50 transactions already: Quasar keeps the hash in the ledger for the merchant (`payment.handover_refused`) and follows it no more, so never offer a second payment; the buyer contacts the seller.",
         ),
         ...checkoutErrors,
       },
