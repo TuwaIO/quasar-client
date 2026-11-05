@@ -323,9 +323,9 @@ export interface Invoice {
   settlement: InvoiceSettlement | null;
   /**
    * Why the payment waits for you: `overpaid` when the app flags overpayments, `quote_expired` when it arrived after
-   * its locked quote expired, `payer_mismatch` when Quasar could tie it to no invoice (from another wallet than the
-   * quoted one, or from one that never confirmed the invoice): refund it to the wallet that sent it, it is never
-   * released.
+   * its locked quote expired, `payment_reverted` when a payment Quasar credited is gone from the chain (check the
+   * transaction `payment.reverted` names; the invoice keeps its status). A transfer Quasar could tie to no invoice
+   * never holds the invoice: it is a held transfer of its own.
    */
   reviewReason: string | null;
   /** The payer's AML screening, once there was one. */

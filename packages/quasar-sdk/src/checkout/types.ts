@@ -156,7 +156,9 @@ export interface CheckoutRejectedPayment {
    * payable invoice is held for a refund only: {@link CheckoutReview}), `payer_unconfirmed` (the same from a wallet that
    * never confirmed the invoice: it pays no invoice; final; a refund only when held, a transfer credited to another
    * invoice is `tx_already_used`), `native_from_contract_unverifiable`, `invoice_not_payable` (a transfer to an invoice paid, held or refunded
-   * already), `settlement_failed` (the network confirmed the transaction, but Quasar has not recorded it yet: not final,
+   * already), `below_minimum` (worth less than one minor unit of the invoice currency), `too_many_transfers` (the
+   * invoice holds 10 transfers for the merchant already), `too_many_parts` (it took 10 parts already) and
+   * `quote_changed` (a relay landed after it was quoted another way), both with `held`, `settlement_failed` (the network confirmed the transaction, but Quasar has not recorded it yet: not final,
    * never a second payment, the buyer contacts the merchant; Quasar settles it again daily for 30 days after it learned
    * of it, while `rechecked`), `unresolved_after_24h` (no result seen on chain within 24 hours: only a transaction
    * Quasar read again after that day and the network does not have), a relay's reason (`user_operation_lost`…), or
