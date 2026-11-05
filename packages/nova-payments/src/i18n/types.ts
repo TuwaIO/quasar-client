@@ -1013,6 +1013,8 @@ export type NovaPaymentsLabels = {
     /** Under the heading when part of the refund reached the buyer: asking again sends only what is missing. */
     failedShort: string;
     failedTitle: string;
+    /** The refund's own transaction cannot settle it (`over_limit`, `tx_of_another_refund`). */
+    failedByHand: string;
     /** Under it; `{network}` (default: `The transaction failed on {network}; only the network fee was spent. Send the refund again.`) */
     failedText: string;
     /** After the failure of a held transfer's refund (default: `The transfer stays held. Close this window: its row says what to do next.`) */

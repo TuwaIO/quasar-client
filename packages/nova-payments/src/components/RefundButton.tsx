@@ -301,12 +301,18 @@ export function RefundSteps({
 // Why it failed, in words for what the merchant can act on: part of it arrived, so asking again sends only the rest
 const failureText = (
   refund: Refund | null | undefined,
-  text: { failedShort: string; failedText: string },
+  text: { failedShort: string; failedByHand: string; failedText: string },
   values: Record<string, string>,
 ) =>
   refund?.failureReason === 'amount_short'
     ? text.failedShort
-    : (refund?.failureReason ?? formatLabel(text.failedText, values));
+    : byHand(refund)
+      ? text.failedByHand
+      : (refund?.failureReason ?? formatLabel(text.failedText, values));
+
+// Its own transaction cannot settle it: Quasar refuses another refund until a person checks it
+const byHand = (refund: Refund | null | undefined) =>
+  refund?.failureReason === 'over_limit' || refund?.failureReason === 'tx_of_another_refund';
 
 // The same refund asked for again, after its transaction failed on-chain
 const requestOf = (refund: Refund): RefundRequest => {
@@ -441,9 +447,13 @@ export function FailedStep({
         {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
-        <PrimaryButton busy={ask.checking} onClick={() => flow.refund && void ask.ask(requestOf(flow.refund))}>
-          {text.sendRefund}
-        </PrimaryButton>
+        {byHand(flow.refund) ? (
+          <PrimaryButton onClick={close}>{text.close}</PrimaryButton>
+        ) : (
+          <PrimaryButton busy={ask.checking} onClick={() => flow.refund && void ask.ask(requestOf(flow.refund))}>
+            {text.sendRefund}
+          </PrimaryButton>
+        )}
         {recordAction}
       </ScreenFooter>
     </>

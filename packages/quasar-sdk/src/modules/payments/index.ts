@@ -290,15 +290,29 @@ export class PaymentsModule {
    *
    * @param invoiceId - The invoice.
    * @param params - Amount (everything left when omitted), mode and reason.
+   * @param options - `idempotencyKey`: a retry with the same key returns the refund asked for first.
    * @returns The refund and what to send where.
    * @throws {QuasarSDKError} `invalid_request` (400), `invoice_not_found` (404), an invoice that cannot be refunded or
    *   an amount above what is left (409), a timeout or a network error.
    */
-  async refund(invoiceId: string, params: RefundParams = {}): Promise<RefundStart> {
+  async refund(invoiceId: string, params: RefundParams = {}, options?: CreateOptions): Promise<RefundStart> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/refunds`, {
       method: 'POST',
       body: params,
+      headers: idempotency(options),
     });
+  }
+
+  /**
+   * Takes back a refund still waiting for its transaction (`POST /v1/payments/refunds/:id/withdraw`): it holds its amount
+   * until it goes out, and nothing else ends it. A refund continued later is priced again at the rate of then.
+   *
+   * @param refundId - The refund.
+   * @returns The refund, `failed` as `withdrawn`.
+   * @throws {QuasarSDKError} `refund_not_found` (404), `refund_not_waiting` (409), a timeout or a network error.
+   */
+  async withdrawRefund(refundId: string): Promise<Refund> {
+    return this.client.request(`${PAYMENTS_ENDPOINT}/refunds/${segment(refundId)}/withdraw`, { method: 'POST' });
   }
 
   /**

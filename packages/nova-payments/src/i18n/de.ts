@@ -494,6 +494,8 @@ export const deLabels: NovaPaymentsLabels = {
     failedShort:
       'Ein Teil der Rückerstattung hat den Käufer erreicht. Senden Sie sie erneut: Es geht nur der fehlende Betrag.',
     failedTitle: 'Die Erstattung ist fehlgeschlagen',
+    failedByHand:
+      'Die Transaktion dieser Erstattung kann sie nicht abschließen: Prüfen Sie sie von Hand anhand der Erstattungen der Rechnung.',
     failedText:
       'Die Transaktion ist im Netzwerk {network} fehlgeschlagen; es wurde nur die Netzwerkgebühr verbraucht. Senden Sie die Erstattung erneut.',
     failedHeldNote:

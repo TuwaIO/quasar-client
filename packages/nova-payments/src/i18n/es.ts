@@ -476,6 +476,8 @@ export const esLabels: NovaPaymentsLabels = {
     done: 'Listo',
     failedShort: 'Parte del reembolso llegó al comprador. Envíe el reembolso de nuevo: solo se envía lo que falta.',
     failedTitle: 'El reembolso falló',
+    failedByHand:
+      'La transacción de este reembolso no puede liquidarlo: compruébala a mano con los reembolsos de la factura.',
     failedText: 'La transacción falló en {network}; solo se gastó la comisión de red. Envía el reembolso de nuevo.',
     failedHeldNote: 'La transferencia sigue retenida. Cierra esta ventana: su fila indica qué hacer a continuación.',
     notSent: 'No enviado',
