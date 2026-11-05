@@ -303,6 +303,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     keep: 'Keep them on',
     connect: 'Connect that wallet',
     otherWallet: 'Only the wallet that allowed them, {wallet}, can turn them off.',
+    useThisWallet: 'Use this wallet instead',
     inWallet: 'Confirm in {wallet}…',
     waiting: 'Waiting for the network…',
     notYet: 'The network does not show it yet. If your wallet sent the transaction, check again in a minute.',

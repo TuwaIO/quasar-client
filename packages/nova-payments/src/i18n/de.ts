@@ -319,6 +319,7 @@ export const deLabels: NovaPaymentsLabels = {
     keep: 'Aktiv lassen',
     connect: 'Dieses Wallet verbinden',
     otherWallet: 'Nur das Wallet, das sie erlaubt hat, {wallet}, kann sie deaktivieren.',
+    useThisWallet: 'Stattdessen diese Wallet verwenden',
     inWallet: 'In {wallet} bestätigen…',
     waiting: 'Warten auf das Netzwerk…',
     notYet:

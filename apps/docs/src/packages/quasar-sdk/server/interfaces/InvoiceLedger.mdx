@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # InvoiceLedger
 
-Defined in: [modules/payments/types.ts:545](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L545)
+Defined in: [modules/payments/types.ts:547](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L547)
 
 A page of an invoice ledger, oldest first, as [PaymentsModule.getEvents](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#getevents) returns it.
 
@@ -14,7 +14,7 @@ A page of an invoice ledger, oldest first, as [PaymentsModule.getEvents](?path=/
 
 > **data**: [`LedgerEvent`](?path=/docs/packages-quasar-sdk-server-interfaces-ledgerevent--docs)[]
 
-Defined in: [modules/payments/types.ts:549](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L549)
+Defined in: [modules/payments/types.ts:551](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L551)
 
 The steps of the page.
 
@@ -24,7 +24,7 @@ The steps of the page.
 
 > **nextCursor**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:553](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L553)
+Defined in: [modules/payments/types.ts:555](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L555)
 
 Pass it as `cursor` for the next page; `null` on the last page.
 
@@ -34,7 +34,7 @@ Pass it as `cursor` for the next page; `null` on the last page.
 
 > **object**: `"list"`
 
-Defined in: [modules/payments/types.ts:547](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L547)
+Defined in: [modules/payments/types.ts:549](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L549)
 
 Always `list`.
 
@@ -44,7 +44,7 @@ Always `list`.
 
 > **summary**: [`LedgerSummary`](?path=/docs/packages-quasar-sdk-server-interfaces-ledgersummary--docs)
 
-Defined in: [modules/payments/types.ts:555](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L555)
+Defined in: [modules/payments/types.ts:557](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L557)
 
 Who created the invoice and when its quote was locked and its receipt issued.
 
@@ -54,7 +54,7 @@ Who created the invoice and when its quote was locked and its receipt issued.
 
 > **total**: `number`
 
-Defined in: [modules/payments/types.ts:551](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L551)
+Defined in: [modules/payments/types.ts:553](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L553)
 
 How many steps the whole ledger has.
 
@@ -64,6 +64,6 @@ How many steps the whole ledger has.
 
 > `optional` **verification?**: [`LedgerVerification`](?path=/docs/packages-quasar-sdk-server-type-aliases-ledgerverification--docs)
 
-Defined in: [modules/payments/types.ts:557](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L557)
+Defined in: [modules/payments/types.ts:559](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L559)
 
 The check of the whole chain, when asked for with `verify: true`.

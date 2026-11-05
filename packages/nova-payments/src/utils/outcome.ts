@@ -187,6 +187,22 @@ export interface AutoPayTerms {
 }
 
 /**
+ * What the connected wallet may ask its wallet for: the offer, or taking over an active permission that holds nothing.
+ *
+ * @param offer - The automatic-charge offer of the checkout.
+ * @returns The method and the request, or `null` when nothing can be given now.
+ */
+export function grantableOffer(
+  offer: AutoChargeOffer | null,
+):
+  | Extract<AutoChargeOffer, { status: 'available' }>
+  | NonNullable<Extract<AutoChargeOffer, { status: 'active' }>['replacement']>
+  | null {
+  if (offer?.status === 'available') return offer;
+  return offer?.status === 'active' ? (offer.replacement ?? null) : null;
+}
+
+/**
  * The terms of an ERC-7715 automatic payments offer: the periodic limit in the token of the method, the period, the
  * expiry and the merchant's wallet the charges are paid to.
  *
@@ -195,10 +211,11 @@ export interface AutoPayTerms {
  * @returns The terms, or `null` when the offer is not available or its method is unknown.
  */
 export function autoPayTerms(offer: AutoChargeOffer | null, methods: CheckoutMethod[]): AutoPayTerms | null {
-  if (offer?.status !== 'available') return null;
-  const method = methods.find((item) => item.id === offer.methodId);
+  const grantable = grantableOffer(offer);
+  if (!grantable) return null;
+  const method = methods.find((item) => item.id === grantable.methodId);
   if (!method) return null;
-  const { request } = offer;
+  const { request } = grantable;
   const expiry = request.rules.find((rule) => rule.type === 'expiry')?.data as { timestamp?: number } | undefined;
   // The permission pays only the merchant's wallet; `request.to` is the collector that sends each charge
   const payee = request.rules.find((rule) => rule.type === 'payee')?.data as { addresses?: string[] } | undefined;

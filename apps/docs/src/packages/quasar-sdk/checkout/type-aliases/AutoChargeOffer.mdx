@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # AutoChargeOffer
 
-> **AutoChargeOffer** = \{ `methodId`: `string`; `request`: [`PermissionRequest`](?path=/docs/packages-quasar-sdk-checkout-interfaces-permissionrequest--docs); `status`: `"available"`; \} \| \{ `permission`: [`SubscriptionPermission`](?path=/docs/packages-quasar-sdk-server-interfaces-subscriptionpermission--docs) \| `null`; `revocation`: \{ `data`: `string`; `to`: `string`; \} \| `null`; `status`: `"active"`; \} \| \{ `reason`: `string`; `status`: `"unavailable"`; \}
+> **AutoChargeOffer** = \{ `methodId`: `string`; `request`: [`PermissionRequest`](?path=/docs/packages-quasar-sdk-checkout-interfaces-permissionrequest--docs); `status`: `"available"`; \} \| \{ `permission`: [`SubscriptionPermission`](?path=/docs/packages-quasar-sdk-server-interfaces-subscriptionpermission--docs) \| `null`; `replacement?`: \{ `methodId`: `string`; `request`: [`PermissionRequest`](?path=/docs/packages-quasar-sdk-checkout-interfaces-permissionrequest--docs); \}; `revocation`: \{ `data`: `string`; `to`: `string`; \} \| `null`; `status`: `"active"`; \} \| \{ `reason`: `string`; `status`: `"unavailable"`; \}
 
 Defined in: [checkout/types.ts:515](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L515)
 
@@ -38,13 +38,28 @@ Ask the wallet with `request`, then pass its answer to [CheckoutState.grantPermi
 
 ### Type Literal
 
-\{ `permission`: [`SubscriptionPermission`](?path=/docs/packages-quasar-sdk-server-interfaces-subscriptionpermission--docs) \| `null`; `revocation`: \{ `data`: `string`; `to`: `string`; \} \| `null`; `status`: `"active"`; \}
+\{ `permission`: [`SubscriptionPermission`](?path=/docs/packages-quasar-sdk-server-interfaces-subscriptionpermission--docs) \| `null`; `replacement?`: \{ `methodId`: `string`; `request`: [`PermissionRequest`](?path=/docs/packages-quasar-sdk-checkout-interfaces-permissionrequest--docs); \}; `revocation`: \{ `data`: `string`; `to`: `string`; \} \| `null`; `status`: `"active"`; \}
 
 #### permission
 
 > **permission**: [`SubscriptionPermission`](?path=/docs/packages-quasar-sdk-server-interfaces-subscriptionpermission--docs) \| `null`
 
 The permission.
+
+#### replacement?
+
+> `optional` **replacement?**: `object`
+
+What another wallet asks for to take over, when the permission never charged anything or its wallet ran out of
+funds: it confirms the invoice and gives its own (`POST permission`).
+
+##### replacement.methodId
+
+> **methodId**: `string`
+
+##### replacement.request
+
+> **request**: [`PermissionRequest`](?path=/docs/packages-quasar-sdk-checkout-interfaces-permissionrequest--docs)
 
 #### revocation
 

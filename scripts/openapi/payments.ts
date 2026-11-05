@@ -285,6 +285,10 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           'What the e-invoice lacked when the invoice was issued as a plain PDF, for example `buyer.country`.',
       }),
       refundedTotal: money('Refunded so far.'),
+      refundShort: z.string().optional().openapi({
+        description:
+          'What refunds that arrived short delivered, of those nothing completes yet: a new refund has that much less to return. With `GET /invoices/{id}` only.',
+      }),
       replaces: z.string().nullable(),
       replacedBy: z.string().nullable(),
       subscriptionId: z.string().nullable(),
@@ -670,11 +674,31 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _checkSubscription: z.ZodType<Subscription> = Subscription;
 
+  const AutoChargeRequest = z.object({
+    chainId: z.string(),
+    to: z.string(),
+    permission: z.object({
+      type: z.literal('erc20-token-periodic'),
+      isAdjustmentAllowed: z.boolean(),
+      data: z.object({
+        tokenAddress: z.string(),
+        periodAmount: z.string(),
+        periodDuration: z.number(),
+        startTime: z.number(),
+        justification: z.string(),
+      }),
+    }),
+    rules: z.array(z.object({ type: z.string(), data: z.unknown() })),
+  });
   const ActiveAutoCharge = z.object({
     status: z.literal('active'),
     permission: Subscription.shape.permission,
     revocation: z.object({ to: z.string(), data: z.string() }).nullable().openapi({
       description: 'The transaction that revokes the permission, for the wallet that granted it to send and pay for.',
+    }),
+    replacement: z.object({ methodId: z.string(), request: AutoChargeRequest }).optional().openapi({
+      description:
+        'What another wallet asks for to take over, when the permission never charged anything or its wallet ran out of funds: it confirms the invoice and gives its own.',
     }),
   });
   registry.register('Subscription', Subscription);
@@ -1022,7 +1046,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     '/invoices/{id}/refunds',
     'Refunds',
     'Ask for a refund',
-    'Prices the refund; send the amount from your wallet to the payer, then submit the transaction. A refund limit is the value of what arrived: a short payment you released never returns more than it brought. A retry with the same `Idempotency-Key` returns the refund the first call created.',
+    'Prices the refund; send the amount from your wallet to the payer, then submit the transaction. A refund limit is the value of what arrived: a short payment you released never returns more than it brought. A retry with the same `Idempotency-Key` returns the refund the first call created while it waits for its transaction.',
     {
       request: {
         params: idParam('id', 'Invoice ID.'),
@@ -1048,7 +1072,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         400: invalid('`amount_exceeds_refundable`, `held_refund_must_be_whole`'),
         404: refused('`invoice_not_found`.'),
         409: refused(
-          '`invoice_not_refundable`, `exact_refund_needs_whole_invoice`, `payment_unknown`: the payment to refund is not known; `sender_blocked`: the AML check blocks the wallet the refund would go to; `refund_top_up_waiting`: a top-up of a short refund waits for its transaction; `idempotency_key_reused`.',
+          '`invoice_not_refundable`, `exact_refund_needs_whole_invoice`, `payment_unknown`: the payment to refund is not known; `sender_blocked`: the AML check blocks the wallet the refund would go to; `refund_top_up_waiting`: a top-up of a short refund waits for its transaction; `idempotency_key_reused`: the key was used for another invoice, mode or amount; `refund_not_waiting`: the key was used for a refund already sent, finished, failed or taken back (`details.refund`): a new refund needs a new key.',
         ),
         ...common,
       },
@@ -1287,6 +1311,13 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       'A new period starts now and is invoiced at once.',
       SubscriptionStart,
       '`subscription_not_paused`, `subscription_over`: its cycles or end date are past.',
+    ],
+    [
+      'permission/end',
+      'End the automatic-charge permission',
+      'For a buyer who lost the wallet: Quasar charges it no more (`subscription.permission_revoked`), and the buyer pays from the invoice links or gives a new permission. The delegation stays valid on chain until its wallet revokes it, but Quasar does not use it again.',
+      Subscription,
+      '`permission_not_active`.',
     ],
   ] as const) {
     route('post', `/subscriptions/{id}/${action}`, 'Subscriptions', summary, description, {
@@ -1618,22 +1649,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           z.object({
             status: z.literal('available'),
             methodId: z.string(),
-            request: z.object({
-              chainId: z.string(),
-              to: z.string(),
-              permission: z.object({
-                type: z.literal('erc20-token-periodic'),
-                isAdjustmentAllowed: z.boolean(),
-                data: z.object({
-                  tokenAddress: z.string(),
-                  periodAmount: z.string(),
-                  periodDuration: z.number(),
-                  startTime: z.number(),
-                  justification: z.string(),
-                }),
-              }),
-              rules: z.array(z.object({ type: z.string(), data: z.unknown() })),
-            }),
+            request: AutoChargeRequest,
           }),
           ActiveAutoCharge,
           z.object({ status: z.literal('unavailable'), reason: z.string() }),
@@ -1903,8 +1919,12 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           description: 'The permission, and what the checkout now offers.',
           ...json(z.object({ permission: Subscription.shape.permission, autoCharge: ActiveAutoCharge })),
         },
-        400: invalid('`payer_chain_mismatch`, `permission_invalid`: the context does not grant the requested terms'),
-        409: refused('`subscription_not_active`, `auto_charge_unavailable`.'),
+        400: invalid(
+          "`payer_chain_mismatch`, `permission_invalid`: the context does not grant the requested terms, or the wallet is not one of the delegation framework's (`details.reason`: `wallet_unknown`)",
+        ),
+        409: refused(
+          '`subscription_not_active`, `auto_charge_unavailable`, `payer_proof_required`, `permission_active`: a permission that pays stays with its wallet, unless it never charged anything or ran out of funds (`replacement` in the offer).',
+        ),
         ...checkoutErrors,
       },
     },

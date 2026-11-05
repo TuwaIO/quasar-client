@@ -336,6 +336,8 @@ export interface Invoice {
   eInvoiceSkipped: string[] | null;
   /** Refunded so far, in the invoice currency. */
   refundedTotal: string;
+  /** What refunds that arrived short delivered, of those nothing completes yet: a new refund has that much less to return. Read with one invoice only. */
+  refundShort?: string;
   /** The invoice this one corrects. */
   replaces: string | null;
   /** The invoice that corrects this one. */

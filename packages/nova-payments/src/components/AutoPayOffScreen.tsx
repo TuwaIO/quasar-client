@@ -41,12 +41,14 @@ export function AutoPayOffScreen() {
     adapterFor,
     connectFamily,
     setAutoPayOff,
+    setAutoPay,
     revokeSent: sent,
     setRevokeSent,
   } = useCheckoutContext();
   const [step, setStep] = useState<'idle' | 'wallet' | 'network'>('idle');
   const [problem, setProblem] = useState<PaymentWalletErrorKind | 'notYet' | 'notAsked' | null>(null);
   const offer = checkout?.autoCharge;
+  const replaceable = offer?.status === 'active' && Boolean(offer.replacement);
   if (!checkout || offer?.status !== 'active' || !offer.permission || !offer.revocation) return null;
 
   const { permission, revocation } = offer;
@@ -149,6 +151,17 @@ export function AutoPayOffScreen() {
           </PrimaryButton>
         ) : (
           <PrimaryButton onClick={() => void connectFamily('eip155')}>{labels.autoPayOff.connect}</PrimaryButton>
+        )}
+        {/* It never charged anything, or ran out of funds: this wallet may take over, with its own permission */}
+        {!payerConnected && wallet && replaceable && (
+          <SecondaryButton
+            onClick={() => {
+              setAutoPayOff(null);
+              setAutoPay(true);
+            }}
+          >
+            {labels.autoPayOff.useThisWallet}
+          </SecondaryButton>
         )}
         <SecondaryButton onClick={() => setAutoPayOff(null)}>{labels.autoPayOff.keep}</SecondaryButton>
       </ScreenFooter>

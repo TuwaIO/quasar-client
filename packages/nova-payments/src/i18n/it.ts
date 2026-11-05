@@ -310,6 +310,7 @@ export const itLabels: NovaPaymentsLabels = {
     keep: 'Lasciali attivi',
     connect: 'Collega quel wallet',
     otherWallet: 'Solo il wallet che li ha autorizzati, {wallet}, può disattivarli.',
+    useThisWallet: 'Usa invece questo wallet',
     inWallet: 'Conferma in {wallet}…',
     waiting: 'In attesa della rete…',
     notYet: 'La rete non lo mostra ancora. Se il wallet ha inviato la transazione, controlla di nuovo tra un minuto.',

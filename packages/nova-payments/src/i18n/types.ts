@@ -585,6 +585,7 @@ export type NovaPaymentsLabels = {
     connect: string;
     /** When that wallet is not connected: `{wallet}` */
     otherWallet: string;
+    useThisWallet: string;
     /** While the wallet asks: `{wallet}` (default: `Confirm in {wallet}…`) */
     inWallet: string;
     /** While the network confirms (default: `Waiting for the network…`) */

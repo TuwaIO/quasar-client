@@ -290,7 +290,10 @@ export class PaymentsModule {
    *
    * @param invoiceId - The invoice.
    * @param params - Amount (everything left when omitted), mode and reason.
-   * @param options - `idempotencyKey`: a retry with the same key returns the refund asked for first.
+   * @param options - `idempotencyKey`: a retry with the same key answers the refund asked for first while it waits for
+   *   its transaction. Once it was sent, finished, failed or taken back the same key answers `refund_not_waiting` (409,
+   *   the refund in `details.refund`), so nothing is sent twice: a new refund needs a new key. `idempotency_key_reused`
+   *   (409): the key was used for another invoice, mode or amount.
    * @returns The refund and what to send where.
    * @throws {QuasarSDKError} `invalid_request` (400), `invoice_not_found` (404), an invoice that cannot be refunded or
    *   an amount above what is left (409), a timeout or a network error.
@@ -305,7 +308,9 @@ export class PaymentsModule {
 
   /**
    * Takes back a refund still waiting for its transaction (`POST /v1/payments/refunds/:id/withdraw`): it holds its amount
-   * until it goes out, and nothing else ends it. A refund continued later is priced again at the rate of then.
+   * until it goes out, and nothing else ends it. A refund continued later is priced again at the rate of then. Call
+   * `reset()` on a refund store that holds it (`createRefundStore`): it would still offer to send it, and Quasar would
+   * refuse to record what was sent.
    *
    * @param refundId - The refund.
    * @returns The refund, `failed` as `withdrawn`.
@@ -543,6 +548,22 @@ export class PaymentsModule {
    */
   async undoSubscriptionCancel(subscriptionId: string): Promise<Subscription> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/cancel/undo`, {
+      method: 'POST',
+      body: {},
+    });
+  }
+
+  /**
+   * Ends the automatic-charge permission of a subscription (`POST /v1/payments/subscriptions/:id/permission/end`), for a
+   * buyer who lost the wallet: Quasar charges it no more, and the buyer pays from the invoice links or gives a new
+   * permission. The delegation stays valid on chain until its wallet revokes it, but Quasar does not use it again.
+   *
+   * @param subscriptionId - The subscription.
+   * @returns The subscription.
+   * @throws {QuasarSDKError} `subscription_not_found` (404), `permission_not_active` (409), a timeout or a network error.
+   */
+  async endSubscriptionPermission(subscriptionId: string): Promise<Subscription> {
+    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/permission/end`, {
       method: 'POST',
       body: {},
     });

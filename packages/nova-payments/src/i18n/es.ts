@@ -306,6 +306,7 @@ export const esLabels: NovaPaymentsLabels = {
     keep: 'Mantenerlos activados',
     connect: 'Conectar esa billetera',
     otherWallet: 'Solo la billetera que los autorizó, {wallet}, puede desactivarlos.',
+    useThisWallet: 'Usar esta billetera en su lugar',
     inWallet: 'Confirma en {wallet}…',
     waiting: 'Esperando a la red…',
     notYet: 'La red aún no lo muestra. Si tu billetera envió la transacción, comprueba de nuevo en un minuto.',

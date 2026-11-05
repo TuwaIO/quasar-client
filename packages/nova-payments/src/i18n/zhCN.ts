@@ -292,6 +292,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     keep: '保持开启',
     connect: '连接该钱包',
     otherWallet: '只有授权的钱包 {wallet} 才能关闭。',
+    useThisWallet: '改用此钱包',
     inWallet: '请在 {wallet} 中确认…',
     waiting: '正在等待网络…',
     notYet: '网络尚未显示。如果钱包已发送交易，请一分钟后再次检查。',

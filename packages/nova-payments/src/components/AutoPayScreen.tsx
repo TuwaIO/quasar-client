@@ -6,7 +6,7 @@ import { useStepHeight } from '../hooks/useStepHeight';
 import { formatLabel } from '../i18n';
 import { formatTokenAmount, shortAddress } from '../utils/format';
 import { methodFamily, networkName } from '../utils/methods';
-import { autoPayTerms, formatPeriod, methodErrorText } from '../utils/outcome';
+import { autoPayTerms, formatPeriod, grantableOffer, methodErrorText } from '../utils/outcome';
 import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
 import { mono } from './classes';
 import {
@@ -41,15 +41,13 @@ export function AutoPayScreen() {
   if (!checkout) return null;
   const merchant = checkout.merchant.name;
   const terms = autoPayTerms(checkout.autoCharge, checkout.methods);
-  const offer = checkout.autoCharge;
-  const method =
-    offer?.status === 'available' ? checkout.methods.find((item) => item.id === offer.methodId) : undefined;
+  const offer = grantableOffer(checkout.autoCharge);
+  const method = offer ? checkout.methods.find((item) => item.id === offer.methodId) : undefined;
   const family = method ? methodFamily(method) : null;
   const adapter = family ? adapterFor(family) : undefined;
 
   const allow = async () => {
-    if (offer?.status !== 'available' || !terms || !wallet || !adapter?.requestPermission)
-      return setProblem('unsupported');
+    if (!offer || !terms || !wallet || !adapter?.requestPermission) return setProblem('unsupported');
     setProblem(null);
     setAsking(true);
     try {

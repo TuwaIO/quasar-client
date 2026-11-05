@@ -531,6 +531,11 @@ export type AutoChargeOffer =
        * {@link CheckoutState.permissionRevoked}. `null` when it cannot be built.
        */
       revocation: { to: string; data: string } | null;
+      /**
+       * What another wallet asks for to take over, when the permission never charged anything or its wallet ran out of
+       * funds: it confirms the invoice and gives its own (`POST permission`).
+       */
+      replacement?: { methodId: string; request: PermissionRequest };
     }
   | {
       /** Not possible now; the buyer pays each invoice. */
