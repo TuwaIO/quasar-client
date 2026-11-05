@@ -395,6 +395,8 @@ export const itLabels: NovaPaymentsLabels = {
       "Questa fattura non accetta altri pagamenti e Quasar non segue questo. Non pagare di nuovo; se è uscito dal tuo wallet, contatta {merchant} con l'hash della transazione.",
     unconfirmedTakenElsewhere:
       "Questa transazione è stata consegnata prima per un'altra fattura. Quasar la accredita alla fattura confermata dal wallet che l'ha inviata, e questa pagina mostra il risultato finché segue il pagamento. Non pagare di nuovo; se il tuo pagamento non compare qui, contatta {merchant} indicando l'hash della transazione.",
+    unconfirmedUnmined:
+      'Quasar legge questo pagamento per una settimana da quando ne è venuto a conoscenza e lo registra se va a buon fine. Controlla il tuo wallet; se è uscito e hai bisogno di aiuto, contatta {merchant} indicando l’hash di questa transazione.',
     unconfirmedNonceSpent:
       'Il tuo wallet ha usato il numero di questa transazione per un’altra che Quasar non è riuscito a trovare, quindi potrebbe essere uscito denaro dal wallet. Per ora non pagare di nuovo. Se l’hai accelerata, indica il suo hash qui sotto; altrimenti contatta {merchant} con questo hash di transazione.',
     unconfirmedSettlementFailed:

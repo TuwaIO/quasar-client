@@ -809,6 +809,12 @@ export type NovaPaymentsLabels = {
      */
     unconfirmedNonceSpent: string;
     /**
+     * A payment a tracker saw on the network that was not mined for a day, which Quasar reads hourly for a week and records if
+     * it lands: `{merchant}` (default: `Quasar reads this payment for a week after it learned of it, and records it if it goes
+     * through. Check your wallet; if it left and you need help, contact {merchant} with this transaction hash.`)
+     */
+    unconfirmedUnmined: string;
+    /**
      * Instead of `unconfirmedSettlementFailed` while Quasar still settles the payment again daily (`rechecked`, for 30
      * days after it learned of it): `{merchant}` (default: `The network confirmed your payment, but Quasar has not
      * recorded it yet. Quasar tries again daily, for 30 days after it learned of the payment. Do not pay again; contact

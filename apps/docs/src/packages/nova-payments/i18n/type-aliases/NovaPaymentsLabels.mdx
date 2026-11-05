@@ -604,7 +604,7 @@ Title of the menu (default: `Language`)
 
 > **leave**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:875](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L875)
+Defined in: [nova-payments/src/i18n/types.ts:881](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L881)
 
 The question when the buyer closes the checkout before a transaction is sent.
 
@@ -1194,6 +1194,14 @@ Its text (default: `Check your wallet before paying again: your payment may stil
 
 Heading when Quasar could not confirm the payment on a payable invoice: it may still arrive, so the checkout offers
 no payment (default: `We could not confirm your payment`)
+
+#### unconfirmedUnmined
+
+> **unconfirmedUnmined**: `string`
+
+A payment a tracker saw on the network that was not mined for a day, which Quasar reads hourly for a week and records if
+it lands: `{merchant}` (default: `Quasar reads this payment for a week after it learned of it, and records it if it goes
+through. Check your wallet; if it left and you need help, contact {merchant} with this transaction hash.`)
 
 #### underpaidBlocked
 
@@ -2128,7 +2136,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:956](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L956)
+Defined in: [nova-payments/src/i18n/types.ts:962](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L962)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2722,7 +2730,7 @@ Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: 
 
 > **summary**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:890](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L890)
+Defined in: [nova-payments/src/i18n/types.ts:896](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L896)
 
 The order panel: the seller, the deadline, the lines and the total.
 

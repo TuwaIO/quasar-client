@@ -2344,6 +2344,68 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
     reopened.getState().destroy();
   });
 
+  // The buyer pasted the wrong hash from the wallet's history: it pays nothing and says nothing of the nonce, and the page went
+  // back to Pay though the transaction that spent it may have moved the money
+  it('stays shut when a newer transaction ends for good while the nonce is still unexplained', async () => {
+    const closed = rejection('0xfeed', 'nonce_spent_unexplained', false, { movedMoney: true });
+    const wrong = rejection('0xbad', 'no_matching_transfer', true, { movedMoney: true });
+    answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [wrong, closed] });
+    const reopened = store();
+    await reopened.getState().load();
+    expect(reopened.getState()).toMatchObject({
+      phase: 'unconfirmed',
+      error: { code: 'payment_unconfirmed', reason: 'nonce_spent_unexplained' },
+    });
+    reopened.getState().payAgain();
+    expect(reopened.getState().phase).toBe('unconfirmed');
+    reopened.getState().destroy();
+  });
+
+  it('stays shut live too, when the transaction the buyer named ends for good', async () => {
+    const closed = rejection('0xfeed', 'nonce_spent_unexplained', false, { movedMoney: true });
+    answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [closed] });
+    const live = store();
+    await live.getState().load();
+    fetchMock.mockResolvedValueOnce(json({ object: 'checkout_submission', status: 'open' }));
+    await live.getState().submit({ txKey: '0xbad' });
+    const events = FakeEventSource.instances.at(-1) as FakeEventSource;
+    const wrong = rejection('0xbad', 'no_matching_transfer', true, { movedMoney: true });
+    events.emit('status', {
+      status: 'open',
+      ledgerSeq: 9,
+      txHash: null,
+      amountPaid: null,
+      quoteExpiresAt: null,
+      pendingPayments: 0,
+      unresolvedPayments: 0,
+      rejectedPayments: [wrong, closed],
+    });
+    await vi.waitFor(() =>
+      expect(live.getState()).toMatchObject({
+        phase: 'unconfirmed',
+        error: { code: 'payment_unconfirmed', reason: 'nonce_spent_unexplained' },
+      }),
+    );
+    live.getState().destroy();
+  });
+
+  // The hand-over of the named hash failed on the network: the retry text offered "the payment did not leave my wallet"
+  it('stays shut while a transaction the buyer named is handed over again, or once that is given up', async () => {
+    const closed = rejection('0xfeed', 'nonce_spent_unexplained', false, { movedMoney: true });
+    answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [closed] });
+    const page = store();
+    await page.getState().load();
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    await page.getState().submit({ txKey: '0xbad' });
+    expect(page.getState()).toMatchObject({
+      phase: 'unconfirmed',
+      error: { reason: 'nonce_spent_unexplained' },
+    });
+    page.getState().payAgain();
+    expect(page.getState().phase).toBe('unconfirmed');
+    page.getState().destroy();
+  });
+
   // Seen on the network and not mined for a day: a wallet may still hold it, so the buyer checks it before paying again
   it('asks to check the wallet for a payment that was seen and not mined for a day', async () => {
     const closed = rejection('0xfeed', 'unmined_after_24h', false);

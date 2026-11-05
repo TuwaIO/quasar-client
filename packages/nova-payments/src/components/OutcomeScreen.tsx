@@ -65,6 +65,7 @@ const isUnconfirmed = (error: { code: string } | null | undefined) => error?.cod
 /** The note about a payment Quasar did not confirm, by what Quasar does with it. */
 const FOLLOW_UP_NOTE: Record<UnconfirmedFollowUp, keyof NovaPaymentsLabels['outcome']> = {
   nonceSpent: 'unconfirmedNonceSpent',
+  unmined: 'unconfirmedUnmined',
   rechecked: 'unconfirmedNote',
   retrying: 'unconfirmedRetrying',
   notReceived: 'unconfirmedNotReceived',
@@ -82,6 +83,7 @@ const FOLLOW_UP_NOTE: Record<UnconfirmedFollowUp, keyof NovaPaymentsLabels['outc
  */
 const FOR_THE_SELLER: ReadonlySet<UnconfirmedFollowUp> = new Set([
   'nonceSpent',
+  'unmined',
   'notReceived',
   'contact',
   'closed',
@@ -508,6 +510,8 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
                   : followUpNote(unconfirmedNext)}
               </Text>
               {transaction(unconfirmedNext)}
+              {/* Past the due date is where this reason usually comes to, as the sweep closes a payment a day after it */}
+              {unconfirmedNext === 'nonceSpent' && <NameTransaction />}
             </>
           ) : closed ? (
             <>
@@ -544,6 +548,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
           <>
             <Text>{followUpNote(followUp)}</Text>
             {transaction(followUp)}
+            {followUp === 'nonceSpent' && <NameTransaction />}
           </>
         );
         break;

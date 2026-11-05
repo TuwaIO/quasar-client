@@ -29,7 +29,8 @@ const { defaultLabels } = await import('../i18n');
 const fixture = await import('../testing/checkoutFixture');
 const { PrimaryButton, SecondaryButton, ScreenContent, ScreenError } = await import('./ScreenParts');
 const { RadioCards } = await import('./RadioCards');
-const { AmountStep, ConfirmStep, FailedStep, RefundButton, RefundDialog, RefundSteps } = await import('./RefundButton');
+const { isSlow, AmountStep, ConfirmStep, FailedStep, RefundButton, RefundDialog, RefundSteps } =
+  await import('./RefundButton');
 const { refundRateMoved } = await import('../utils/outcome');
 
 type Props = Record<string, unknown>;
@@ -123,6 +124,15 @@ const PREVIEW = {
 
 // Board RefundSendStates of the dashboard sketch: the steps of a refund from the merchant's wallet
 describe('RefundButton', () => {
+  // Counted from when it was asked for, the window said slow and offered to name a hash Quasar then refused as too soon
+  it('counts a refund as slow from when it last changed, not from when it was asked for', () => {
+    const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
+    expect(isSlow({ createdAt: ago(600), updatedAt: ago(1) } as never)).toBe(false);
+    expect(isSlow({ createdAt: ago(600), updatedAt: ago(30) } as never)).toBe(true);
+    expect(isSlow({ createdAt: ago(30) } as never)).toBe(true);
+    expect(isSlow(null)).toBe(false);
+  });
+
   it('asks what to refund: an amount of the invoice currency (everything left when empty) or everything received', async () => {
     const flow = flowOf({ step: 'amount' });
     let tree = render(AmountStep, {

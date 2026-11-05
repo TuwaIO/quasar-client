@@ -360,6 +360,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
       '此发票不再接受付款,Quasar 也不再跟踪这笔付款。请勿重复付款;如果款项已从您的钱包转出,请携带交易哈希联系 {merchant}。',
     unconfirmedTakenElsewhere:
       '此交易已先被提交给另一张发票。Quasar 会将其计入发送它的钱包所确认的发票，此页面在跟踪付款期间会显示结果。请勿再次付款；如果您的付款未在此处显示，请提供交易哈希联系 {merchant}。',
+    unconfirmedUnmined:
+      '自得知这笔付款起，Quasar 会读取一周，如果它成功就会记录。请检查您的钱包；如果款项已转出且需要帮助，请提供此交易哈希联系 {merchant}。',
     unconfirmedNonceSpent:
       '您的钱包把这笔交易的编号用于了另一笔交易，Quasar 无法找到它，因此款项可能已离开您的钱包。暂时不要再次付款。如果您加速了它，请在下方填写其哈希；否则请携带此交易哈希联系 {merchant}。',
     unconfirmedSettlementFailed: '网络已确认您的付款，但 Quasar 未记录。请勿再次付款；请提供交易哈希联系 {merchant}。',

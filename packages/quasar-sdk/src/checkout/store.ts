@@ -986,6 +986,14 @@ const keepsPaymentShut = (error: CheckoutError | null) =>
     error.reason === NONCE_SPENT ||
     error.reason === INVOICE_FULL);
 
+/**
+ * The rejection of a payment whose nonce went to a transaction nothing found, when Quasar still lists it: it lists none once
+ * what spent the nonce is recorded. Read from the whole list and not from the newest: a transaction the buyer named by mistake
+ * ends for good and says nothing of that nonce, and the money may still have left in what spent it.
+ */
+const openNonceSpent = <R extends { reason?: string | null }>(rejections: readonly R[]) =>
+  rejections.find((rejection) => rejection.reason === NONCE_SPENT) ?? null;
+
 /** Whether the error is the store's word on a transaction another invoice handed over first. */
 const isTakenElsewhere = (error: CheckoutError | null) =>
   error?.code === 'payment_unconfirmed' && error.reason === TAKEN_ELSEWHERE;
@@ -1123,6 +1131,10 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
   const submitRetries = new Map<string, ReturnType<typeof setTimeout>>();
   /** Whether Quasar last reported a payment of the invoice that it reads again (`unresolvedPayments` above `0`). */
   let quasarRechecks = false;
+  /** The payment whose nonce nothing explains yet, as Quasar last listed it: the page stays shut, whatever else happens. */
+  let nonceStillOpen: ReturnType<typeof openNonceSpent<Rejection>> = null;
+  /** What keeps the page shut while {@link nonceStillOpen}: any other word on a hand-over would offer a payment. */
+  const shutByNonce = () => ({ error: nonceSpentError() });
   /**
    * The number of the latest {@link CheckoutState.confirmPayer} attempt: a new call replaces the one under way (a
    * prompt the buyer closed may never answer), whose late answer only records the wallet's proof.
@@ -1451,6 +1463,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
             })
           : { final: true };
       }
+      if (rejections) nonceStillOpen = openNonceSpent(rejections);
+      if (ended?.final && nonceStillOpen) ended = nonceStillOpen;
       if (ended?.final) {
         // The transaction can never pay the invoice (it may still have moved money: `payment_mismatch`): the buyer
         // may pay again while it is payable
@@ -1683,22 +1697,29 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         }
         if (!retryable(error)) {
           forgetHandOver(body.txKey);
-          if (!quiet()) fail(error, before === 'submitting' ? 'awaitingPayment' : before);
+          // A hash the buyer named was refused, which says nothing of the nonce. `NameTransaction` says it was refused
+          if (nonceStillOpen && !quiet()) update({ ...shutByNonce(), ...(closed() ? {} : { phase: 'unconfirmed' }) });
+          else if (!quiet()) fail(error, before === 'submitting' ? 'awaitingPayment' : before);
           return false;
         }
         // The wallet sent the transaction and Quasar has not received it: never offer to pay again meanwhile
         if (!quiet()) {
-          update({ txKey: body.txKey, error: retryingError(), ...(closed() ? {} : { phase: 'unconfirmed' as const }) });
+          update({
+            txKey: body.txKey,
+            ...(nonceStillOpen ? shutByNonce() : { error: retryingError() }),
+            ...(closed() ? {} : { phase: 'unconfirmed' as const }),
+          });
         }
         const retryUntil = Date.now() + SUBMIT_RETRY_FOR_MS;
         /** Whether the page still waits for this hand-over: the retry error of this transaction is shown. */
-        const waiting = () => get().error?.reason === 'submit_retrying' && get().txKey === body.txKey;
+        const waiting = () =>
+          (get().error?.reason === 'submit_retrying' || Boolean(nonceStillOpen)) && get().txKey === body.txKey;
         const retry = (attempt: number) => {
           const pause = SUBMIT_RETRY_MS[Math.min(attempt, SUBMIT_RETRY_MS.length - 1)];
           if (destroyed) return;
           if (Date.now() + pause > retryUntil) {
             // Given up: the page stops promising to keep trying. The hand-over stays kept for the next load
-            if (waiting()) update({ error: submitFailedError() });
+            if (waiting()) update(nonceStillOpen ? shutByNonce() : { error: submitFailedError() });
             return;
           }
           const timer = setTimeout(() => {
@@ -1728,6 +1749,10 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
                 }
                 // Refused: say why where the page still waits for this hand-over (the buyer may pay again then)
                 if (!waiting()) return;
+                if (nonceStillOpen) {
+                  update(shutByNonce());
+                  return;
+                }
                 const refusal = errorOf(again);
                 const phaseOfRefusal = PHASE_OF_REFUSAL[refusal.code];
                 const now = get().phase;
@@ -1808,10 +1833,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           const latest = rejections?.[0];
           const unresolved = unresolvedOf(invoice);
           const reopenable = invoice.status === 'open' || invoice.status === 'underpaid' || CLOSED.has(invoice.status);
+          if (rejections) nonceStillOpen = openNonceSpent(rejections);
           if (!onItsWay && !get().paymentOnTheWay && reopenable) {
             // No plain payment while the latest one may still arrive or moved money without a final word
             let check = false;
-            if (latest && !latest.final && !resolvedSince(latest, invoice)) {
+            if (nonceStillOpen) {
+              error = endedError(nonceStillOpen);
+              check = true;
+            } else if (latest && !latest.final && !resolvedSince(latest, invoice)) {
               // The latest payment may still have gone through: the buyer checks the wallet before paying again
               error = endedError(latest);
               check = true;

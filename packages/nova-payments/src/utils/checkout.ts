@@ -600,6 +600,7 @@ export function isInvoicePaymentUnresolved(
  */
 export type UnconfirmedFollowUp =
   | 'nonceSpent'
+  | 'unmined'
   | 'rechecked'
   | 'retrying'
   | 'notReceived'
@@ -632,6 +633,8 @@ export function unconfirmedFollowUp(error: CheckoutError | null | undefined): Un
   }
   if (code !== 'payment_unconfirmed') return null;
   if (reason === 'nonce_spent_unexplained') return 'nonceSpent';
+  // Read hourly for a week, not for the day `rechecked` promises, and not "never again" either
+  if (reason === 'unmined_after_24h') return 'unmined';
   if (reason === TAKEN_ELSEWHERE) return 'takenElsewhere';
   if (reason === 'submit_retrying') return 'retrying';
   if (reason === 'submit_failed') return 'notReceived';

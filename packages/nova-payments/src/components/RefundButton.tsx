@@ -358,7 +358,8 @@ const REFUSAL_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']
 const SLOW_REFUND_MS = 10 * 60 * 1000;
 // Since it last changed, as Quasar counts before it takes the hash a merchant names: a refund asked for long before it was
 // sent is not slow yet
-const isSlow = (refund: Refund | null | undefined) => {
+/** Whether a refund has been on its way for long, from when it last changed. @internal */
+export const isSlow = (refund: Pick<Refund, 'createdAt' | 'updatedAt'> | null | undefined) => {
   const since = refund?.updatedAt ?? refund?.createdAt;
   return Boolean(since) && Date.now() - Date.parse(since as string) > SLOW_REFUND_MS;
 };

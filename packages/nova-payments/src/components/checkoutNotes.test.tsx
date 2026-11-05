@@ -23,6 +23,7 @@ const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { PayScreen } = await import('./PayScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
+const { NameTransaction } = await import('./NameTransaction');
 const { PrimaryButton, SecondaryButton } = await import('./ScreenParts');
 const { AutoPayScreen } = await import('./AutoPayScreen');
 
@@ -280,6 +281,56 @@ describe('an invoice that expired while the payment of this page was confirming'
   });
 
   // Quasar never reads again a payment rejected for another reason (a relay operation lost, transaction_failed)
+  // Past the due date is the normal case with the default expiry: the text asked for a hash "below", and nothing was below
+  for (const kind of ['expired', 'cancelled'] as const) {
+    it(`asks for the transaction that spent the nonce on an invoice ${kind}, with a field for it`, () => {
+      show(kind, { status: kind, amountPaid: null });
+      const spent = { code: 'payment_unconfirmed', message: '', reason: 'nonce_spent_unexplained' };
+      ctx = {
+        ...ctx,
+        paymentSent: true,
+        state: { ...ctx.state, phase: kind, txKey: '0xabc', paymentOnTheWay: false, error: spent } as never,
+      };
+      const tree = OutcomeScreen({ kind });
+      expect(textOf(tree)).toContain('Your wallet used the number of this transaction for another one');
+      expect(fixture.ofType(tree, NameTransaction)).toHaveLength(1);
+    });
+  }
+
+  const unconfirmedOf = (reason: string) => {
+    show('unconfirmed' as never, { status: 'open', amountPaid: null });
+    ctx = {
+      ...ctx,
+      paymentSent: true,
+      state: {
+        ...ctx.state,
+        phase: 'unconfirmed',
+        invoiceStatus: 'open',
+        txKey: '0xabc',
+        paymentOnTheWay: false,
+        error: { code: 'payment_unconfirmed', message: '', reason },
+      } as never,
+    };
+    return OutcomeScreen({ kind: 'unconfirmed' } as never);
+  };
+
+  // What the fix of a page that invited a second payment rests on: nothing noticed when these were taken out
+  it('offers no payment, and a way to name the transaction, when the nonce is unexplained', () => {
+    const tree = unconfirmedOf('nonce_spent_unexplained');
+    expect(fixture.ofType(tree, NameTransaction)).toHaveLength(1);
+    expect(textOf(tree)).not.toContain('did not leave my wallet');
+  });
+
+  // "Quasar does not check this payment again" stood next to "The payment did not leave my wallet", while the engine reads it
+  // hourly for a week and the merchant's page said so: a buyer who believed it paid twice
+  it('says that Quasar reads a payment seen and not mined for a day, with its transaction', () => {
+    const tree = unconfirmedOf('unmined_after_24h');
+    const text = textOf(tree);
+    expect(text).toContain('Quasar reads this payment for a week');
+    expect(text).not.toContain('does not check this payment again');
+    expect(showsHash(tree, '0xabc')).toBe(true);
+  });
+
   it('promises no re-check for a payment Quasar does not read again: contact the merchant with the hash', () => {
     show('expired', { status: 'expired', amountPaid: null });
     const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'user_operation_lost' };
