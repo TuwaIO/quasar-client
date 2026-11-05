@@ -135,6 +135,7 @@ export function PayScreen() {
     onPaymentSent,
     customization,
     lockPrice,
+    display,
   } = useCheckoutContext();
   const balanceCheck = customization.config?.balanceCheck !== false;
   const quote = state.quote;
@@ -200,6 +201,7 @@ export function PayScreen() {
   const rate = checkout.invoice.amountPaid ? null : quoteRate(quote, checkout.invoice.totalMinor);
   // The rest of an underpaid invoice: what is sent is not the total of the invoice
   const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
+  const page = display === 'page';
   const feeAmount = fee ? formatFeeAmount(String(fee.amount), fee.decimals, locale) : null;
   const restRate = rest ? restRateText(quote, now, labels, merchant, locale) : null;
   const total = checkout.invoice.totalMinor ? formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale) : null;
@@ -274,7 +276,12 @@ export function PayScreen() {
         inert={prompting}
         className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompting && 'novapay:hidden')}
       >
-        <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-3 novapay:px-5 novapay:py-4">
+        <section
+          className={cn(
+            'novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-3 novapay:px-5 novapay:py-4',
+            page && 'novapay-page-screen novapay-page-pay',
+          )}
+        >
           <h2 {...screenHeading} className="novapay:sr-only">
             {labels.pay.title}
           </h2>
@@ -343,8 +350,14 @@ export function PayScreen() {
             <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
               {rest ? labels.pay.youSendRest : labels.pay.youSend}
             </span>
-            <div className="novapay:flex novapay:items-baseline novapay:gap-2">
-              <span className={cn(mono, 'novapay:text-[28px] novapay:font-bold novapay:leading-tight')}>
+            <div className={cn('novapay:flex novapay:items-baseline novapay:gap-2', page && 'novapay-page-amount-row')}>
+              <span
+                className={cn(
+                  mono,
+                  'novapay:text-[28px] novapay:font-bold novapay:leading-tight',
+                  page && 'novapay-page-amount',
+                )}
+              >
                 {formatTokenAmount(amounts.send, quote.decimals, locale)}
               </span>
               <span className={cn(mono, 'novapay:text-sm novapay:font-semibold')}>{quote.instructions.symbol}</span>

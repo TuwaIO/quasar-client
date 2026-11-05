@@ -1196,3 +1196,50 @@ export const KeyboardBuyerErrors: Story = {
     await expect(email).toHaveAccessibleDescription('Required');
   },
 };
+
+/** A story as its own payment page: the whole window, on the page's background, without the fade of a new step. */
+const onPage = (story: Story = {}): Story => ({
+  ...story,
+  parameters: { ...story.parameters, layout: 'fullscreen' },
+  args: { ...story.args, display: 'page', customization: { config: { animation: { disabled: true } } } },
+  decorators: [
+    (Story) => (
+      <div style={{ background: 'var(--tuwa-bg-secondary)', minHeight: '100svh' }}>
+        <Story />
+      </div>
+    ),
+  ],
+});
+
+/** The payment page: one sheet centered in the window. It grows downward with its step and scrolls nothing inside. */
+export const PageMethod: Story = onPage();
+
+/** The payment page with a required buyer form. */
+export const PageBuyerDetails: Story = onPage(BuyerDetails);
+
+/** The payment page on the step that pays. */
+export const PagePay: Story = onPage(PayGasless);
+
+/** The payment page with the wallet on another network. */
+export const PageWrongNetwork: Story = onPage(WrongNetwork);
+
+/** The payment page with a Solana Pay code. */
+export const PageSolanaQr: Story = onPage(SolanaPayQr);
+
+/** The payment page with the code of the page for a phone. */
+export const PageEvmQr: Story = onPage(WithPayUrl);
+
+/** The payment page while the payment confirms: the amount stands where the paid screen shows it. */
+export const PageConfirming: Story = onPage(Confirming);
+
+/** The payment page once paid: the steps stay, all done. */
+export const PagePaid: Story = onPage(Paid);
+
+/** The payment page with a part of the payment received. */
+export const PageUnderpaid: Story = onPage(Underpaid);
+
+/** The payment page of an invoice that expired. */
+export const PageExpired: Story = onPage(Expired);
+
+/** The payment page after a transfer from another wallet, which the seller holds. */
+export const PageHeldTransfer: Story = onPage(HeldTransfer);

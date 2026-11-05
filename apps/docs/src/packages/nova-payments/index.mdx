@@ -54,7 +54,7 @@ export function Checkout({ token }: { token: string }) {
 }
 ```
 
-`display="inline"` renders it in the page and `display="page"` centers it, as the Quasar payment page does. `NovaPaymentsProvider` sets the Quasar API for a Community Edition node (`baseUrl`) and replaces labels.
+`display="inline"` renders it in the page. `display="page"` is the whole page, as the Quasar payment page shows it: a sheet 880 px wide, centered in the window (`min-height: 100svh`; a page with a header of its own sets `--novapay-page-height` on an ancestor, for example `calc(100svh - 64px)`), that grows downward with its step and scrolls nothing inside, full-bleed under 640 px. `NovaPaymentsProvider` sets the Quasar API for a Community Edition node (`baseUrl`) and replaces labels.
 
 To pay from a wallet in the browser, give the provider the chain adapters of your app (`@tuwaio/nova-payments/evm` needs `@wagmi/core` and `viem`; `@tuwaio/nova-payments/solana` needs `@solana/kit`, `@solana-program/system`, `@solana-program/token` and `@tuwaio/orbit-solana`) and, optionally, your Pulsar store: a payment the wallet sends after the buyer closed the checkout goes to it, and Nova Transactions shows its toast.
 

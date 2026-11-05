@@ -5,7 +5,7 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { isInvoicePaymentOnTheWay, isPaymentOnTheWay, sentBeforeDeadline } from '../utils/checkout';
-import { screenHeading, screenTitle } from './classes';
+import { mono, screenHeading, screenTitle } from './classes';
 import { DetailRow, DetailsCard, ScreenFooter, SecondaryButton } from './ScreenParts';
 import { TxLabels } from './TxLabels';
 
@@ -30,7 +30,8 @@ const WAITING_STATUSES: ReadonlySet<string> = new Set(['open', 'underpaid']);
  * @returns The confirm step.
  */
 export function ConfirmScreen() {
-  const { checkout, state, labels, close, customization, now, handedOverAt } = useCheckoutContext();
+  const { checkout, state, labels, close, customization, now, handedOverAt, display } = useCheckoutContext();
+  const page = display === 'page';
   const child = customization.childCustomizations;
   const facts = usePaymentFacts();
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
@@ -45,12 +46,27 @@ export function ConfirmScreen() {
   const sentInTime = pastDeadline && sentBeforeDeadline({ state, checkout, handedOverAt, dueAt });
   return (
     <TxLabels>
-      <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center">
-        <TxStatusVisual isProcessing {...child?.statusVisual} />
+      <section
+        className={cn(
+          'novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center',
+          page && 'novapay-page-status',
+        )}
+      >
+        <TxStatusVisual
+          isProcessing
+          {...child?.statusVisual}
+          className={page ? cn('novapay-page-visual', child?.statusVisual?.className) : child?.statusVisual?.className}
+        />
         <div>
           <h2 {...screenHeading} className={screenTitle}>
             {labels.confirm.title}
           </h2>
+          {/* On a page the amount stands where the paid screen shows it, so nothing moves when the payment confirms */}
+          {page && facts.amount && (
+            <p className={cn(mono, 'novapay-page-amount novapay:m-0 novapay:mt-2 novapay:text-2xl novapay:font-bold')}>
+              {facts.amount}
+            </p>
+          )}
           {facts.network && (
             <p className="novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
               {formatLabel(labels.confirm.hint, { network: facts.network })}
@@ -64,7 +80,7 @@ export function ConfirmScreen() {
         />
         <DetailsCard className="novapay:max-w-sm">
           {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
-          {facts.amount && <DetailRow name={labels.confirm.amount}>{facts.amount}</DetailRow>}
+          {!page && facts.amount && <DetailRow name={labels.confirm.amount}>{facts.amount}</DetailRow>}
           {facts.txKey && (
             <DetailRow name={labels.confirm.transaction}>
               <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" {...child?.hashLink} />
@@ -78,7 +94,10 @@ export function ConfirmScreen() {
         </DetailsCard>
         <p
           role="status"
-          className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]"
+          className={cn(
+            'novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]',
+            page && 'novapay:mt-auto',
+          )}
         >
           {pastDeadline
             ? formatLabel(sentInTime ? labels.confirm.afterDeadline : labels.confirm.pastDeadline, {

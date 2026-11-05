@@ -6,7 +6,7 @@ import { type ReactNode, useEffect, useEffectEvent, useId, useMemo, useState } f
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel, formatLabelParts, type NovaPaymentsLabels } from '../i18n';
-import { groupMethodsByToken } from '../utils/checkout';
+import { type CheckoutTokenGroup, groupMethodsByToken } from '../utils/checkout';
 import { shortAddress } from '../utils/format';
 import { canPayWithQr, methodFamily, networkName, payerFor, priceAdjustment } from '../utils/methods';
 import { methodErrorText } from '../utils/outcome';
@@ -163,6 +163,9 @@ export function MethodScreen() {
     );
   }
 
+  const page = context.display === 'page';
+  // The token with the most networks holds its place on a page, so that picking another moves nothing under it
+  const largest = groups.reduce((most, item) => (item.methods.length > most.methods.length ? item : most), groups[0]);
   const quoting = state.phase === 'quoting';
   const consent = checkout.consent ?? null;
   const consentGiven = Boolean(state.consentGiven);
@@ -193,6 +196,63 @@ export function MethodScreen() {
     await lockPrice();
   };
 
+  const networksOf = (item: CheckoutTokenGroup) => (
+    <>
+      <GroupLabel>{formatLabel(labels.method.network, { symbol: item.symbol })}</GroupLabel>
+      <RadioCards
+        label={formatLabel(labels.method.network, { symbol: item.symbol })}
+        items={item.methods}
+        value={selected?.id ?? null}
+        getKey={(method) => method.id}
+        onChange={(id) => {
+          const next = item.methods.find((method) => method.id === id);
+          if (next) pick(next);
+        }}
+        className={
+          page && item.methods.length > 1
+            ? 'novapay:grid novapay:grid-cols-1 novapay:gap-1.5 novapay:@min-[520px]:grid-cols-2'
+            : 'novapay:flex novapay:flex-col novapay:gap-1.5'
+        }
+        itemClassName={(isSelected, method) =>
+          cn(
+            'novapay:flex novapay:items-center novapay:gap-2.5 novapay:px-3 novapay:py-2.5',
+            checkoutClassName(context, 'networkOption', { method, selected: isSelected }),
+          )
+        }
+      >
+        {(method, isSelected) =>
+          NetworkOption ? (
+            <NetworkOption method={method} selected={isSelected} />
+          ) : (
+            <>
+              <span className="novapay:h-5 novapay:w-5 novapay:shrink-0">
+                <NetworkIcon chainId={toEvmChainId(method.chainId) ?? method.chainId} />
+              </span>
+              {/* The name, and under it what the network costs and why it stands out: one layout at every width
+                  and in every language */}
+              <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col novapay:gap-1">
+                <span className="novapay:text-[13px] novapay:font-semibold">{networkName(method.chainId)}</span>
+                <span className="novapay:flex novapay:flex-wrap novapay:items-center novapay:gap-1.5">
+                  {wallet?.chainId === method.chainId && <Badge tone="neutral">{labels.method.yourWallet}</Badge>}
+                  {method.featured && <Badge tone="accent">{labels.method.popular}</Badge>}
+                  <Adjustment method={method} labels={labels} />
+                  {method.gasless === 'auto' ? (
+                    <Badge tone="success">{labels.method.noGasFee}</Badge>
+                  ) : (
+                    <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
+                      {labels.method.buyerPaysGas}
+                    </span>
+                  )}
+                </span>
+              </span>
+              <RadioDot selected={isSelected} />
+            </>
+          )
+        }
+      </RadioCards>
+    </>
+  );
+
   return (
     <>
       <ScreenContent
@@ -214,6 +274,7 @@ export function MethodScreen() {
           itemClassName={(isSelected, item) =>
             cn(
               'novapay:flex novapay:min-w-0 novapay:flex-col novapay:items-center novapay:gap-1 novapay:px-2 novapay:py-2',
+              page && 'novapay-page-token',
               checkoutClassName(context, 'tokenOption', { group: item, selected: isSelected }),
             )
           }
@@ -241,57 +302,24 @@ export function MethodScreen() {
           }
         </RadioCards>
 
-        {group && group.methods.length > 1 && (
-          <>
-            <GroupLabel>{formatLabel(labels.method.network, { symbol: group.symbol })}</GroupLabel>
-            <RadioCards
-              label={formatLabel(labels.method.network, { symbol: group.symbol })}
-              items={group.methods}
-              value={selected?.id ?? null}
-              getKey={(method) => method.id}
-              onChange={(id) => {
-                const next = group.methods.find((method) => method.id === id);
-                if (next) pick(next);
-              }}
-              className="novapay:flex novapay:flex-col novapay:gap-1.5"
-              itemClassName={(isSelected, method) =>
-                cn(
-                  'novapay:flex novapay:items-center novapay:gap-2.5 novapay:px-3 novapay:py-2.5',
-                  checkoutClassName(context, 'networkOption', { method, selected: isSelected }),
-                )
-              }
-            >
-              {(method, isSelected) =>
-                NetworkOption ? (
-                  <NetworkOption method={method} selected={isSelected} />
-                ) : (
-                  <>
-                    <span className="novapay:h-5 novapay:w-5 novapay:shrink-0">
-                      <NetworkIcon chainId={toEvmChainId(method.chainId) ?? method.chainId} />
-                    </span>
-                    {/* The name, and under it what the network costs and why it stands out: one layout at every width
-                        and in every language */}
-                    <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col novapay:gap-1">
-                      <span className="novapay:text-[13px] novapay:font-semibold">{networkName(method.chainId)}</span>
-                      <span className="novapay:flex novapay:flex-wrap novapay:items-center novapay:gap-1.5">
-                        {wallet?.chainId === method.chainId && <Badge tone="neutral">{labels.method.yourWallet}</Badge>}
-                        {method.featured && <Badge tone="accent">{labels.method.popular}</Badge>}
-                        <Adjustment method={method} labels={labels} />
-                        {method.gasless === 'auto' ? (
-                          <Badge tone="success">{labels.method.noGasFee}</Badge>
-                        ) : (
-                          <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
-                            {labels.method.buyerPaysGas}
-                          </span>
-                        )}
-                      </span>
-                    </span>
-                    <RadioDot selected={isSelected} />
-                  </>
-                )
-              }
-            </RadioCards>
-          </>
+        {page && group ? (
+          // The network of a page always shows, and its place is that of the largest list, from 640 px: "Pay with" stays
+          <div className={cn('novapay:grid', group.methods.length === 1 && 'novapay:max-sm:hidden')}>
+            {largest !== group && (
+              <div
+                inert
+                aria-hidden
+                className="novapay:invisible novapay:flex novapay:flex-col novapay:gap-2.5 novapay:[grid-area:1/1] novapay:max-sm:hidden"
+              >
+                {networksOf(largest)}
+              </div>
+            )}
+            <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-2.5 novapay:[grid-area:1/1]">
+              {networksOf(group)}
+            </div>
+          </div>
+        ) : (
+          group && group.methods.length > 1 && networksOf(group)
         )}
 
         <GroupLabel>{labels.method.payWith}</GroupLabel>
@@ -308,6 +336,7 @@ export function MethodScreen() {
           itemClassName={(isSelected, item) =>
             cn(
               'novapay:flex novapay:items-center novapay:gap-2.5 novapay:px-2.5 novapay:py-2',
+              page && 'novapay-page-way',
               checkoutClassName(context, 'payWithOption', { payWith: item, selected: isSelected }),
             )
           }

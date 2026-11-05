@@ -193,6 +193,24 @@ export function checkoutSteps(screen: CheckoutScreen, options: { withDetails?: b
   return keys.map((key, i) => ({ key, state: i < index ? 'done' : i === index ? 'current' : 'upcoming' }));
 }
 
+/**
+ * The steps of the stepper on the paid screen of a payment page, all done. Elsewhere that screen has no stepper
+ * ({@link checkoutSteps}).
+ *
+ * @param options - Steps that apply to this invoice.
+ * @param options.withDetails - The checkout asked for the buyer details first.
+ * @returns The steps.
+ */
+export function paidSteps(options: { withDetails?: boolean } = {}): CheckoutStep[] {
+  const keys: CheckoutStep['key'][] = [
+    ...(options.withDetails ? (['details'] as const) : []),
+    'method',
+    'pay',
+    'confirm',
+  ];
+  return keys.map((key) => ({ key, state: 'done' }));
+}
+
 /** The methods of one token, as the method step shows it: the token first, then its network. */
 export interface CheckoutTokenGroup {
   /** Token symbol. */

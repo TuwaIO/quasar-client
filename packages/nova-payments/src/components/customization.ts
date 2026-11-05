@@ -79,7 +79,7 @@ export interface PaymentCheckoutClassNames {
    */
   step?: (params: CheckoutPartState & { step: CheckoutStep; index: number }) => string | undefined;
   /**
-   * The scrolling area of the screen, under the header.
+   * The area of the screen, under the header. It scrolls in a modal and inline; on a page the window does.
    *
    * @param params - The state of the checkout.
    * @returns Classes to add.
@@ -249,7 +249,10 @@ export interface CheckoutScreenProps {
 export interface PaymentCheckoutComponents {
   /** The header: the steps (or the heading of an outcome), the language menu and the close button; on a phone too. */
   Header?: ComponentType<CheckoutHeaderProps>;
-  /** The content of the order panel on the left (from 640 px; `classNames.summary` styles the panel around it). */
+  /**
+   * The content of the order panel on the left (from 640 px; `classNames.summary` styles the panel around it). On a page
+   * the panel is a flex column as tall as the sheet.
+   */
   Summary?: ComponentType;
   /** The order above the steps on a phone; `className` holds the classes of `classNames.compactSummary`. */
   CompactSummary?: ComponentType<{ className?: string }>;

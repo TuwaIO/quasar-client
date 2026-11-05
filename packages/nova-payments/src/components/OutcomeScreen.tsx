@@ -596,7 +596,10 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
     <>
       <section
         role={kind === 'blocked' ? 'alert' : undefined}
-        className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:px-5 novapay:py-6 novapay:text-center"
+        className={cn(
+          'novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:px-5 novapay:py-6 novapay:text-center',
+          context.display === 'page' && 'novapay-page-screen',
+        )}
       >
         {StatusIcon ? (
           <StatusIcon kind={kind} className={iconClassName} />

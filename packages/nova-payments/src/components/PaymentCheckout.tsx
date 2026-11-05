@@ -2,7 +2,7 @@ import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outl
 import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
 import type { CheckoutApi, CheckoutStore, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
-import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { useCheckoutEvents } from '../hooks/useCheckoutEvents';
@@ -29,7 +29,7 @@ import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
 import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
-import { checkoutWidthClasses, screenHeading, screenTitle } from './classes';
+import { checkoutLayout, checkoutWidthClasses, screenHeading, screenTitle } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
 import { ConfirmWalletScreen } from './ConfirmWalletScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
@@ -50,8 +50,10 @@ export interface PaymentCheckoutProps {
   token: string;
   /**
    * `modal` (default): a dialog over the page, 760 px wide (less on a narrower window), a sheet from the bottom under
-   * 640 px; `inline`: a block in the page, as wide as its place up to 760 px; `page`: the block centered on its own
-   * page, as the Quasar payment page shows it.
+   * 640 px; `inline`: a block in the page, as wide as its place up to 760 px; `page`: the whole page, as the Quasar
+   * payment page shows it: a sheet 880 px wide, centered in the window (`min-height: 100svh`; set `--novapay-page-height`
+   * on an ancestor for a page with a header of its own), that grows downward with its step and scrolls nothing inside,
+   * full-bleed under 640 px.
    */
   display?: PaymentCheckoutDisplay;
   /** Whether the modal is open (`display="modal"`; default `true`). */
@@ -214,8 +216,12 @@ export function CheckoutFrame({
     if (!block || previous === screen || previous === 'loading') return;
     const active = block.ownerDocument.activeElement;
     if (active && active !== block.ownerDocument.body && !block.contains(active)) return;
-    block.querySelector<HTMLElement>('[data-novapay-scroll] [data-novapay-heading]')?.focus();
-  }, [screen]);
+    const heading = block.querySelector<HTMLElement>('[data-novapay-scroll] [data-novapay-heading]');
+    if (display !== 'page') return heading?.focus();
+    // The page itself scrolls: a new step starts from the top of the sheet, and the focus moves nothing more
+    if (block.getBoundingClientRect().top < 0) block.scrollIntoView({ block: 'start' });
+    heading?.focus({ preventScroll: true });
+  }, [screen, display]);
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
@@ -236,46 +242,37 @@ export function CheckoutFrame({
     }
   }, [dueAt, now, labels, announcements, paying]);
 
+  const page = display === 'page';
+  const layout = checkoutLayout[page ? 'page' : 'default'];
   return (
-    <div
-      ref={frame}
-      lang={locale}
-      className={cn(
-        'novapay:relative novapay:box-border novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:flex-row',
-        checkoutWidthClasses(display).frame,
-        className,
-      )}
-    >
+    <div ref={frame} lang={locale} className={cn(layout.frame, checkoutWidthClasses(display).frame, className)}>
       {checkout && (
-        <aside
-          inert={Boolean(leave)}
-          className={cn(
-            'novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block',
-            checkoutClassName(context, 'summary'),
-          )}
-        >
+        <aside inert={Boolean(leave)} className={cn(layout.aside, checkoutClassName(context, 'summary'))}>
           <Summary />
         </aside>
       )}
       {/* While the question to leave shows, the rest is out of reach: Tab stays in the question */}
-      <div
-        inert={Boolean(leave)}
-        className="novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col"
-      >
+      <div inert={Boolean(leave)} className={layout.main}>
         <Header withDetails={withDetails} />
         <div className="novapay:sm:hidden">
           {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
           <MobileSteps withDetails={withDetails} />
         </div>
         {/* A container: a screen lays itself out by the width of this area, 320 px in two panes on a 640 px window */}
-        <div
-          data-novapay-scroll=""
-          className={cn(
-            'novapay:@container novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto',
-            checkoutClassName(context, 'body'),
+        <div data-novapay-scroll="" className={cn(layout.area, checkoutClassName(context, 'body'))}>
+          {page ? (
+            <div
+              key={screen}
+              className={cn(
+                'novapay:flex novapay:flex-1 novapay:flex-col',
+                !customization.config?.animation?.disabled && 'novapay-page-fade',
+              )}
+            >
+              <ScreenBody />
+            </div>
+          ) : (
+            <ScreenBody />
           )}
-        >
-          <ScreenBody />
         </div>
       </div>
       <div role="status" aria-live="polite" className="novapay:sr-only">
@@ -583,17 +580,48 @@ export function PaymentCheckout({
       </Dialog>
     );
   }
+  const label = formatLabel(labels.common.dialogTitle, { merchant: checkout?.merchant.name ?? '' });
+  if (display === 'page') {
+    return (
+      <CheckoutPageRoot label={label} className={blockClassName}>
+        {frame}
+      </CheckoutPageRoot>
+    );
+  }
   return (
     <section
-      aria-label={formatLabel(labels.common.dialogTitle, { merchant: checkout?.merchant.name ?? '' })}
+      aria-label={label}
       className={cn(
         'novapay:overflow-hidden novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)]',
         checkoutWidthClasses(display).section,
-        display === 'page' && 'novapay:mx-auto novapay:my-8',
         blockClassName,
       )}
     >
       {frame}
     </section>
+  );
+}
+
+/**
+ * The checkout as a whole page: the block, centered from a floor (`styles/app.css`) and not from its own height, so that
+ * no step can move its top.
+ *
+ * @internal
+ */
+export function CheckoutPageRoot({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="novapay-page">
+      <section aria-label={label} className={cn(checkoutWidthClasses('page').section, 'novapay-page-block', className)}>
+        {children}
+      </section>
+    </div>
   );
 }

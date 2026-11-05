@@ -85,7 +85,7 @@ export function WalletPrompt({
   onCancel,
   stepHeight,
 }: WalletPromptProps) {
-  const { labels } = useCheckoutContext();
+  const { labels, display } = useCheckoutContext();
   const headingId = useId();
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [kind]);
@@ -118,11 +118,15 @@ export function WalletPrompt({
   return (
     <section
       aria-labelledby={headingId}
-      // Below 640 px the checkout takes its content's height: the window keeps the height of the step
+      // Below 640 px the checkout takes its content's height, and on its own page at every width: the window keeps the
+      // height of the step
       style={stepHeight ? ({ '--novapay-step-height': `${stepHeight}px` } as CSSProperties) : undefined}
       className={cn(
         'novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center',
-        stepHeight && 'novapay:max-sm:min-h-[var(--novapay-step-height)]',
+        stepHeight &&
+          (display === 'page'
+            ? 'novapay:min-h-[var(--novapay-step-height)]'
+            : 'novapay:max-sm:min-h-[var(--novapay-step-height)]'),
       )}
     >
       <span className="novapay:relative novapay:h-12 novapay:w-12">

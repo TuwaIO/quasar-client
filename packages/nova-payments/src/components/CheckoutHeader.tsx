@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import type { CheckoutLocale } from '../i18n';
-import { type CheckoutStep, checkoutSteps } from '../utils/checkout';
+import { type CheckoutStep, checkoutSteps, paidSteps } from '../utils/checkout';
 import type { CheckoutContextValue } from './checkoutContext';
 import { CheckoutStepper } from './CheckoutStepper';
 import { MerchantBadge } from './CheckoutSummary';
@@ -19,6 +19,11 @@ export interface CheckoutHeaderProps {
   /** The checkout asked for the buyer details first: the steps start with them. */
   withDetails?: boolean;
 }
+
+/** The steps of a screen; on its own page the paid screen keeps them, all done, so the row does not change at the end. */
+const stepsOfScreen = (context: CheckoutContextValue, withDetails?: boolean) =>
+  checkoutSteps(context.screen, { withDetails }) ??
+  (context.display === 'page' && context.screen === 'paid' ? paidSteps({ withDetails }) : null);
 
 /** The steps of the checkout, or their replacement (`customization.components.Stepper`), with their classes. */
 function stepsOf(context: CheckoutContextValue, steps: CheckoutStep[], className?: string) {
@@ -43,8 +48,9 @@ function stepsOf(context: CheckoutContextValue, steps: CheckoutStep[], className
  */
 export function CheckoutHeader({ title, withDetails }: CheckoutHeaderProps) {
   const context = useCheckoutContext();
-  const { screen, labels, locale, store, close, state } = context;
-  const steps = context.customization.config?.showSteps === false ? null : checkoutSteps(screen, { withDetails });
+  const { labels, locale, store, close, state } = context;
+  const page = context.display === 'page';
+  const steps = context.customization.config?.showSteps === false ? null : stepsOfScreen(context, withDetails);
   const extra = checkoutClassName(context, 'header');
   const onLocaleChange = context.customization.handlers?.onLocaleChange;
   const setLocale = async (code: CheckoutLocale) => {
@@ -72,6 +78,7 @@ export function CheckoutHeader({ title, withDetails }: CheckoutHeaderProps) {
       <header
         className={cn(
           'novapay:hidden novapay:items-center novapay:gap-3 novapay:border-b novapay:border-[var(--tuwa-border-primary)] novapay:py-3.5 novapay:pl-5 novapay:pr-4 novapay:sm:flex',
+          page && 'novapay-page-header',
           extra,
         )}
       >
@@ -85,6 +92,7 @@ export function CheckoutHeader({ title, withDetails }: CheckoutHeaderProps) {
       <header
         className={cn(
           'novapay:flex novapay:items-center novapay:gap-2.5 novapay:px-4 novapay:pb-3 novapay:pt-1.5 novapay:sm:hidden',
+          page && 'novapay-page-header-phone',
           extra,
         )}
       >
@@ -99,7 +107,7 @@ export function CheckoutHeader({ title, withDetails }: CheckoutHeaderProps) {
 export function MobileSteps({ withDetails }: { withDetails?: boolean }) {
   const context = useCheckoutContext();
   if (context.customization.config?.showSteps === false) return null;
-  const steps = checkoutSteps(context.screen, { withDetails });
+  const steps = stepsOfScreen(context, withDetails);
   if (!steps) return null;
   return stepsOf(context, steps, 'novapay:px-4 novapay:pt-3.5');
 }

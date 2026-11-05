@@ -35,17 +35,58 @@ export const secondaryAction = `${mono} novapay:inline-flex novapay:h-11 novapay
 /**
  * The width classes of the checkout: in a dialog the frame is 760 px wide from 640 px, but never wider than the window
  * with the padding and border of the dialog (on a 700 px window it would otherwise run off both sides); in a page the
- * block (`section`) is 760 px wide but never wider than its place, and the frame fills the block, so page padding never
- * makes it overflow. A width of 760 px capped by `max-width: 100%`, not `width: 100%`: in a parent that takes the width
- * of its content (a centered flex box) a full width would follow the content and change from step to step. The two
- * panes show from 640 px of window and hold down to a frame of about 590 px.
+ * block (`section`) is 760 px wide, 880 px on its own page, but never wider than its place, and the frame fills the block,
+ * so page padding never makes it overflow. A fixed width capped by `max-width: 100%`, not `width: 100%`: in a parent that
+ * takes the width of its content (a centered flex box) a full width would follow the content and change from step to step.
+ * The two panes show from 640 px of window and hold down to a frame of about 590 px.
  *
  * @param display - Where the checkout is shown.
  * @returns The classes of the frame and of the block around it in a page.
  * @internal
  */
 export function checkoutWidthClasses(display: PaymentCheckoutDisplay): { frame: string; section: string } {
-  return display === 'modal'
-    ? { frame: 'novapay:sm:w-[min(760px,calc(100vw_-_2rem_-_2px))]', section: '' }
-    : { frame: '', section: 'novapay:box-border novapay:w-[760px] novapay:max-w-full' };
+  if (display === 'modal') return { frame: 'novapay:sm:w-[min(760px,calc(100vw_-_2rem_-_2px))]', section: '' };
+  return {
+    frame: '',
+    section: `novapay:box-border ${display === 'page' ? 'novapay:w-[880px]' : 'novapay:w-[760px]'} novapay:max-w-full`,
+  };
+}
+
+/**
+ * The classes of the frame and its panes. The modal and the inline checkout hold their height and scroll inside; the page
+ * has a floor (`--novapay-page-floor` of `styles/app.css`) and grows downward with its step, so nothing scrolls inside it.
+ *
+ * @internal
+ */
+export const checkoutLayout = {
+  default: {
+    frame:
+      'novapay:relative novapay:box-border novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:flex-row',
+    aside:
+      'novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block',
+    main: 'novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col',
+    area: 'novapay:@container novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto',
+  },
+  page: {
+    frame:
+      'novapay:relative novapay:box-border novapay:flex novapay:w-full novapay:flex-1 novapay:flex-col novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:min-h-[calc(var(--novapay-page-floor)_-_2px)] novapay:sm:flex-row',
+    aside:
+      'novapay-page-aside novapay:hidden novapay:w-[clamp(260px,36.4%,320px)] novapay:shrink-0 novapay:flex-col novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:p-5 novapay:sm:flex',
+    main: 'novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col',
+    area: 'novapay:@container novapay:flex novapay:flex-1 novapay:flex-col',
+  },
+};
+
+/**
+ * The size of the total on the page: the amount is the largest fact of the order, and a long one steps down instead of
+ * breaking the order panel.
+ *
+ * @param amount - The formatted amount.
+ * @returns The class of its size.
+ * @internal
+ */
+export function heroAmountClass(amount: string): string {
+  if (amount.length <= 7) return 'novapay:text-[36px]';
+  if (amount.length <= 10) return 'novapay:text-[30px]';
+  return amount.length <= 13 ? 'novapay:text-[24px]' : 'novapay:text-[20px]';
 }

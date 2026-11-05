@@ -47,10 +47,12 @@ export function ScreenContent({
   children: ReactNode;
 }) {
   const context = useOptionalCheckoutContext();
+  const page = context?.display === 'page';
   return (
     <section
       className={cn(
         'novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-2.5 novapay:px-5 novapay:py-4',
+        page && 'novapay-page-screen',
         partClass(context, 'screen'),
       )}
     >
@@ -59,7 +61,12 @@ export function ScreenContent({
           {title}
         </h2>
         {subtitle && (
-          <p className="novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+          <p
+            className={cn(
+              'novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]',
+              page && 'novapay-page-subtitle',
+            )}
+          >
             {subtitle}
           </p>
         )}
@@ -79,13 +86,17 @@ export function ScreenFooter({ children }: { children: ReactNode }) {
   // With nothing in it (children may all render nothing) neither its rule nor its padding shows: `empty:hidden`
   const context = useOptionalCheckoutContext();
   const ref = useRef<HTMLElement>(null);
+  const page = context?.display === 'page';
   // The scrolling area keeps its bottom padding at the footer's height, so the browser scrolls a focused field above
-  // the footer instead of under it, and not further
+  // the footer instead of under it, and not further. On its own page the window scrolls, and a footer a short window
+  // does not keep in place covers nothing
   useEffect(() => {
     const footer = ref.current;
-    const area = footer?.closest<HTMLElement>('[data-novapay-scroll]');
+    const area = page ? footer?.ownerDocument.documentElement : footer?.closest<HTMLElement>('[data-novapay-scroll]');
     if (!footer || !area || typeof ResizeObserver === 'undefined') return;
-    const update = () => (area.style.scrollPaddingBottom = `${footer.offsetHeight + 8}px`);
+    const update = () =>
+      (area.style.scrollPaddingBottom =
+        !page || getComputedStyle(footer).position === 'sticky' ? `${footer.offsetHeight + 8}px` : '');
     update();
     const observer = new ResizeObserver(update);
     observer.observe(footer);
@@ -93,12 +104,13 @@ export function ScreenFooter({ children }: { children: ReactNode }) {
       observer.disconnect();
       area.style.scrollPaddingBottom = '';
     };
-  }, []);
+  }, [page]);
   return (
     <footer
       ref={ref}
       className={cn(
         'novapay:empty:hidden novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center',
+        page && 'novapay-page-footer',
         partClass(context, 'footer'),
       )}
     >
@@ -109,8 +121,16 @@ export function ScreenFooter({ children }: { children: ReactNode }) {
 
 /** A small heading of a group of options. @internal */
 export function GroupLabel({ children, id }: { children: ReactNode; id?: string }) {
+  const page = useOptionalCheckoutContext()?.display === 'page';
   return (
-    <span id={id} className={cn(mono, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
+    <span
+      id={id}
+      className={cn(
+        mono,
+        'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
+        page && 'novapay-page-group',
+      )}
+    >
       {children}
     </span>
   );
@@ -258,6 +278,7 @@ export function DetailRow({ name, children }: { name: ReactNode; children: React
     <div
       className={cn(
         'novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3 novapay:py-2 novapay:text-xs',
+        context?.display === 'page' && 'novapay-page-row',
         partClass(context, 'detailRow'),
       )}
     >

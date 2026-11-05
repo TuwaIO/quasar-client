@@ -62,7 +62,10 @@ afterEach(() => unmount());
 // Only `display="page"` changes: a modal or an inline checkout an app already shows must not move by a class
 describe.each(['modal', 'inline'] as const)('the classes of the %s checkout', (display) => {
   it.each(PARTS)('%s', (_name, part, props) => {
-    const checkout = { ...fixture.checkout, buyer: { collect: 'full', buyer: null } } as typeof fixture.checkout;
+    const checkout = {
+      ...fixture.checkout,
+      buyer: { collect: 'full', buyer: null },
+    } as unknown as typeof fixture.checkout;
     ctx = fixture.checkoutContextValue({}, { display, ...(part === BuyerScreen ? { checkout } : {}) });
     const classes = classesOf(render(part as never, props as never));
     expect(classes).toMatchSnapshot();

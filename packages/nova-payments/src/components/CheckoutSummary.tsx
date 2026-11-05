@@ -8,7 +8,7 @@ import { formatCountLabel, formatLabel, type NovaPaymentsLabels } from '../i18n'
 import { deadlineState } from '../utils/checkout';
 import { formatCountdown, formatFiat, minorToDecimal } from '../utils/format';
 import { invoiceTotals } from '../utils/totals';
-import { focusRing, mono } from './classes';
+import { focusRing, heroAmountClass, mono } from './classes';
 import { checkoutClassName } from './customization';
 
 /** The host name of a website link, for display. */
@@ -22,7 +22,7 @@ const hostOf = (url: string) => {
 
 /** The merchant's logo (or the first letter of its name), name and website, and the test badge. @internal */
 export function MerchantBadge({ compact = false }: { compact?: boolean }) {
-  const { checkout, state, labels } = useCheckoutContext();
+  const { checkout, state, labels, display } = useCheckoutContext();
   // A logo that does not load falls back to the letter, as with no logo at all
   const [logoFailed, setLogoFailed] = useState(false);
   if (!checkout) return null;
@@ -50,7 +50,15 @@ export function MerchantBadge({ compact = false }: { compact?: boolean }) {
         </span>
       )}
       <div className="novapay:flex novapay:min-w-0 novapay:flex-col">
-        <span className="novapay:truncate novapay:text-sm novapay:font-semibold">{merchant.name}</span>
+        <span
+          className={cn(
+            'novapay:text-sm novapay:font-semibold',
+            // Its own page has the room for the whole name, in two lines at most
+            display === 'page' && !compact ? 'novapay:line-clamp-2 novapay:break-words' : 'novapay:truncate',
+          )}
+        >
+          {merchant.name}
+        </span>
         {compact
           ? invoice.number && (
               <span className={cn(mono, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
@@ -149,7 +157,7 @@ export function SellerDetailsContent({ checkout, labels }: { checkout: CheckoutV
  * stays at 00:00 when the deadline passes while the payment confirms. @internal
  */
 export function DeadlineTimer() {
-  const { checkout, labels, locale, now, screen } = useCheckoutContext();
+  const { checkout, labels, locale, now, screen, display } = useCheckoutContext();
   const dueAt = checkout?.invoice.dueAt;
   const state = checkout && deadlineState(checkout.invoice.status, screen, checkout.invoice.restPayable);
   if (!checkout || !dueAt || !state) return null;
@@ -160,7 +168,12 @@ export function DeadlineTimer() {
     minute: '2-digit',
   }).format(new Date(dueAt));
   return (
-    <div className="novapay:flex novapay:items-center novapay:justify-between novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:py-2.5">
+    <div
+      className={cn(
+        'novapay:flex novapay:items-center novapay:justify-between novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:py-2.5',
+        display === 'page' && 'novapay-page-deadline',
+      )}
+    >
       <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-0.5">
         <span className={cn(mono, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
           {state === 'closed' ? labels.summary.refundAfter : labels.summary.payWithin}
@@ -283,7 +296,17 @@ export function SummaryFooter() {
 }
 
 /** A button that shows or hides a part, with `aria-expanded` and `aria-controls`. @internal */
-function Disclosure({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
+function Disclosure({
+  label,
+  children,
+  className,
+  buttonClassName,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+  buttonClassName?: string;
+}) {
   const [open, setOpen] = useState(false);
   const id = useId();
   return (
@@ -296,6 +319,7 @@ function Disclosure({ label, children, className }: { label: string; children: R
         className={cn(
           'novapay:inline-flex novapay:cursor-pointer novapay:items-center novapay:gap-1 novapay:self-start novapay:border-0 novapay:bg-transparent novapay:p-0 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)] novapay:hover:text-[var(--tuwa-text-primary)]',
           focusRing,
+          buttonClassName,
         )}
       >
         {label}
@@ -314,6 +338,146 @@ function Disclosure({ label, children, className }: { label: string; children: R
   );
 }
 
+/** The lines the order card of a page shows in full before it folds the rest, so that the panel keeps its height. */
+const PAGE_LINES = 5;
+
+/** The total as the largest fact of the order on a page; it carries `classNames.total`. */
+function HeroTotal() {
+  const context = useCheckoutContext();
+  const { checkout, labels, locale } = context;
+  if (!checkout) return null;
+  const amount = formatFiat(invoiceTotals(checkout.invoice).total, locale);
+  return (
+    <div className={cn('novapay:flex novapay:flex-col novapay:gap-1.5', checkoutClassName(context, 'total'))}>
+      <span className={cn(mono, 'novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]')}>
+        {labels.summary.total}
+      </span>
+      <span
+        className={cn(
+          mono,
+          'novapay:flex novapay:flex-wrap novapay:items-baseline novapay:gap-x-2 novapay:gap-y-1 novapay:font-bold',
+          heroAmountClass(amount),
+        )}
+      >
+        <span>{amount}</span>
+        <span className="novapay:text-[15px] novapay:font-normal novapay:text-[var(--tuwa-text-secondary)]">
+          {checkout.invoice.currency}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+const pageRow = 'novapay:flex novapay:justify-between novapay:gap-3 novapay:px-3 novapay:py-2';
+
+/** One line of the order card of a page; quantity and price only when they say more than its amount does. */
+function PageOrderLine({ line }: { line: CheckoutView['invoice']['lineItems'][number] }) {
+  const { labels, locale } = useCheckoutContext();
+  const amount = formatFiat(minorToDecimal(line.netMinor), locale);
+  const unit = formatFiat(line.unitPrice, locale);
+  return (
+    <li className={cn(pageRow, 'novapay:text-[13px]')}>
+      <span className="novapay:flex novapay:min-w-0 novapay:flex-col">
+        <span className="novapay:break-words">{line.name}</span>
+        {line.description && (
+          <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">{line.description}</span>
+        )}
+        {(Number(line.quantity) !== 1 || unit !== amount) && (
+          <span className={cn(mono, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
+            {formatLabel(labels.summary.quantity, { quantity: line.quantity, price: unit })}
+          </span>
+        )}
+      </span>
+      <span className={cn(mono, 'novapay:shrink-0')}>{amount}</span>
+    </li>
+  );
+}
+
+/**
+ * The order on a page, as one card with a line between its rows: the invoice, its lines, and the subtotal and tax when it
+ * has them. Nothing scrolls inside it: past what fits, the rest of the lines folds under a button that stays in place.
+ */
+function PageOrderCard() {
+  const { checkout, labels, locale } = useCheckoutContext();
+  if (!checkout) return null;
+  const { invoice } = checkout;
+  const totals = invoiceTotals(invoice);
+  const cap = totals.tax ? PAGE_LINES - 1 : PAGE_LINES;
+  const lines = invoice.lineItems;
+  const shown = lines.length > cap ? lines.slice(0, cap - 1) : lines;
+  const rest = lines.slice(shown.length);
+  if (!invoice.number && lines.length === 0) return null;
+  return (
+    <div className="novapay:flex novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)]">
+      {invoice.number && (
+        <div className={cn(mono, pageRow, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
+          <span>{labels.summary.invoice}</span>
+          <span className="novapay:min-w-0 novapay:break-all novapay:text-right">{invoice.number}</span>
+        </div>
+      )}
+      {shown.length > 0 && (
+        <ul className="novapay:m-0 novapay:flex novapay:list-none novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:p-0">
+          {shown.map((line, i) => (
+            <PageOrderLine key={i} line={line} />
+          ))}
+        </ul>
+      )}
+      {rest.length > 0 && (
+        <Disclosure
+          label={`+${rest.length} · ${labels.summary.showOrder}`}
+          className="novapay:px-3 novapay:py-2"
+          buttonClassName="novapay:min-h-6"
+        >
+          <ul className="novapay:-mx-3 novapay:m-0 novapay:flex novapay:list-none novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:p-0">
+            {rest.map((line, i) => (
+              <PageOrderLine key={i} line={line} />
+            ))}
+          </ul>
+        </Disclosure>
+      )}
+      {totals.tax && (
+        <dl className="novapay:m-0 novapay:flex novapay:flex-col novapay:gap-1.5 novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+          <div className="novapay:flex novapay:justify-between">
+            <dt>{labels.summary.subtotal}</dt>
+            <dd className={cn(mono, 'novapay:m-0')}>{formatFiat(totals.subtotal, locale)}</dd>
+          </div>
+          <div className="novapay:flex novapay:justify-between">
+            <dt>{totals.rate ? formatLabel(labels.summary.taxRate, { rate: totals.rate }) : labels.summary.tax}</dt>
+            <dd className={cn(mono, 'novapay:m-0')}>{formatFiat(totals.tax, locale)}</dd>
+          </div>
+        </dl>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The order panel of a page. At the top who asks, how much and for what; at the bottom, level with the main button, by when
+ * and who is behind it: the deadline leaving when the invoice is paid and the seller details opening move nothing above.
+ */
+function PageSummary() {
+  const { checkout, labels } = useCheckoutContext();
+  if (!checkout) return null;
+  return (
+    <div className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col">
+      <MerchantBadge />
+      <div className="novapay:mt-6">
+        <HeroTotal />
+      </div>
+      <div className="novapay:mt-5">
+        <PageOrderCard />
+      </div>
+      <div className="novapay:mt-auto novapay:flex novapay:flex-col novapay:gap-3 novapay:pt-5">
+        <DeadlineTimer />
+        <Disclosure label={labels.summary.sellerDetails} buttonClassName="novapay:min-h-6">
+          <SellerDetailsContent checkout={checkout} labels={labels} />
+        </Disclosure>
+        <SummaryFooter />
+      </div>
+    </div>
+  );
+}
+
 /**
  * The order panel on the left of the checkout (from 640 px): the merchant, the seller details (unfolded in place, the
  * lines scroll while the deadline and the total stay), the countdown to the deadline (through every step of the
@@ -322,8 +486,9 @@ function Disclosure({ label, children, className }: { label: string; children: R
  * @returns The order panel.
  */
 export function CheckoutSummary() {
-  const { checkout, labels } = useCheckoutContext();
+  const { checkout, labels, display } = useCheckoutContext();
   if (!checkout) return null;
+  if (display === 'page') return <PageSummary />;
   return (
     <div className="novapay:flex novapay:h-full novapay:flex-col novapay:gap-3.5">
       <div className="novapay:flex novapay:flex-col novapay:gap-1.5">

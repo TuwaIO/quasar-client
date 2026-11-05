@@ -16,7 +16,7 @@ vi.mock('../hooks/useCheckoutContext', () => ({
 
 const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
-const { CheckoutFrame } = await import('./PaymentCheckout');
+const { CheckoutFrame, CheckoutPageRoot } = await import('./PaymentCheckout');
 const { checkoutWidthClasses } = await import('./classes');
 const { QrScreen } = await import('./QrScreen');
 
@@ -33,7 +33,7 @@ afterEach(() => unmount());
 
 // Showcase review, 2026-10-29: on a 768 px window with page padding the inline checkout kept 760 px and overflowed
 describe('the width of the checkout', () => {
-  it.each(['inline', 'page'] as const)('%s: 760 px, never wider than its place', (display) => {
+  it.each(['inline'] as const)('%s: 760 px, never wider than its place', (display) => {
     const { frame, section } = checkoutWidthClasses(display);
     // Not `w-full`: in a parent as wide as its content (a centered flex box) it would follow the content of each step
     expect(section.split(' ')).toEqual(
@@ -56,7 +56,7 @@ describe('the width of the checkout', () => {
     );
   });
 
-  it.each(['modal', 'inline', 'page'] as const)(
+  it.each(['modal', 'inline'] as const)(
     '%s: keeps the two panes and the 680 px height from 640 px, one column below',
     (display) => {
       expect(frameClasses(display)).toEqual(
@@ -97,5 +97,37 @@ describe('the Solana Pay step in a narrow screen area', () => {
       expect.arrayContaining(['novapay:@min-[440px]:flex-row', 'novapay:@min-[440px]:self-auto']),
     );
     expect(classes.filter((name) => name.startsWith('novapay:sm:'))).toEqual([]);
+  });
+
+  it('page: 880 px, never wider than its place, at least the floor, and nothing scrolls inside', () => {
+    const { frame, section } = checkoutWidthClasses('page');
+    expect(section.split(' ')).toEqual(
+      expect.arrayContaining(['novapay:w-[880px]', 'novapay:max-w-full', 'novapay:box-border']),
+    );
+    expect(frame).toBe('');
+    ctx = fixture.checkoutContextValue({}, { display: 'page' });
+    const tree = render(CheckoutFrame, { leave: null });
+    const classes = fixture.elements(tree).flatMap(classesOf);
+    for (const name of [
+      'novapay:sm:h-[680px]',
+      'novapay:overflow-hidden',
+      'novapay:overflow-y-auto',
+      'novapay:min-h-0',
+    ]) {
+      expect(classes).not.toContain(name);
+    }
+    expect(classesOf(tree)).toEqual(
+      expect.arrayContaining(['novapay:sm:flex-row', 'novapay:sm:min-h-[calc(var(--novapay-page-floor)_-_2px)]']),
+    );
+  });
+
+  it('page: the root centers the block from its floor, and the block takes the classes of the app', () => {
+    const tree = CheckoutPageRoot({ label: 'Pay', className: 'mine', children: 'frame' });
+    expect(classesOf(tree)).toEqual(['novapay-page']);
+    const [section] = fixture.elements(tree).filter((element) => element.type === 'section');
+    const classes = classesOf(section);
+    expect(classes).toEqual(expect.arrayContaining(['novapay-page-block', 'mine']));
+    expect(classes).not.toContain('novapay:my-8');
+    expect(classes).not.toContain('novapay:overflow-hidden');
   });
 });

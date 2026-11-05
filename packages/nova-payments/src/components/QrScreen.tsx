@@ -14,12 +14,16 @@ import { CopyButton, PrimaryButton, ScreenContent, ScreenError, ScreenFooter, Se
 
 /** The phone hand-off of an EVM method: the QR code of the payment page, where the phone's wallet pays. */
 function HandoffQr({ payUrl }: { payUrl: string }) {
-  const { labels, backToMethods } = useCheckoutContext();
+  const { labels, backToMethods, display } = useCheckoutContext();
   return (
     <>
       <ScreenContent title={labels.qr.handoffTitle} subtitle={labels.qr.handoffHint}>
         <div className="novapay:flex novapay:flex-col novapay:items-center novapay:gap-3 novapay:py-2">
-          <QrCode value={payUrl} label={labels.qr.handoffCode} className="novapay:h-48 novapay:w-48" />
+          <QrCode
+            value={payUrl}
+            label={labels.qr.handoffCode}
+            className={cn('novapay:h-48 novapay:w-48', display === 'page' && 'novapay-page-qr-handoff')}
+          />
           <CopyButton text={payUrl} label={labels.qr.copyLink} copiedLabel={labels.pay.copied}>
             {labels.qr.copyLink}
           </CopyButton>
@@ -73,7 +77,11 @@ export function QrScreen() {
           <QrCode
             value={instructions.solanaPayUrl}
             label={formatLabel(labels.qr.solanaCode, { amount })}
-            className={cn('novapay:h-44 novapay:w-44 novapay:shrink-0', expired && 'novapay:opacity-30')}
+            className={cn(
+              'novapay:h-44 novapay:w-44 novapay:shrink-0',
+              context.display === 'page' && 'novapay-page-qr',
+              expired && 'novapay:opacity-30',
+            )}
           />
           {/* On a phone the facts take the width of the screen under the code, aligned with the rest of it */}
           <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-2 novapay:self-stretch novapay:text-xs novapay:@min-[440px]:self-auto">

@@ -80,13 +80,32 @@ export function PaidScreen() {
 
   return (
     <TxLabels>
-      <section className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center">
-        <TxStatusVisual isSucceed {...child?.statusVisual} />
+      <section
+        className={cn(
+          'novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center',
+          context.display === 'page' && 'novapay-page-status',
+        )}
+      >
+        <TxStatusVisual
+          isSucceed
+          {...child?.statusVisual}
+          className={
+            context.display === 'page'
+              ? cn('novapay-page-visual', child?.statusVisual?.className)
+              : child?.statusVisual?.className
+          }
+        />
         <h2 {...screenHeading} className={screenTitle}>
           {labels.paid.title}
         </h2>
         <div>
-          <p className={cn(mono, 'novapay:m-0 novapay:text-2xl novapay:font-bold')}>
+          <p
+            className={cn(
+              mono,
+              'novapay:m-0 novapay:text-2xl novapay:font-bold',
+              context.display === 'page' && 'novapay-page-amount',
+            )}
+          >
             {facts.paidAmount ?? (total && `${total} ${checkout.invoice.currency}`)}
           </p>
           <p className="novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">

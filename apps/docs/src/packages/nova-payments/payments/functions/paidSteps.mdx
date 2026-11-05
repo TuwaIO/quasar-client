@@ -1,0 +1,30 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/paidSteps" />
+
+# paidSteps()
+
+> **paidSteps**(`options?`): [`CheckoutStep`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstep--docs)[]
+
+Defined in: [nova-payments/src/utils/checkout.ts:204](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L204)
+
+The steps of the stepper on the paid screen of a payment page, all done. Elsewhere that screen has no stepper
+([checkoutSteps](?path=/docs/packages-nova-payments-payments-functions-checkoutsteps--docs)).
+
+## Parameters
+
+### options?
+
+Steps that apply to this invoice.
+
+#### withDetails?
+
+`boolean`
+
+The checkout asked for the buyer details first.
+
+## Returns
+
+[`CheckoutStep`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstep--docs)[]
+
+The steps.

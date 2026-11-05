@@ -34,6 +34,8 @@ const issueText = (labels: NovaPaymentsLabels, issue: BuyerIssue) =>
 
 /** Fields on two columns from 640 px; the others take the whole row. */
 const HALF_WIDTH = new Set<keyof Buyer>(['postalCode', 'city', 'taxId', 'registrationNumber']);
+// On a page the screen has the room for these side by side too, when its area is wide enough
+const PAGE_HALF_WIDTH = new Set<keyof Buyer>(['name', 'country', 'addressLine1', 'addressLine2']);
 
 /** Inputs keep a 3:1 border against the page (WCAG 1.4.11); the focused one turns to the accent. */
 const inputClass = (invalid: boolean) =>
@@ -54,7 +56,7 @@ const inputClass = (invalid: boolean) =>
  * @returns The buyer details step.
  */
 export function BuyerScreen() {
-  const { checkout, state, store, labels, locale } = useCheckoutContext();
+  const { checkout, state, store, labels, locale, display } = useCheckoutContext();
   const [values, setValues] = useState<Values>({});
   const [company, setCompany] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -138,7 +140,10 @@ export function BuyerScreen() {
                 <div
                   className={cn(
                     'novapay:flex novapay:flex-col novapay:gap-1.5',
-                    !HALF_WIDTH.has(field.name) && 'novapay:sm:col-span-2',
+                    !HALF_WIDTH.has(field.name) &&
+                      (display === 'page' && PAGE_HALF_WIDTH.has(field.name)
+                        ? 'novapay:sm:@max-[519px]:col-span-2'
+                        : 'novapay:sm:col-span-2'),
                   )}
                 >
                   <label
