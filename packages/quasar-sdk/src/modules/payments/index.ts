@@ -235,13 +235,14 @@ export class PaymentsModule {
   }
 
   /**
-   * Gives an open invoice a new checkout token and payment page (`POST /v1/payments/invoices/:id/checkout`), for
-   * example when its link leaked. The earlier link stops working, also in the emails already sent; the current link
-   * needs no call: the invoice shows it (`payUrl`).
+   * Gives an invoice, in any status, a new checkout token and payment page (`POST /v1/payments/invoices/:id/checkout`),
+   * for example when its link leaked. The earlier link stops working, also in the emails already sent, and so does the
+   * link of an invoice this one replaced; the current link needs no call: the invoice shows it (`payUrl`). The link of a
+   * settled invoice stops opening 90 days after it settled, unless its subscription still runs.
    *
    * @param invoiceId - The invoice.
    * @returns The invoice with its new token and page.
-   * @throws {QuasarSDKError} `invoice_not_found` (404), `invoice_not_open` (409), a timeout or a network error.
+   * @throws {QuasarSDKError} `invoice_not_found` (404), a timeout or a network error.
    */
   async replacePayLink(invoiceId: string): Promise<InvoiceWithCheckout> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/checkout`, {
