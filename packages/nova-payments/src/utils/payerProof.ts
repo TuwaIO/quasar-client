@@ -12,7 +12,7 @@ import type { PayPath } from './pay';
 import type { PaymentWalletErrorKind } from './walletErrors';
 
 /** Why the wallet did not confirm: its kind of failure, or a network switch the buyer refused. */
-type ConfirmProblem = PaymentWalletErrorKind | 'switchDeclined';
+export type ConfirmProblem = PaymentWalletErrorKind | 'switchDeclined';
 
 /**
  * Connector types of wallets that are smart accounts signing with a passkey (Coinbase Smart Wallet and Base Account

@@ -514,7 +514,7 @@ export interface PermissionRequest {
 /** For a subscription with automatic charges: whether the page should ask the wallet for the permission. */
 export type AutoChargeOffer =
   | {
-      /** Ask the wallet with `request`, then pass its answer to {@link CheckoutState.grantPermission}. */
+      /** Ask the wallet with `request`, then pass its answer to `grantPermission` of the checkout store. */
       status: 'available';
       /** The method the charges use. */
       methodId: string;
@@ -619,7 +619,7 @@ export interface CheckoutApi {
   url: (route: string) => string;
 }
 
-/** The answer of the wallet to `wallet_grantPermissions`, as {@link CheckoutState.grantPermission} takes it. */
+/** The answer of the wallet to `wallet_grantPermissions`, as `grantPermission` of the checkout store takes it. */
 export interface GrantPermissionParams {
   /** CAIP-10 account that granted it, on the method's chain. */
   payer: string;
