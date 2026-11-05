@@ -86,6 +86,24 @@ describe('needsLeaveConfirm after a payment that left the wallet', () => {
 });
 
 describe('methodErrorText', () => {
+  // Each said "Something went wrong": a transaction that reverted, seen after the price lock or on a rest, and the method
+  // refused for a rest
+  it.each([
+    ['payment_failed', 'paymentFailed'],
+    ['rest_method_mismatch', 'restSameMethod'],
+  ] as const)('explains %s', (code, label) => {
+    expect(methodErrorText({ code, message: 'raw' } as never, defaultLabels)).toBe(defaultLabels.method[label]);
+  });
+
+  it('explains the refusals of a confirmation that arrive after the buyer left its step', () => {
+    expect(methodErrorText({ code: 'payer_proof_declined', message: 'raw' } as never, defaultLabels)).toBe(
+      defaultLabels.payerProof.text,
+    );
+    expect(methodErrorText({ code: 'payer_proof_invalid', message: 'raw' } as never, defaultLabels)).toBe(
+      defaultLabels.payerProof.invalid,
+    );
+  });
+
   // Names nobody signed for filled the places, and this wallet cannot sign: only a new link helps
   it('asks for a new link when too many wallets tried the invoice', () => {
     const text = methodErrorText({ code: 'too_many_payers', message: 'raw' } as never, defaultLabels, 'Shop');

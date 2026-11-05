@@ -13,7 +13,7 @@ vi.mock('../hooks/useCheckoutContext', () => ({
   useCheckoutContext: () => ctx,
   useOptionalCheckoutContext: () => ctx,
 }));
-vi.mock('../hooks/useAsyncValue', () => ({ useAsyncValue: () => null }));
+vi.mock('../hooks/useAsyncValue', () => ({ useAsyncValue: () => null, useRereadValue: () => null }));
 let problem: PaymentWalletErrorKind | null = null;
 vi.mock('../hooks/usePayment', () => ({
   usePayment: () => ({ status: 'idle', problem, pay: vi.fn(), switchNetwork: vi.fn(), dismiss: vi.fn() }),

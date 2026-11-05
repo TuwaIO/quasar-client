@@ -60,6 +60,8 @@ export const esLabels: NovaPaymentsLabels = {
     nativeFromSmartWallet: 'Una smart wallet no puede pagar con esta moneda: elige un token.',
     payerNotExpected: 'El vendedor pidió que esta factura se pague desde otra billetera. Conecta esa billetera.',
     rateLimited: 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.',
+    paymentFailed: 'El pago falló. Solo se gastó la comisión de red; la factura sigue abierta.',
+    restSameMethod: 'El resto se paga en el mismo token y en la misma red que la primera parte.',
     priceUnavailable:
       'Ahora no se puede obtener el precio de este método. Elige otro método o vuelve a intentarlo en un minuto.',
   },
@@ -145,6 +147,12 @@ export const esLabels: NovaPaymentsLabels = {
     topUp: 'O añade {symbol} a esta billetera y vuelve:',
     getToken: 'Obtener {symbol}',
     connectUnavailable: 'Esta página no permite conectar una billetera. Paga con un código QR.',
+    switchFailed: '{wallet} no cambió a {network}. Cámbiala en la billetera y vuelve a intentarlo.',
+    notAuthorized:
+      '{wallet} no ha permitido esta cuenta aquí. Comprueba en {wallet} que esta cuenta está conectada a este sitio y vuelve a intentarlo.',
+    walletFailed: '{wallet} no lo hizo y no se envió nada. Vuelve a intentarlo.',
+    sentUnconfirmed:
+      '{wallet} envió el pago y aún no está confirmado. No pagues otra vez: esta página se actualizará cuando llegue.',
     declined: 'Rechazaste la solicitud en {wallet}.',
     tryAgain: 'Reintentar',
     failed: 'El pago falló en {network}. Solo se gastó la comisión de red; la factura sigue abierta.',
@@ -219,6 +227,9 @@ export const esLabels: NovaPaymentsLabels = {
     wrongNetwork: 'Cambia {wallet} a {network} y vuelve a confirmar.',
     tooManyWallets:
       'Demasiadas billeteras han confirmado esta factura. Paga desde una de ellas o pide a {merchant} una factura nueva.',
+    switchDeclined:
+      'Rechazaste el cambio a {network} en {wallet}. Apruébalo para confirmar esta billetera o elige otro método.',
+    willSwitch: 'Tu billetera está en {current}: primero pedirá cambiar a {network}.',
     confirmToPay: 'Confirmar esta billetera para pagar',
     payNote:
       'Para pagar desde esta billetera primero hace falta una firma gratuita: confirma que la billetera paga esta factura y no mueve fondos.',
@@ -298,6 +309,14 @@ export const esLabels: NovaPaymentsLabels = {
     walletNote: 'Tu billetera muestra este permiso (ERC-7715) antes de que lo apruebes.',
     approveIn: 'Aprueba en {wallet}',
     unavailable: '{wallet} no puede permitir pagos automáticos.',
+    smartAccountNote:
+      'Los pagos automáticos requieren una cuenta inteligente. {wallet} te pedirá cambiar primero: una transacción en {network}, cuya comisión de red pagas tú. Tu dirección no cambia.',
+    smartAccountPrompt:
+      '{wallet} te pide cambiar esta cuenta a una cuenta inteligente. Tu dirección y tus fondos no cambian.',
+    smartAccountNeeded:
+      'Los pagos automáticos requieren una cuenta inteligente. En {wallet}, abre los detalles de esta cuenta, activa su cuenta inteligente para {network} y vuelve a intentarlo.',
+    notGranted: '{wallet} no dio el permiso. Vuelve a intentarlo o paga tú cada factura.',
+    invalid: 'Este permiso no se puede usar. Vuelve a intentarlo o paga tú cada factura.',
   },
   autoPayOff: {
     title: '¿Desactivar los pagos automáticos?',

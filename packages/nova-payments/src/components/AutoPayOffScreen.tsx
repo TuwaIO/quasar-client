@@ -49,6 +49,13 @@ export function AutoPayOffScreen() {
   } = useCheckoutContext();
   const [step, setStep] = useState<'idle' | 'wallet' | 'network'>('idle');
   const [problem, setProblem] = useState<PaymentWalletErrorKind | 'notYet' | 'notAsked' | null>(null);
+  // Another wallet: what the last one refused is not about this one
+  const address = wallet?.address;
+  const [shownAddress, setShownAddress] = useState(address);
+  if (shownAddress !== address) {
+    setShownAddress(address);
+    setProblem(null);
+  }
   const offer = checkout?.autoCharge;
   // Only where the screen that gives a new permission can open: an outcome keeps its own screen
   const replaceable = offer?.status === 'active' && Boolean(offer.replacement) && takeOverOpens(state.phase);
@@ -113,9 +120,17 @@ export function AutoPayOffScreen() {
         ? formatLabel(labels.pay.declined, values)
         : problem === 'unsupported'
           ? formatLabel(labels.autoPayOff.unsupported, values)
-          : problem
-            ? labels.error.generic
-            : null;
+          : problem === 'wrongNetwork' || problem === 'switchFailed'
+            ? formatLabel(labels.pay.switchFailed, values)
+            : problem === 'notAuthorized'
+              ? formatLabel(labels.pay.notAuthorized, values)
+              : problem === 'alreadyPending'
+                ? formatLabel(labels.walletPrompt.stillWaiting, values)
+                : problem === 'failed'
+                  ? formatLabel(labels.pay.walletFailed, values)
+                  : problem
+                    ? labels.error.generic
+                    : null;
   const decimals = method ? Number(method.decimals) : null;
 
   return (

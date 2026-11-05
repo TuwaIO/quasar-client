@@ -461,8 +461,9 @@ export function PaymentCheckout({
     }
     // No price is locked: the store still follows the wallet, or the step that confirms the wallet would ask this wallet
     // to sign the last one's message, which Quasar refuses again and again until the buyer reconnects
-    if (phase === 'selectMethod' || phase === 'underpaid') {
+    if (phase === 'selectMethod' || phase === 'underpaid' || phase === 'blocked') {
       if (state.payer === null || payerOfStep === state.payer) return;
+      // Out of a refused wallet too: the refusal is about the last one, whose name the screen would go on showing
       store.getState().setPayer(payerOfStep);
       // It signs, or goes on to the price if it confirmed already
       if (walletStep === 'follow') void lockStorePrice();
@@ -482,7 +483,15 @@ export function PaymentCheckout({
     store.getState().setPayer(payer);
     if (paysInvoice(payer)) void lockStorePrice();
   });
-  useEffect(() => lockForWallet(), [wallet?.address, wallet?.chainId, wallet?.connectorType, autoPayOff]);
+  // Also when the page settles on a price: a wallet changed while the price was on its way, or while a held transfer was
+  // shown, or one connected before the invoice was read. The pay step then showed another wallet than the price's, and
+  // "Connect a wallet" could not change anything for the wallet already connected
+  const quotePayer = state.quote?.payer;
+  const loaded = Boolean(checkout);
+  useEffect(
+    () => lockForWallet(),
+    [wallet?.address, wallet?.chainId, wallet?.connectorType, autoPayOff, state.phase, quotePayer, loaded],
+  );
   // The connect modal closed without a wallet of that family
   useEffect(() => {
     if (!connection.connecting) connectingFor.current = null;

@@ -8,12 +8,15 @@ import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErr
 /** Where the confirmation of the paying wallet stands: the wallet switches its network, then signs. */
 export type PayerProofStep = 'idle' | 'switching' | 'signing';
 
+/** Why the wallet did not confirm: its kind of failure, or a network switch the buyer refused, no signature being asked. */
+export type PayerProofProblem = PaymentWalletErrorKind | 'switchDeclined';
+
 /** What {@link usePayerProof} needs. */
 export interface UsePayerProofParams {
   /** The adapter of the method's chain family; without `signMessage` the wallet cannot confirm the invoice. */
   adapter: PaymentsAdapter | undefined;
   /** The checkout store. */
-  store: { getState: () => Pick<CheckoutState, 'confirmPayer' | 'requestQuote' | 'payer'> };
+  store: { getState: () => Pick<CheckoutState, 'confirmPayer' | 'requestQuote' | 'payer' | 'abandonConfirmation'> };
   /** The connected wallet. */
   wallet: CheckoutWallet | null;
   /** The CAIP-2 network of the method: a smart wallet's signature counts there only. */
@@ -24,8 +27,8 @@ export interface UsePayerProofParams {
 export interface PayerProofFlow {
   /** Where the confirmation stands. */
   step: PayerProofStep;
-  /** Why the wallet did not switch or sign, until the next try. */
-  problem: PaymentWalletErrorKind | null;
+  /** Why the wallet did not switch or sign, until the next try; `switchDeclined`: the buyer refused the network switch. */
+  problem: PayerProofProblem | null;
   /** The message Quasar issued for the wallet to sign (its site, network, nonce), once Quasar answered. */
   request: PayerProofMessage | null;
   /**
@@ -58,7 +61,7 @@ export interface PayerProofFlow {
  */
 export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProofParams): PayerProofFlow {
   const [step, setStep] = useState<PayerProofStep>('idle');
-  const [problem, setProblem] = useState<PaymentWalletErrorKind | null>(null);
+  const [problem, setProblem] = useState<PayerProofProblem | null>(null);
   const [request, setRequest] = useState<PayerProofMessage | null>(null);
   // Each try gets a number; a dismissed one no longer changes the page
   const attempt = useRef(0);
@@ -98,7 +101,9 @@ export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProof
         await adapter.switchChain(chainId);
       } catch (error) {
         if (isCurrent()) {
-          setProblem(walletErrorKind(error));
+          // Not a refusal of the signature, which was never asked for
+          const kind = walletErrorKind(error);
+          setProblem(kind === 'declined' ? 'switchDeclined' : kind === 'failed' ? 'switchFailed' : kind);
           setStep('idle');
         }
         return false;
@@ -137,6 +142,8 @@ export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProof
     dismiss: () => {
       attempt.current++;
       setStep('idle');
+      // The store's attempt ends too: a refusal the wallet gives later must not appear on the screen the buyer went to
+      store.getState().abandonConfirmation();
     },
   };
 }

@@ -45,6 +45,7 @@ function step(
     phase?: string;
     error?: { code: string; message: string; reason?: string } | null;
     connectorType?: string;
+    walletChainId?: string;
     confirmedWallets?: string[];
     storePayer?: string;
   } = {},
@@ -80,7 +81,7 @@ function step(
       wallet: {
         family: 'eip155',
         address: PAYER,
-        chainId: BASE,
+        chainId: options.walletChainId ?? BASE,
         name: options.connectorType === 'evm:coinbase' ? 'Coinbase Wallet' : 'MetaMask',
         walletId: 'metamask',
         connectorType: options.connectorType ?? 'evm:metamask',
@@ -146,6 +147,29 @@ describe('the step that confirms the paying wallet', () => {
   });
 
   // The buyer signed with another wallet, and may not want to sign again
+  it('opens clean: an error about something else stays out of it', () => {
+    const { tree } = step({ error: { code: 'payment_mismatch', message: 'raw' } });
+    expect(fixture.ofType(tree, ScreenError)).toEqual([]);
+  });
+
+  it('shows the failure of its own requests', () => {
+    const { tree } = step({ error: { code: 'rate_limited', message: 'raw' } });
+    expect(fixture.ofType(tree, ScreenError)[0].props.children).toBe(defaultLabels.method.rateLimited);
+  });
+
+  // The price is on its way: going back was undone a moment later by the pay step
+  it('does not go back while the price is being locked', () => {
+    const { tree } = step({ phase: 'quoting', payerProof: 'confirmed' });
+    expect(fixture.ofType(tree, SecondaryButton)[0].props.disabled).toBe(true);
+  });
+
+  it('shows where the wallet is, and that it is asked to switch', () => {
+    const { tree } = step({ walletChainId: 'eip155:1' });
+    const text = JSON.stringify(tree);
+    expect(text).toContain('Ethereum');
+    expect(text).toContain('it first asks to switch');
+  });
+
   it('names a wallet that already confirmed the invoice, to switch to it', () => {
     const other = '0x2222222222222222222222222222222222222222';
     const { text } = step({ confirmedWallets: [`${BASE}:${PAYER}`, `${BASE}:${other}`] });

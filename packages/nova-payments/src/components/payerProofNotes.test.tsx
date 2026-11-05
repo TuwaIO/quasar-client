@@ -15,10 +15,22 @@ vi.mock('../hooks/useCheckoutContext', () => ({
   useCheckoutContext: () => ctx,
   useOptionalCheckoutContext: () => ctx,
 }));
-vi.mock('../hooks/useAsyncValue', () => ({ useAsyncValue: () => null }));
+const asyncValue = vi.hoisted(() => ({ balance: null as bigint | null, balances: null as bigint[] | null }));
+vi.mock('../hooks/useAsyncValue', () => ({
+  useAsyncValue: (key: string | null) => (key ? asyncValue.balances : null),
+  useRereadValue: () => asyncValue.balance,
+}));
 const pay = vi.fn();
+const paymentProblem = vi.hoisted(() => ({ current: null as string | null }));
 vi.mock('../hooks/usePayment', () => ({
-  usePayment: () => ({ status: 'idle', problem: null, pay, switchNetwork: vi.fn(), dismiss: vi.fn() }),
+  usePayment: () => ({
+    status: 'idle',
+    problem: paymentProblem.current,
+    askedWallet: null,
+    pay,
+    switchNetwork: vi.fn(),
+    dismiss: vi.fn(),
+  }),
 }));
 vi.mock('../hooks/useSolanaClusterSync', () => ({ useSolanaClusterSync: vi.fn() }));
 const flow: PayerProofFlow = {
@@ -37,7 +49,7 @@ const { PayScreen } = await import('./PayScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
 const { MethodScreen } = await import('./MethodScreen');
 const { QrScreen } = await import('./QrScreen');
-const { PrimaryButton, ScreenError } = await import('./ScreenParts');
+const { PrimaryButton, ScreenError, SecondaryButton } = await import('./ScreenParts');
 const { WalletPrompt } = await import('./WalletPrompt');
 
 type Props = Record<string, unknown>;
@@ -116,6 +128,9 @@ function show(
 
 afterEach(() => {
   unmount();
+  paymentProblem.current = null;
+  asyncValue.balance = null;
+  asyncValue.balances = null;
   flow.step = 'idle';
   flow.request = null;
 });
@@ -176,6 +191,69 @@ describe('the pay step of a method the gasless relay may pay', () => {
     });
     const errors = fixture.ofType(render(PayScreen, {}), ScreenError) as ReactElement<Props>[];
     expect(errors.map((error) => error.props.children)).toContain(defaultLabels.payerProof.invalid);
+  });
+
+  // "The payment failed, only the fee was spent", about requests that never left the wallet
+  it.each([
+    ['failed', 'walletFailed'],
+    ['switchFailed', 'switchFailed'],
+    ['notAuthorized', 'notAuthorized'],
+    ['sentUnconfirmed', 'sentUnconfirmed'],
+  ] as const)('says what happened when the wallet answers %s', (kind, label) => {
+    paymentProblem.current = kind;
+    show('pay', { quote: quoteOf(null), payerProof: 'confirmed' });
+    const errors = fixture.ofType(render(PayScreen, {}), ScreenError) as ReactElement<Props>[];
+    expect(errors.map((error) => error.props.children)).toEqual([
+      defaultLabels.pay[label].replace(/\{wallet\}/g, 'MetaMask').replace('{network}', 'Base'),
+    ]);
+  });
+
+  it('offers no second payment while the first is not confirmed', () => {
+    paymentProblem.current = 'sentUnconfirmed';
+    show('pay', { quote: quoteOf(null), payerProof: 'confirmed' });
+    const button = fixture.ofType(render(PayScreen, {}), PrimaryButton)[0] as ReactElement<Props>;
+    expect(button.props.disabled).toBe(true);
+  });
+
+  // The same button came back with no text at all
+  it('says why a new price was refused', () => {
+    show('pay', { quote: quoteOf(null), payerProof: 'confirmed', error: { code: 'rate_limited', message: '' } });
+    const errors = fixture.ofType(render(PayScreen, {}), ScreenError) as ReactElement<Props>[];
+    expect(errors.map((error) => error.props.children)).toEqual([defaultLabels.method.rateLimited]);
+  });
+
+  // Quasar takes the rest only in the method that paid first: the offer led to a refusal and to the same refusal again
+  it('offers another method when the wallet is short, but not on a rest', () => {
+    asyncValue.balance = 0n;
+    asyncValue.balances = fixture.checkout.methods.map(() => 5n);
+    show('pay', { quote: quoteOf(null), payerProof: 'confirmed' });
+    expect(JSON.stringify(render(PayScreen, {}))).toContain(defaultLabels.pay.payFromBalance);
+    unmount();
+    show('pay', { quote: quoteOf(null), payerProof: 'confirmed', invoiceStatus: 'underpaid' });
+    expect(JSON.stringify(render(PayScreen, {}))).not.toContain(defaultLabels.pay.payFromBalance);
+  });
+
+  // It read as a failed sanctions check of a wallet that only is not the one the seller asked for
+  it('says that the seller asked for another wallet, on the refused screen', () => {
+    show('blocked', {
+      phase: 'blocked',
+      payer: `${BASE}:${PAYER}`,
+      error: { code: 'payer_not_expected', message: '' },
+    });
+    expect(JSON.stringify(render(OutcomeScreen, { kind: 'blocked' }))).toContain(defaultLabels.method.payerNotExpected);
+  });
+
+  it('says the check did not pass for a blocked wallet', () => {
+    show('blocked', { phase: 'blocked', payer: `${BASE}:${PAYER}`, error: { code: 'payer_blocked', message: '' } });
+    expect(JSON.stringify(render(OutcomeScreen, { kind: 'blocked' }))).not.toContain(
+      defaultLabels.method.payerNotExpected,
+    );
+  });
+
+  it('does not go back while a new price is on its way', () => {
+    show('pay', { phase: 'quoting', quote: quoteOf(null), payerProof: 'confirmed' });
+    const back = fixture.ofType(render(PayScreen, {}), SecondaryButton)[0] as ReactElement<Props>;
+    expect(back.props.disabled).toBe(true);
   });
 
   it('pays once the wallet confirmed the invoice', () => {

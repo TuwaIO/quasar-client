@@ -107,6 +107,8 @@ export type NovaPaymentsLabels = {
     payerNotExpected: string;
     /** Too many tries (`rate_limited`) (default: `Too many tries. Wait a minute and try again.`) */
     rateLimited: string;
+    paymentFailed: string;
+    restSameMethod: string;
     /** Quasar cannot read the price of the method now: its feed or network is down (`price_unavailable`) */
     priceUnavailable: string;
   };
@@ -270,6 +272,10 @@ export type NovaPaymentsLabels = {
     getToken: string;
     /** Without a way to connect a wallet in this app */
     connectUnavailable: string;
+    switchFailed: string;
+    notAuthorized: string;
+    walletFailed: string;
+    sentUnconfirmed: string;
     /** The buyer declined in the wallet: `{wallet}` (default: `You declined the request in {wallet}.`) */
     declined: string;
     /** Button after a declined request (default: `Try again`) */
@@ -442,6 +448,8 @@ export type NovaPaymentsLabels = {
     wrongNetwork: string;
     /** Too many wallets confirmed the invoice (`too_many_payers`): `{merchant}` */
     tooManyWallets: string;
+    switchDeclined: string;
+    willSwitch: string;
     /**
      * The main button of the pay step when the buyer pays the gas (or through the paymaster) of a method the gasless
      * relay could pay: the wallet confirms the invoice first (default: `Confirm this wallet to pay`)
@@ -639,6 +647,11 @@ export type NovaPaymentsLabels = {
     approveIn: string;
     /** The wallet cannot grant it: `{wallet}` (default: `{wallet} can't allow automatic payments.`) */
     unavailable: string;
+    smartAccountNote: string;
+    smartAccountPrompt: string;
+    smartAccountNeeded: string;
+    notGranted: string;
+    invalid: string;
   };
   /** The outcomes other than paid. */
   outcome: {

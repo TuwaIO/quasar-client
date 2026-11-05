@@ -130,6 +130,22 @@ export interface PaymentsAdapter {
    */
   explorerAddressUrl?: (params: { chainId: string; address: string }) => string | undefined;
   /**
+   * What the account is for automatic payments, read before asking for the permission: `smart` has code on the network,
+   * `upgradable` is a plain account its wallet can switch to a smart account, `unknown` says nothing either way. Quasar
+   * decides in the end: it refuses a wallet that could never be charged.
+   *
+   * @param params - The network and the account.
+   * @returns The kind.
+   */
+  smartAccountStatus?: (params: { chainId: string; account: string }) => Promise<'smart' | 'upgradable' | 'unknown'>;
+  /**
+   * Has the wallet switch a plain account to its smart account (`upgradable` of {@link PaymentsAdapter.smartAccountStatus})
+   * and waits until the network includes it. The wallet asks the buyer and the buyer pays the network fee.
+   *
+   * @param params - The network and the account.
+   */
+  upgradeToSmartAccount?: (params: { chainId: string; account: string }) => Promise<void>;
+  /**
    * Asks the wallet for the ERC-7715 permission of a subscription's automatic payments, with the wallet's prompt.
    *
    * @param params - The request of the checkout's auto-charge offer and the granting account.
@@ -166,5 +182,7 @@ export interface PaymentsAdapter {
     chainId: string;
     account: string;
     onSent?: () => void;
+    /** Called with the transaction of a batch that landed after the adapter gave up waiting (`sentUnconfirmed`). */
+    onLate?: (txKey: string) => void;
   }) => Promise<string>;
 }

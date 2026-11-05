@@ -61,6 +61,9 @@ export const deLabels: NovaPaymentsLabels = {
     payerNotExpected:
       'Der Verkäufer möchte, dass diese Rechnung von einem anderen Wallet bezahlt wird. Verbinden Sie das gewünschte Wallet.',
     rateLimited: 'Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es erneut.',
+    paymentFailed:
+      'Die Zahlung ist fehlgeschlagen. Nur die Netzwerkgebühr wurde verbraucht; die Rechnung bleibt offen.',
+    restSameMethod: 'Der Rest wird im selben Token und im selben Netzwerk bezahlt wie der erste Teil.',
     priceUnavailable:
       'Der Preis dieser Methode kann gerade nicht ermittelt werden. Wählen Sie eine andere Methode oder versuchen Sie es in einer Minute erneut.',
   },
@@ -148,6 +151,12 @@ export const deLabels: NovaPaymentsLabels = {
     topUp: 'Oder laden Sie {symbol} auf dieses Wallet und kommen Sie zurück:',
     getToken: '{symbol} besorgen',
     connectUnavailable: 'Diese Seite hat keine Wallet-Verbindung. Zahlen Sie stattdessen per QR-Code.',
+    switchFailed: '{wallet} hat nicht zu {network} gewechselt. Wechseln Sie in der Wallet und versuchen Sie es erneut.',
+    notAuthorized:
+      '{wallet} hat dieses Konto hier nicht zugelassen. Prüfen Sie in {wallet}, ob dieses Konto mit dieser Website verbunden ist, und versuchen Sie es erneut.',
+    walletFailed: '{wallet} hat die Anfrage nicht ausgeführt, und es wurde nichts gesendet. Versuchen Sie es erneut.',
+    sentUnconfirmed:
+      '{wallet} hat die Zahlung gesendet, sie ist aber noch nicht bestätigt. Zahlen Sie nicht erneut: Diese Seite aktualisiert sich, sobald sie eingeht.',
     declined: 'Sie haben die Anfrage in {wallet} abgelehnt.',
     tryAgain: 'Erneut versuchen',
     failed:
@@ -228,6 +237,9 @@ export const deLabels: NovaPaymentsLabels = {
     wrongNetwork: 'Wechseln Sie in {wallet} zu {network} und bestätigen Sie dann erneut.',
     tooManyWallets:
       'Zu viele Wallets haben diese Rechnung bestätigt. Zahlen Sie mit einem davon oder bitten Sie {merchant} um eine neue Rechnung.',
+    switchDeclined:
+      'Sie haben den Wechsel zu {network} in {wallet} abgelehnt. Stimmen Sie zu, um diese Wallet zu bestätigen, oder wählen Sie eine andere Methode.',
+    willSwitch: 'Ihre Wallet ist auf {current}: Sie fragt zuerst nach dem Wechsel zu {network}.',
     confirmToPay: 'Wallet bestätigen, um zu zahlen',
     payNote:
       'Für die Zahlung mit diesem Wallet ist zuerst eine kostenlose Signatur nötig: Sie bestätigt, dass das Wallet diese Rechnung bezahlt, und bewegt kein Geld.',
@@ -311,6 +323,16 @@ export const deLabels: NovaPaymentsLabels = {
     walletNote: 'Ihr Wallet zeigt diese Erlaubnis (ERC-7715) an, bevor Sie sie bestätigen.',
     approveIn: 'In {wallet} bestätigen',
     unavailable: '{wallet} kann automatische Zahlungen nicht erlauben.',
+    smartAccountNote:
+      'Automatische Zahlungen erfordern ein Smart Account. {wallet} fragt zuerst nach dem Wechsel: eine Transaktion auf {network}, deren Netzwerkgebühr Sie zahlen. Ihre Adresse bleibt gleich.',
+    smartAccountPrompt:
+      '{wallet} fragt, ob dieses Konto zu einem Smart Account wechseln soll. Adresse und Guthaben bleiben gleich.',
+    smartAccountNeeded:
+      'Automatische Zahlungen erfordern ein Smart Account. Öffnen Sie in {wallet} die Details dieses Kontos, aktivieren Sie das Smart Account für {network} und versuchen Sie es erneut.',
+    notGranted:
+      '{wallet} hat die Berechtigung nicht erteilt. Versuchen Sie es erneut oder zahlen Sie jede Rechnung selbst.',
+    invalid:
+      'Diese Berechtigung kann nicht verwendet werden. Versuchen Sie es erneut oder zahlen Sie jede Rechnung selbst.',
   },
   autoPayOff: {
     title: 'Automatische Zahlungen deaktivieren?',

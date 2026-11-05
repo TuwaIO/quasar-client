@@ -12,6 +12,7 @@ const wagmi = vi.hoisted(() => ({
   estimateGas: vi.fn(),
   estimateFeesPerGas: vi.fn(),
   getCapabilities: vi.fn(),
+  getBytecode: vi.fn(),
   switchChain: vi.fn(),
   sendTransaction: vi.fn(),
   writeContract: vi.fn(),
@@ -271,6 +272,90 @@ describe('paymentsEVMAdapter', () => {
     ).rejects.toMatchObject({
       kind: 'failed',
     });
+  });
+
+  describe('the switch of a plain account to its smart account', () => {
+    const adapter = () => paymentsEVMAdapter(config);
+    const params = { chainId: BASE_SEPOLIA, account: ACCOUNT };
+
+    it('tells a smart account, a plain one the wallet can switch, and an account it knows nothing of', async () => {
+      wagmi.getBytecode.mockResolvedValueOnce('0xef0100aa');
+      await expect(adapter().smartAccountStatus!(params)).resolves.toBe('smart');
+
+      wagmi.getBytecode.mockResolvedValue('0x');
+      wagmi.getCapabilities.mockResolvedValueOnce({ atomic: { status: 'ready' } });
+      await expect(adapter().smartAccountStatus!(params)).resolves.toBe('upgradable');
+
+      // Quasar decides on what such a wallet gives: it may deploy through `dependencies`
+      wagmi.getCapabilities.mockResolvedValueOnce({});
+      await expect(adapter().smartAccountStatus!(params)).resolves.toBe('unknown');
+      wagmi.getCapabilities.mockRejectedValueOnce(new Error('no EIP-5792'));
+      await expect(adapter().smartAccountStatus!(params)).resolves.toBe('unknown');
+    });
+
+    // Live on MetaMask 13.55: one call goes out as a plain transaction (type 2) and the account stays as it was
+    it('asks with two calls, atomically, that move nothing', async () => {
+      wagmi.sendCalls.mockResolvedValue({ id: '0xbatch' });
+      wagmi.waitForCallsStatus.mockResolvedValue({ status: 'success' });
+      wagmi.getBytecode.mockResolvedValue('0xef0100aa');
+      await adapter().upgradeToSmartAccount!(params);
+      const sent = wagmi.sendCalls.mock.calls[0][1];
+      expect(sent).toMatchObject({ account: ACCOUNT, chainId: 84532, forceAtomic: true });
+      expect(sent.calls).toHaveLength(2);
+      for (const call of sent.calls) expect(call).toMatchObject({ value: 0n });
+      expect(wagmi.switchChain).toHaveBeenCalledWith(config, { chainId: 84532 });
+    });
+
+    // Live on MetaMask 13.55: its gas estimate leaves the batch out of gas (status 500), the authorization still applied
+    it('goes by the code on the network, not by the status of the batch', async () => {
+      wagmi.sendCalls.mockResolvedValue({ id: '0xbatch' });
+      wagmi.waitForCallsStatus.mockResolvedValue({ status: 'failure', statusCode: 500 });
+      wagmi.getBytecode.mockResolvedValue('0xef0100aa');
+      await expect(adapter().upgradeToSmartAccount!(params)).resolves.toBeUndefined();
+      wagmi.waitForCallsStatus.mockRejectedValueOnce(new Error('no status'));
+      await expect(adapter().upgradeToSmartAccount!(params)).resolves.toBeUndefined();
+    });
+
+    it('fails when the account has no code after all', async () => {
+      vi.useFakeTimers();
+      try {
+        wagmi.sendCalls.mockResolvedValue({ id: '0xbatch' });
+        wagmi.waitForCallsStatus.mockResolvedValue({ status: 'success' });
+        wagmi.getBytecode.mockResolvedValue('0x');
+        const upgrading = adapter().upgradeToSmartAccount!(params);
+        const failure = expect(upgrading).rejects.toMatchObject({ kind: 'failed' });
+        await vi.runAllTimersAsync();
+        await failure;
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("leaves the buyer's refusal as it is", async () => {
+      wagmi.sendCalls.mockRejectedValue({ code: 4001 });
+      await expect(adapter().upgradeToSmartAccount!(params)).rejects.toMatchObject({ code: 4001 });
+    });
+  });
+
+  // "The payment failed, only the fee was spent" with Pay live, for a batch that may still land: a second payment
+  it('says a sponsored batch is not confirmed yet, and hands it over when it lands', async () => {
+    let lands: (value: unknown) => void = () => undefined;
+    wagmi.sendCalls.mockResolvedValue({ id: '0xbatch' });
+    wagmi.waitForCallsStatus
+      .mockRejectedValueOnce(Object.assign(new Error('timed out'), { name: 'WaitForCallsStatusTimeoutError' }))
+      .mockImplementationOnce(() => new Promise((resolve) => (lands = resolve)));
+    const onLate = vi.fn();
+    await expect(
+      paymentsEVMAdapter(config).sendSponsoredCalls!({
+        calls: [],
+        paymasterUrl: 'https://quasar/paymaster',
+        chainId: BASE_SEPOLIA,
+        account: ACCOUNT,
+        onLate,
+      }),
+    ).rejects.toMatchObject({ kind: 'sentUnconfirmed' });
+    lands({ status: 'success', receipts: [{ transactionHash: '0xlate' }] });
+    await vi.waitFor(() => expect(onLate).toHaveBeenCalledWith('0xlate'));
   });
 
   it('refuses a chain that is not EVM', async () => {

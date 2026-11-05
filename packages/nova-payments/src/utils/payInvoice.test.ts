@@ -101,8 +101,36 @@ describe('payInvoice', () => {
       paymasterUrl: 'https://quasar/paymaster',
       chainId: 'eip155:8453',
       account: ACCOUNT,
+      onLate: expect.any(Function),
     });
     expect(actions.submit).toHaveBeenCalledWith({ txKey: '0xsponsored', connectorType: 'evm:metamask' });
+  });
+
+  // The adapter stopped waiting and told the buyer not to pay again: the batch that lands later still reaches Quasar
+  it('hands over a sponsored batch that lands after the adapter stopped waiting', async () => {
+    const onSent = vi.fn();
+    let late: ((txKey: string) => void) | undefined;
+    const adapter = {
+      family: 'eip155',
+      sendSponsoredCalls: vi.fn(async (params: { onLate?: (txKey: string) => void }) => {
+        late = params.onLate;
+        throw new Error('not confirmed yet');
+      }),
+    } as never;
+    const submit = vi.fn(async () => true);
+    const paying = payInvoice({
+      adapter,
+      store: { getState: () => ({ submit, relay: vi.fn() }) } as never,
+      quote: { instructions: { family: 'eip155', chainId: 8453 }, gasless: { paymaster: { calls: [] } } } as never,
+      wallet: { address: ACCOUNT, connectorType: 'evm:metamask' } as never,
+      path: 'paymaster',
+      paymasterUrl: 'https://quasar/paymaster',
+      onSent,
+    });
+    await expect(paying).rejects.toThrow('not confirmed yet');
+    late!('0xlate');
+    expect(onSent).toHaveBeenCalledWith('0xlate');
+    expect(submit).toHaveBeenCalledWith({ txKey: '0xlate', connectorType: 'evm:metamask' });
   });
 
   it('names the transaction the wallet sent before Quasar takes it, and none for a gasless signature', async () => {

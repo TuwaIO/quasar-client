@@ -14,7 +14,7 @@ vi.mock('../hooks/useCheckoutContext', () => ({
   useCheckoutContext: () => ctx,
   useOptionalCheckoutContext: () => ctx,
 }));
-vi.mock('../hooks/useAsyncValue', () => ({ useAsyncValue: () => null }));
+vi.mock('../hooks/useAsyncValue', () => ({ useAsyncValue: () => null, useRereadValue: () => null }));
 const payment = vi.hoisted(() => ({ status: 'idle' }));
 vi.mock('../hooks/usePayment', () => ({
   usePayment: () => ({ status: payment.status, problem: null, pay: vi.fn(), switchNetwork: vi.fn(), dismiss: vi.fn() }),

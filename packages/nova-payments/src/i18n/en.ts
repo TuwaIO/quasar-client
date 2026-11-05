@@ -59,6 +59,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     nativeFromSmartWallet: 'A smart wallet cannot pay in this coin: choose a token.',
     payerNotExpected: 'The seller asked for this invoice to be paid from another wallet. Connect that wallet.',
     rateLimited: 'Too many tries. Wait a minute and try again.',
+    paymentFailed: 'The payment failed. Only the network fee was spent; the invoice is still open.',
+    restSameMethod: 'The rest is paid in the same token on the same network as the first part.',
     priceUnavailable:
       "The price of this method can't be read right now. Choose another method or try again in a minute.",
   },
@@ -143,6 +145,12 @@ export const defaultLabels: NovaPaymentsLabels = {
     topUp: 'Or add {symbol} to this wallet and come back:',
     getToken: 'Get {symbol}',
     connectUnavailable: 'This page has no wallet connection. Pay with a QR code instead.',
+    switchFailed: '{wallet} did not switch to {network}. Switch it in the wallet, then try again.',
+    notAuthorized:
+      '{wallet} has not allowed this account here. Check in {wallet} that this account is connected to this site, then try again.',
+    walletFailed: '{wallet} did not do it, and nothing was sent. Try again.',
+    sentUnconfirmed:
+      '{wallet} sent the payment and it is not confirmed yet. Do not pay again: this page updates once it lands.',
     declined: 'You declined the request in {wallet}.',
     tryAgain: 'Try again',
     failed: 'The payment failed on {network}. Only the network fee was spent; the invoice is still open.',
@@ -216,6 +224,9 @@ export const defaultLabels: NovaPaymentsLabels = {
     wrongNetwork: 'Switch {wallet} to {network}, then confirm again.',
     tooManyWallets:
       'Too many wallets have confirmed this invoice. Pay from one of them, or ask {merchant} for a new invoice.',
+    switchDeclined:
+      'You declined the switch to {network} in {wallet}. Approve it to confirm this wallet, or choose another method.',
+    willSwitch: 'Your wallet is on {current}: it first asks to switch to {network}.',
     confirmToPay: 'Confirm this wallet to pay',
     payNote:
       'Paying from this wallet needs a free signature first: it confirms that the wallet pays this invoice and moves no money.',
@@ -295,6 +306,14 @@ export const defaultLabels: NovaPaymentsLabels = {
     walletNote: 'Your wallet shows this permission (ERC-7715) before you approve it.',
     approveIn: 'Approve in {wallet}',
     unavailable: "{wallet} can't allow automatic payments.",
+    smartAccountNote:
+      'Automatic payments need a smart account. {wallet} asks you to switch to it first: one transaction on {network}, and you pay its network fee. Your address stays the same.',
+    smartAccountPrompt:
+      '{wallet} asks you to switch this account to a smart account. Your address and your funds stay the same.',
+    smartAccountNeeded:
+      'Automatic payments need a smart account. In {wallet}, open the details of this account, turn on its smart account for {network}, then try again.',
+    notGranted: '{wallet} did not give the permission. Try again, or pay each invoice yourself.',
+    invalid: "This permission can't be used. Try again, or pay each invoice yourself.",
   },
   autoPayOff: {
     title: 'Turn off automatic payments?',

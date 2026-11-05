@@ -66,7 +66,8 @@ const setup = (options: { walletChainId?: string; signMessage?: PaymentsAdapter[
     }
   });
   const requestQuote = vi.fn(async () => null);
-  const store = { getState: () => ({ ...state, confirmPayer, requestQuote }) } as never;
+  const abandonConfirmation = vi.fn();
+  const store = { getState: () => ({ ...state, confirmPayer, requestQuote, abandonConfirmation }) } as never;
   const props: Parameters<typeof usePayerProof>[0] = {
     adapter,
     store,
@@ -74,7 +75,7 @@ const setup = (options: { walletChainId?: string; signMessage?: PaymentsAdapter[
     chainId: BASE,
   };
   const renderHook = () => render(usePayerProof, props) as ReturnType<typeof usePayerProof>;
-  return { adapter, signMessage, signature, confirmPayer, requestQuote, renderHook, props, state };
+  return { adapter, signMessage, signature, confirmPayer, requestQuote, abandonConfirmation, renderHook, props, state };
 };
 
 afterEach(unmount);
@@ -91,6 +92,29 @@ describe('usePayerProof', () => {
     expect(confirmPayer).toHaveBeenCalledOnce();
     expect(requestQuote).toHaveBeenCalledOnce();
     expect(renderHook()).toMatchObject({ step: 'idle', problem: null });
+  });
+
+  // The page said "You declined the signature", and none had been asked for
+  it('says that the buyer refused the network switch, not a signature', async () => {
+    const { adapter, signMessage, renderHook } = setup({ walletChainId: 'eip155:1' });
+    vi.mocked(adapter.switchChain!).mockRejectedValueOnce({ code: 4001, message: 'User rejected' });
+    await expect(renderHook().confirm()).resolves.toBe(false);
+    expect(signMessage).not.toHaveBeenCalled();
+    expect(renderHook()).toMatchObject({ step: 'idle', problem: 'switchDeclined' });
+  });
+
+  it('says that the wallet did not switch, however it failed', async () => {
+    const { adapter, renderHook } = setup({ walletChainId: 'eip155:1' });
+    vi.mocked(adapter.switchChain!).mockRejectedValueOnce(new Error('boom'));
+    await renderHook().confirm();
+    expect(renderHook().problem).toBe('switchFailed');
+  });
+
+  // Its refusal came later and appeared on the screen the buyer had gone to
+  it('ends the attempt of the store when the buyer closes the window', () => {
+    const { abandonConfirmation, renderHook } = setup();
+    renderHook().dismiss();
+    expect(abandonConfirmation).toHaveBeenCalledOnce();
   });
 
   it('keeps a locked price: a payment of it waits only for the confirmation', async () => {

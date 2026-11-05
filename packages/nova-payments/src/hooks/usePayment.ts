@@ -11,6 +11,12 @@ import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErr
 /** Where a payment from the wallet stands: `wallet` while the wallet asks the buyer, `submitting` while Quasar takes it. */
 export type PaymentStatus = 'idle' | 'switching' | 'wallet' | 'submitting';
 
+/**
+ * How long a transaction the wallet never answered blocks a second one. A wallet that lost its request (a mobile session
+ * that ended) gives no answer at all, and the buyer must not be trapped by it for good.
+ */
+export const OPEN_REQUEST_MS = 10 * 60 * 1000;
+
 /** What {@link usePayment} needs. */
 export interface UsePaymentParams {
   /** The adapter of the quote's chain family; without it the wallet cannot pay. */
@@ -39,6 +45,8 @@ export interface Payment {
   status: PaymentStatus;
   /** Why the wallet did not pay or switch, until the next try. */
   problem: PaymentWalletErrorKind | null;
+  /** The wallet asked, for the window: it keeps its name when the buyer disconnects it while the request waits there. */
+  askedWallet: CheckoutWallet | null;
   /** Pays the quote from the wallet; resolves when Quasar took it or the wallet refused. */
   pay: () => Promise<void>;
   /** Asks the wallet to switch to the quote's chain. */
@@ -63,6 +71,10 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
   const [problem, setProblem] = useState<PaymentWalletErrorKind | null>(null);
   // Each request gets a number; a dismissed or replaced one no longer changes the page
   const request = useRef(0);
+  // A transaction waiting in the wallet. Closing our window leaves it open there: another press must not send a second
+  // one next to it, or both could be confirmed and the buyer pays twice. Only a signature (`relay`) may be asked again
+  const open = useRef<{ account: string; paying: Promise<unknown>; since: number } | null>(null);
+  const [askedWallet, setAskedWallet] = useState<CheckoutWallet | null>(null);
 
   const run = async (next: PaymentStatus, action: (isCurrent: () => boolean) => Promise<unknown>) => {
     const id = ++request.current;
@@ -81,10 +93,18 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
   return {
     status,
     problem,
+    askedWallet,
     pay: () =>
       run('wallet', async (isCurrent) => {
         if (!adapter || !quote || !wallet) return setProblem('unsupported');
-        await payInvoice({
+        setAskedWallet(wallet);
+        const waiting = open.current;
+        if (path !== 'relay' && waiting?.account === wallet.address && Date.now() - waiting.since < OPEN_REQUEST_MS) {
+          // The window shows again and says that the request waits in the wallet
+          await waiting.paying;
+          return;
+        }
+        const paying = payInvoice({
           adapter,
           store,
           quote,
@@ -101,6 +121,15 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
               connectorType: wallet.connectorType,
             }),
         });
+        if (path !== 'relay') {
+          const entry = { account: wallet.address, paying, since: Date.now() };
+          open.current = entry;
+          const settled = () => {
+            if (open.current === entry) open.current = null;
+          };
+          paying.then(settled, settled);
+        }
+        await paying;
       }),
     switchNetwork: () =>
       run('switching', async () => {

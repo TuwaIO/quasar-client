@@ -71,7 +71,18 @@ export async function payInvoice({
     const calls = quote.gasless?.paymaster?.calls;
     if (!calls || !paymasterUrl || !adapter.sendSponsoredCalls) throw unsupported('A sponsored payment');
     const chainId = instructionsChainId(quote.instructions);
-    const txKey = await adapter.sendSponsoredCalls({ calls, paymasterUrl, chainId, account, onSent: onWalletDone });
+    const txKey = await adapter.sendSponsoredCalls({
+      calls,
+      paymasterUrl,
+      chainId,
+      account,
+      onSent: onWalletDone,
+      // It landed after the adapter gave up waiting: Quasar still gets it, and the page follows the invoice
+      onLate: (late) => {
+        onSent?.(late);
+        void store.getState().submit({ txKey: late, connectorType: wallet.connectorType });
+      },
+    });
     onWalletDone?.();
     onSent?.(txKey);
     return store.getState().submit({ txKey, connectorType: wallet.connectorType });

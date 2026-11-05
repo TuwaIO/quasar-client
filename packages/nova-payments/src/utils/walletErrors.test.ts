@@ -23,6 +23,31 @@ describe('walletErrorKind', () => {
     expect(walletErrorKind({ name: 'ConnectorChainMismatchError' })).toBe('wrongNetwork');
   });
 
+  // Each said "the payment failed, only the fee was spent" although nothing had left the wallet
+  it.each([
+    ['ChainMismatchError', 'wrongNetwork'],
+    ['SwitchChainError', 'switchFailed'],
+    ['SwitchChainNotSupportedError', 'switchFailed'],
+  ])('names %s', (name, kind) => {
+    expect(walletErrorKind({ name })).toBe(kind);
+    expect(walletErrorKind({ message: 'wrapped', cause: { name } })).toBe(kind);
+  });
+
+  // MetaMask's own refusal of an account: the live test of automatic payments got "Something went wrong" for it
+  it('knows an account the wallet has not allowed here', () => {
+    expect(walletErrorKind({ code: 4100, message: 'not authorized' })).toBe('notAuthorized');
+    expect(walletErrorKind({ name: 'UnauthorizedProviderError', cause: { code: 4100 } })).toBe('notAuthorized');
+  });
+
+  it('knows a request that already waits in the wallet, also inside a failed switch', () => {
+    expect(walletErrorKind({ code: -32002, message: 'already pending' })).toBe('alreadyPending');
+    expect(walletErrorKind({ name: 'SwitchChainError', cause: { code: -32002 } })).toBe('alreadyPending');
+  });
+
+  it("prefers the buyer's refusal to the switch it stopped", () => {
+    expect(walletErrorKind({ name: 'SwitchChainError', cause: { code: 4001 } })).toBe('declined');
+  });
+
   it('keeps the kind an adapter gave, and calls anything else a failure', () => {
     expect(walletErrorKind(new PaymentWalletError('unsupported', 'No paymaster support'))).toBe('unsupported');
     expect(walletErrorKind(new PaymentWalletError('declined', 'Declined'))).toBe('declined');

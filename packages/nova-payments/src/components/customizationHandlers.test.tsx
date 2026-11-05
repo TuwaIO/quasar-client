@@ -30,6 +30,10 @@ vi.mock('../hooks/useAsyncValue', () => ({
     asyncKeys.push(key);
     return null;
   },
+  useRereadValue: (key: string | null) => {
+    asyncKeys.push(key);
+    return null;
+  },
 }));
 const pay = vi.fn(async () => undefined);
 vi.mock('../hooks/usePayment', () => ({

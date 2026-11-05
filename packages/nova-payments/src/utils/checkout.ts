@@ -138,6 +138,9 @@ export function checkoutScreen(
       if (choices.autoPay && replaceablePermission(state.checkout?.autoCharge)) return 'autoPay';
     // falls through
     case 'submitting':
+      // The buyer went back while the wallet still asked, and confirmed it there: no price to show, Quasar takes the
+      // payment. The pay step renders nothing without a quote, which left an empty pane
+      if ((state.phase as string) === 'submitting' && !state.quote) return 'confirm';
       // A price locked without a payer is a Solana Pay QR code, also when the page was reloaded
       return choices.payWith === 'qr' || state.quote?.payer === null ? 'qr' : 'pay';
     case 'confirming':

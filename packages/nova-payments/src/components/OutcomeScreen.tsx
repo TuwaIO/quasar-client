@@ -10,7 +10,7 @@ import {
 import { cn } from '@tuwaio/nova-core';
 import { HashLink } from '@tuwaio/nova-transactions';
 import { parseCaip10AccountId } from '@tuwaio/orbit-core';
-import type { ComponentType, ReactNode, SVGProps } from 'react';
+import { type ComponentType, type ReactNode, type SVGProps, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
@@ -179,6 +179,7 @@ function ContactLink() {
  * @returns The outcome step.
  */
 export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
+  const [cannotConnect, setCannotConnect] = useState(false);
   const context = useCheckoutContext();
   const {
     checkout,
@@ -333,7 +334,9 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       }
       const rateNote = restRateText(locked, now, labels, merchant, locale, labels.outcome.underpaidRateEnded);
       // The rest of an underpaid invoice has one method, whatever the page chose before the part arrived
-      const restMethod = method ?? checkout.methods[0];
+      // The method that paid first, also after another one was tried and refused (`rest_method_mismatch`), which "Pay the
+      // rest" would otherwise ask for again and again
+      const restMethod = checkout.methods.find((item) => item.id === locked?.methodId) ?? method ?? checkout.methods[0];
       // Why the last attempt did nothing, or what happens to a transfer that moved money without counting. A refused
       // wallet has its own sentence below
       const problem =
@@ -575,7 +578,12 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const payer = state.payer ? parseCaip10AccountId(state.payer)?.address : undefined;
       body = (
         <>
-          <Text>{formatLabel(labels.outcome.blockedText, { merchant })}</Text>
+          {/* The seller named another wallet: not a failed check, whatever this one is */}
+          <Text>
+            {state.error?.code === 'payer_not_expected'
+              ? labels.method.payerNotExpected
+              : formatLabel(labels.outcome.blockedText, { merchant })}
+          </Text>
           {payer && (
             <p className={cn(mono, 'novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]')}>
               {shortAddress(payer)}
@@ -585,7 +593,13 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       );
       if (method) {
         action = (
-          <PrimaryButton onClick={() => void connectWallet(method)}>{labels.outcome.useAnotherWallet}</PrimaryButton>
+          <PrimaryButton
+            onClick={() => {
+              if (!connectWallet(method)) setCannotConnect(true);
+            }}
+          >
+            {labels.outcome.useAnotherWallet}
+          </PrimaryButton>
         );
       }
       break;
@@ -610,6 +624,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
           {title}
         </h2>
         {body}
+        {cannotConnect && <ScreenError>{labels.pay.connectUnavailable}</ScreenError>}
       </section>
       <ScreenFooter>
         {action}

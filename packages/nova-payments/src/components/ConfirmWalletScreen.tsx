@@ -1,6 +1,6 @@
 import { FingerPrintIcon } from '@heroicons/react/24/outline';
 import { cn, WalletIcon } from '@tuwaio/nova-core';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePayerProof } from '../hooks/usePayerProof';
@@ -9,7 +9,7 @@ import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal, shortAddress } from '../utils/format';
 import { methodFamily, networkName, payerFor } from '../utils/methods';
 import { isSameWallet } from '../utils/outcome';
-import { isSmartWallet, payerProofErrorText } from '../utils/payerProof';
+import { isConfirmationError, isSmartWallet, payerProofErrorText } from '../utils/payerProof';
 import { focusRing, mono } from './classes';
 import {
   DetailRow,
@@ -53,6 +53,7 @@ export function ConfirmWalletScreen() {
     wallet,
     chainId: method?.chainId ?? '',
   });
+  const [cannotConnect, setCannotConnect] = useState(false);
   const area = useRef<HTMLDivElement>(null);
   // The window of the wallet took the focus; when it closes, the step's heading takes it back (WCAG 2.4.3)
   const prompting = proof.step !== 'idle';
@@ -78,11 +79,17 @@ export function ConfirmWalletScreen() {
   const quoting = state.phase === 'quoting';
   // Busy only while the wallet window is open: once it is closed, the buyer can ask the wallet again
   const waiting = prompting;
-  const error = payerProofErrorText(quoting ? null : state.error, proof.problem, labels, {
-    wallet: walletName,
-    network,
-    merchant,
-  });
+  // Only what is about this confirmation: the store may hold a refusal of something else, from before the step opened
+  const error = payerProofErrorText(
+    !quoting && isConfirmationError(state.error) ? state.error : null,
+    proof.problem,
+    labels,
+    {
+      wallet: walletName,
+      network,
+      merchant,
+    },
+  );
   const values = { wallet: walletName, invoice, merchant };
   const asked = payerFor(wallet, method);
   const retry = () => {
@@ -116,13 +123,19 @@ export function ConfirmWalletScreen() {
                 <span
                   className={cn(mono, 'novapay:truncate novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}
                 >
-                  {formatLabel(labels.pay.walletLine, { address: shortAddress(wallet.address), network })}
+                  {/* Where the wallet is now, as on the pay step: the line below says that it is asked to switch */}
+                  {formatLabel(labels.pay.walletLine, {
+                    address: shortAddress(wallet.address),
+                    network: networkName(wallet.chainId),
+                  })}
                 </span>
               </span>
               <button
                 type="button"
                 aria-label={labels.pay.changeWallet}
-                onClick={() => connectWallet(method)}
+                onClick={() => {
+                  if (!connectWallet(method)) setCannotConnect(true);
+                }}
                 className={cn(
                   'novapay:min-h-6 novapay:cursor-pointer novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-transparent novapay:px-2.5 novapay:py-1 novapay:text-xs novapay:font-semibold novapay:text-[var(--tuwa-text-primary)] novapay:hover:bg-[var(--tuwa-bg-muted)]',
                   focusRing,
@@ -149,6 +162,11 @@ export function ConfirmWalletScreen() {
               <span>{formatLabel(labels.payerProof.passkey, values)}</span>
             </p>
           )}
+          {wallet && family === 'eip155' && wallet.chainId !== method.chainId && (
+            <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+              {formatLabel(labels.payerProof.willSwitch, { current: networkName(wallet.chainId), network })}
+            </p>
+          )}
           {confirmedOther && (
             <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-primary)]">
               {formatLabel(labels.payerProof.alreadyConfirmed, {
@@ -157,6 +175,7 @@ export function ConfirmWalletScreen() {
             </p>
           )}
           {error && <ScreenError>{error}</ScreenError>}
+          {cannotConnect && <ScreenError>{labels.pay.connectUnavailable}</ScreenError>}
         </ScreenContent>
 
         <ScreenFooter>
@@ -167,7 +186,8 @@ export function ConfirmWalletScreen() {
                 ? formatLabel(labels.payerProof.waiting, values)
                 : formatLabel(labels.payerProof.confirm, values)}
           </PrimaryButton>
-          <SecondaryButton onClick={back}>
+          {/* The price is on its way and would open the pay step a moment later */}
+          <SecondaryButton disabled={quoting} onClick={back}>
             {(state.invoiceStatus ?? checkout?.invoice.status) === 'underpaid'
               ? labels.pay.backFromRest
               : labels.pay.back}

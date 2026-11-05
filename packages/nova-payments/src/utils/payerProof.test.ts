@@ -2,7 +2,14 @@ import type { CheckoutError } from '@tuwaio/quasar-sdk/checkout';
 import { describe, expect, it, vi } from 'vitest';
 
 import { defaultLabels } from '../i18n/en';
-import { isPayerProofError, isSmartWallet, lockPrice, needsPayerProof, payerProofErrorText } from './payerProof';
+import {
+  isConfirmationError,
+  isPayerProofError,
+  isSmartWallet,
+  lockPrice,
+  needsPayerProof,
+  payerProofErrorText,
+} from './payerProof';
 
 const values = { wallet: 'MetaMask', network: 'Base', merchant: 'Cosmos' };
 const refusal = (code: string, reason?: string): CheckoutError =>
@@ -87,6 +94,21 @@ describe('payerProofErrorText', () => {
     );
   });
 
+  // "You declined the signature" for a network switch, and "did not sign" when it was the network that failed
+  it('talks about the network when the wallet did not get to the signature', () => {
+    expect(payerProofErrorText(null, 'switchDeclined', defaultLabels, values)).toContain('switch');
+    for (const problem of ['switchFailed', 'wrongNetwork'] as const) {
+      expect(payerProofErrorText(null, problem, defaultLabels, values)).toBe(
+        defaultLabels.payerProof.wrongNetwork.replace('{wallet}', values.wallet).replace('{network}', values.network),
+      );
+    }
+  });
+
+  it('says that the request waits in the wallet, and that the account is not allowed', () => {
+    expect(payerProofErrorText(null, 'alreadyPending', defaultLabels, values)).toContain('waits there');
+    expect(payerProofErrorText(null, 'notAuthorized', defaultLabels, values)).toContain('has not allowed');
+  });
+
   it("explains Quasar's refusals of the signature", () => {
     expect(payerProofErrorText(refusal('payer_proof_invalid', 'signature_invalid'), null, defaultLabels, values)).toBe(
       defaultLabels.payerProof.invalid,
@@ -114,6 +136,19 @@ describe('payerProofErrorText', () => {
   it('says nothing about the reason the step shows, nor without an error', () => {
     expect(payerProofErrorText(refusal('payer_proof_required'), null, defaultLabels, values)).toBeNull();
     expect(payerProofErrorText(null, null, defaultLabels, values)).toBeNull();
+  });
+});
+
+// A transfer held from another wallet, or a price refused to the last wallet, opened the step with "Something went wrong"
+describe('isConfirmationError', () => {
+  it('takes what is about the confirmation, and nothing else', () => {
+    for (const code of ['payer_proof_declined', 'payer_chain_mismatch', 'rate_limited', 'request_failed']) {
+      expect(isConfirmationError({ code, message: '' } as never)).toBe(true);
+    }
+    for (const code of ['payment_mismatch', 'price_unavailable', 'native_from_contract']) {
+      expect(isConfirmationError({ code, message: '' } as never)).toBe(false);
+    }
+    expect(isConfirmationError(null)).toBe(false);
   });
 });
 

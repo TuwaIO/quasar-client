@@ -11,6 +11,9 @@ import type { CheckoutWallet } from './methods';
 import type { PayPath } from './pay';
 import type { PaymentWalletErrorKind } from './walletErrors';
 
+/** Why the wallet did not confirm: its kind of failure, or a network switch the buyer refused. */
+type ConfirmProblem = PaymentWalletErrorKind | 'switchDeclined';
+
 /**
  * Connector types of wallets that are smart accounts signing with a passkey (Coinbase Smart Wallet and Base Account
  * connect as `evm:coinbase`): the checkout says that the wallet may ask for the passkey.
@@ -90,6 +93,27 @@ export function isPayerProofError(error: CheckoutError | null | undefined): bool
   return code !== undefined && (code.startsWith('payer_proof_') || PAYER_PROOF_CODES.has(code));
 }
 
+/** Errors of the confirmation that are not refusals of it: its own requests were refused or got no answer. */
+const CONFIRMATION_REQUEST_CODES: ReadonlySet<string> = new Set([
+  'rate_limited',
+  'request_failed',
+  'origin_required',
+  'invoice_not_payable',
+]);
+
+/**
+ * Whether an error belongs on the step that confirms the wallet. The store's error may be about something else: a
+ * transfer held from another wallet, or a price refused to the last wallet, opened the step with "Something went wrong"
+ * before the wallet was asked anything.
+ *
+ * @param error - The checkout store's error, if any.
+ * @returns `true` for a refusal of the confirmation or a failure of its requests.
+ */
+export function isConfirmationError(error: CheckoutError | null | undefined): boolean {
+  const code: string | undefined = error?.code;
+  return isPayerProofError(error) || (code !== undefined && CONFIRMATION_REQUEST_CODES.has(code));
+}
+
 /**
  * What the step that confirms the wallet says about a refusal, with what to do: the wallet's (the buyer declined, the
  * wallet cannot sign messages, it failed) or Quasar's (`payer_proof_invalid`, `payer_proof_unavailable`,
@@ -106,13 +130,19 @@ export function isPayerProofError(error: CheckoutError | null | undefined): bool
  */
 export function payerProofErrorText(
   error: CheckoutError | null | undefined,
-  problem: PaymentWalletErrorKind | null,
+  problem: ConfirmProblem | null,
   labels: NovaPaymentsLabels,
   values: { wallet: string; network: string; merchant: string },
 ): string | null {
   if (problem === 'declined') return formatLabel(labels.payerProof.declined, values);
+  if (problem === 'switchDeclined') return formatLabel(labels.payerProof.switchDeclined, values);
   if (problem === 'unsupported') return formatLabel(labels.payerProof.unsupported, values);
-  if (problem === 'failed' || problem === 'wrongNetwork') return formatLabel(labels.payerProof.failed, values);
+  // The network, not the signature: it was never asked for
+  if (problem === 'wrongNetwork' || problem === 'switchFailed')
+    return formatLabel(labels.payerProof.wrongNetwork, values);
+  if (problem === 'notAuthorized') return formatLabel(labels.pay.notAuthorized, values);
+  if (problem === 'alreadyPending') return formatLabel(labels.walletPrompt.stillWaiting, values);
+  if (problem) return formatLabel(labels.payerProof.failed, values);
   // Error codes newer than some `@tuwaio/quasar-sdk` alphas: compare them as strings
   const code: string | undefined = error?.code;
   switch (code) {

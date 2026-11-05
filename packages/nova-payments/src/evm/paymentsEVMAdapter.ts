@@ -6,6 +6,7 @@ import {
   estimateFeesPerGas,
   estimateGas,
   getBalance,
+  getBytecode,
   getCapabilities,
   getConnection,
   getConnectorClient,
@@ -25,6 +26,14 @@ import { PaymentWalletError } from '../utils/walletErrors';
 
 /** How long a sponsored payment may take to be included, in milliseconds. */
 const CALLS_TIMEOUT_MS = 180_000;
+/** How long a sponsored payment past {@link CALLS_TIMEOUT_MS} is still followed, in milliseconds. */
+const CALLS_LATE_TIMEOUT_MS = 30 * 60_000;
+
+/** A call that moves nothing, to an address nothing runs at: the batch exists only for the switch it makes the wallet offer. */
+const NO_OP_CALL = { to: '0x000000000000000000000000000000000000dEaD' as Address, value: 0n };
+/** How many times the code of a switched account is read, and how far apart: RPC nodes lag behind the receipt. */
+const UPGRADE_CHECKS = 5;
+const UPGRADE_CHECK_EVERY_MS = 2000;
 
 /** The EVM chain ID of a CAIP-2 chain. */
 function evmChainId(chainId: string): number {
@@ -167,7 +176,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       return signMessage(config, { account: account as Address, message });
     },
 
-    sendSponsoredCalls: async ({ calls, paymasterUrl, chainId, account, onSent }) => {
+    sendSponsoredCalls: async ({ calls, paymasterUrl, chainId, account, onSent, onLate }) => {
       refuseSafe();
       const { id } = await sendCalls(config, {
         account: account as Address,
@@ -176,7 +185,19 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         capabilities: { paymasterService: { url: paymasterUrl } },
       });
       onSent?.();
-      const result = await waitForCallsStatus(config, { id, timeout: CALLS_TIMEOUT_MS });
+      const result = await waitForCallsStatus(config, { id, timeout: CALLS_TIMEOUT_MS }).catch((error: unknown) => {
+        if ((error as { name?: string })?.name !== 'WaitForCallsStatusTimeoutError') throw error;
+        // The wallet sent it and the batch may still land: "it failed" would invite a second payment. Its transaction
+        // still reaches Quasar when it comes
+        void waitForCallsStatus(config, { id, timeout: CALLS_LATE_TIMEOUT_MS }).then(
+          (late) => {
+            const hash = late.status === 'success' ? late.receipts?.at(-1)?.transactionHash : undefined;
+            if (hash) onLate?.(hash);
+          },
+          () => undefined,
+        );
+        throw new PaymentWalletError('sentUnconfirmed', 'The sponsored payment is not confirmed yet', { cause: error });
+      });
       const hash = result.status === 'success' ? result.receipts?.at(-1)?.transactionHash : undefined;
       if (!hash) throw new PaymentWalletError('failed', 'The sponsored payment failed');
       return hash;
@@ -192,6 +213,46 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       const chain = config.chains.find((item) => item.id === toEvmChainId(chainId));
       const url = chain?.blockExplorers?.default.url;
       return url ? `${url}/address/${address}` : undefined;
+    },
+
+    smartAccountStatus: async ({ chainId, account }) => {
+      const id = evmChainId(chainId);
+      try {
+        const code = await getBytecode(config, { address: account as Address, chainId: id });
+        if (code && code !== '0x') return 'smart';
+        const capabilities = await getCapabilities(config, { account: account as Address, chainId: id });
+        const atomic = (capabilities as { atomic?: { status?: string } }).atomic?.status;
+        return atomic === 'ready' ? 'upgradable' : 'unknown';
+      } catch {
+        // A wallet without EIP-5792 does not answer, and nothing is known of it: Quasar decides on what it gives
+        return 'unknown';
+      }
+    },
+
+    upgradeToSmartAccount: async ({ chainId, account }) => {
+      refuseSafe();
+      const id = evmChainId(chainId);
+      const address = account as Address;
+      await switchChain(config, { chainId: id });
+      // MetaMask 13.55 signs an ERC-7715 permission for a plain account without switching it to its smart account, and no
+      // site may call `wallet_upgradeAccount`. Quasar then refuses the permission, rightly: nothing could ever charge it.
+      // An atomic batch is what makes the wallet offer the switch itself. Checked live: it takes two calls, as MetaMask
+      // sends a single call as a plain transaction and the account stays as it was. They move nothing
+      const { id: batch } = await sendCalls(config, {
+        account: address,
+        chainId: id,
+        forceAtomic: true,
+        calls: [NO_OP_CALL, NO_OP_CALL],
+      });
+      // Its answer decides nothing. Checked live: MetaMask's gas estimate left the batch out of gas, status 500, with the
+      // authorization of the same transaction applied. Only the code on the network says whether the account switched
+      await waitForCallsStatus(config, { id: batch, timeout: CALLS_TIMEOUT_MS }).catch(() => undefined);
+      for (let check = 0; check < UPGRADE_CHECKS; check++) {
+        const code = await getBytecode(config, { address, chainId: id }).catch(() => undefined);
+        if (code && code !== '0x') return;
+        await new Promise((resolve) => setTimeout(resolve, UPGRADE_CHECK_EVERY_MS));
+      }
+      throw new PaymentWalletError('failed', 'The wallet did not switch the account');
     },
 
     requestPermission: async ({ request, account }) => {

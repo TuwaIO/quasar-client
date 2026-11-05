@@ -47,6 +47,14 @@ export type RefundStep =
  */
 export type RefundProblem = 'notEnough' | 'declined' | 'unsupported' | 'wrongNetwork' | 'failed' | 'noRecipient';
 
+/** What the refund window says about a wallet that did not send: it has one text for a network, one for the rest. */
+function refundProblemOf(error: unknown): RefundProblem {
+  const kind = walletErrorKind(error);
+  if (kind === 'switchFailed') return 'wrongNetwork';
+  if (kind === 'notAuthorized' || kind === 'alreadyPending' || kind === 'sentUnconfirmed') return 'failed';
+  return kind;
+}
+
 // The transaction a wallet sent for a refund of a store, kept past the window that sent it: until Quasar takes it,
 // the next send hands it over again instead of sending a second one
 const sentTransactions = new WeakMap<RefundStore, { refundId: string; txKey: string }>();
@@ -220,7 +228,7 @@ export function useRefund({
       setStatus('switching');
       await adapter.switchChain(chainId!);
     } catch (error) {
-      setProblem(walletErrorKind(error));
+      setProblem(refundProblemOf(error));
     } finally {
       setStatus('idle');
     }
@@ -255,7 +263,7 @@ export function useRefund({
       await store.getState().submit({ txHash: hash, from: wallet.address });
     } catch (error) {
       setStatus('idle');
-      setProblem(walletErrorKind(error));
+      setProblem(refundProblemOf(error));
     }
   };
 

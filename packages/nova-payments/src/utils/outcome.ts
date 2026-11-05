@@ -167,9 +167,21 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.method.priceUnavailable;
     case 'consent_required':
       return labels.method.consentRequired;
-    // Quasar wants the wallet confirmed before the price: the step that confirms it says so
+    // Quasar wants the wallet confirmed before the price: the step that confirms it says so. Its other answers land here
+    // when the buyer has left that step
     case 'payer_proof_required':
+    case 'payer_proof_declined':
       return labels.payerProof.text;
+    case 'payer_proof_invalid':
+      return labels.payerProof.invalid;
+    case 'payer_proof_unavailable':
+      return labels.payerProof.unavailable;
+    // A transaction that reverted, seen after the price lock ended or on a rest: the pay step has the same sentence
+    case 'payment_failed':
+      return labels.method.paymentFailed;
+    // Quasar takes the rest only in the method that paid first
+    case 'rest_method_mismatch':
+      return labels.method.restSameMethod;
     default:
       return labels.error.generic;
   }

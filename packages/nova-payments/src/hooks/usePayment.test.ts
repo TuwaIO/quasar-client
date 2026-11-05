@@ -10,7 +10,7 @@ vi.mock('react', async () => ({
 }));
 
 const { render, unmount } = await import('../testing/hookHarness');
-const { usePayment } = await import('./usePayment');
+const { OPEN_REQUEST_MS, usePayment } = await import('./usePayment');
 
 const ACCOUNT = '0x1111111111111111111111111111111111111111';
 const wallet: CheckoutWallet = {
@@ -83,6 +83,64 @@ describe('usePayment', () => {
       account: ACCOUNT,
       connectorType: 'evm:metamask',
     });
+  });
+
+  // Cancel closes our window only: a second transaction next to the one waiting in the wallet could pay the invoice twice
+  it('does not send a second transaction while the first waits in the wallet', async () => {
+    const { transfer, submit, adapter, renderHook } = setup();
+    const first = renderHook().pay();
+    renderHook().dismiss();
+    expect(renderHook().status).toBe('idle');
+    const second = renderHook().pay();
+    expect(renderHook().status).toBe('wallet');
+    await vi.waitFor(() => expect(adapter.sendTransfer).toHaveBeenCalledOnce());
+    transfer.resolve('0xhash');
+    await Promise.all([first, second]);
+    expect(adapter.sendTransfer).toHaveBeenCalledOnce();
+    expect(submit).toHaveBeenCalledOnce();
+    expect(renderHook().status).toBe('idle');
+  });
+
+  it('sends again once the wallet refused the first one', async () => {
+    const { transfer, adapter, renderHook } = setup();
+    const first = renderHook().pay();
+    renderHook().dismiss();
+    transfer.reject({ code: 4001, message: 'User rejected' });
+    await first;
+    void renderHook().pay();
+    await vi.waitFor(() => expect(adapter.sendTransfer).toHaveBeenCalledTimes(2));
+  });
+
+  it('lets another wallet pay while the last one still has its request open', async () => {
+    const { adapter, renderHook, props } = setup();
+    void renderHook().pay();
+    renderHook().dismiss();
+    props.wallet = { ...wallet, address: '0x2222222222222222222222222222222222222222' };
+    void renderHook().pay();
+    await vi.waitFor(() => expect(adapter.sendTransfer).toHaveBeenCalledTimes(2));
+  });
+
+  // A wallet that lost its request (a mobile session that ended) never answers
+  it('does not trap the buyer behind a request the wallet never answers', async () => {
+    vi.useFakeTimers();
+    try {
+      const { adapter, renderHook } = setup();
+      void renderHook().pay();
+      renderHook().dismiss();
+      await vi.advanceTimersByTimeAsync(OPEN_REQUEST_MS + 1);
+      void renderHook().pay();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(adapter.sendTransfer).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps naming the wallet asked when the buyer disconnects it while the request waits', () => {
+    const { renderHook, props } = setup();
+    void renderHook().pay();
+    props.wallet = null;
+    expect(renderHook().askedWallet).toMatchObject({ name: 'MetaMask' });
   });
 
   it('says why the wallet did not pay', async () => {

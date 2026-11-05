@@ -51,10 +51,16 @@ describe('checkoutScreen', () => {
     expect(checkoutScreen({ phase: 'buyer', checkout: view() })).toBe('buyer');
     expect(checkoutScreen({ phase: 'selectMethod', checkout: view() })).toBe('method');
     for (const phase of ['awaitingPayment', 'submitting'] as const) {
-      expect(checkoutScreen({ phase, checkout: view() })).toBe('pay');
-      expect(checkoutScreen({ phase, checkout: view() }, { payWith: 'qr' })).toBe('qr');
+      const quote = { payer: 'eip155:1:0x1' } as never;
+      expect(checkoutScreen({ phase, checkout: view(), quote })).toBe('pay');
+      expect(checkoutScreen({ phase, checkout: view(), quote }, { payWith: 'qr' })).toBe('qr');
     }
     expect(checkoutScreen({ phase: 'confirming', checkout: view() })).toBe('confirm');
+  });
+
+  // The buyer cancelled, went back to the methods and then confirmed in the wallet: the pay step has nothing to render
+  it('shows that Quasar takes the payment when the buyer has gone back from the price', () => {
+    expect(checkoutScreen({ phase: 'submitting', checkout: view(), quote: null })).toBe('confirm');
   });
 
   it('stays on loading until the labels of the language are loaded, but shows an error at once', () => {
