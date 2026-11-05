@@ -2882,6 +2882,25 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
     checkout.getState().destroy();
   });
 
+  // A payment sent from another tab or wallet may still land: a new price would ask for the money twice
+  it.each(['open', 'underpaid'])(
+    'waits for a payment on its way when Quasar refuses a new price (%s)',
+    async (status) => {
+      const invoice = { ...view().invoice, status } as CheckoutView['invoice'];
+      fetchMock
+        .mockResolvedValueOnce(json(view({ invoice })))
+        .mockResolvedValueOnce(json({ error: { code: 'payment_on_its_way', message: 'Refused' } }, 409));
+      const checkout = store({ EventSource: null });
+      await checkout.getState().load();
+      checkout.getState().selectMethod('ap_1');
+      checkout.getState().setPayer(QUOTE.payer);
+
+      expect(await checkout.getState().requestQuote()).toBeNull();
+      expect(checkout.getState().phase).toBe('confirming');
+      checkout.getState().destroy();
+    },
+  );
+
   // Another wallet became active over the quote of the rest, or the page chose another method
   it.each(['payer_mismatch', 'rest_method_mismatch'])('leaves the payment step of a rest on %s', async (code) => {
     const invoice = { ...view().invoice, status: 'underpaid', amountPaid: '1000000' } as CheckoutView['invoice'];

@@ -774,12 +774,13 @@ const PHASE_OF_REFUSAL: Record<string, CheckoutPhase> = {
   buyer_required: 'buyer',
   invoice_expired: 'expired',
   invoice_processing: 'confirming',
+  payment_on_its_way: 'confirming',
   payer_mismatch: 'underpaid',
   rest_method_mismatch: 'underpaid',
 };
 
 /** Refusals of a quote of a rest that do not lead back to the underpaid outcome. */
-const LEAVES_REST: ReadonlySet<string> = new Set(['invoice_expired', 'invoice_processing']);
+const LEAVES_REST: ReadonlySet<string> = new Set(['invoice_expired', 'invoice_processing', 'payment_on_its_way']);
 
 /** How a payment the store follows, or the latest one of a reopened page, ended without paying the invoice. */
 type Ending = {
