@@ -142,3 +142,24 @@ merchant with the transaction hash if money left the wallet.
 Defined in: [checkout/store.ts:99](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L99)
 
 HTTP status, when the API answered.
+
+***
+
+### stillRead?
+
+> `optional` **stillRead?**: `true`
+
+Defined in: [checkout/store.ts:157](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L157)
+
+Set on `payment_unconfirmed` for a payment past the first day Quasar still reads, as a node still shows it or nothing could
+read it: neither the promise of `rechecked` nor that Quasar stopped reading it holds.
+
+***
+
+### txKey?
+
+> `optional` **txKey?**: `string`
+
+Defined in: [checkout/store.ts:152](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L152)
+
+The transaction whose nonce nothing explains, on `nonce_spent_unexplained`: not always the one the page handed over last.

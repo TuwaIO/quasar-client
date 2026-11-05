@@ -148,6 +148,13 @@ export interface CheckoutError {
    * prices the rest of an underpaid invoice only for that wallet, so the buyer pays the rest from it.
    */
   originWallet?: string;
+  /** The transaction whose nonce nothing explains, on `nonce_spent_unexplained`: not always the one the page handed over last. */
+  txKey?: string;
+  /**
+   * Set on `payment_unconfirmed` for a payment past the first day Quasar still reads, as a node still shows it or nothing could
+   * read it: neither the promise of `rechecked` nor that Quasar stopped reading it holds.
+   */
+  stillRead?: true;
 }
 
 /**
@@ -833,6 +840,8 @@ const LEAVES_REST: ReadonlySet<string> = new Set(['invoice_expired', 'invoice_pr
 /** How a payment the store follows, or the latest one of a reopened page, ended without paying the invoice. */
 type Ending = {
   final: boolean;
+  /** Every key of the transaction, when Quasar listed it. */
+  keys?: string[];
   reason?: string;
   movedMoney?: boolean;
   rechecked?: boolean;
@@ -848,7 +857,9 @@ function endedError(ended: Ending): CheckoutError {
   const reason = ended.reason ? { reason: ended.reason } : {};
   // Confirmed on chain, not recorded yet: the merchant has the money, Quasar may still retry it
   if (ended.reason === SETTLEMENT_FAILED) return settlementFailedError(ended.rechecked);
-  if (ended.reason === NONCE_SPENT) return nonceSpentError();
+  if (ended.reason === NONCE_SPENT) {
+    return ended.otherInvoice ? unconfirmedError() : nonceSpentError(ended.keys?.[0]);
+  }
   if (ended.reason === CHARGE_AFTER_REQUOTE) {
     return {
       code: 'payment_mismatch',
@@ -957,8 +968,9 @@ const settlementFailedError = (rechecked = false): CheckoutError => ({
 });
 
 /** The error of a payment whose nonce went to a transaction Quasar could not find. */
-const nonceSpentError = (): CheckoutError => ({
+const nonceSpentError = (txKey?: string): CheckoutError => ({
   code: 'payment_unconfirmed',
+  ...(txKey ? { txKey } : {}),
   message:
     'The wallet used the number of this transaction for another one, which Quasar could not find, so money may have left the wallet. Do not pay again yet: name that transaction, or contact the merchant.',
   reason: NONCE_SPENT,
@@ -991,8 +1003,9 @@ const keepsPaymentShut = (error: CheckoutError | null) =>
  * what spent the nonce is recorded. Read from the whole list and not from the newest: a transaction the buyer named by mistake
  * ends for good and says nothing of that nonce, and the money may still have left in what spent it.
  */
-const openNonceSpent = <R extends { reason?: string | null }>(rejections: readonly R[]) =>
-  rejections.find((rejection) => rejection.reason === NONCE_SPENT) ?? null;
+const openNonceSpent = <R extends { reason?: string | null; otherInvoice?: string }>(rejections: readonly R[]) =>
+  // Of a transaction another invoice follows: this one can never learn what became of it, and a page shut for good helps nobody
+  rejections.find((rejection) => rejection.reason === NONCE_SPENT && !rejection.otherInvoice) ?? null;
 
 /** Whether the error is the store's word on a transaction another invoice handed over first. */
 const isTakenElsewhere = (error: CheckoutError | null) =>
@@ -1134,7 +1147,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
   /** The payment whose nonce nothing explains yet, as Quasar last listed it: the page stays shut, whatever else happens. */
   let nonceStillOpen: ReturnType<typeof openNonceSpent<Rejection>> = null;
   /** What keeps the page shut while {@link nonceStillOpen}: any other word on a hand-over would offer a payment. */
-  const shutByNonce = () => ({ error: nonceSpentError() });
+  const shutByNonce = () => ({ error: nonceStillOpen ? endedError(nonceStillOpen) : nonceSpentError() });
   /**
    * The number of the latest {@link CheckoutState.confirmPayer} attempt: a new call replaces the one under way (a
    * prompt the buyer closed may never answer), whose late answer only records the wallet's proof.
@@ -1463,8 +1476,11 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
             })
           : { final: true };
       }
+      const nonceWasOpen = nonceStillOpen;
       if (rejections) nonceStillOpen = openNonceSpent(rejections);
-      if (ended?.final && nonceStillOpen) ended = nonceStillOpen;
+      // Whatever became of another transaction, a final word or none: it says nothing of the money that may have left in what
+      // spent this nonce. Only a read of the list saw this before, and a page left open went back to Pay
+      if (ended && nonceStillOpen) ended = nonceStillOpen;
       if (ended?.final) {
         // The transaction can never pay the invoice (it may still have moved money: `payment_mismatch`): the buyer
         // may pay again while it is payable
@@ -1498,7 +1514,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           event.status === 'underpaid' &&
           previous !== 'underpaid' &&
           earlier &&
-          earlier.code !== 'payment_mismatch'
+          earlier.code !== 'payment_mismatch' &&
+          !nonceStillOpen
         ) {
           partial.error = null;
         }
@@ -1538,6 +1555,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         (event.status === 'processing' || (event.status === 'underpaid' && !restStands) || SETTLED.has(event.status))
       ) {
         partial.error = null;
+      }
+      // Closed while the page offers a payment, or with a first part that takes it to the rest: no payment next to that nonce.
+      // Not while a payment of this page is on its way: that one is followed, and may be the answer
+      if (nonceStillOpen && PAYABLE.has(event.status) && OFFERING.has(partial.phase ?? phase)) {
+        Object.assign(partial, shutByNonce(), { phase: 'unconfirmed' });
+      } else if (nonceWasOpen && !nonceStillOpen && get().error?.reason === NONCE_SPENT && !partial.error) {
+        // What spent it is on record: the page goes back to what the invoice takes
+        Object.assign(partial, { error: null }, PAYABLE.has(event.status) ? retryPhase(event.status) : {});
       }
       update(partial);
 
@@ -1843,6 +1868,10 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
             } else if (latest && !latest.final && !resolvedSince(latest, invoice)) {
               // The latest payment may still have gone through: the buyer checks the wallet before paying again
               error = endedError(latest);
+              // Past its first day, and the closing still reads it: "Quasar does not check this payment again" would be false
+              if (RE_READ_REASONS.has(latest.reason ?? '') && !latest.rechecked && recheckedOf(invoice)) {
+                error = { ...error, stillRead: true };
+              }
               check = true;
             } else if (latest?.reason === 'unresolved_after_24h') {
               // Final for Quasar, which stopped reading it, and no word about the money: a payment sped up in the wallet has
@@ -2153,7 +2182,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
 
       payAgain: () => {
         // A payment that left the wallet and may still pay the invoice: the merchant or Quasar decides, not the buyer
-        if (get().phase !== 'unconfirmed' || keepsPaymentShut(get().error)) return;
+        if (get().phase !== 'unconfirmed' || keepsPaymentShut(get().error) || nonceStillOpen) return;
         update({ error: null, ...retryPhase(get().invoiceStatus) });
       },
 

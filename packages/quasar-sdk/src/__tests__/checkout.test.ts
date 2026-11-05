@@ -2389,6 +2389,97 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
     live.getState().destroy();
   });
 
+  describe('a nonce nothing explains, on a page left open', () => {
+    const closed = rejection('0xfeed', 'nonce_spent_unexplained', false, { movedMoney: true });
+    const shut = { phase: 'unconfirmed', error: { reason: 'nonce_spent_unexplained' } };
+    const opened = async () => {
+      answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [closed] });
+      const page = store();
+      await page.getState().load();
+      return { page, events: FakeEventSource.instances.at(-1) as FakeEventSource };
+    };
+
+    // A mistyped hash, or one a node does not show yet: "the payment did not leave my wallet" next to money that may have left
+    it('stays shut when the transaction the buyer named ends with no last word', async () => {
+      const { page } = await opened();
+      await page.getState().submit({ txKey: '0xbad' });
+      const events = FakeEventSource.instances.at(-1) as FakeEventSource;
+      const wrong = rejection('0xbad', 'not_found', false, { rechecked: true });
+      events.emit(
+        'status',
+        signal('open', 9, { pendingPayments: 0, unresolvedPayments: 1, rejectedPayments: [wrong, closed] }),
+      );
+      await vi.waitFor(() => expect(page.getState()).toMatchObject(shut));
+      page.getState().payAgain();
+      expect(page.getState().phase).toBe('unconfirmed');
+      page.getState().destroy();
+    });
+
+    it('stays shut when a first part with another nonce arrives', async () => {
+      const { page, events } = await opened();
+      events.emit('status', {
+        ...signal('underpaid', 9, { pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [closed] }),
+        amountPaid: '10',
+      });
+      await vi.waitFor(() => expect(page.getState()).toMatchObject(shut));
+      page.getState().destroy();
+    });
+
+    it('shuts when the sweep closes it while the page offers a payment', async () => {
+      answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [] });
+      const page = store();
+      await page.getState().load();
+      const events = FakeEventSource.instances.at(-1) as FakeEventSource;
+      events.emit(
+        'status',
+        signal('open', 9, { pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [closed] }),
+      );
+      await vi.waitFor(() => expect(page.getState()).toMatchObject(shut));
+      page.getState().destroy();
+    });
+
+    it('opens again once Quasar no longer lists it, as what spent the nonce is on record', async () => {
+      const { page, events } = await opened();
+      expect(page.getState()).toMatchObject(shut);
+      events.emit('status', signal('open', 9, { pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [] }));
+      await vi.waitFor(() => expect(page.getState().error).toBeNull());
+      expect(page.getState().phase).not.toBe('unconfirmed');
+      page.getState().destroy();
+    });
+
+    it('names the transaction whose nonce it is, not the one named since', async () => {
+      const wrong = rejection('0xbad', 'no_matching_transfer', true, { movedMoney: true });
+      answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [wrong, closed] });
+      const page = store();
+      await page.getState().load();
+      expect(page.getState().error?.txKey).toBe('0xfeed');
+      page.getState().destroy();
+    });
+  });
+
+  // Another invoice follows that transaction, so this one can never learn what became of it, and its page stayed shut until it
+  // ended, for a buyer who only reused a hash someone handed over first
+  it('asks to check the wallet but stays open for a nonce of a transaction another invoice follows', async () => {
+    const copy = rejection('0xfeed', 'nonce_spent_unexplained', false, { movedMoney: true, otherInvoice: 'inv_2' });
+    answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [copy] });
+    const page = store();
+    await page.getState().load();
+    expect(page.getState().phase).toBe('unconfirmed');
+    page.getState().payAgain();
+    expect(page.getState().phase).not.toBe('unconfirmed');
+    page.getState().destroy();
+  });
+
+  // Past its day the closing still reads it for a month: "Quasar does not check this payment again" stood next to it
+  it('says that Quasar still reads a payment it lost sight of past its first day', async () => {
+    const lost = rejection('0xfeed', 'timeout', false);
+    answer({ pendingPayments: 0, unresolvedPayments: 1, rejectedPayments: [lost] });
+    const page = store();
+    await page.getState().load();
+    expect(page.getState()).toMatchObject({ phase: 'unconfirmed', error: { reason: 'timeout', stillRead: true } });
+    page.getState().destroy();
+  });
+
   // The hand-over of the named hash failed on the network: the retry text offered "the payment did not leave my wallet"
   it('stays shut while a transaction the buyer named is handed over again, or once that is given up', async () => {
     const closed = rejection('0xfeed', 'nonce_spent_unexplained', false, { movedMoney: true });

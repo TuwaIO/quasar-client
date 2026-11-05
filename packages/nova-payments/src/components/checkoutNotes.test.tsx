@@ -314,6 +314,40 @@ describe('an invoice that expired while the payment of this page was confirming'
     return OutcomeScreen({ kind: 'unconfirmed' } as never);
   };
 
+  it('shows the transaction whose nonce is unexplained, not the hash named since', () => {
+    const tree = unconfirmedOf('nonce_spent_unexplained');
+    ctx = {
+      ...ctx,
+      state: {
+        ...ctx.state,
+        txKey: '0xnamed',
+        error: { code: 'payment_unconfirmed', message: '', reason: 'nonce_spent_unexplained', txKey: '0xspent' },
+      } as never,
+    };
+    expect(showsHash(OutcomeScreen({ kind: 'unconfirmed' } as never), '0xspent')).toBe(true);
+    expect(tree).toBeTruthy();
+  });
+
+  // Past its first day the closing still reads it for a month, and the page said it never would again
+  it('says that Quasar reads a payment it lost sight of past its first day', () => {
+    show('unconfirmed' as never, { status: 'open', amountPaid: null });
+    ctx = {
+      ...ctx,
+      paymentSent: true,
+      state: {
+        ...ctx.state,
+        phase: 'unconfirmed',
+        invoiceStatus: 'open',
+        txKey: '0xabc',
+        paymentOnTheWay: false,
+        error: { code: 'payment_unconfirmed', message: '', reason: 'timeout', stillRead: true },
+      } as never,
+    };
+    const text = textOf(OutcomeScreen({ kind: 'unconfirmed' } as never));
+    expect(text).toContain('Quasar reads this payment for a week');
+    expect(text).not.toContain('does not check this payment again');
+  });
+
   // What the fix of a page that invited a second payment rests on: nothing noticed when these were taken out
   it('offers no payment, and a way to name the transaction, when the nonce is unexplained', () => {
     const tree = unconfirmedOf('nonce_spent_unexplained');

@@ -401,6 +401,7 @@ export function screensPayingWallets(checkout: CheckoutView): boolean {
  * @param state.paymentOnTheWay - What the store says, when it has the field.
  * @param state.txKey - The transaction this page submitted.
  * @param state.txHash - The transaction of the payment, once known.
+ * @param state.error - The store's error, which names a transaction of its own when its nonce is unexplained.
  * @returns Whether a payment of this page may still arrive.
  */
 export function isPaymentOnTheWay(
@@ -626,7 +627,11 @@ export type UnconfirmedFollowUp =
 export function unconfirmedFollowUp(error: CheckoutError | null | undefined): UnconfirmedFollowUp | null {
   // `payment_unconfirmed`, `reason` and `rechecked` are newer than some `@tuwaio/quasar-sdk` alphas: read them as such
   const code: string | undefined = error?.code;
-  const { reason, rechecked } = (error ?? {}) as { reason?: string; rechecked?: boolean };
+  const { reason, rechecked, stillRead } = (error ?? {}) as {
+    reason?: string;
+    rechecked?: boolean;
+    stillRead?: boolean;
+  };
   if (code === 'payment_failed' && reason === 'unresolved_after_24h') return 'closed';
   if (reason === SETTLEMENT_FAILED && (code === 'payment_unconfirmed' || code === 'payment_mismatch')) {
     return rechecked === true ? 'settlementRetrying' : 'settlementFailed';
@@ -634,7 +639,7 @@ export function unconfirmedFollowUp(error: CheckoutError | null | undefined): Un
   if (code !== 'payment_unconfirmed') return null;
   if (reason === 'nonce_spent_unexplained') return 'nonceSpent';
   // Read hourly for a week, not for the day `rechecked` promises, and not "never again" either
-  if (reason === 'unmined_after_24h') return 'unmined';
+  if (reason === 'unmined_after_24h' || stillRead === true) return 'unmined';
   if (reason === TAKEN_ELSEWHERE) return 'takenElsewhere';
   if (reason === 'submit_retrying') return 'retrying';
   if (reason === 'submit_failed') return 'notReceived';
@@ -653,9 +658,13 @@ export function unconfirmedFollowUp(error: CheckoutError | null | undefined): Un
  * @returns The transaction hash (EVM) or signature (Solana), or `null` when the page does not know it.
  */
 export function unconfirmedTxKey(
-  state: Pick<CheckoutState, 'txKey' | 'txHash'>,
+  state: Pick<CheckoutState, 'txKey' | 'txHash'> & { error?: object | null },
   checkout: CheckoutView | null,
 ): string | null {
+  // The transaction whose nonce nothing explains: "this transaction" of that text, and a hash named since says nothing of it.
+  // `txKey` of the error is newer than some `@tuwaio/quasar-sdk` alphas: read it as such
+  const { txKey: spent } = (state.error ?? {}) as { txKey?: string };
+  if (spent) return spent;
   // `rejectedPayments` is newer than some `@tuwaio/quasar-sdk` alphas and Quasar versions: read it as optional; Quasar
   // lists the newest first
   const rejected = (checkout?.invoice as { rejectedPayments?: { txKey: string }[] } | undefined)?.rejectedPayments;
