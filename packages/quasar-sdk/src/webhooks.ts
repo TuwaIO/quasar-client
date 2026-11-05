@@ -48,7 +48,8 @@ export type PaymentWebhookEventType =
   | 'subscription.ended'
   | 'subscription.permission_granted'
   | 'subscription.charge_failed'
-  | 'subscription.permission_revoked';
+  | 'subscription.permission_revoked'
+  | 'subscription.invoice_refused';
 
 /**
  * What a hold is about (`data.hold` of `invoice.held`): an invoice paid in a way that waits for your decision. `reason`
