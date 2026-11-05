@@ -185,6 +185,32 @@ describe('the pay step of a method the gasless relay may pay', () => {
   });
 });
 
+// The price is locked for the wallet it was quoted for: another one neither asks for a new price nor pays this one
+describe('the pay step after the buyer switched wallets', () => {
+  it('keeps the price and asks for the wallet it was locked for', () => {
+    const quote = quoteOf(null);
+    show('pay', { quote, payerProof: 'confirmed' });
+    const requestQuote = vi.fn();
+    const connectWallet = vi.fn(async () => undefined);
+    ctx = {
+      ...ctx,
+      connectWallet,
+      store: { getState: () => ({ ...ctx.state, requestQuote }) },
+      wallet: { ...(ctx.wallet as object), address: '0x9999999999999999999999999999999999999999' },
+    } as never;
+
+    const tree = render(PayScreen, {});
+
+    expect(textOf(tree)).toContain('89.54');
+    const button = fixture.ofType(tree, PrimaryButton)[0] as ReactElement<Props>;
+    expect(button.props.children).toBe(defaultLabels.pay.connect);
+    (button.props.onClick as () => void)();
+    expect(connectWallet).toHaveBeenCalledOnce();
+    expect(requestQuote).not.toHaveBeenCalled();
+    expect(pay).not.toHaveBeenCalled();
+  });
+});
+
 describe('the method step', () => {
   it('locks the price through the confirmation of the wallet', async () => {
     show('method', { phase: 'selectMethod', quote: null, payer: null });
