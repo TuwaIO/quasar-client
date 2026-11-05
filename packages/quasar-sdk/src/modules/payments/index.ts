@@ -184,7 +184,7 @@ export class PaymentsModule {
 
   /**
    * Cancels an open invoice (`POST /v1/payments/invoices/:id/cancel`): it stops being payable; its number stays
-   * taken. A payment that arrives later is held for you.
+   * taken. A payment that arrives later is held for you. An underpaid invoice is closed as expired: refund what arrived.
    *
    * @param invoiceId - The invoice.
    * @param params - `reason`, recorded in the ledger.

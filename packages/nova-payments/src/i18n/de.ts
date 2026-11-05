@@ -55,6 +55,7 @@ export const deLabels: NovaPaymentsLabels = {
     consentRequired: 'Zum Fortfahren erforderlich.',
     noMethods: 'Diese Rechnung kann derzeit mit keiner Methode bezahlt werden. Wenden Sie sich an den Verkäufer.',
     methodUnavailable: 'Diese Seite kann diese Methode nicht annehmen. Wählen Sie eine andere.',
+    nativeFromSmartWallet: 'Eine Smart Wallet kann nicht mit dieser Coin bezahlen: Wähle einen Token.',
     payerNotExpected:
       'Der Verkäufer möchte, dass diese Rechnung von einem anderen Wallet bezahlt wird. Verbinden Sie das gewünschte Wallet.',
     rateLimited: 'Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es erneut.',

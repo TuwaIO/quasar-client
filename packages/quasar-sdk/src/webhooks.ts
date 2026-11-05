@@ -36,6 +36,7 @@ export type PaymentWebhookEventType =
   | 'refund.confirmed'
   | 'refund.failed'
   | 'payment.reverted'
+  | 'payment.unverified'
   | 'subscription.created'
   | 'subscription.renewed'
   | 'subscription.past_due'
@@ -84,7 +85,7 @@ export interface PaymentWebhookHeldTransfer {
   /** The wallets that sent it. */
   senders: string[];
   /** Why it is tied to no invoice. */
-  reason: 'payer_mismatch' | 'payer_unconfirmed' | 'already_paid' | 'quote_changed' | null;
+  reason: 'payer_mismatch' | 'payer_unconfirmed' | 'already_paid' | 'quote_changed' | 'too_many_parts' | null;
   /** It arrived after the invoice expired or was cancelled. */
   late?: true;
   /** Set when AML blocked its sender: Quasar refunds it to no one. */

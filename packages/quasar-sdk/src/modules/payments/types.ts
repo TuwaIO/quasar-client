@@ -640,7 +640,7 @@ export interface HeldTransfer {
   /** Where it is. */
   status: HeldTransferStatus;
   /** Why it is tied to no invoice. */
-  reason: 'payer_mismatch' | 'payer_unconfirmed' | 'already_paid' | 'quote_changed';
+  reason: 'payer_mismatch' | 'payer_unconfirmed' | 'already_paid' | 'quote_changed' | 'too_many_parts';
   /** Whether it arrived after the invoice expired or was cancelled. */
   late: boolean;
   /** CAIP-2 chain. */

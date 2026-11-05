@@ -55,6 +55,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     consentRequired: '勾选后才能继续。',
     noMethods: '此发票目前无法通过任何方式支付。请联系卖方。',
     methodUnavailable: '此页面不支持该方式。请选择其他方式。',
+    nativeFromSmartWallet: '智能钱包无法用此币种付款:请选择代币。',
     payerNotExpected: '卖方要求用另一个钱包支付此发票。请连接该钱包。',
     rateLimited: '尝试次数过多。请等待一分钟后重试。',
     priceUnavailable: '暂时无法获取此方式的价格。请选择其他方式，或一分钟后重试。',

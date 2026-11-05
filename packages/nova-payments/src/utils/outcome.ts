@@ -146,6 +146,8 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.method.methodUnavailable;
     case 'payer_not_expected':
       return labels.method.payerNotExpected;
+    case 'native_from_contract':
+      return labels.method.nativeFromSmartWallet;
     case 'rate_limited':
       return labels.method.rateLimited;
     // `price_no_rpc`: the seller set up no RPC for a network the price is read on, so another method may work

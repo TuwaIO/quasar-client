@@ -578,6 +578,8 @@ const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
   'payer_unconfirmed',
   'already_paid',
   'quote_changed',
+  'too_many_parts',
+  'below_minimum',
   'native_from_contract_unverifiable',
   'invoice_not_payable',
   'settlement_failed',

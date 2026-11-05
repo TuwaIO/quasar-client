@@ -38,7 +38,7 @@ const { invoice, payUrl } = await quasar.payments.createInvoice(
 Defined in: [modules/payments/index.ts:195](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L195)
 
 Cancels an open invoice (`POST /v1/payments/invoices/:id/cancel`): it stops being payable; its number stays
-taken. A payment that arrives later is held for you.
+taken. A payment that arrives later is held for you. An underpaid invoice is closed as expired: refund what arrived.
 
 #### Parameters
 

@@ -99,6 +99,8 @@ export type NovaPaymentsLabels = {
     noMethods: string;
     /** The page can pay the chosen method neither from a wallet nor with a QR code */
     methodUnavailable: string;
+    /** A smart wallet chose a native coin, whose transfer no receipt shows (`native_from_contract`). */
+    nativeFromSmartWallet: string;
     /** The seller named the paying wallet, and it is another one (`payer_not_expected`) */
     payerNotExpected: string;
     /** Too many tries (`rate_limited`) (default: `Too many tries. Wait a minute and try again.`) */

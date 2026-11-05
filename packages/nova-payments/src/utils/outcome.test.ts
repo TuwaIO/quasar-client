@@ -86,6 +86,12 @@ describe('needsLeaveConfirm after a payment that left the wallet', () => {
 });
 
 describe('methodErrorText', () => {
+  it('asks a smart wallet for a token instead of a native coin', () => {
+    expect(methodErrorText({ code: 'native_from_contract', message: 'raw' } as never, defaultLabels, 'Cosmos')).toBe(
+      defaultLabels.method.nativeFromSmartWallet,
+    );
+  });
+
   // F9: back at the methods after a transaction that does not pay the invoice, the buyer learns what to do if money left
   it('says that a transaction does not pay the invoice, never that it did not go through', () => {
     const text = methodErrorText({ code: 'payment_mismatch', message: 'raw' } as never, defaultLabels, 'Cosmos');
