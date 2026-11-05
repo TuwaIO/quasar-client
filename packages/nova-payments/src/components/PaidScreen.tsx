@@ -1,5 +1,5 @@
-import { ArrowDownTrayIcon, CheckCircleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-import { cn } from '@tuwaio/nova-core';
+import { ArrowDownTrayIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { cn, DrawnCheck } from '@tuwaio/nova-core';
 import { HashLink, TxProgressIndicator, TxStatusVisual } from '@tuwaio/nova-transactions';
 import { useState } from 'react';
 
@@ -9,7 +9,7 @@ import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal } from '../utils/format';
 import { methodFamily } from '../utils/methods';
-import { focusRing, mono, primaryAction, screenHeading, screenTitle, secondaryAction, textButton } from './classes';
+import { focusRing, mono, primaryAction, secondaryAction, textButton } from './classes';
 import { checkoutClassName } from './customization';
 import {
   DetailRow,
@@ -20,6 +20,7 @@ import {
   ScreenFooter,
   SecondaryButton,
 } from './ScreenParts';
+import { StatusTitle } from './StatusTitle';
 import { TxLabels } from './TxLabels';
 
 /**
@@ -95,9 +96,7 @@ export function PaidScreen() {
               : child?.statusVisual?.className
           }
         />
-        <h2 {...screenHeading} className={screenTitle}>
-          {labels.paid.title}
-        </h2>
+        <StatusTitle>{labels.paid.title}</StatusTitle>
         <div>
           <p
             className={cn(
@@ -166,7 +165,7 @@ export function PaidScreen() {
         )}
         {offer?.status === 'active' && (
           <p className="novapay:m-0 novapay:flex novapay:items-center novapay:gap-1.5 novapay:text-xs novapay:text-[var(--tuwa-success-text)]">
-            <CheckCircleIcon aria-hidden className="novapay:h-4 novapay:w-4" />
+            <DrawnCheck variant="disc" className="novapay:h-4 novapay:w-4" />
             {labels.paid.autoPayActive}
             {offer.revocation && (
               <button type="button" onClick={() => setAutoPayOff('open')} className={textButton}>

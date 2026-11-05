@@ -1,5 +1,5 @@
-import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { cn } from '@tuwaio/nova-core';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { cn, QuasarLoader } from '@tuwaio/nova-core';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
@@ -106,10 +106,7 @@ export function QrScreen() {
             {!expired && (
               <>
                 <span role="status" className="novapay:flex novapay:items-center novapay:gap-1.5">
-                  <ArrowPathIcon
-                    aria-hidden
-                    className="novapay:h-3.5 novapay:w-3.5 novapay:animate-spin novapay:motion-reduce:animate-none"
-                  />
+                  <QuasarLoader size={14} accent="var(--tuwa-pending-icon)" />
                   {labels.qr.waiting}
                 </span>
                 <span role="timer" aria-live="off" className="novapay:text-[var(--tuwa-text-secondary)]">

@@ -1,3 +1,4 @@
+import type { StatusEdgeProps, StatusTone } from '@tuwaio/nova-core';
 import type { HashLinkProps, TxProgressIndicatorProps, TxStatusVisualProps } from '@tuwaio/nova-transactions';
 import type {
   CheckoutError,
@@ -193,6 +194,14 @@ export interface PaymentCheckoutClassNames {
    * @returns Classes to add.
    */
   statusIcon?: (params: CheckoutPartState & { kind: OutcomeKind }) => string | undefined;
+  /**
+   * The strip and the wash of the status color along the top of the checkout, on a payment on its way and its outcome.
+   *
+   * @param params - The state of the checkout, and `tone`, the state the strip shows.
+   * @param params.tone - The state the strip shows.
+   * @returns Classes to add.
+   */
+  statusEdge?: (params: CheckoutPartState & { tone: StatusTone }) => string | undefined;
 }
 
 /** Props of a replacement token card content (`PaymentCheckoutComponents.TokenOption`). */
@@ -213,7 +222,7 @@ export interface CheckoutNetworkOptionProps {
 
 /** Props of a replacement main button (`PaymentCheckoutComponents.PrimaryButton`): a `<button>`'s props and `busy`. */
 export type CheckoutPrimaryButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  /** The action is running: the default button shows a spinner and is disabled. */
+  /** The action is running: the default button shows the Quasar loader and is disabled. */
   busy?: boolean;
 };
 
@@ -268,6 +277,8 @@ export interface PaymentCheckoutComponents {
   QrCode?: ComponentType<CheckoutQrCodeProps>;
   /** The icon of an outcome other than paid. */
   StatusIcon?: ComponentType<CheckoutStatusIconProps>;
+  /** The strip and the wash of the status color along the top of the checkout (`StatusEdge` of `@tuwaio/nova-core`). */
+  StatusEdge?: ComponentType<StatusEdgeProps>;
   /** Whole screens, by the screen they replace (for example `paid` or `loading`). */
   screens?: Partial<Record<CheckoutScreen, ComponentType<CheckoutScreenProps>>>;
 }

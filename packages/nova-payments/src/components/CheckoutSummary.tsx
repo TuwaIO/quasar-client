@@ -296,16 +296,19 @@ export function SummaryFooter() {
 }
 
 /** A button that shows or hides a part, with `aria-expanded` and `aria-controls`. @internal */
-function Disclosure({
+export function Disclosure({
   label,
   children,
   className,
   buttonClassName,
+  growsUp = false,
 }: {
   label: string;
   children: ReactNode;
   className?: string;
   buttonClassName?: string;
+  /** The part stands at the bottom of its panel, so its content pushes the button upwards: the arrow says so. */
+  growsUp?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -327,7 +330,7 @@ function Disclosure({
           aria-hidden
           className={cn(
             'novapay:h-3 novapay:w-3 novapay:transition-transform novapay:motion-reduce:transition-none',
-            open && 'novapay:rotate-180',
+            open !== growsUp && 'novapay:rotate-180',
           )}
         />
       </button>
@@ -469,7 +472,7 @@ function PageSummary() {
       </div>
       <div className="novapay:mt-auto novapay:flex novapay:flex-col novapay:gap-3 novapay:pt-5">
         <DeadlineTimer />
-        <Disclosure label={labels.summary.sellerDetails} buttonClassName="novapay:min-h-6">
+        <Disclosure label={labels.summary.sellerDetails} buttonClassName="novapay:min-h-6" growsUp>
           <SellerDetailsContent checkout={checkout} labels={labels} />
         </Disclosure>
         <SummaryFooter />

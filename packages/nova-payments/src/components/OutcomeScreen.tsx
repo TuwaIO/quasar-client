@@ -5,9 +5,8 @@ import {
   ExclamationTriangleIcon,
   MagnifyingGlassIcon,
   NoSymbolIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
-import { cn } from '@tuwaio/nova-core';
+import { cn, DrawnCross } from '@tuwaio/nova-core';
 import { HashLink } from '@tuwaio/nova-transactions';
 import { parseCaip10AccountId } from '@tuwaio/orbit-core';
 import { type ComponentType, type ReactNode, type SVGProps, useState } from 'react';
@@ -38,9 +37,10 @@ import {
 } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { AutoPayNote } from './AutoPayNote';
-import { mono, screenHeading, screenTitle, secondaryAction } from './classes';
+import { mono, secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
 import { DetailRow, DetailsCard, PrimaryButton, ScreenError, ScreenFooter, SecondaryButton } from './ScreenParts';
+import { StatusTitle } from './StatusTitle';
 import { TxLabels } from './TxLabels';
 
 /** The outcomes this screen shows. */
@@ -93,6 +93,9 @@ const LEFT_THE_WALLET: ReadonlySet<UnconfirmedFollowUp> = new Set([
 
 /** Whether two account addresses are one: EVM ones in any case, Solana (base58) ones exactly. */
 
+/** A cancelled invoice: the cross of a result, which draws itself. */
+const CancelledMark = ({ className }: SVGProps<SVGSVGElement>) => <DrawnCross variant="disc" className={className} />;
+
 /** The icon and tone of each outcome. */
 const LOOK: Record<OutcomeKind, { Icon: ComponentType<SVGProps<SVGSVGElement>>; tone: string }> = {
   unconfirmed: { Icon: ExclamationTriangleIcon, tone: 'novapay:text-[var(--tuwa-pending-icon)]' },
@@ -100,7 +103,7 @@ const LOOK: Record<OutcomeKind, { Icon: ComponentType<SVGProps<SVGSVGElement>>; 
   held: { Icon: MagnifyingGlassIcon, tone: 'novapay:text-[var(--tuwa-info-icon)]' },
   refunded: { Icon: ArrowUturnLeftIcon, tone: 'novapay:text-[var(--tuwa-info-icon)]' },
   expired: { Icon: ClockIcon, tone: 'novapay:text-[var(--tuwa-text-secondary)]' },
-  cancelled: { Icon: XCircleIcon, tone: 'novapay:text-[var(--tuwa-text-secondary)]' },
+  cancelled: { Icon: CancelledMark, tone: 'novapay:text-[var(--tuwa-text-secondary)]' },
   replaced: { Icon: ArrowPathRoundedSquareIcon, tone: 'novapay:text-[var(--tuwa-info-icon)]' },
   blocked: { Icon: NoSymbolIcon, tone: 'novapay:text-[var(--tuwa-error-icon)]' },
 };
@@ -620,9 +623,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         ) : (
           <Icon aria-hidden className={cn('novapay:h-12 novapay:w-12', tone, iconClassName)} />
         )}
-        <h2 {...screenHeading} className={cn(screenTitle, 'novapay:max-w-sm')}>
-          {title}
-        </h2>
+        <StatusTitle className="novapay:max-w-sm">{title}</StatusTitle>
         {body}
         {cannotConnect && <ScreenError>{labels.pay.connectUnavailable}</ScreenError>}
       </section>

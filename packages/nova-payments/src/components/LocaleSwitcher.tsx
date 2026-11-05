@@ -1,5 +1,5 @@
-import { CheckIcon, ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
-import { cn } from '@tuwaio/nova-core';
+import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { cn, DrawnCheck } from '@tuwaio/nova-core';
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 
 import { CHECKOUT_LOCALES, type CheckoutLocale, formatLabel, type NovaPaymentsLabels } from '../i18n';
@@ -157,10 +157,7 @@ export function LocaleSwitcher({ locale, labels, receiptIssued, onSelect, classN
                   </span>
                   <span>{item.name}</span>
                   {selected && (
-                    <CheckIcon
-                      aria-hidden
-                      className="novapay:ml-auto novapay:h-3.5 novapay:w-3.5 novapay:text-[var(--tuwa-text-accent)]"
-                    />
+                    <DrawnCheck className="novapay:ml-auto novapay:h-3.5 novapay:w-3.5 novapay:text-[var(--tuwa-text-accent)]" />
                   )}
                 </li>
               );

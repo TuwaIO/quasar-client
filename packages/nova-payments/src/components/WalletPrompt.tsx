@@ -1,11 +1,10 @@
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
 import { type CSSProperties, useEffect, useId, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
 import { screenTitle } from './classes';
-import { CheckoutWalletIcon, DetailRow, DetailsCard, FooterAction, SecondaryButton } from './ScreenParts';
+import { DetailRow, DetailsCard, FooterAction, SecondaryButton, WalletWait } from './ScreenParts';
 
 /**
  * What the wallet asks for: a gasless signature, a transaction, a network switch, the permission of automatic
@@ -129,13 +128,7 @@ export function WalletPrompt({
             : 'novapay:max-sm:min-h-[var(--novapay-step-height)]'),
       )}
     >
-      <span className="novapay:relative novapay:h-12 novapay:w-12">
-        {(walletId || walletIcon) && <CheckoutWalletIcon walletId={walletId} icon={walletIcon} />}
-        <ArrowPathIcon
-          aria-hidden
-          className="novapay:absolute novapay:-bottom-1 novapay:-right-1 novapay:h-5 novapay:w-5 novapay:animate-spin novapay:rounded-full novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-accent)] novapay:motion-reduce:animate-none"
-        />
-      </span>
+      <WalletWait walletId={walletId} walletIcon={walletIcon} />
       <h2 id={headingId} ref={heading} tabIndex={-1} className={screenTitle}>
         {formatLabel(title, values)}
       </h2>

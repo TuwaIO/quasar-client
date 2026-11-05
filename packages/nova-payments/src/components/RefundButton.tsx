@@ -1,4 +1,4 @@
-import { ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
 import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type { RefundState, RefundStore } from '@tuwaio/quasar-sdk/checkout';
@@ -13,7 +13,6 @@ import { refundRateMoved } from '../utils/outcome';
 import { iconButton, mono, primaryAction } from './classes';
 import { RadioCards } from './RadioCards';
 import {
-  CheckoutWalletIcon,
   DetailRow,
   DetailsCard,
   FooterNote,
@@ -22,6 +21,7 @@ import {
   ScreenError,
   ScreenFooter,
   SecondaryButton,
+  WalletWait,
 } from './ScreenParts';
 
 /** A refund of the store (`Refund` of `@tuwaio/quasar-sdk`). */
@@ -475,24 +475,12 @@ export function FailedStep({
 
 /** A step that waits: the wallet's prompt (with its icon) or Quasar. */
 function Waiting({ walletId, walletIcon, children }: { walletId?: string; walletIcon?: string; children: ReactNode }) {
-  const withWallet = Boolean(walletId || walletIcon);
   return (
     <section
       role="status"
-      className="novapay:flex novapay:min-h-56 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:px-6 novapay:py-8 novapay:text-center novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]"
+      className="novapay:flex novapay:min-h-56 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:px-5 novapay:py-6 novapay:text-center"
     >
-      <span className="novapay:relative novapay:h-12 novapay:w-12">
-        {withWallet && <CheckoutWalletIcon walletId={walletId ?? ''} icon={walletIcon} />}
-        <ArrowPathIcon
-          aria-hidden
-          className={cn(
-            'novapay:animate-spin novapay:text-[var(--tuwa-text-accent)] novapay:motion-reduce:animate-none',
-            withWallet
-              ? 'novapay:absolute novapay:-bottom-1 novapay:-right-1 novapay:h-5 novapay:w-5 novapay:rounded-full novapay:bg-[var(--tuwa-bg-primary)]'
-              : 'novapay:h-12 novapay:w-12',
-          )}
-        />
-      </span>
+      <WalletWait walletId={walletId} walletIcon={walletIcon} />
       {children}
     </section>
   );

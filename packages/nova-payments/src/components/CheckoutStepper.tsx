@@ -1,5 +1,4 @@
-import { CheckIcon } from '@heroicons/react/24/solid';
-import { cn } from '@tuwaio/nova-core';
+import { cn, DrawnCheck } from '@tuwaio/nova-core';
 import { useEffect, useRef, useState } from 'react';
 
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
@@ -77,7 +76,7 @@ export function CheckoutStepper({ steps, labels, className, stepClassName }: Che
                 <span
                   aria-hidden
                   className={cn(
-                    'novapay:h-0.5 novapay:min-w-2 novapay:flex-1 novapay:rounded-full',
+                    'novapay:h-0.5 novapay:min-w-2 novapay:flex-1 novapay:rounded-full novapay:transition-colors novapay:duration-300 novapay:motion-reduce:transition-none',
                     step.state === 'upcoming'
                       ? 'novapay:bg-[var(--tuwa-border-primary)]'
                       : 'novapay:bg-[var(--tuwa-success-icon)]',
@@ -96,7 +95,7 @@ export function CheckoutStepper({ steps, labels, className, stepClassName }: Che
                     'novapay:border-2 novapay:border-[var(--tuwa-border-primary)] novapay:text-[var(--tuwa-text-secondary)]',
                 )}
               >
-                {step.state === 'done' ? <CheckIcon className="novapay:h-3 novapay:w-3" /> : i + 1}
+                {step.state === 'done' ? <DrawnCheck className="novapay:h-3 novapay:w-3" /> : i + 1}
               </span>
               <span
                 className={cn(

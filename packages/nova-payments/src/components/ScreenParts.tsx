@@ -1,5 +1,4 @@
-import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
-import { cn, WalletIcon } from '@tuwaio/nova-core';
+import { cn, CopyIcon, MorphText, QuasarLoader, WalletIcon } from '@tuwaio/nova-core';
 import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
@@ -36,6 +35,25 @@ export function CheckoutWalletIcon({ walletId, icon }: { walletId: string; icon?
   return <WalletIcon walletName={walletId} />;
 }
 
+/**
+ * The wait for a wallet: a ring runs around its icon, as on the connecting screen of Nova Connect. Without a wallet to show,
+ * the Quasar loader. Both in the pending color: this is a wait for a person, not for the page.
+ *
+ * @internal
+ */
+export function WalletWait({ walletId, walletIcon }: { walletId?: string; walletIcon?: string }) {
+  if (!walletId && !walletIcon) return <QuasarLoader size={48} accent="var(--tuwa-pending-icon)" />;
+  return (
+    <span className="novapay:relative novapay:block novapay:h-12 novapay:w-12">
+      <CheckoutWalletIcon walletId={walletId ?? ''} icon={walletIcon} />
+      <span
+        aria-hidden
+        className="novapay:absolute novapay:-inset-1 novapay:animate-spin novapay:rounded-full novapay:border-2 novapay:border-[var(--tuwa-pending-text)] novapay:border-t-transparent novapay:motion-reduce:animate-none"
+      />
+    </span>
+  );
+}
+
 /** The scrolling content of a screen, with its heading. @internal */
 export function ScreenContent({
   title,
@@ -58,7 +76,7 @@ export function ScreenContent({
     >
       <div>
         <h2 {...screenHeading} className={screenTitle}>
-          {title}
+          {typeof title === 'string' ? <MorphText wrap>{title}</MorphText> : title}
         </h2>
         {subtitle && (
           <p
@@ -137,7 +155,8 @@ export function GroupLabel({ children, id }: { children: ReactNode; id?: string 
 }
 
 /**
- * The main button of a screen, in the solid accent of the checkout; `busy` shows a spinner with its text. A
+ * The main button of a screen, in the solid accent of the checkout; `busy` shows the Quasar loader with its text, and a
+ * text that changes morphs. A
  * `customization.components.PrimaryButton` replaces it with the same props.
  *
  * @internal
@@ -161,13 +180,8 @@ export function PrimaryButton({ busy, children, className, ...props }: CheckoutP
       disabled={props.disabled || busy}
       className={cn(primaryAction, className, extra)}
     >
-      {busy && (
-        <ArrowPathIcon
-          aria-hidden
-          className="novapay:h-4 novapay:w-4 novapay:animate-spin novapay:motion-reduce:animate-none"
-        />
-      )}
-      {children}
+      {busy && <QuasarLoader size={16} accent="currentColor" />}
+      {typeof children === 'string' ? <MorphText>{children}</MorphText> : children}
     </button>
   );
 }
@@ -246,7 +260,6 @@ export function CopyButton({
     const timer = setTimeout(() => setCopied(false), 2000);
     return () => clearTimeout(timer);
   }, [copied]);
-  const Icon = copied ? CheckIcon : DocumentDuplicateIcon;
   return (
     <>
       <button
@@ -261,7 +274,7 @@ export function CopyButton({
         }}
         className={cn(iconButton, 'novapay:min-h-6 novapay:min-w-6 novapay:text-xs')}
       >
-        <Icon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
+        <CopyIcon copied={copied} className="novapay:h-3.5 novapay:w-3.5" />
         {children}
       </button>
       <span role="status" className="novapay:sr-only">

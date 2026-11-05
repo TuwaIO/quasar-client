@@ -1,5 +1,5 @@
-import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { cn, Dialog, DialogContent, DialogTitle, QuasarLoader, StatusEdge } from '@tuwaio/nova-core';
 import type { CheckoutApi, CheckoutStore, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
 import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
@@ -46,6 +46,7 @@ import { PaidScreen } from './PaidScreen';
 import { PayScreen } from './PayScreen';
 import { QrScreen } from './QrScreen';
 import { SecondaryButton } from './ScreenParts';
+import { statusToneOf } from './statusTone';
 
 /** Where the checkout is shown. */
 export type PaymentCheckoutDisplay = 'modal' | 'inline' | 'page';
@@ -127,10 +128,7 @@ function LoadingScreen() {
       role="status"
       className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:p-8 novapay:text-sm novapay:text-[var(--tuwa-text-secondary)]"
     >
-      <ArrowPathIcon
-        aria-hidden
-        className="novapay:h-6 novapay:w-6 novapay:animate-spin novapay:motion-reduce:animate-none"
-      />
+      <QuasarLoader size={48} />
       {labels.common.loading}
     </div>
   );
@@ -250,6 +248,8 @@ export function CheckoutFrame({
 
   const page = display === 'page';
   const layout = checkoutLayout[page ? 'page' : 'default'];
+  const statusTone = statusToneOf(screen);
+  const CStatusEdge = customization.components?.StatusEdge ?? StatusEdge;
   return (
     <div ref={frame} lang={locale} className={cn(layout.frame, checkoutWidthClasses(display).frame, className)}>
       {checkout && (
@@ -258,7 +258,14 @@ export function CheckoutFrame({
         </aside>
       )}
       {/* While the question to leave shows, the rest is out of reach: Tab stays in the question */}
-      <div inert={Boolean(leave)} className={layout.main}>
+      <div inert={Boolean(leave)} className={cn('novapay:relative', layout.main)}>
+        {/* One strip for all the status screens, above the header: its color goes on from one to the next */}
+        {statusTone && (
+          <CStatusEdge
+            tone={statusTone}
+            className={cn('novapay:z-20', checkoutClassName(context, 'statusEdge', { tone: statusTone }))}
+          />
+        )}
         <Header withDetails={withDetails} />
         <div className="novapay:sm:hidden">
           {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
@@ -268,7 +275,8 @@ export function CheckoutFrame({
         <div data-novapay-scroll="" className={cn(layout.area, checkoutClassName(context, 'body'))}>
           {page ? (
             <div
-              key={screen}
+              // Not between status screens: "Confirming" goes on into "Paid", and a fade would take that away
+              key={statusTone ? 'status' : screen}
               className={cn(
                 'novapay:flex novapay:flex-1 novapay:flex-col',
                 !customization.config?.animation?.disabled && 'novapay-page-fade',

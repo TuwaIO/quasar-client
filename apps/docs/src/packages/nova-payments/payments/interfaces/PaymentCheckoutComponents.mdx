@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentCheckoutComponents
 
-Defined in: [nova-payments/src/components/customization.ts:249](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L249)
+Defined in: [nova-payments/src/components/customization.ts:258](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L258)
 
 Components that replace parts of [PaymentCheckout](?path=/docs/packages-nova-payments-payments-functions-paymentcheckout--docs). A replacement reads the checkout with
 [useCheckoutContext](?path=/docs/packages-nova-payments-payments-functions-usecheckoutcontext--docs) (the store, its state, the labels of the checkout language, the connected wallet and the
@@ -16,7 +16,7 @@ actions of the steps).
 
 > `optional` **CompactSummary?**: `ComponentType`\<\{ `className?`: `string`; \}\>
 
-Defined in: [nova-payments/src/components/customization.ts:258](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L258)
+Defined in: [nova-payments/src/components/customization.ts:267](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L267)
 
 The order above the steps on a phone; `className` holds the classes of `classNames.compactSummary`.
 
@@ -26,7 +26,7 @@ The order above the steps on a phone; `className` holds the classes of `classNam
 
 > `optional` **Header?**: `ComponentType`\<[`CheckoutHeaderProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutheaderprops--docs)\>
 
-Defined in: [nova-payments/src/components/customization.ts:251](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L251)
+Defined in: [nova-payments/src/components/customization.ts:260](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L260)
 
 The header: the steps (or the heading of an outcome), the language menu and the close button; on a phone too.
 
@@ -36,7 +36,7 @@ The header: the steps (or the heading of an outcome), the language menu and the 
 
 > `optional` **NetworkOption?**: `ComponentType`\<[`CheckoutNetworkOptionProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutnetworkoptionprops--docs)\>
 
-Defined in: [nova-payments/src/components/customization.ts:264](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L264)
+Defined in: [nova-payments/src/components/customization.ts:273](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L273)
 
 The content of a network option of the method step (the option itself stays a radio button).
 
@@ -46,7 +46,7 @@ The content of a network option of the method step (the option itself stays a ra
 
 > `optional` **PrimaryButton?**: `ComponentType`\<[`CheckoutPrimaryButtonProps`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutprimarybuttonprops--docs)\>
 
-Defined in: [nova-payments/src/components/customization.ts:266](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L266)
+Defined in: [nova-payments/src/components/customization.ts:275](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L275)
 
 The main button of every screen.
 
@@ -56,7 +56,7 @@ The main button of every screen.
 
 > `optional` **QrCode?**: `ComponentType`\<[`CheckoutQrCodeProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutqrcodeprops--docs)\>
 
-Defined in: [nova-payments/src/components/customization.ts:268](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L268)
+Defined in: [nova-payments/src/components/customization.ts:277](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L277)
 
 A QR code. Keep it dark on light: scanners read inverted codes badly.
 
@@ -66,9 +66,19 @@ A QR code. Keep it dark on light: scanners read inverted codes badly.
 
 > `optional` **screens?**: `Partial`\<`Record`\<[`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs), `ComponentType`\<[`CheckoutScreenProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutscreenprops--docs)\>\>\>
 
-Defined in: [nova-payments/src/components/customization.ts:272](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L272)
+Defined in: [nova-payments/src/components/customization.ts:283](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L283)
 
 Whole screens, by the screen they replace (for example `paid` or `loading`).
+
+***
+
+### StatusEdge?
+
+> `optional` **StatusEdge?**: `ComponentType`\<`StatusEdgeProps`\>
+
+Defined in: [nova-payments/src/components/customization.ts:281](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L281)
+
+The strip and the wash of the status color along the top of the checkout (`StatusEdge` of `@tuwaio/nova-core`).
 
 ***
 
@@ -76,7 +86,7 @@ Whole screens, by the screen they replace (for example `paid` or `loading`).
 
 > `optional` **StatusIcon?**: `ComponentType`\<[`CheckoutStatusIconProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstatusiconprops--docs)\>
 
-Defined in: [nova-payments/src/components/customization.ts:270](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L270)
+Defined in: [nova-payments/src/components/customization.ts:279](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L279)
 
 The icon of an outcome other than paid.
 
@@ -86,7 +96,7 @@ The icon of an outcome other than paid.
 
 > `optional` **Stepper?**: `ComponentType`\<[`CheckoutStepperProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstepperprops--docs)\>
 
-Defined in: [nova-payments/src/components/customization.ts:260](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L260)
+Defined in: [nova-payments/src/components/customization.ts:269](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L269)
 
 The list of steps, in the header and, on a phone, under the order.
 
@@ -96,7 +106,7 @@ The list of steps, in the header and, on a phone, under the order.
 
 > `optional` **Summary?**: `ComponentType`
 
-Defined in: [nova-payments/src/components/customization.ts:256](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L256)
+Defined in: [nova-payments/src/components/customization.ts:265](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L265)
 
 The content of the order panel on the left (from 640 px; `classNames.summary` styles the panel around it). On a page
 the panel is a flex column as tall as the sheet.
@@ -107,6 +117,6 @@ the panel is a flex column as tall as the sheet.
 
 > `optional` **TokenOption?**: `ComponentType`\<[`CheckoutTokenOptionProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkouttokenoptionprops--docs)\>
 
-Defined in: [nova-payments/src/components/customization.ts:262](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L262)
+Defined in: [nova-payments/src/components/customization.ts:271](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L271)
 
 The content of a token card of the method step (the card itself stays a radio button).

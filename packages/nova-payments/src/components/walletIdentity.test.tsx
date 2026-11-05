@@ -25,7 +25,7 @@ const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { defaultLabels } = await import('../i18n');
 const { WalletIcon } = await import('@tuwaio/nova-core');
-const { CheckoutWalletIcon } = await import('./ScreenParts');
+const { CheckoutWalletIcon, WalletWait } = await import('./ScreenParts');
 const { WalletPrompt } = await import('./WalletPrompt');
 const { PayScreen } = await import('./PayScreen');
 const { MethodScreen } = await import('./MethodScreen');
@@ -155,7 +155,7 @@ describe('the checkout names and shows the wallet as it calls itself', () => {
     unmount();
     const window = render(WalletPrompt, prompt as never);
     expect(textOf(window)).toContain('Approve the switch in Switch Wallet');
-    expect(iconsOf(window)).toEqual([{ walletId: 'switchwallet', icon: ICON }]);
+    expect(fixture.ofType(window, WalletWait)[0].props).toEqual({ walletId: 'switchwallet', walletIcon: ICON });
   });
 
   it('under "Wallet" of the method step', () => {

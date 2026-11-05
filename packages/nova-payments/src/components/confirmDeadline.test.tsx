@@ -98,7 +98,11 @@ const NEUTRAL =
 
 /** The text of the status note under the payment. */
 const noteOf = (tree: unknown) =>
-  fixture.elements(tree).find((element) => element.props.role === 'status')?.props.children;
+  (
+    fixture.elements(tree).find((element) => element.props.role === 'status')?.props.children as {
+      props: { children: string };
+    }
+  ).props.children;
 
 afterEach(() => unmount());
 

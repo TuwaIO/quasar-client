@@ -1,12 +1,13 @@
-import { cn } from '@tuwaio/nova-core';
+import { cn, MorphText } from '@tuwaio/nova-core';
 import { HashLink, TxProgressIndicator, TxStatusVisual } from '@tuwaio/nova-transactions';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { isInvoicePaymentOnTheWay, isPaymentOnTheWay, sentBeforeDeadline } from '../utils/checkout';
-import { mono, screenHeading, screenTitle } from './classes';
+import { mono } from './classes';
 import { DetailRow, DetailsCard, ScreenFooter, SecondaryButton } from './ScreenParts';
+import { StatusTitle } from './StatusTitle';
 import { TxLabels } from './TxLabels';
 
 /** Invoice states in which Quasar waits for a payment sent before the deadline (not `processing`: it has arrived). */
@@ -58,9 +59,7 @@ export function ConfirmScreen() {
           className={page ? cn('novapay-page-visual', child?.statusVisual?.className) : child?.statusVisual?.className}
         />
         <div>
-          <h2 {...screenHeading} className={screenTitle}>
-            {labels.confirm.title}
-          </h2>
+          <StatusTitle>{labels.confirm.title}</StatusTitle>
           {/* On a page the amount stands where the paid screen shows it, so nothing moves when the payment confirms */}
           {page && facts.amount && (
             <p className={cn(mono, 'novapay-page-amount novapay:m-0 novapay:mt-2 novapay:text-2xl novapay:font-bold')}>
@@ -99,13 +98,15 @@ export function ConfirmScreen() {
             page && 'novapay:mt-auto',
           )}
         >
-          {pastDeadline
-            ? formatLabel(sentInTime ? labels.confirm.afterDeadline : labels.confirm.pastDeadline, {
-                merchant: checkout.merchant.name,
-              })
-            : found
-              ? labels.confirm.invoicePayment
-              : labels.confirm.canClose}
+          <MorphText wrap>
+            {pastDeadline
+              ? formatLabel(sentInTime ? labels.confirm.afterDeadline : labels.confirm.pastDeadline, {
+                  merchant: checkout.merchant.name,
+                })
+              : found
+                ? labels.confirm.invoicePayment
+                : labels.confirm.canClose}
+          </MorphText>
         </p>
       </section>
       {close && (
