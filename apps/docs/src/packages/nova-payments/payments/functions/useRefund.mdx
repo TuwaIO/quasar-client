@@ -6,13 +6,14 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **useRefund**(`params`): [`RefundFlow`](?path=/docs/packages-nova-payments-payments-interfaces-refundflow--docs)
 
-Defined in: [nova-payments/src/hooks/useRefund.ts:154](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L154)
+Defined in: [nova-payments/src/hooks/useRefund.ts:161](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L161)
 
 Refunds a payment from the merchant's connected wallet: asks Quasar for the refund through the store,
 sends its transfer to the payer with the payments adapter of the chain family (switching the wallet to the payment's
 network first, and never prompting a wallet that holds too little), hands the transaction to Quasar and lets the
 store follow it until Quasar confirms it and issues the credit note. A transaction the wallet sent is handed over
-again on the next [RefundFlow.send](?path=/docs/packages-nova-payments-payments-interfaces-refundflow--docs#send), never sent twice. With the app's Pulsar store (`pulsar` of
+again on the next [RefundFlow.send](?path=/docs/packages-nova-payments-payments-interfaces-refundflow--docs#send), never sent twice. Before the wallet is asked the refund is read again, and nothing
+goes out when it no longer waits or Quasar does not answer. With the app's Pulsar store (`pulsar` of
 `NovaPaymentsProvider`) and an adapter that describes its transactions, the refund is also tracked by Pulsar, and
 Nova Transactions shows its toast.
 

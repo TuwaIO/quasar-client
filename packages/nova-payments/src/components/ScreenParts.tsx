@@ -1,11 +1,14 @@
 import { cn, CopyIcon, MorphText, QuasarLoader, WalletIcon } from '@tuwaio/nova-core';
+import { HashLink } from '@tuwaio/nova-transactions';
 import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
+import type { NovaPaymentsLabels } from '../i18n';
 import { isWalletIconUrl } from '../utils/methods';
 import type { CheckoutContextValue } from './checkoutContext';
 import { focusRing, iconButton, mono, primaryAction, screenHeading, screenTitle, secondaryAction } from './classes';
 import { checkoutClassName, type CheckoutPrimaryButtonProps } from './customization';
+import { TxLabels } from './TxLabels';
 
 // A class of the checkout's customization; none outside a checkout (RefundButton)
 const partClass = (
@@ -33,6 +36,45 @@ export function CheckoutWalletIcon({ walletId, icon }: { walletId: string; icon?
     );
   }
   return <WalletIcon walletName={walletId} />;
+}
+
+/**
+ * An address or transaction in a row: short, in the same form everywhere, linked to the explorer and with a copy button, as the
+ * hash of a transaction is. In a checkout the link of an address comes from the adapter of its chain.
+ *
+ * @param props - The address or hash; its chain, or its link when the caller has it; the labels outside a checkout.
+ * @returns The link.
+ * @internal
+ */
+export function ChainLink({
+  hash,
+  chainId,
+  explorerUrl,
+  labels,
+}: {
+  hash: string;
+  chainId?: string | null;
+  explorerUrl?: string;
+  labels?: NovaPaymentsLabels;
+}) {
+  const context = useOptionalCheckoutContext();
+  const url =
+    explorerUrl ??
+    (chainId
+      ? context
+          ?.adapterFor(chainId.startsWith('solana:') ? 'solana' : 'eip155')
+          ?.explorerAddressUrl?.({ chainId, address: hash })
+      : undefined);
+  return (
+    <TxLabels labels={labels}>
+      <HashLink
+        hash={hash}
+        explorerUrl={url}
+        variant="compact"
+        {...context?.customization.childCustomizations?.hashLink}
+      />
+    </TxLabels>
+  );
 }
 
 /**

@@ -6,8 +6,10 @@ import { takeOverOpens } from '../utils/checkout';
 import { formatTokenAmount, shortAddress } from '../utils/format';
 import { networkName } from '../utils/methods';
 import { addressOfWallet, formatPeriod, isSameWallet } from '../utils/outcome';
+import { OPEN_REQUEST_MS, settlesWithin } from '../utils/settlesWithin';
 import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
 import {
+  ChainLink,
   DetailRow,
   DetailsCard,
   PrimaryButton,
@@ -97,12 +99,23 @@ export function AutoPayOffScreen() {
         if (revoked === null) return setProblem('notAsked');
         if (!adapter?.revokePermission) return setProblem('unsupported');
         setStep('wallet');
-        await adapter.revokePermission({
-          revocation,
-          chainId,
-          account: wallet.address,
-          onSent: () => setRevokeSent(true),
-        });
+        let wentOut = false;
+        const settled = await settlesWithin(
+          adapter.revokePermission({
+            revocation,
+            chainId,
+            account: wallet.address,
+            onSent: () => {
+              wentOut = true;
+              setRevokeSent(true);
+              // Nothing waits in the wallet any more, only the network: the button says so
+              setStep('network');
+            },
+          }),
+          OPEN_REQUEST_MS,
+        );
+        // A wallet that lost the request never answers: nothing went out, so the chain cannot show anything
+        if (!settled && !wentOut) return setProblem('alreadyPending');
       }
       await check();
     } catch (error) {
@@ -138,7 +151,9 @@ export function AutoPayOffScreen() {
       <ScreenContent title={labels.autoPayOff.title} subtitle={formatLabel(labels.autoPayOff.subtitle, { merchant })}>
         <DetailsCard>
           <DetailRow name={labels.autoPayOff.wallet}>
-            {shortAddress(payer)} · {network}
+            <span className="novapay:inline-flex novapay:items-center novapay:gap-1">
+              <ChainLink hash={payer} chainId={chainId} /> · {network}
+            </span>
           </DetailRow>
           {permission.periodAmount && decimals !== null && method && (
             <DetailRow name={labels.autoPayOff.allowed}>

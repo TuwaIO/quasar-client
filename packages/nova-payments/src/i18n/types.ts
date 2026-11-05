@@ -150,6 +150,8 @@ export type NovaPaymentsLabels = {
     invalidEmail: string;
     /** The country is not on the list (default: `Choose a country from the list`) */
     invalidCountry: string;
+    /** Quasar refused the details (default: `Your details could not be saved. Check them and try again.`) */
+    refused: string;
     /** Main button (default: `Continue`) */
     continue: string;
   };
@@ -811,6 +813,16 @@ export type NovaPaymentsLabels = {
      * outcome.`)
      */
     followingUntil: string;
+    /** Opens the field for the hash the wallet shows (default: `Does your wallet show another transaction?`) */
+    nameHash: string;
+    /** The name of that field (default: `Transaction hash`) */
+    nameHashField: string;
+    /** Its button (default: `Check this transaction`) */
+    nameHashSend: string;
+    /** The text is no transaction of the network of the payment (default: `This is not a transaction of this network.`) */
+    nameHashInvalid: string;
+    /** Quasar did not take it (default: `Quasar could not take this transaction. Contact the seller with its hash.`) */
+    nameHashRefused: string;
     /**
      * The button that goes back to the payment once the buyer checked the wallet (default: `The payment did not leave
      * my wallet`)
@@ -1072,6 +1084,28 @@ export type NovaPaymentsLabels = {
     failed: string;
     /** Quasar does not know the payer (default: `The payer's wallet is not known, so this refund can't be sent from here.`) */
     noRecipient: string;
+    /** Quasar did not answer: the window sent nothing (default: `Quasar does not answer, so nothing was sent. Try again in a moment.`) */
+    unreachable: string;
+    /** Refused: `amount_exceeds_refundable` (default: `The amount is more than what is left to refund.`) */
+    refusedAmount: string;
+    /** Refused: the payment cannot be refunded any more (default: `This payment cannot be refunded any more.`) */
+    refusedNotRefundable: string;
+    /** Refused: `held_refund_must_be_whole` (default: `A held transfer is returned whole.`) */
+    refusedWhole: string;
+    /** Refused: `sender_blocked` (default: `A compliance check blocks the wallet to refund. Nothing can be sent to it.`) */
+    refusedBlocked: string;
+    /** Refused: `refund_not_waiting` (default: `This refund no longer waits for a transaction. Nothing was sent.`) */
+    refusedNotWaiting: string;
+    /** Refused: `refund_may_have_landed` (default: `An earlier transaction of this refund may have gone through. Check it before asking again.`) */
+    refusedMayHaveLanded: string;
+    /** Refused: the price cannot be read (default: `The price cannot be read right now. Try again in a moment.`) */
+    refusedPrice: string;
+    /** Refused: `mainnet_disabled_on_node` (default: `This node accepts test networks only.`) */
+    refusedTestOnly: string;
+    /** Refused for a reason this package does not name (default: `Quasar refused this refund. Nothing was sent.`) */
+    refusedOther: string;
+    /** A refund on its way for a while (default: `Quasar has not seen this transaction land yet. If your wallet shows another hash, because it was sped up or cancelled there, record that one.`) */
+    slowNote: string;
     /** Under a refusal: nothing went out (default: `Nothing was sent: the refund waits for its transaction.`) */
     nothingSent: string;
     /** The wallet sent it, Quasar did not take it (default: `The refund was sent, but Quasar hasn't taken its transaction yet. Hand it over again: nothing is sent twice.`) */

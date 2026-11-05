@@ -10,7 +10,15 @@ import { instructionsChainId } from '../utils/pay';
 import { mono, primaryAction } from './classes';
 import { checkoutClassName } from './customization';
 import { QrCode } from './QrCode';
-import { CopyButton, PrimaryButton, ScreenContent, ScreenError, ScreenFooter, SecondaryButton } from './ScreenParts';
+import {
+  ChainLink,
+  CopyButton,
+  PrimaryButton,
+  ScreenContent,
+  ScreenError,
+  ScreenFooter,
+  SecondaryButton,
+} from './ScreenParts';
 
 /** The phone hand-off of an EVM method: the QR code of the payment page, where the phone's wallet pays. */
 function HandoffQr({ payUrl }: { payUrl: string }) {
@@ -100,9 +108,15 @@ export function QrScreen() {
                 copiedLabel={labels.pay.copied}
               />
             </div>
-            <span className={cn(mono, 'novapay:text-[var(--tuwa-text-secondary)]')}>
-              {instructions.symbol} · {network} · {shortAddress(instructions.to)}
-            </span>
+            <div
+              className={cn(
+                mono,
+                'novapay:flex novapay:items-center novapay:gap-1 novapay:text-[var(--tuwa-text-secondary)]',
+              )}
+            >
+              {instructions.symbol} · {network} ·{' '}
+              <ChainLink hash={instructions.to} chainId={instructionsChainId(instructions)} />
+            </div>
             {!expired && (
               <>
                 <span role="status" className="novapay:flex novapay:items-center novapay:gap-1.5">

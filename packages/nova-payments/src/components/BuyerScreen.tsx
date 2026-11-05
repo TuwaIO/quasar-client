@@ -192,7 +192,8 @@ export function BuyerScreen() {
             );
           })}
         </div>
-        {state.error && state.phase === 'buyer' && <ScreenError>{state.error.message}</ScreenError>}
+        {/* What Quasar answers is in English: the buyer reads the language of the checkout */}
+        {state.error && state.phase === 'buyer' && <ScreenError>{labels.buyer.refused}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
         <PrimaryButton type="submit" busy={sending}>

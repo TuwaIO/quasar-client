@@ -6,16 +6,13 @@ import type { SentPayment } from '../utils/handOver';
 import type { CheckoutWallet } from '../utils/methods';
 import { instructionsChainId, type PayPath } from '../utils/pay';
 import { payInvoice, type PayInvoiceParams } from '../utils/payInvoice';
+import { OPEN_REQUEST_MS } from '../utils/settlesWithin';
 import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
 
 /** Where a payment from the wallet stands: `wallet` while the wallet asks the buyer, `submitting` while Quasar takes it. */
 export type PaymentStatus = 'idle' | 'switching' | 'wallet' | 'submitting';
 
-/**
- * How long a transaction the wallet never answered blocks a second one. A wallet that lost its request (a mobile session
- * that ended) gives no answer at all, and the buyer must not be trapped by it for good.
- */
-export const OPEN_REQUEST_MS = 10 * 60 * 1000;
+export { OPEN_REQUEST_MS };
 
 /** What {@link usePayment} needs. */
 export interface UsePaymentParams {

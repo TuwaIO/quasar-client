@@ -84,6 +84,7 @@ export const itLabels: NovaPaymentsLabels = {
     required: 'Obbligatorio',
     invalidEmail: 'Inserisci un indirizzo email come nome@esempio.com',
     invalidCountry: "Scegli un paese dall'elenco",
+    refused: 'Non è stato possibile salvare i tuoi dati. Controllali e riprova.',
     continue: 'Continua',
   },
   pay: {
@@ -399,6 +400,11 @@ export const itLabels: NovaPaymentsLabels = {
     unconfirmedSettlementRetrying:
       "La rete ha confermato il tuo pagamento, ma Quasar non l'ha ancora registrato. Quasar riprova ogni giorno per 30 giorni da quando ha saputo del pagamento. Non pagare di nuovo; contatta {merchant} indicando l'hash della transazione.",
     followingUntil: 'Questa pagina segue il pagamento fino a {time}. Più tardi, ricaricala per vedere l’esito.',
+    nameHash: "Il tuo wallet mostra un'altra transazione?",
+    nameHashField: 'Hash della transazione',
+    nameHashSend: 'Controlla questa transazione',
+    nameHashInvalid: 'Questa non è una transazione di questa rete.',
+    nameHashRefused: 'Quasar non ha potuto accettare questa transazione. Contatta il venditore con il suo hash.',
     unconfirmedPayAgain: 'Il pagamento non è partito dal mio wallet',
     cancelledTitle: 'Questa fattura è stata annullata',
     cancelledText: "{merchant} l'ha annullata; non ti è stato addebitato nulla.",
@@ -532,6 +538,19 @@ export const itLabels: NovaPaymentsLabels = {
     wrongNetwork: "{wallet} è su un'altra rete, quindi non è stato inviato nulla. Passa a {network} e invia di nuovo.",
     failed: 'Il wallet non ha inviato il rimborso. Riprova.',
     noRecipient: 'Il wallet di chi ha pagato non è noto, quindi questo rimborso non può essere inviato da qui.',
+    unreachable: 'Quasar non risponde, quindi non è stato inviato nulla. Riprova tra poco.',
+    refusedAmount: "L'importo supera quanto resta da rimborsare.",
+    refusedNotRefundable: 'Questo pagamento non può più essere rimborsato.',
+    refusedWhole: 'Un trasferimento trattenuto si restituisce per intero.',
+    refusedBlocked: 'Un controllo di conformità blocca il wallet da rimborsare. Non è possibile inviargli nulla.',
+    refusedNotWaiting: 'Questo rimborso non attende più una transazione. Non è stato inviato nulla.',
+    refusedMayHaveLanded:
+      'Una transazione precedente di questo rimborso potrebbe essere andata a buon fine. Controllala prima di richiederlo di nuovo.',
+    refusedPrice: 'Al momento non è possibile leggere il prezzo. Riprova tra poco.',
+    refusedTestOnly: 'Questo nodo accetta solo reti di test.',
+    refusedOther: 'Quasar ha rifiutato questo rimborso. Non è stato inviato nulla.',
+    slowNote:
+      'Quasar non vede ancora questa transazione in rete. Se il wallet mostra un altro hash, perché è stata accelerata o annullata lì, registralo.',
     nothingSent: 'Non è stato inviato nulla: il rimborso attende la sua transazione.',
     notHandedOver:
       'Il rimborso è stato inviato, ma Quasar non ha ancora ricevuto la transazione. Consegnala di nuovo: nulla viene inviato due volte.',

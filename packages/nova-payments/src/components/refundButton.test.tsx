@@ -25,8 +25,8 @@ vi.mock('../hooks/useRefund', () => ({
 }));
 
 const { render, unmount } = await import('../testing/hookHarness');
-const fixture = await import('../testing/checkoutFixture');
 const { defaultLabels } = await import('../i18n');
+const fixture = await import('../testing/checkoutFixture');
 const { PrimaryButton, SecondaryButton, ScreenContent, ScreenError } = await import('./ScreenParts');
 const { RadioCards } = await import('./RadioCards');
 const { AmountStep, ConfirmStep, FailedStep, RefundButton, RefundDialog, RefundSteps } = await import('./RefundButton');
@@ -56,6 +56,8 @@ const flowOf = (extra: Partial<RefundFlow> = {}): RefundFlow => ({
     decimals: 6,
     symbol: 'USDC',
   },
+  transactionUrl: () => undefined,
+  addressUrl: () => undefined,
   chainId: 'eip155:8453',
   network: 'Base',
   amount: '15.89 USDC',
@@ -245,7 +247,8 @@ describe('RefundButton', () => {
       proceed(amountStep(flow));
       await vi.waitFor(() => expect(flow.preview).toHaveBeenCalled());
       await Promise.resolve();
-      expect(textOf(amountStep(flow))).toContain('Check the wallet first');
+      expect(textOf(amountStep(flow))).toContain(defaultLabels.refund.refusedMayHaveLanded);
+      expect(textOf(amountStep(flow))).not.toContain('Check the wallet first');
     });
 
     it('asks nothing when the price held: a stablecoin at par goes straight on', async () => {
@@ -460,7 +463,20 @@ describe('RefundButton', () => {
         phase: 'failed',
         error: { code: 'refund_may_have_landed', message: 'Check the wallet first' } as never,
       });
-      expect(textOf(failed(flow))).toContain('Check the wallet first');
+      expect(textOf(failed(flow))).toContain(defaultLabels.refund.refusedMayHaveLanded);
+      // What Quasar answers is in English: the window speaks the language of the merchant
+      expect(textOf(failed(flow))).not.toContain('Check the wallet first');
+    });
+
+    it('never shows a refusal it does not know as its code or its English text', () => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        error: { code: 'something_new', message: 'Some English text' } as never,
+      });
+      expect(textOf(failed(flow))).toContain(defaultLabels.refund.refusedOther);
+      expect(textOf(failed(flow))).not.toContain('Some English text');
+      expect(textOf(failed(flow))).not.toContain('something_new');
     });
 
     it('asks for the same refund again', async () => {

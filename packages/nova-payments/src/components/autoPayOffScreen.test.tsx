@@ -99,6 +99,51 @@ describe('turning off automatic payments', () => {
     expect(permissionRevoked).toHaveBeenCalledTimes(2);
   });
 
+  it('says what it waits for: once the transaction went out nothing waits in the wallet, only the network', async () => {
+    let sent = () => {};
+    const revokePermission = vi.fn(
+      ({ onSent }: { onSent: () => void }) =>
+        new Promise<void>(() => {
+          sent = onSent;
+        }),
+    );
+    const { primary } = screen(PAYER, { revokePermission });
+    (primary.props.onClick as () => void)();
+    await vi.waitFor(() => expect(revokePermission).toHaveBeenCalled());
+    const label = () => textOf(fixture.elements(render(AutoPayOffScreen, {})).find((e) => e.type === PrimaryButton));
+    expect(label()).toContain('MetaMask');
+
+    sent();
+    expect(label()).toContain(en.autoPayOff.waiting);
+  });
+
+  it('stops waiting for a transaction that never lands, and asks the chain what it shows', async () => {
+    vi.useFakeTimers();
+    const revokePermission = vi.fn(({ onSent }: { onSent: () => void }) => {
+      onSent();
+      return new Promise<void>(() => {});
+    });
+    const { primary, setAutoPayOff } = screen(PAYER, { revokePermission });
+    (primary.props.onClick as () => void)();
+    await vi.advanceTimersByTimeAsync(11 * 60 * 1000);
+    expect(setAutoPayOff).toHaveBeenCalledWith('done');
+    vi.useRealTimers();
+  });
+
+  it('stops waiting for a wallet that never answers, and says that the request waits there', async () => {
+    vi.useFakeTimers();
+    const revokePermission = vi.fn(() => new Promise<void>(() => {}));
+    const { primary, permissionRevoked } = screen(PAYER, { revokePermission });
+    permissionRevoked.mockReset();
+    permissionRevoked.mockResolvedValue(false);
+    (primary.props.onClick as () => void)();
+    await vi.advanceTimersByTimeAsync(11 * 60 * 1000);
+    expect(textOf(render(AutoPayOffScreen, {}))).toContain('waits');
+    // It was not sent: the chain is not asked as if it were
+    expect(permissionRevoked).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
+
   it('asks the chain first: a permission already revoked costs no second transaction', async () => {
     const revokePermission = vi.fn(async () => undefined);
     const { primary, permissionRevoked, setAutoPayOff } = screen(PAYER, { revokePermission });

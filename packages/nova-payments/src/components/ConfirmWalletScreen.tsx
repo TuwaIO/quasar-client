@@ -12,6 +12,7 @@ import { isSameWallet } from '../utils/outcome';
 import { isConfirmationError, isSmartWallet, payerProofErrorText } from '../utils/payerProof';
 import { focusRing, mono } from './classes';
 import {
+  ChainLink,
   DetailRow,
   DetailsCard,
   FooterNote,
@@ -151,7 +152,11 @@ export function ConfirmWalletScreen() {
             <DetailRow name={labels.payerProof.invoice}>{invoice}</DetailRow>
             <DetailRow name={labels.payerProof.merchant}>{merchant}</DetailRow>
             {amount && <DetailRow name={labels.payerProof.amount}>{amount}</DetailRow>}
-            {wallet && <DetailRow name={labels.payerProof.wallet}>{shortAddress(wallet.address)}</DetailRow>}
+            {wallet && (
+              <DetailRow name={labels.payerProof.wallet}>
+                <ChainLink hash={wallet.address} chainId={wallet.chainId} />
+              </DetailRow>
+            )}
           </DetailsCard>
           <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
             {labels.payerProof.why}

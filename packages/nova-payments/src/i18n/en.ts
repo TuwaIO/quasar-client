@@ -83,6 +83,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     required: 'Required',
     invalidEmail: 'Enter an email like name@example.com',
     invalidCountry: 'Choose a country from the list',
+    refused: 'Your details could not be saved. Check them and try again.',
     continue: 'Continue',
   },
   pay: {
@@ -386,6 +387,11 @@ export const defaultLabels: NovaPaymentsLabels = {
     unconfirmedSettlementRetrying:
       'The network confirmed your payment, but Quasar has not recorded it yet. Quasar tries again daily, for 30 days after it learned of the payment. Do not pay again; contact {merchant} with the transaction hash.',
     followingUntil: 'This page follows the payment until {time}. Later, reload it to see the outcome.',
+    nameHash: 'Does your wallet show another transaction?',
+    nameHashField: 'Transaction hash',
+    nameHashSend: 'Check this transaction',
+    nameHashInvalid: 'This is not a transaction of this network.',
+    nameHashRefused: 'Quasar could not take this transaction. Contact the seller with its hash.',
     unconfirmedPayAgain: 'The payment did not leave my wallet',
     cancelledTitle: 'This invoice was cancelled',
     cancelledText: '{merchant} cancelled it; nothing was charged.',
@@ -515,6 +521,18 @@ export const defaultLabels: NovaPaymentsLabels = {
     wrongNetwork: '{wallet} is on another network, so nothing was sent. Switch it to {network} and send again.',
     failed: 'The wallet did not send the refund. Try again.',
     noRecipient: "The payer's wallet is not known, so this refund can't be sent from here.",
+    unreachable: 'Quasar does not answer, so nothing was sent. Try again in a moment.',
+    refusedAmount: 'The amount is more than what is left to refund.',
+    refusedNotRefundable: 'This payment cannot be refunded any more.',
+    refusedWhole: 'A held transfer is returned whole.',
+    refusedBlocked: 'A compliance check blocks the wallet to refund. Nothing can be sent to it.',
+    refusedNotWaiting: 'This refund no longer waits for a transaction. Nothing was sent.',
+    refusedMayHaveLanded: 'An earlier transaction of this refund may have gone through. Check it before asking again.',
+    refusedPrice: 'The price cannot be read right now. Try again in a moment.',
+    refusedTestOnly: 'This node accepts test networks only.',
+    refusedOther: 'Quasar refused this refund. Nothing was sent.',
+    slowNote:
+      'Quasar has not seen this transaction land yet. If your wallet shows another hash, because it was sped up or cancelled there, record that one.',
     nothingSent: 'Nothing was sent: the refund waits for its transaction.',
     notHandedOver:
       "The refund was sent, but Quasar hasn't taken its transaction yet. Hand it over again: nothing is sent twice.",

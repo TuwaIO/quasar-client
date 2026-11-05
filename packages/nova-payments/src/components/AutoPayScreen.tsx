@@ -10,9 +10,11 @@ import { formatTokenAmount, shortAddress } from '../utils/format';
 import { methodFamily, networkName } from '../utils/methods';
 import { autoPayTerms, formatPeriod, grantableOffer, methodErrorText } from '../utils/outcome';
 import { isPayerProofError, payerProofErrorText } from '../utils/payerProof';
+import { OPEN_REQUEST_MS, settlesWithin } from '../utils/settlesWithin';
 import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
 import { mono } from './classes';
 import {
+  ChainLink,
   DetailRow,
   DetailsCard,
   FooterNote,
@@ -134,7 +136,21 @@ export function AutoPayScreen() {
           };
           asked.then(settled, settled);
         }
-        granted = await open.current!.asked;
+        // A wallet that lost the request never answers: after this long it is over, and the buyer can ask again
+        const waited = open.current!;
+        let answer: Granted | null = null;
+        const settled = await settlesWithin(
+          waited.asked.then((value) => {
+            answer = value;
+          }),
+          OPEN_REQUEST_MS,
+        );
+        if (!settled || !answer) {
+          if (open.current === waited) open.current = null;
+          if (isCurrent()) setProblem('alreadyPending');
+          return;
+        }
+        granted = answer as Granted;
         kept.current = { account, granted };
       }
       const accepted = await store.getState().grantPermission(
@@ -220,11 +236,13 @@ export function AutoPayScreen() {
               <DetailsCard>
                 {wallet && (
                   <DetailRow name={labels.autoPay.from}>
-                    {shortAddress(wallet.address)} · {networkName(terms.chainId)}
+                    <span className="novapay:inline-flex novapay:items-center novapay:gap-1">
+                      <ChainLink hash={wallet.address} chainId={terms.chainId} /> · {networkName(terms.chainId)}
+                    </span>
                   </DetailRow>
                 )}
                 <DetailRow name={labels.autoPay.to}>
-                  {shortAddress(terms.to)}{' '}
+                  <ChainLink hash={terms.to} chainId={terms.chainId} />
                   <span className="novapay:font-sans novapay:text-[var(--tuwa-text-secondary)]">{merchant}</span>
                 </DetailRow>
                 {terms.expiresAt && (

@@ -1271,6 +1271,19 @@ describe('createCheckoutStore: payments on their way and why they failed', () =>
     stuck.getState().destroy();
   });
 
+  it('asks to check the wallet on a page reopened after Quasar stopped reading a payment: 24 hours say nothing of the money', async () => {
+    // A sped-up payment has another hash than the one Quasar followed: a plain Pay here would take the money twice
+    answer({
+      pendingPayments: 0,
+      rejectedTxKeys: ['0xold'],
+      rejectedPayments: [rejection('0xold', 'unresolved_after_24h', true)],
+    });
+    const checkout = store();
+    await checkout.getState().load();
+    expect(checkout.getState()).toMatchObject({ phase: 'unconfirmed', error: { reason: 'unresolved_after_24h' } });
+    checkout.getState().destroy();
+  });
+
   it('stops offering to pay when Quasar finds a payment of the invoice, such as a scanned QR code', async () => {
     answer({ pendingPayments: 0, rejectedPayments: [] });
     const checkout = store();

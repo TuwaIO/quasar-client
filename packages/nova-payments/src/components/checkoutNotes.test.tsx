@@ -823,7 +823,7 @@ describe('the automatic payments offer', () => {
     const text = textOf(tree);
     expect(text).toContain("Quasar sends each charge for Cosmos, only to Cosmos's wallet and within this limit.");
     expect(text).toContain("Cosmos can't take more than this limit in a period.");
-    expect(text).toContain('0x2222…2222');
+    expect(showsHash(tree, MERCHANT_WALLET)).toBe(true);
     expect(text).not.toContain('0x3333…3333');
   });
 });

@@ -1,16 +1,18 @@
 import { NovaTransactionsLabelsProvider, useLabels } from '@tuwaio/nova-transactions/providers';
 import { type ReactNode, useMemo } from 'react';
 
-import { useCheckoutContext } from '../hooks/useCheckoutContext';
+import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
+import type { NovaPaymentsLabels } from '../i18n';
 
 /**
  * Gives the parts of Nova Transactions the checkout reuses (progress, status, transaction link) the texts of the
- * checkout language: Sent, Confirming or Confirmed, Paid.
+ * checkout language: Sent, Confirming or Confirmed, Paid. Outside a checkout (the refund window) `labels` gives them.
  *
  * @internal
  */
-export function TxLabels({ children }: { children: ReactNode }) {
-  const { labels } = useCheckoutContext();
+export function TxLabels({ children, labels: given }: { children: ReactNode; labels?: NovaPaymentsLabels }) {
+  const context = useOptionalCheckoutContext();
+  const labels = (given ?? context?.labels) as NovaPaymentsLabels;
   const base = useLabels();
   const merged = useMemo(
     () => ({

@@ -86,6 +86,7 @@ export const deLabels: NovaPaymentsLabels = {
     required: 'Pflichtfeld',
     invalidEmail: 'Geben Sie eine E-Mail-Adresse wie name@example.com ein',
     invalidCountry: 'Wählen Sie ein Land aus der Liste',
+    refused: 'Ihre Angaben konnten nicht gespeichert werden. Prüfen Sie sie und versuchen Sie es erneut.',
     continue: 'Weiter',
   },
   pay: {
@@ -412,6 +413,11 @@ export const deLabels: NovaPaymentsLabels = {
     unconfirmedSettlementRetrying:
       'Das Netzwerk hat Ihre Zahlung bestätigt, aber Quasar hat sie noch nicht erfasst. Quasar versucht es täglich erneut, 30 Tage lang ab Kenntnis der Zahlung. Zahlen Sie nicht erneut; wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     followingUntil: 'Diese Seite verfolgt die Zahlung bis {time}. Laden Sie sie danach neu, um das Ergebnis zu sehen.',
+    nameHash: 'Zeigt Ihr Wallet eine andere Transaktion?',
+    nameHashField: 'Transaktions-Hash',
+    nameHashSend: 'Diese Transaktion prüfen',
+    nameHashInvalid: 'Das ist keine Transaktion dieses Netzwerks.',
+    nameHashRefused: 'Quasar konnte diese Transaktion nicht annehmen. Wenden Sie sich mit ihrem Hash an den Verkäufer.',
     unconfirmedPayAgain: 'Die Zahlung hat mein Wallet nicht verlassen',
     cancelledTitle: 'Diese Rechnung wurde storniert',
     cancelledText: '{merchant} hat sie storniert; es wurde nichts berechnet.',
@@ -551,6 +557,20 @@ export const deLabels: NovaPaymentsLabels = {
     failed: 'Das Wallet hat die Erstattung nicht gesendet. Versuchen Sie es erneut.',
     noRecipient:
       'Das Wallet des Zahlers ist nicht bekannt, daher kann diese Erstattung nicht von hier gesendet werden.',
+    unreachable: 'Quasar antwortet nicht, daher wurde nichts gesendet. Versuchen Sie es gleich noch einmal.',
+    refusedAmount: 'Der Betrag ist höher als das, was noch zu erstatten ist.',
+    refusedNotRefundable: 'Diese Zahlung kann nicht mehr erstattet werden.',
+    refusedWhole: 'Eine zurückgehaltene Überweisung wird nur vollständig zurückgegeben.',
+    refusedBlocked:
+      'Eine Compliance-Prüfung sperrt das Wallet für die Erstattung. Es kann nichts dorthin gesendet werden.',
+    refusedNotWaiting: 'Diese Erstattung wartet nicht mehr auf eine Transaktion. Es wurde nichts gesendet.',
+    refusedMayHaveLanded:
+      'Eine frühere Transaktion dieser Erstattung könnte durchgegangen sein. Prüfen Sie sie, bevor Sie erneut anfragen.',
+    refusedPrice: 'Der Preis kann gerade nicht gelesen werden. Versuchen Sie es gleich noch einmal.',
+    refusedTestOnly: 'Dieser Knoten akzeptiert nur Testnetze.',
+    refusedOther: 'Quasar hat diese Erstattung abgelehnt. Es wurde nichts gesendet.',
+    slowNote:
+      'Quasar sieht diese Transaktion noch nicht im Netzwerk. Wenn Ihr Wallet einen anderen Hash zeigt, weil sie dort beschleunigt oder abgebrochen wurde, erfassen Sie diesen.',
     nothingSent: 'Es wurde nichts gesendet: Die Erstattung wartet auf ihre Transaktion.',
     notHandedOver:
       'Die Erstattung wurde gesendet, aber Quasar hat ihre Transaktion noch nicht übernommen. Übergeben Sie sie erneut: Es wird nichts doppelt gesendet.',

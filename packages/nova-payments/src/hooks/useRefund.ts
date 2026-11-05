@@ -43,9 +43,11 @@ export type RefundStep =
 
 /**
  * Why a refund was not sent: the wallet holds too little (`notEnough`), the merchant declined, the wallet cannot send
- * it or sent it on another network, it failed, or Quasar does not know the payer (`noRecipient`).
+ * it or sent it on another network, it failed, Quasar does not know the payer (`noRecipient`), or Quasar did not answer when
+ * the window looked again before asking the wallet (`unreachable`).
  */
-export type RefundProblem = 'notEnough' | 'declined' | 'unsupported' | 'wrongNetwork' | 'failed' | 'noRecipient';
+export type RefundProblem =
+  'notEnough' | 'declined' | 'unsupported' | 'wrongNetwork' | 'failed' | 'noRecipient' | 'unreachable';
 
 /** What the refund window says about a wallet that did not send: it has one text for a network, one for the rest. */
 function refundProblemOf(error: unknown): RefundProblem {
@@ -119,6 +121,10 @@ export interface RefundFlow {
   problem: RefundProblem | null;
   /** The transaction the wallet sent; while Quasar has not taken it, {@link RefundFlow.send} hands it over again. */
   txKey: string | null;
+  /** The explorer link of a transaction of the refund, when the chain has one. */
+  transactionUrl: (hash: string) => string | undefined;
+  /** The explorer link of an address on the chain of the refund, when the chain has one. */
+  addressUrl: (address: string) => string | undefined;
   /** Whether the page can connect a wallet. */
   canConnect: boolean;
   /** Whether the connect modal is open. */
@@ -142,7 +148,8 @@ export interface RefundFlow {
  * sends its transfer to the payer with the payments adapter of the chain family (switching the wallet to the payment's
  * network first, and never prompting a wallet that holds too little), hands the transaction to Quasar and lets the
  * store follow it until Quasar confirms it and issues the credit note. A transaction the wallet sent is handed over
- * again on the next {@link RefundFlow.send}, never sent twice. With the app's Pulsar store (`pulsar` of
+ * again on the next {@link RefundFlow.send}, never sent twice. Before the wallet is asked the refund is read again, and nothing
+ * goes out when it no longer waits or Quasar does not answer. With the app's Pulsar store (`pulsar` of
  * `NovaPaymentsProvider`) and an adapter that describes its transactions, the refund is also tracked by Pulsar, and
  * Nova Transactions shows its toast.
  *
@@ -245,6 +252,12 @@ export function useRefund({
     }
     const needed = BigInt(transfer.amount) + (transfer.token === 'native' && fee ? fee.amount : 0n);
     if (typeof balance === 'bigint' && balance < needed) return setProblem('notEnough');
+    // The window may have stood open while the refund was withdrawn or sent elsewhere: a wallet asked now would pay out money
+    // nobody asks for any more. Nothing goes out unless Quasar says that the refund still waits.
+    if (!(await store.getState().recheck())) {
+      if (store.getState().phase === 'awaitingTransfer') setProblem('unreachable');
+      return;
+    }
     try {
       if (wrongNetwork && adapter.switchChain) {
         setStatus('switching');
@@ -293,6 +306,8 @@ export function useRefund({
     fee,
     problem: problem ?? (state.instructions && !transfer ? 'noRecipient' : null),
     txKey,
+    transactionUrl: (hash) => (chainId ? adapter?.explorerUrl?.({ chainId, txKey: hash }) : undefined),
+    addressUrl: (address) => (chainId ? adapter?.explorerAddressUrl?.({ chainId, address }) : undefined),
     canConnect: connection.canConnect,
     connecting: connection.connecting,
     preview: async (request) => {

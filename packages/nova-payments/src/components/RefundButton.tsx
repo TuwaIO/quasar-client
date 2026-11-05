@@ -13,6 +13,7 @@ import { refundRateMoved } from '../utils/outcome';
 import { iconButton, mono, primaryAction } from './classes';
 import { RadioCards } from './RadioCards';
 import {
+  ChainLink,
   DetailRow,
   DetailsCard,
   FooterNote,
@@ -198,6 +199,8 @@ export function RefundSteps({
     amount: flow.amount,
     wallet: flow.wallet?.name ?? '',
   };
+  // The hash Quasar follows now: after a speed-up it is not the one this window sent
+  const sentHash = flow.refund?.txHash ?? flow.txKey;
   const recordAction = onRecord && (
     <>
       <SecondaryButton onClick={onRecord}>{text.record}</SecondaryButton>
@@ -255,13 +258,19 @@ export function RefundSteps({
           <ScreenContent title={text.onItsWay}>
             <DetailsCard>
               <DetailRow name={text.status}>{text.pending}</DetailRow>
-              {flow.txKey && <DetailRow name={text.transaction}>{shortAddress(flow.txKey)}</DetailRow>}
+              {sentHash && (
+                <DetailRow name={text.transaction}>
+                  <ChainLink hash={sentHash} explorerUrl={flow.transactionUrl(sentHash)} labels={labels} />
+                </DetailRow>
+              )}
               <DetailRow name={text.network}>{formatLabel(text.waiting, values)}</DetailRow>
             </DetailsCard>
+            {/* Nobody knows it landed: a replacement in the wallet has another hash, and the merchant can see which */}
+            {isSlow(flow.refund) && <FooterNote>{text.slowNote}</FooterNote>}
           </ScreenContent>
           <ScreenFooter>
             <SecondaryButton onClick={close}>{text.close}</SecondaryButton>
-            <FooterNote>{text.canClose}</FooterNote>
+            {isSlow(flow.refund) ? recordAction : <FooterNote>{text.canClose}</FooterNote>}
           </ScreenFooter>
         </>
       );
@@ -273,8 +282,10 @@ export function RefundSteps({
               {flow.refund?.creditNoteNumber && (
                 <DetailRow name={text.creditNote}>{flow.refund.creditNoteNumber}</DetailRow>
               )}
-              {(flow.refund?.txHash ?? flow.txKey) && (
-                <DetailRow name={text.transaction}>{shortAddress((flow.refund?.txHash ?? flow.txKey)!)}</DetailRow>
+              {sentHash && (
+                <DetailRow name={text.transaction}>
+                  <ChainLink hash={sentHash} explorerUrl={flow.transactionUrl(sentHash)} labels={labels} />
+                </DetailRow>
               )}
               {details?.done}
             </DetailsCard>
@@ -322,6 +333,35 @@ const failureText = (
   const label = refund?.failureReason ? FAILURE_LABELS[refund.failureReason] : undefined;
   return label ? text[label] : formatLabel(text.failedText, values);
 };
+
+// What Quasar answers in English goes to the logs of an app: a merchant reads a refusal in the language of the window, in words
+// for what can be done. A code this package does not know says that Quasar refused, never the code itself.
+const REFUSAL_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']>> = {
+  request_failed: 'unreachable',
+  amount_exceeds_refundable: 'refusedAmount',
+  invoice_not_refundable: 'refusedNotRefundable',
+  payment_unknown: 'refusedNotRefundable',
+  held_transfer_not_refundable: 'refusedNotRefundable',
+  held_refund_must_be_whole: 'refusedWhole',
+  sender_blocked: 'refusedBlocked',
+  refund_not_waiting: 'refusedNotWaiting',
+  refund_may_have_landed: 'refusedMayHaveLanded',
+  refund_from_buyer: 'failedFromBuyer',
+  method_not_priced: 'refusedPrice',
+  price_no_rpc: 'refusedPrice',
+  price_unavailable: 'refusedPrice',
+  mainnet_disabled_on_node: 'refusedTestOnly',
+};
+
+// How long a refund on its way looks normal. After that the window says what it knows: Quasar has not seen it land, and a
+// replacement in the wallet has another hash than the one sent
+const SLOW_REFUND_MS = 10 * 60 * 1000;
+const isSlow = (refund: Refund | null | undefined) =>
+  Boolean(refund?.createdAt) && Date.now() - Date.parse(refund!.createdAt) > SLOW_REFUND_MS;
+
+/** A refusal of Quasar in the words of the window. @internal */
+export const refusalText = (error: { code: string }, text: NovaPaymentsLabels['refund']): string =>
+  text[REFUSAL_LABELS[error.code] ?? 'refusedOther'];
 
 // Its own transaction cannot settle it: Quasar refuses another refund until a person checks it
 const byHand = (refund: Refund | null | undefined) =>
@@ -402,7 +442,7 @@ function movedScreen(
         {exactBehind && preview.exactPossible && (
           <FooterNote>{formatLabel(text.movedExact, { exact: text.modeExact })}</FooterNote>
         )}
-        {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
+        {flow.error && <ScreenError>{refusalText(flow.error, text)}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
         <PrimaryButton busy={ask.checking} onClick={() => void ask.ask(request, preview)}>
@@ -457,7 +497,7 @@ export function FailedStep({
     <>
       <ScreenContent title={text.failedTitle}>
         <ScreenError>{failureText(flow.refund, text, values)}</ScreenError>
-        {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
+        {flow.error && <ScreenError>{refusalText(flow.error, text)}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
         {byHand(flow.refund) ? (
@@ -575,7 +615,7 @@ export function AmountStep({
             />
           </label>
         </fieldset>
-        {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
+        {flow.error && <ScreenError>{refusalText(flow.error, text)}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
         <PrimaryButton busy={ask.checking} disabled={!valid} onClick={() => void ask.ask(request)}>
@@ -621,6 +661,7 @@ export function ConfirmStep({
     wrongNetwork: formatLabel(text.wrongNetwork, values),
     failed: text.failed,
     noRecipient: text.noRecipient,
+    unreachable: text.unreachable,
   };
   const notSent = Boolean(flow.problem);
   // The wallet sent it and Quasar has not taken it yet: hand the same transaction over again
@@ -632,12 +673,19 @@ export function ConfirmStep({
           <DetailRow name={text.send}>{formatLabel(text.sendValue, values)}</DetailRow>
           {transfer && (
             <DetailRow name={text.to}>
-              {shortAddress(transfer.to)} · {flow.refund?.heldTransfer ? text.theSender : text.thePayer}
+              <span className="novapay:inline-flex novapay:items-center novapay:gap-1">
+                <ChainLink hash={transfer.to} explorerUrl={flow.addressUrl(transfer.to)} labels={labels} /> ·{' '}
+                {flow.refund?.heldTransfer ? text.theSender : text.thePayer}
+              </span>
             </DetailRow>
           )}
           {flow.wallet && (
             <DetailRow name={text.from}>
-              <span className="novapay:block">{shortAddress(flow.wallet.address)}</span>
+              <ChainLink
+                hash={flow.wallet.address}
+                explorerUrl={flow.addressUrl(flow.wallet.address)}
+                labels={labels}
+              />
               {balance && (
                 <span className="novapay:mt-1 novapay:block novapay:text-[var(--tuwa-text-secondary)]">
                   {formatLabel(text.balance, { amount: balance })}
@@ -649,7 +697,9 @@ export function ConfirmStep({
           {details}
         </DetailsCard>
         {flow.problem && <ScreenError>{problems[flow.problem]}</ScreenError>}
-        {flow.problem && flow.problem !== 'noRecipient' && <FooterNote>{text.nothingSent}</FooterNote>}
+        {flow.problem && flow.problem !== 'noRecipient' && flow.problem !== 'unreachable' && (
+          <FooterNote>{text.nothingSent}</FooterNote>
+        )}
         {handOver && flow.error && <ScreenError>{text.notHandedOver}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>

@@ -81,10 +81,11 @@ function setup(
     instructions: { ...instructions, to: options.to === undefined ? PAYER : options.to },
   }));
   const submit = vi.fn(options.submit ?? (async () => ({ ...(refund as object), status: 'submitted' }) as never));
-  const store = createRefundStore({ request, submit, get: vi.fn(async () => refund), pollMs: 60_000 });
+  const get = vi.fn(async () => refund);
+  const store = createRefundStore({ request, submit, get, pollMs: 60_000 });
   const params = { store, invoiceId: 'inv_1', invoice: 'INV-2026-7', labels: defaultLabels, locale: 'en' };
   const flow = (extra: object = {}) => render(useRefund, { ...params, ...extra }) as ReturnType<typeof useRefund>;
-  return { adapter, request, submit, store, flow };
+  return { adapter, request, submit, store, flow, get };
 }
 
 afterEach(() => {
@@ -193,6 +194,35 @@ describe('useRefund', () => {
     expect(adapter.switchChain).toHaveBeenCalledWith('eip155:8453');
     expect(adapter.sendTransfer).toHaveBeenCalledOnce();
     store.getState().reset();
+  });
+
+  it('asks the wallet nothing about a refund withdrawn meanwhile: a window left open must not pay it out', async () => {
+    wallet = merchantWallet();
+    const { adapter, store, flow, get } = setup();
+    await store.getState().start('inv_1', {});
+    flow();
+    await tick();
+    get.mockResolvedValue({ ...(refund as object), status: 'failed', failureReason: 'withdrawn' } as never);
+
+    await flow().send();
+
+    expect(adapter.sendTransfer).not.toHaveBeenCalled();
+    expect(store.getState().phase).toBe('failed');
+  });
+
+  it('asks the wallet nothing while Quasar does not answer, and says so', async () => {
+    wallet = merchantWallet();
+    const { adapter, store, flow, get, submit } = setup();
+    await store.getState().start('inv_1', {});
+    flow();
+    await tick();
+    get.mockRejectedValue(new Error('network'));
+
+    await flow().send();
+
+    expect(adapter.sendTransfer).not.toHaveBeenCalled();
+    expect(submit).not.toHaveBeenCalled();
+    expect(flow().problem).toBe('unreachable');
   });
 
   it('asks the wallet nothing when it holds too little', async () => {

@@ -70,6 +70,26 @@ The preview; `null` without the option, or when it failed (`error` says why).
 
 ***
 
+### recheck
+
+> **recheck**: () => `Promise`\<`boolean`\>
+
+Defined in: [checkout/refundStore.ts:61](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L61)
+
+Reads the refund again before a wallet is asked to send it. A window can stay open while the refund is withdrawn or sent
+elsewhere, and a wallet asked then would pay out money nobody asks for any more. What it finds shows in `phase`.
+
+Side effects: one `get`; follows a refund it finds submitted.
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+Whether the refund still waits for its transaction: `false` also when Quasar does not answer (`error` says so), as
+it cannot be known then.
+
+***
+
 ### refund
 
 > **refund**: [`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs) \| `null`
@@ -84,7 +104,7 @@ The refund, once asked for.
 
 > **reset**: () => `void`
 
-Defined in: [checkout/refundStore.ts:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L60)
+Defined in: [checkout/refundStore.ts:70](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L70)
 
 Stops following and returns to `idle`.
 
@@ -156,7 +176,7 @@ Whether it was asked for; `phase` is then `awaitingTransfer`.
 
 > **submit**: (`params`) => `Promise`\<`boolean`\>
 
-Defined in: [checkout/refundStore.ts:58](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L58)
+Defined in: [checkout/refundStore.ts:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L68)
 
 Hands over the refund transaction through `submit`, then follows the refund through `get` until it is final.
 

@@ -98,6 +98,23 @@ afterEach(() => {
 });
 
 describe('allowing automatic payments', () => {
+  it('stops waiting for a wallet that lost its request, and the buyer can ask again', async () => {
+    vi.useFakeTimers();
+    const { press, requestPermission, mount } = setup();
+    requestPermission.mockImplementationOnce(() => new Promise<typeof GRANTED>(() => {}));
+    press();
+    await vi.advanceTimersByTimeAsync(11 * 60 * 1000);
+    // Not asked twice while it waits, but a request nobody answers for this long is over
+    expect(requestPermission).toHaveBeenCalledOnce();
+    expect(
+      fixture.ofType(mount('0x1111111111111111111111111111111111111111'), PrimaryButton)[0].props.busy,
+    ).toBeFalsy();
+    press();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(requestPermission).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+
   it('asks for the permission and hands it to Quasar', async () => {
     const { press, requestPermission, grantPermission, setAutoPay } = setup();
     press();

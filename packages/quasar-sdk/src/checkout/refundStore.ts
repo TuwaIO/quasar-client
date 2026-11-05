@@ -50,6 +50,16 @@ export interface RefundState {
    */
   resume: (refund: Refund, instructions: RefundStart['instructions']) => void;
   /**
+   * Reads the refund again before a wallet is asked to send it. A window can stay open while the refund is withdrawn or sent
+   * elsewhere, and a wallet asked then would pay out money nobody asks for any more. What it finds shows in `phase`.
+   *
+   * Side effects: one `get`; follows a refund it finds submitted.
+   *
+   * @returns Whether the refund still waits for its transaction: `false` also when Quasar does not answer (`error` says so), as
+   * it cannot be known then.
+   */
+  recheck: () => Promise<boolean>;
+  /**
    * Hands over the refund transaction through `submit`, then follows the refund through `get` until it is final.
    *
    * @param params - The transaction and the merchant wallet it was sent from.
@@ -179,6 +189,29 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
       resume: (refund, instructions) => {
         stop();
         set({ phase: 'awaitingTransfer', refund, instructions, error: null });
+      },
+
+      recheck: async () => {
+        const asked = get().refund;
+        if (!asked) return false;
+        try {
+          const refund = await options.get(asked.id);
+          if (get().refund?.id !== asked.id) return false;
+          if (refund.status === 'requested') {
+            set({ refund, error: null });
+            return true;
+          }
+          if (refund.status === 'submitted') {
+            set({ phase: 'confirming', refund, error: null });
+            follow(asked.id);
+          } else {
+            set({ phase: refund.status, refund, error: null });
+          }
+          return false;
+        } catch (error) {
+          set({ error: errorOf(error) });
+          return false;
+        }
       },
 
       submit: async (params) => {

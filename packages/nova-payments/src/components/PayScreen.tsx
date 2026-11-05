@@ -35,6 +35,7 @@ import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { AutoPayNote } from './AutoPayNote';
 import { focusRing, mono, screenHeading } from './classes';
 import {
+  ChainLink,
   CheckoutWalletIcon,
   CopyButton,
   DetailRow,
@@ -549,7 +550,7 @@ export function PayScreen() {
               </span>
             </DetailRow>
             <DetailRow name={labels.pay.to}>
-              {shortAddress(quote.instructions.to)}{' '}
+              <ChainLink hash={quote.instructions.to} chainId={chainId} />
               <span className="novapay:font-sans novapay:text-[var(--tuwa-text-secondary)]">{merchant}</span>
             </DetailRow>
           </DetailsCard>

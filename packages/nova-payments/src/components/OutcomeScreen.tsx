@@ -37,9 +37,18 @@ import {
 } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { AutoPayNote } from './AutoPayNote';
-import { mono, secondaryAction } from './classes';
+import { secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
-import { DetailRow, DetailsCard, PrimaryButton, ScreenError, ScreenFooter, SecondaryButton } from './ScreenParts';
+import { NameTransaction } from './NameTransaction';
+import {
+  ChainLink,
+  DetailRow,
+  DetailsCard,
+  PrimaryButton,
+  ScreenError,
+  ScreenFooter,
+  SecondaryButton,
+} from './ScreenParts';
 import { StatusTitle } from './StatusTitle';
 import { TxLabels } from './TxLabels';
 
@@ -287,6 +296,8 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
             <Text>{labels.outcome.unconfirmedText}</Text>
             <Text muted>{followUpNote(next)}</Text>
             {transaction(next)}
+            {/* Sped up in the wallet, it went out under a hash only the buyer can see */}
+            <NameTransaction />
           </>
         );
       }
@@ -534,6 +545,8 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       }
       const maybePaid =
         isUnconfirmed(state.error) ||
+        // Quasar stopped reading it, which says nothing of the money: a payment sped up in the wallet has another hash
+        followUp === 'closed' ||
         isPaymentOnTheWay(state) ||
         isInvoicePaymentOnTheWay(state, checkout) ||
         isInvoicePaymentUnresolved(state, checkout) ||
@@ -588,9 +601,10 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
               : formatLabel(labels.outcome.blockedText, { merchant })}
           </Text>
           {payer && (
-            <p className={cn(mono, 'novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]')}>
-              {shortAddress(payer)}
-            </p>
+            <ChainLink
+              hash={payer}
+              chainId={(quote ?? checkout.quote) ? instructionsChainId((quote ?? checkout.quote)!.instructions) : null}
+            />
           )}
         </>
       );

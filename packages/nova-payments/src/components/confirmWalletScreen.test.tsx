@@ -107,7 +107,7 @@ describe('the step that confirms the paying wallet', () => {
     expect(text).toContain('INV-1');
     expect(text).toContain('Cosmos');
     expect(text).toContain('89.54 USD');
-    expect(fixture.elements(tree).some((element) => element.props.children === '0x1111…1111')).toBe(true);
+    expect(fixture.elements(tree).some((element) => element.props.hash === PAYER)).toBe(true);
   });
 
   it("opens the wallet's signature request from its main button, and goes back to the methods", () => {

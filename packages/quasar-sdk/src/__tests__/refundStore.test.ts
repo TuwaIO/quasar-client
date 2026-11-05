@@ -24,6 +24,57 @@ describe('createRefundStore', () => {
     vi.useRealTimers();
   });
 
+  describe('recheck, before a wallet is asked', () => {
+    const started = async (get: () => Promise<Refund>) => {
+      const store = createRefundStore({
+        request: vi.fn().mockResolvedValue(START),
+        submit: vi.fn(),
+        get,
+        pollMs: 1_000,
+      });
+      await store.getState().start('inv_1');
+      return store;
+    };
+
+    it('says yes while the refund still waits for its transaction', async () => {
+      const store = await started(async () => refund('requested'));
+      expect(await store.getState().recheck()).toBe(true);
+      expect(store.getState().phase).toBe('awaitingTransfer');
+    });
+
+    it('says no to a refund withdrawn meanwhile, and shows why: a window left open would pay out money nobody asks for', async () => {
+      const store = await started(async () => refund('failed', { failureReason: 'withdrawn' }));
+      expect(await store.getState().recheck()).toBe(false);
+      expect(store.getState()).toMatchObject({ phase: 'failed', refund: { failureReason: 'withdrawn' } });
+    });
+
+    it('says no to a refund another window already sent, and follows it', async () => {
+      vi.useFakeTimers();
+      const get = vi.fn().mockResolvedValue(refund('submitted', { txHash: '0xfeed' }));
+      const store = await started(get);
+      expect(await store.getState().recheck()).toBe(false);
+      expect(store.getState().phase).toBe('confirming');
+
+      get.mockResolvedValue(refund('confirmed'));
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(store.getState().phase).toBe('confirmed');
+      store.getState().reset();
+    });
+
+    it('says no when Quasar does not answer: it cannot be known that the refund still waits', async () => {
+      const store = await started(async () => {
+        throw new Error('network');
+      });
+      expect(await store.getState().recheck()).toBe(false);
+      expect(store.getState()).toMatchObject({ phase: 'awaitingTransfer', error: { code: 'request_failed' } });
+    });
+
+    it('says no without a refund', async () => {
+      const store = createRefundStore({ request: vi.fn(), submit: vi.fn(), get: vi.fn() });
+      expect(await store.getState().recheck()).toBe(false);
+    });
+  });
+
   it('asks for a refund, takes its transaction and follows it until confirmed', async () => {
     vi.useFakeTimers();
     const request = vi.fn().mockResolvedValue(START);

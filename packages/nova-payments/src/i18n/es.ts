@@ -84,6 +84,7 @@ export const esLabels: NovaPaymentsLabels = {
     required: 'Obligatorio',
     invalidEmail: 'Escribe un correo como nombre@ejemplo.com',
     invalidCountry: 'Elige un país de la lista',
+    refused: 'No se pudieron guardar tus datos. Revísalos e inténtalo de nuevo.',
     continue: 'Continuar',
   },
   pay: {
@@ -393,6 +394,11 @@ export const esLabels: NovaPaymentsLabels = {
     unconfirmedSettlementRetrying:
       'La red confirmó tu pago, pero Quasar aún no lo ha registrado. Quasar lo vuelve a intentar cada día durante 30 días desde que supo del pago. No vuelvas a pagar; contacta con {merchant} e indica el hash de la transacción.',
     followingUntil: 'Esta página sigue el pago hasta {time}. Después, vuelve a cargarla para ver el resultado.',
+    nameHash: '¿Tu billetera muestra otra transacción?',
+    nameHashField: 'Hash de la transacción',
+    nameHashSend: 'Comprobar esta transacción',
+    nameHashInvalid: 'Esta no es una transacción de esta red.',
+    nameHashRefused: 'Quasar no pudo aceptar esta transacción. Contacta con el vendedor con su hash.',
     unconfirmedPayAgain: 'El pago no salió de mi billetera',
     cancelledTitle: 'Esta factura se canceló',
     cancelledText: '{merchant} la canceló; no se te cobró nada.',
@@ -524,6 +530,19 @@ export const esLabels: NovaPaymentsLabels = {
     wrongNetwork: '{wallet} está en otra red, así que no se envió nada. Cámbiala a {network} y envía de nuevo.',
     failed: 'La billetera no envió el reembolso. Inténtalo de nuevo.',
     noRecipient: 'No se conoce la billetera de quien pagó, así que este reembolso no se puede enviar desde aquí.',
+    unreachable: 'Quasar no responde, así que no se envió nada. Inténtalo de nuevo en un momento.',
+    refusedAmount: 'El importe supera lo que queda por reembolsar.',
+    refusedNotRefundable: 'Este pago ya no se puede reembolsar.',
+    refusedWhole: 'Una transferencia retenida se devuelve entera.',
+    refusedBlocked: 'Un control de cumplimiento bloquea la billetera a reembolsar. No se le puede enviar nada.',
+    refusedNotWaiting: 'Este reembolso ya no espera una transacción. No se envió nada.',
+    refusedMayHaveLanded:
+      'Una transacción anterior de este reembolso puede haberse completado. Compruébala antes de volver a pedirlo.',
+    refusedPrice: 'Ahora no se puede leer el precio. Inténtalo de nuevo en un momento.',
+    refusedTestOnly: 'Este nodo solo acepta redes de prueba.',
+    refusedOther: 'Quasar rechazó este reembolso. No se envió nada.',
+    slowNote:
+      'Quasar aún no ve esta transacción en la red. Si tu billetera muestra otro hash, porque se aceleró o canceló allí, regístralo.',
     nothingSent: 'No se envió nada: el reembolso espera su transacción.',
     notHandedOver:
       'El reembolso se envió, pero Quasar aún no recibió su transacción. Entrégala de nuevo: no se envía nada dos veces.',

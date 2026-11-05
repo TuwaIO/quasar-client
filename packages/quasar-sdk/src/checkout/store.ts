@@ -1797,6 +1797,11 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
               // The latest payment may still have gone through: the buyer checks the wallet before paying again
               error = endedError(latest);
               check = true;
+            } else if (latest?.reason === 'unresolved_after_24h') {
+              // Final for Quasar, which stopped reading it, and no word about the money: a payment sped up in the wallet has
+              // another hash than the one followed. A plain Pay here would take the money twice
+              error = endedError(latest);
+              check = true;
             } else if (unresolved) {
               // A payment Quasar stopped counting as on its way, but may still arrive
               error = unconfirmedError(undefined, recheckedOf(invoice));
