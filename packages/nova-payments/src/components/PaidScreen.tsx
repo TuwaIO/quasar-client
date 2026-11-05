@@ -103,7 +103,7 @@ export function PaidScreen() {
           <DetailsCard className="novapay:max-w-sm">
             {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
             {facts.txKey && (
-              <DetailRow name={labels.confirm.transaction}>
+              <DetailRow name={facts.lastOfParts ? labels.confirm.lastTransfer : labels.confirm.transaction}>
                 <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" {...child?.hashLink} />
               </DetailRow>
             )}

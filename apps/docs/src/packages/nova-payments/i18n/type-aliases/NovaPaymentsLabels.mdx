@@ -17,7 +17,7 @@ checkout. Pass a partial object as `labels` of `NovaPaymentsProvider` to overrid
 
 > **autoPay**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:601](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L601)
+Defined in: [nova-payments/src/i18n/types.ts:603](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L603)
 
 The automatic payments offer of a subscription (ERC-7715), after a paid period.
 
@@ -135,7 +135,7 @@ Under the buttons (default: `Your wallet shows this permission (ERC-7715) before
 
 > **autoPayOff**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:569](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L569)
+Defined in: [nova-payments/src/i18n/types.ts:571](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L571)
 
 Turning off automatic payments: the wallet that allowed them sends the transaction that revokes the permission.
 
@@ -459,6 +459,12 @@ Instead of `canClose` while a payment of the invoice that this page did not hand
 reopened or reloaded, another tab paid, Quasar found a Solana Pay transfer), before the deadline (default: `A
 payment for this invoice is on its way. Wait until it is confirmed before paying again.`)
 
+#### lastTransfer
+
+> **lastTransfer**: `string`
+
+The same row on an invoice paid in parts, where it names the last one; the receipt names them all (default: `Last transfer`)
+
 #### network
 
 > **network**: `string`
@@ -572,7 +578,7 @@ Title of the menu (default: `Language`)
 
 > **leave**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:838](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L838)
+Defined in: [nova-payments/src/i18n/types.ts:840](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L840)
 
 The question when the buyer closes the checkout before a transaction is sent.
 
@@ -798,7 +804,7 @@ Badge of the connected wallet's network (default: `Your wallet`)
 
 > **outcome**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:640](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L640)
+Defined in: [nova-payments/src/i18n/types.ts:642](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L642)
 
 The outcomes other than paid.
 
@@ -1178,7 +1184,7 @@ Button that connects another wallet (default: `Use another wallet`)
 
 > **paid**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:540](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L540)
+Defined in: [nova-payments/src/i18n/types.ts:542](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L542)
 
 The paid outcome.
 
@@ -2018,7 +2024,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:915](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L915)
+Defined in: [nova-payments/src/i18n/types.ts:921](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L921)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2130,11 +2136,41 @@ The wallet failed (default: `The wallet did not send the refund. Try again.`)
 
 The refund's own transaction cannot settle it (`over_limit`, `tx_of_another_refund`).
 
+#### failedDropped
+
+> **failedDropped**: `string`
+
+Why it failed: `dropped` (not on the network).
+
+#### failedFromBuyer
+
+> **failedFromBuyer**: `string`
+
+Why it failed: `refund_from_buyer` (the wallet it goes to, or one that paid, sent it).
+
 #### failedHeldNote
 
 > **failedHeldNote**: `string`
 
 After the failure of a held transfer's refund (default: `The transfer stays held. Close this window: its row says what to do next.`)
+
+#### failedNotFound
+
+> **failedNotFound**: `string`
+
+Why it failed: `transaction_failed` (not found in time, or replaced).
+
+#### failedNoTransfer
+
+> **failedNoTransfer**: `string`
+
+Why it failed: `no_matching_transfer` (it sent nothing to the recipient).
+
+#### failedResendConfirmed
+
+> **failedResendConfirmed**: `string`
+
+Why it failed: `resend_confirmed` (the merchant confirmed that it did not leave the wallet).
 
 #### failedShort
 
@@ -2151,6 +2187,18 @@ Under it; `{network}` (default: `The transaction failed on {network}; only the n
 #### failedTitle
 
 > **failedTitle**: `string`
+
+#### failedTooEarly
+
+> **failedTooEarly**: `string`
+
+Why it failed: `too_early` (older than the payment).
+
+#### failedWithdrawn
+
+> **failedWithdrawn**: `string`
+
+Why it failed: `withdrawn` (taken back before it was sent).
 
 #### feeEstimate
 
@@ -2504,7 +2552,7 @@ Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: 
 
 > **summary**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:853](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L853)
+Defined in: [nova-payments/src/i18n/types.ts:855](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L855)
 
 The order panel: the seller, the deadline, the lines and the total.
 
@@ -2514,6 +2562,18 @@ The order panel: the seller, the deadline, the lines and the total.
 
 On a phone: the number of lines and the tax; `{count}`, `{tax}` (default: `{count} items · incl. VAT {tax}`).
 Used when the plural rule of the language does not pick `one` for the count.
+
+#### compactNoTax
+
+> **compactNoTax**: `string`
+
+On a phone, for an invoice without tax; `{count}` (default: `{count} items`). Picked as `compact` is.
+
+#### compactNoTaxOne
+
+> **compactNoTaxOne**: `string`
+
+On a phone, for an invoice without tax, as `compactOne` is picked; `{count}` (default: `{count} item`)
 
 #### compactOne
 

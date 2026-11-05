@@ -385,10 +385,12 @@ export function CompactSummary({ className }: { className?: string } = {}) {
       </div>
       <Disclosure
         label={`${formatCountLabel(
-          { one: labels.summary.compactOne, other: labels.summary.compact },
+          totals.tax
+            ? { one: labels.summary.compactOne, other: labels.summary.compact }
+            : { one: labels.summary.compactNoTaxOne, other: labels.summary.compactNoTax },
           invoice.lineItems.length,
           locale,
-          { tax: totals.tax ? formatFiat(totals.tax, locale) : formatFiat('0', locale) },
+          totals.tax ? { tax: formatFiat(totals.tax, locale) } : {},
         )} · ${labels.summary.showOrder}`}
       >
         <div className="novapay:flex novapay:flex-col novapay:gap-3 novapay:pt-1">

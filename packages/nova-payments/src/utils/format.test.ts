@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   baseUnitsToDecimal,
   formatCountdown,
+  formatFeeAmount,
   formatFiat,
   formatTokenAmount,
   minorToDecimal,
@@ -71,5 +72,18 @@ describe('baseUnitsToDecimal', () => {
     expect(baseUnitsToDecimal('5000000', 6)).toBe('5');
     expect(baseUnitsToDecimal('123456789012345678901', 18)).toBe('123.456789012345678901');
     expect(baseUnitsToDecimal('42', 0)).toBe('42');
+  });
+});
+
+describe('formatFeeAmount', () => {
+  it('rounds an estimate to six decimals', () => {
+    expect(formatFeeAmount('36082500481100', 18, 'en')).toBe('0.000036');
+    expect(formatFeeAmount('5000', 9, 'en')).toBe('0.000005');
+    expect(formatFeeAmount('1250000000000000', 18, 'en')).toBe('0.00125');
+  });
+
+  it('gives no number for a fee too small to tell anything', () => {
+    expect(formatFeeAmount('24929646', 18, 'en')).toBeNull();
+    expect(formatFeeAmount('0', 18, 'en')).toBeNull();
   });
 });

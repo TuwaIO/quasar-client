@@ -508,6 +508,8 @@ export type NovaPaymentsLabels = {
     amount: string;
     /** Row of the transaction (default: `Transaction`) */
     transaction: string;
+    /** The same row on an invoice paid in parts, where it names the last one; the receipt names them all (default: `Last transfer`) */
+    lastTransfer: string;
     /** Row of the sender (default: `From`) */
     from: string;
     /** That the window may close */
@@ -908,6 +910,10 @@ export type NovaPaymentsLabels = {
      * also 21, 31…); `{count}`, `{tax}` (default: `{count} item · incl. VAT {tax}`)
      */
     compactOne: string;
+    /** On a phone, for an invoice without tax; `{count}` (default: `{count} items`). Picked as `compact` is. */
+    compactNoTax: string;
+    /** On a phone, for an invoice without tax, as `compactOne` is picked; `{count}` (default: `{count} item`) */
+    compactNoTaxOne: string;
     /** On a phone: button that shows the order (default: `Details`) */
     showOrder: string;
   };
@@ -1021,6 +1027,20 @@ export type NovaPaymentsLabels = {
     failedByHand: string;
     /** Under it; `{network}` (default: `The transaction failed on {network}; only the network fee was spent. Send the refund again.`) */
     failedText: string;
+    /** Why it failed: `refund_from_buyer` (the wallet it goes to, or one that paid, sent it). */
+    failedFromBuyer: string;
+    /** Why it failed: `transaction_failed` (not found in time, or replaced). */
+    failedNotFound: string;
+    /** Why it failed: `dropped` (not on the network). */
+    failedDropped: string;
+    /** Why it failed: `too_early` (older than the payment). */
+    failedTooEarly: string;
+    /** Why it failed: `no_matching_transfer` (it sent nothing to the recipient). */
+    failedNoTransfer: string;
+    /** Why it failed: `withdrawn` (taken back before it was sent). */
+    failedWithdrawn: string;
+    /** Why it failed: `resend_confirmed` (the merchant confirmed that it did not leave the wallet). */
+    failedResendConfirmed: string;
     /** After the failure of a held transfer's refund (default: `The transfer stays held. Close this window: its row says what to do next.`) */
     failedHeldNote: string;
     /** Heading of a refund the wallet did not send (default: `Not sent`) */

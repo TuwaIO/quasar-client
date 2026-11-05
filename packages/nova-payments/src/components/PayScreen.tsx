@@ -14,6 +14,7 @@ import { isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/
 import {
   baseUnitsToDecimal,
   formatCountdown,
+  formatFeeAmount,
   formatFiat,
   formatTokenAmount,
   minorToDecimal,
@@ -199,6 +200,7 @@ export function PayScreen() {
   const rate = checkout.invoice.amountPaid ? null : quoteRate(quote, checkout.invoice.totalMinor);
   // The rest of an underpaid invoice: what is sent is not the total of the invoice
   const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
+  const feeAmount = fee ? formatFeeAmount(String(fee.amount), fee.decimals, locale) : null;
   const restRate = rest ? restRateText(quote, now, labels, merchant, locale) : null;
   const total = checkout.invoice.totalMinor ? formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale) : null;
   const walletMatches = Boolean(wallet && quote.payer && payerFor(wallet, method) === quote.payer);
@@ -490,10 +492,8 @@ export function PayScreen() {
                   <span className="novapay:text-[var(--tuwa-success-text)]">
                     {formatLabel(labels.pay.merchantPaysGas, { merchant })}
                   </span>
-                ) : fee ? (
-                  formatLabel(labels.pay.gasEstimate, {
-                    amount: `${formatTokenAmount(String(fee.amount), fee.decimals, locale)} ${fee.symbol}`,
-                  })
+                ) : feeAmount ? (
+                  formatLabel(labels.pay.gasEstimate, { amount: `${feeAmount} ${fee?.symbol}` })
                 ) : (
                   labels.pay.gasFromWallet
                 )}

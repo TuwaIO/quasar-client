@@ -21,10 +21,10 @@ const { CompactSummary } = await import('./CheckoutSummary');
 const line = { name: 'Hoodie', quantity: '1', unitMinor: '100', netMinor: '100', taxRate: '0' };
 
 /** The label of the order's disclosure on a phone, for an invoice with `count` lines. */
-async function compactLabel(locale: string, count: number) {
+async function compactLabel(locale: string, count: number, invoice: object = { totalMinor: '1000' }) {
   const checkout = {
     ...fixture.checkout,
-    invoice: { ...fixture.checkout.invoice, lineItems: Array.from({ length: count }, () => line) },
+    invoice: { ...fixture.checkout.invoice, lineItems: Array.from({ length: count }, () => line), ...invoice },
   } as unknown as typeof fixture.checkout;
   ctx = fixture.checkoutContextValue({}, { checkout, locale, labels: await loadLabels(locale) });
   const labels = fixture
@@ -45,5 +45,12 @@ describe('the compact order on a phone', () => {
     expect(await compactLabel('uk', 1)).toMatch(/^1 позиція · /);
     expect(await compactLabel('de', 1)).toMatch(/^1 Position · /);
     expect(await compactLabel('zh-CN', 1)).toMatch(/^1 件商品 · /);
+  });
+
+  // An invoice with no tax on it says nothing about tax
+  it('names no tax on an invoice without one', async () => {
+    expect(await compactLabel('en', 1, { totalMinor: '100' })).toBe('1 item · Details');
+    expect(await compactLabel('en', 2, { totalMinor: '200' })).toBe('2 items · Details');
+    expect(await compactLabel('de', 2, { totalMinor: '200' })).toBe('2 Positionen · Details');
   });
 });

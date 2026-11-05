@@ -254,6 +254,7 @@ export const itLabels: NovaPaymentsLabels = {
     network: 'Rete',
     amount: 'Importo',
     transaction: 'Transazione',
+    lastTransfer: 'Ultimo trasferimento',
     from: 'Da',
     canClose: 'Puoi chiudere questa finestra: il pagamento prosegue e il venditore invia la ricevuta.',
     afterDeadline: 'Il pagamento è stato inviato prima del termine ed è in fase di conferma.',
@@ -430,6 +431,8 @@ export const itLabels: NovaPaymentsLabels = {
     help: 'Aiuto',
     compact: '{count} articoli · IVA incl. {tax}',
     compactOne: '{count} articolo · IVA incl. {tax}',
+    compactNoTax: '{count} articoli',
+    compactNoTaxOne: '{count} articolo',
     showOrder: 'Dettagli',
   },
   refund: {
@@ -491,6 +494,15 @@ export const itLabels: NovaPaymentsLabels = {
       'La transazione di questo rimborso non può chiuderlo: verificala a mano con i rimborsi della fattura.',
     failedText:
       'La transazione non è riuscita su {network}; è stata spesa solo la commissione di rete. Invia di nuovo il rimborso.',
+    failedFromBuyer:
+      'È stato inviato dal wallet a cui doveva tornare o da un wallet che ha pagato la fattura, quindi non è stato restituito nulla. Invialo di nuovo da un altro wallet.',
+    failedNotFound:
+      'La sua transazione non è stata trovata in tempo o è stata sostituita: potrebbe comunque essere arrivata.',
+    failedDropped: 'La sua transazione non è stata trovata sulla rete: potrebbe comunque essere arrivata.',
+    failedTooEarly: 'La sua transazione è precedente al pagamento: non è questo rimborso.',
+    failedNoTransfer: 'La sua transazione non ha inviato nulla che Quasar possa vedere al wallet di destinazione.',
+    failedWithdrawn: "L'hai ritirato prima dell'invio.",
+    failedResendConfirmed: 'Hai confermato che non è uscito dal tuo wallet: può essere inviato di nuovo.',
     failedHeldNote: 'Il trasferimento resta trattenuto. Chiudi questa finestra: la sua riga indica cosa fare dopo.',
     notSent: 'Non inviato',
     notEnough: '{symbol} insufficienti su {address}: contiene {balance}.',

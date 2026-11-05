@@ -423,6 +423,37 @@ describe('RefundButton', () => {
       expect(textOf(tree)).not.toContain('amount_short');
     });
 
+    // The code Quasar records is for the code that reads it
+    it.each([
+      ['refund_from_buyer', 'failedFromBuyer'],
+      ['dropped', 'failedDropped'],
+      ['withdrawn', 'failedWithdrawn'],
+    ] as const)("says why a held transfer's refund failed in words, never as %s", (failureReason, label) => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        refund: {
+          id: 'rf_4',
+          mode: 'exact_received',
+          heldTransfer: 'ht_1',
+          failureReason,
+          creditNoteNumber: null,
+        } as never,
+      });
+      const text = textOf(failed(flow));
+      expect(text).toContain(defaultLabels.refund[label]);
+      expect(text).not.toContain(failureReason);
+    });
+
+    it('reads a reason it does not know as a failed transaction, not as a code', () => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        refund: { id: 'rf_5', mode: 'exact_received', failureReason: 'something_new', creditNoteNumber: null } as never,
+      });
+      expect(textOf(failed(flow))).not.toContain('something_new');
+    });
+
     it('says why when Quasar refused the refund asked again', () => {
       const flow = flowOf({
         step: 'failed',

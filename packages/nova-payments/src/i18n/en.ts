@@ -248,6 +248,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     network: 'Network',
     amount: 'Amount',
     transaction: 'Transaction',
+    lastTransfer: 'Last transfer',
     from: 'From',
     canClose: 'You can close this window: the payment keeps going, and the seller sends the receipt.',
     afterDeadline: 'Your payment was sent before the deadline and is being confirmed.',
@@ -416,6 +417,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     help: 'Help',
     compact: '{count} items · incl. VAT {tax}',
     compactOne: '{count} item · incl. VAT {tax}',
+    compactNoTax: '{count} items',
+    compactNoTaxOne: '{count} item',
     showOrder: 'Details',
   },
   refund: {
@@ -475,6 +478,14 @@ export const defaultLabels: NovaPaymentsLabels = {
     failedByHand:
       'The transaction of this refund cannot settle it: check it by hand against the refunds of the invoice.',
     failedText: 'The transaction failed on {network}; only the network fee was spent. Send the refund again.',
+    failedFromBuyer:
+      'It was sent from the wallet it goes back to, or from a wallet that paid the invoice, so nothing went back. Send it again from another wallet.',
+    failedNotFound: 'Its transaction was not found in time or was replaced: it may still have arrived.',
+    failedDropped: 'Its transaction was not found on the network: it may still have arrived.',
+    failedTooEarly: 'Its transaction is older than the payment, so it is not this refund.',
+    failedNoTransfer: 'Its transaction sent nothing Quasar could see to the wallet the refund goes to.',
+    failedWithdrawn: 'You took it back before it was sent.',
+    failedResendConfirmed: 'You confirmed that it did not leave your wallet: it can be sent again.',
     failedHeldNote: 'The transfer stays held. Close this window: its row says what to do next.',
     notSent: 'Not sent',
     notEnough: 'Not enough {symbol} on {address}: it holds {balance}.',

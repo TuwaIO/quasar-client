@@ -261,6 +261,7 @@ export const deLabels: NovaPaymentsLabels = {
     network: 'Netzwerk',
     amount: 'Betrag',
     transaction: 'Transaktion',
+    lastTransfer: 'Letzte Überweisung',
     from: 'Von',
     canClose: 'Sie können dieses Fenster schließen: Die Zahlung läuft weiter, und der Verkäufer sendet die Quittung.',
     afterDeadline: 'Ihre Zahlung wurde vor Fristende gesendet und wird bestätigt.',
@@ -440,6 +441,8 @@ export const deLabels: NovaPaymentsLabels = {
     help: 'Hilfe',
     compact: '{count} Positionen · inkl. USt. {tax}',
     compactOne: '{count} Position · inkl. USt. {tax}',
+    compactNoTax: '{count} Positionen',
+    compactNoTaxOne: '{count} Position',
     showOrder: 'Details',
   },
   refund: {
@@ -503,6 +506,16 @@ export const deLabels: NovaPaymentsLabels = {
       'Die Transaktion dieser Erstattung kann sie nicht abschließen: Prüfen Sie sie von Hand anhand der Erstattungen der Rechnung.',
     failedText:
       'Die Transaktion ist im Netzwerk {network} fehlgeschlagen; es wurde nur die Netzwerkgebühr verbraucht. Senden Sie die Erstattung erneut.',
+    failedFromBuyer:
+      'Sie wurde von dem Wallet gesendet, an das sie zurückgehen sollte, oder von einem Wallet, das die Rechnung bezahlt hat, daher ging nichts zurück. Senden Sie sie erneut von einem anderen Wallet.',
+    failedNotFound:
+      'Die Transaktion wurde nicht rechtzeitig gefunden oder wurde ersetzt: Sie kann trotzdem angekommen sein.',
+    failedDropped: 'Die Transaktion wurde im Netzwerk nicht gefunden: Sie kann trotzdem angekommen sein.',
+    failedTooEarly: 'Die Transaktion ist älter als die Zahlung und gehört nicht zu dieser Rückerstattung.',
+    failedNoTransfer: 'Die Transaktion hat nichts an das Ziel-Wallet gesendet, was Quasar sehen könnte.',
+    failedWithdrawn: 'Sie haben sie vor dem Senden zurückgezogen.',
+    failedResendConfirmed:
+      'Sie haben bestätigt, dass sie Ihr Wallet nicht verlassen hat: Sie kann erneut gesendet werden.',
     failedHeldNote:
       'Der Transfer bleibt einbehalten. Schließen Sie dieses Fenster: In seiner Zeile steht, wie es weitergeht.',
     notSent: 'Nicht gesendet',

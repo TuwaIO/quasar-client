@@ -289,10 +289,17 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       // `payAgain` is newer than some `@tuwaio/quasar-sdk` alphas, whose stores never reach this phase
       const { payAgain } = store.getState() as { payAgain?: () => void };
       const status = state.invoiceStatus ?? checkout.invoice.status;
-      // Not the main button: the buyer pays again only after checking that the payment did not leave the wallet, and
-      // only while the invoice can be paid
       if (payAgain && (status === 'open' || status === 'underpaid') && !(followUp && LEFT_THE_WALLET.has(followUp))) {
-        action = <SecondaryButton onClick={() => payAgain()}>{labels.outcome.unconfirmedPayAgain}</SecondaryButton>;
+        // Quasar read this transfer from the chain, so "it did not leave my wallet" would be false: it does not count, and
+        // the invoice can still be paid. When the seller holds it to return it, that is the way on
+        // Otherwise not the main button: the buyer pays again only after checking that the payment did not leave the wallet
+        action = !isMovedMoneyFailure(state.error) ? (
+          <SecondaryButton onClick={() => payAgain()}>{labels.outcome.unconfirmedPayAgain}</SecondaryButton>
+        ) : (state.error as { held?: boolean }).held === true ? (
+          <PrimaryButton onClick={() => payAgain()}>{labels.pay.payAgain}</PrimaryButton>
+        ) : (
+          <SecondaryButton onClick={() => payAgain()}>{labels.pay.payAgain}</SecondaryButton>
+        );
       }
       break;
     }

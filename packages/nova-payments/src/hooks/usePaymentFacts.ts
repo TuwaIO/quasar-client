@@ -27,6 +27,8 @@ export function usePaymentFacts() {
       ? `${formatTokenAmount(quote.amountDue === quote.cryptoAmountExpected ? quote.amountToSend : quote.cryptoAmountExpected, quote.decimals, locale)} ${quote.instructions.symbol}`
       : null,
     txKey,
+    // The invoice was paid in parts and this is the last one: the receipt names them all
+    lastOfParts: quote ? quote.amountDue !== quote.cryptoAmountExpected : false,
     explorerUrl:
       quote && chainId && txKey ? adapterFor(quote.instructions.family)?.explorerUrl?.({ chainId, txKey }) : undefined,
     from: sender ? shortAddress(sender) : null,

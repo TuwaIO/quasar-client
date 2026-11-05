@@ -545,6 +545,7 @@ describe('a payment Quasar could not confirm', () => {
       code = 'payment_unconfirmed',
       txKey = null,
       invoice = {},
+      held = false,
     }: {
       reason?: string;
       status?: string;
@@ -552,6 +553,7 @@ describe('a payment Quasar could not confirm', () => {
       code?: string;
       txKey?: string | null;
       invoice?: Record<string, unknown>;
+      held?: boolean;
     } = {},
   ) => {
     show('unconfirmed', { status: status as never, ...invoice });
@@ -564,7 +566,7 @@ describe('a payment Quasar could not confirm', () => {
         invoiceStatus: status,
         paymentOnTheWay: false,
         txKey,
-        error: { code, message: '', reason, ...(rechecked ? { rechecked: true } : {}) },
+        error: { code, message: '', reason, ...(rechecked ? { rechecked: true } : {}), ...(held ? { held } : {}) },
       } as never,
     };
     return OutcomeScreen({ kind: 'unconfirmed' });
@@ -655,6 +657,35 @@ describe('a payment Quasar could not confirm', () => {
     expect(checked[0].props.children).toBe('The payment did not leave my wallet');
     (checked[0].props.onClick as () => void)();
     expect(payAgain).toHaveBeenCalledOnce();
+  });
+
+  // Quasar read it from the chain, so "it did not leave my wallet" would be false, and the invoice can still be paid
+  it('offers to pay again, as the main button, after a transfer from another wallet that is held', () => {
+    const payAgain = vi.fn();
+    const tree = unconfirmedScreen(payAgain, {
+      code: 'payment_mismatch',
+      reason: 'payer_mismatch',
+      held: true,
+      rechecked: false,
+      txKey: '0xabc',
+    });
+    expect(textOf(tree)).not.toContain('did not leave');
+    const [main] = fixture.ofType(tree, PrimaryButton);
+    expect(main.props.children).toBe('Pay again');
+    (main.props.onClick as () => void)();
+    expect(payAgain).toHaveBeenCalledOnce();
+    expect(showsHash(tree, '0xabc')).toBe(true);
+  });
+
+  it('keeps paying again a second action after a transfer nobody holds: the note says to contact the seller', () => {
+    const tree = unconfirmedScreen(vi.fn(), {
+      code: 'payment_mismatch',
+      reason: 'payer_mismatch',
+      rechecked: false,
+      txKey: '0xabc',
+    });
+    expect(fixture.ofType(tree, PrimaryButton)).toHaveLength(0);
+    expect(fixture.ofType(tree, SecondaryButton)[0].props.children).toBe('Pay again');
   });
 
   // The payment left the wallet and may still pay the invoice: no second payment, and

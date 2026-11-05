@@ -7,7 +7,7 @@ import { type ReactNode, useEffect, useEffectEvent, useId, useRef, useState } fr
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { type RefundFlow, type RefundRequest, useRefund } from '../hooks/useRefund';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
-import { formatTokenAmount, shortAddress } from '../utils/format';
+import { formatFeeAmount, formatTokenAmount, shortAddress } from '../utils/format';
 import type { PaymentFamily } from '../utils/methods';
 import { refundRateMoved } from '../utils/outcome';
 import { iconButton, mono, primaryAction } from './classes';
@@ -298,17 +298,30 @@ export function RefundSteps({
   }
 }
 
-// Why it failed, in words for what the merchant can act on: part of it arrived, so asking again sends only the rest
+// The reasons Quasar names in words: a code on the screen tells nobody what to do
+const FAILURE_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']>> = {
+  amount_short: 'failedShort',
+  over_limit: 'failedByHand',
+  tx_of_another_refund: 'failedByHand',
+  refund_from_buyer: 'failedFromBuyer',
+  transaction_failed: 'failedNotFound',
+  dropped: 'failedDropped',
+  too_early: 'failedTooEarly',
+  no_matching_transfer: 'failedNoTransfer',
+  withdrawn: 'failedWithdrawn',
+  resend_confirmed: 'failedResendConfirmed',
+};
+
+// Why it failed, in words for what the merchant can act on: part of it arrived, so asking again sends only the rest. A
+// reason this package does not know reads as a failed transaction, never as its code
 const failureText = (
   refund: Refund | null | undefined,
-  text: { failedShort: string; failedByHand: string; failedText: string },
+  text: NovaPaymentsLabels['refund'],
   values: Record<string, string>,
-) =>
-  refund?.failureReason === 'amount_short'
-    ? text.failedShort
-    : byHand(refund)
-      ? text.failedByHand
-      : (refund?.failureReason ?? formatLabel(text.failedText, values));
+) => {
+  const label = refund?.failureReason ? FAILURE_LABELS[refund.failureReason] : undefined;
+  return label ? text[label] : formatLabel(text.failedText, values);
+};
 
 // Its own transaction cannot settle it: Quasar refuses another refund until a person checks it
 const byHand = (refund: Refund | null | undefined) =>
@@ -430,7 +443,7 @@ export function FailedStep({
     return (
       <>
         <ScreenContent title={text.failedTitle}>
-          <ScreenError>{flow.refund.failureReason ?? formatLabel(text.failedText, values)}</ScreenError>
+          <ScreenError>{failureText(flow.refund, text, values)}</ScreenError>
           <FooterNote>{text.failedHeldNote}</FooterNote>
         </ScreenContent>
         <ScreenFooter>
@@ -607,9 +620,8 @@ export function ConfirmStep({
     typeof flow.balance === 'bigint' && transfer
       ? `${formatTokenAmount(flow.balance.toString(), transfer.decimals, locale)} ${transfer.symbol}`
       : null;
-  const fee = flow.fee
-    ? `${formatTokenAmount(flow.fee.amount.toString(), flow.fee.decimals, locale)} ${flow.fee.symbol}`
-    : null;
+  const feeAmount = flow.fee ? formatFeeAmount(flow.fee.amount.toString(), flow.fee.decimals, locale) : null;
+  const fee = flow.fee && feeAmount ? `${feeAmount} ${flow.fee.symbol}` : null;
   const problems: Record<string, string> = {
     notEnough: formatLabel(text.notEnough, {
       ...values,

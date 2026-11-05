@@ -251,6 +251,7 @@ export const esLabels: NovaPaymentsLabels = {
     network: 'Red',
     amount: 'Importe',
     transaction: 'Transacción',
+    lastTransfer: 'Última transferencia',
     from: 'Desde',
     canClose: 'Puedes cerrar esta ventana: el pago sigue su curso y el vendedor envía el recibo.',
     afterDeadline: 'Tu pago se envió antes de que venciera el plazo y se está confirmando.',
@@ -424,6 +425,8 @@ export const esLabels: NovaPaymentsLabels = {
     help: 'Ayuda',
     compact: '{count} artículos · IVA incl. {tax}',
     compactOne: '{count} artículo · IVA incl. {tax}',
+    compactNoTax: '{count} artículos',
+    compactNoTaxOne: '{count} artículo',
     showOrder: 'Detalles',
   },
   refund: {
@@ -484,6 +487,14 @@ export const esLabels: NovaPaymentsLabels = {
     failedByHand:
       'La transacción de este reembolso no puede liquidarlo: compruébala a mano con los reembolsos de la factura.',
     failedText: 'La transacción falló en {network}; solo se gastó la comisión de red. Envía el reembolso de nuevo.',
+    failedFromBuyer:
+      'Se envió desde la billetera a la que debía volver o desde una billetera que pagó la factura, así que no se devolvió nada. Envíalo de nuevo desde otra billetera.',
+    failedNotFound: 'Su transacción no se encontró a tiempo o fue reemplazada: aún puede haber llegado.',
+    failedDropped: 'Su transacción no se encontró en la red: aún puede haber llegado.',
+    failedTooEarly: 'Su transacción es anterior al pago: no es este reembolso.',
+    failedNoTransfer: 'Su transacción no envió nada que Quasar pueda ver a la billetera de destino.',
+    failedWithdrawn: 'Lo retiraste antes de enviarlo.',
+    failedResendConfirmed: 'Confirmaste que no salió de tu billetera: se puede enviar de nuevo.',
     failedHeldNote: 'La transferencia sigue retenida. Cierra esta ventana: su fila indica qué hacer a continuación.',
     notSent: 'No enviado',
     notEnough: 'No hay suficiente {symbol} en {address}: tiene {balance}.',

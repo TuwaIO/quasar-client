@@ -55,6 +55,21 @@ export function formatTokenAmount(baseUnits: string, decimals: number, locale: s
 }
 
 /**
+ * A network fee for a line of text: an estimate, so six decimals at most. A fee below that says nothing a reader can use
+ * (the wallet sets its own and may well charge more), so it has no number.
+ *
+ * @param baseUnits - Base units, as a decimal integer string (not negative).
+ * @param decimals - Decimals of the native token.
+ * @param locale - BCP 47 language of the page.
+ * @returns For example `0.000036` for 36082500481100 with 18 decimals; `null` for a fee below `0.000001`.
+ */
+export function formatFeeAmount(baseUnits: string, decimals: number, locale: string): string | null {
+  const unit = 10n ** BigInt(Math.max(decimals - 6, 0));
+  const rounded = ((BigInt(baseUnits) + unit / 2n) / unit) * unit;
+  return rounded === 0n ? null : formatTokenAmount(rounded.toString(), decimals, locale);
+}
+
+/**
  * A token amount as a wallet takes it when pasted: exact, with a dot, without grouping or trailing zeros.
  *
  * @param baseUnits - Base units, as a decimal integer string (not negative).
