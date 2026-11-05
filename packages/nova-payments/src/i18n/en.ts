@@ -54,6 +54,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     consentRequired: 'Required to continue.',
     noMethods: 'This invoice cannot be paid with any method right now. Contact the seller.',
     methodUnavailable: 'This page cannot take this method. Choose another one.',
+    tooManyPayers: 'Too many wallets tried this invoice. Ask {merchant} for a new payment link.',
     tooManyPayments: 'This invoice can no longer take a payment here. Contact {merchant}.',
     nativeFromSmartWallet: 'A smart wallet cannot pay in this coin: choose a token.',
     payerNotExpected: 'The seller asked for this invoice to be paid from another wallet. Connect that wallet.',
@@ -354,6 +355,8 @@ export const defaultLabels: NovaPaymentsLabels = {
       'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact {merchant} with the transaction hash.',
     unconfirmedRetrying:
       'This page keeps handing your payment over to Quasar. Keep it open until the payment shows here.',
+    unconfirmedInvoiceFull:
+      'This invoice takes no more payments, and Quasar does not follow this one. Do not pay again; if it left your wallet, contact {merchant} with the transaction hash.',
     unconfirmedTakenElsewhere:
       'This transaction was handed over for another invoice first. Quasar credits it to the invoice the wallet that sent it confirmed, and this page shows the result while it follows the payment. Do not pay again; if your payment does not show here, contact {merchant} with the transaction hash.',
     unconfirmedSettlementFailed:

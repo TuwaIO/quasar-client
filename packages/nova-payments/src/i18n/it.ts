@@ -55,6 +55,7 @@ export const itLabels: NovaPaymentsLabels = {
     consentRequired: 'Obbligatorio per continuare.',
     noMethods: 'Al momento questa fattura non si può pagare con nessun metodo. Contatta il venditore.',
     methodUnavailable: 'Questa pagina non accetta questo metodo. Scegline un altro.',
+    tooManyPayers: 'Troppi wallet hanno provato questa fattura. Chiedi a {merchant} un nuovo link di pagamento.',
     tooManyPayments: 'Questa fattura non può più ricevere un pagamento qui. Contatta {merchant}.',
     nativeFromSmartWallet: 'Uno smart wallet non può pagare con questa moneta: scegli un token.',
     payerNotExpected: 'Il venditore ha chiesto di pagare questa fattura da un altro wallet. Collega quel wallet.',
@@ -367,6 +368,8 @@ export const itLabels: NovaPaymentsLabels = {
       "Quasar non ha trovato questo pagamento sulla rete entro 24 ore e non lo controlla più. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
     unconfirmedRetrying:
       'Questa pagina continua a consegnare il pagamento a Quasar. Tienila aperta finché il pagamento non compare qui.',
+    unconfirmedInvoiceFull:
+      "Questa fattura non accetta altri pagamenti e Quasar non segue questo. Non pagare di nuovo; se è uscito dal tuo wallet, contatta {merchant} con l'hash della transazione.",
     unconfirmedTakenElsewhere:
       "Questa transazione è stata consegnata prima per un'altra fattura. Quasar la accredita alla fattura confermata dal wallet che l'ha inviata, e questa pagina mostra il risultato finché segue il pagamento. Non pagare di nuovo; se il tuo pagamento non compare qui, contatta {merchant} indicando l'hash della transazione.",
     unconfirmedSettlementFailed:

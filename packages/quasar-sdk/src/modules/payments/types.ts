@@ -439,7 +439,7 @@ export interface InvoiceDetails extends Invoice {
   refunds: Refund[];
   /** How many refunds it has. */
   refundsTotal: number;
-  /** How many credit notes it has (one per refund and correction). */
+  /** How many credit notes it has (one per correction and per refund of what the invoice still credits). */
   creditNotesTotal: number;
   /** Every transfer credited to it, oldest first, also through a correction: an invoice paid in parts has several. */
   payments: InvoicePayment[];
@@ -614,7 +614,7 @@ export interface Refund {
   reason: string | null;
   /** Why it failed. */
   failureReason: string | null;
-  /** Its credit note, once confirmed. */
+  /** Its credit note, once confirmed; none for a held transfer or a payment that stayed on a corrected invoice. */
   creditNoteNumber: string | null;
   /** The held transfer it returns to its sender ({@link HeldTransfer}), or `null` for a refund of the invoice. */
   heldTransfer: string | null;

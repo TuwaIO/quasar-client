@@ -63,6 +63,7 @@ const FOLLOW_UP_NOTE: Record<UnconfirmedFollowUp, keyof NovaPaymentsLabels['outc
   takenElsewhere: 'unconfirmedTakenElsewhere',
   settlementRetrying: 'unconfirmedSettlementRetrying',
   settlementFailed: 'unconfirmedSettlementFailed',
+  invoiceFull: 'unconfirmedInvoiceFull',
 };
 
 /**
@@ -76,6 +77,7 @@ const FOR_THE_SELLER: ReadonlySet<UnconfirmedFollowUp> = new Set([
   'takenElsewhere',
   'settlementRetrying',
   'settlementFailed',
+  'invoiceFull',
 ]);
 
 /**
@@ -86,6 +88,7 @@ const LEFT_THE_WALLET: ReadonlySet<UnconfirmedFollowUp> = new Set([
   'takenElsewhere',
   'settlementRetrying',
   'settlementFailed',
+  'invoiceFull',
 ]);
 
 /** Whether two account addresses are one: EVM ones in any case, Solana (base58) ones exactly. */

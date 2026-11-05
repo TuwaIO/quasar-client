@@ -55,6 +55,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     consentRequired: '勾选后才能继续。',
     noMethods: '此发票目前无法通过任何方式支付。请联系卖方。',
     methodUnavailable: '此页面不支持该方式。请选择其他方式。',
+    tooManyPayers: '尝试支付此发票的钱包过多。请向 {merchant} 索取新的付款链接。',
     tooManyPayments: '此发票无法再在此处接受付款。请联系 {merchant}。',
     nativeFromSmartWallet: '智能钱包无法用此币种付款:请选择代币。',
     payerNotExpected: '卖方要求用另一个钱包支付此发票。请连接该钱包。',
@@ -338,6 +339,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
     unconfirmedClosed:
       'Quasar 在 24 小时内未在网络上找到这笔付款，且不再核查。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
     unconfirmedRetrying: '此页面会继续将您的付款提交给 Quasar。请保持页面打开，直到付款显示在此处。',
+    unconfirmedInvoiceFull:
+      '此发票不再接受付款,Quasar 也不再跟踪这笔付款。请勿重复付款;如果款项已从您的钱包转出,请携带交易哈希联系 {merchant}。',
     unconfirmedTakenElsewhere:
       '此交易已先被提交给另一张发票。Quasar 会将其计入发送它的钱包所确认的发票，此页面在跟踪付款期间会显示结果。请勿再次付款；如果您的付款未在此处显示，请提供交易哈希联系 {merchant}。',
     unconfirmedSettlementFailed: '网络已确认您的付款，但 Quasar 未记录。请勿再次付款；请提供交易哈希联系 {merchant}。',

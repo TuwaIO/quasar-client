@@ -100,6 +100,7 @@ export type NovaPaymentsLabels = {
     /** The page can pay the chosen method neither from a wallet nor with a QR code */
     methodUnavailable: string;
     tooManyPayments: string;
+    tooManyPayers: string;
     /** A smart wallet chose a native coin, whose transfer no receipt shows (`native_from_contract`). */
     nativeFromSmartWallet: string;
     /** The seller named the paying wallet, and it is another one (`payer_not_expected`) */
@@ -771,6 +772,7 @@ export type NovaPaymentsLabels = {
      * again; if your payment does not show here, contact {merchant} with the transaction hash.`)
      */
     unconfirmedTakenElsewhere: string;
+    unconfirmedInvoiceFull: string;
     /**
      * Instead of `unconfirmedText` and `unconfirmedNote`, and on the expired and cancelled outcomes, next to its
      * transaction, when the network confirmed the payment but Quasar could not record it (`settlement_failed`) and

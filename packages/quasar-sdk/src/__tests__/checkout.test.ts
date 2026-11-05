@@ -1588,8 +1588,56 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
     expect(checkout.getState()).toMatchObject({
       phase: 'unconfirmed',
       txKey: '0xfeed',
-      error: { code: 'payment_unconfirmed', reason: 'submit_failed' },
+      error: { code: 'payment_unconfirmed', reason: 'too_many_payments' },
     });
+    checkout.getState().payAgain();
+    expect(checkout.getState().phase).toBe('unconfirmed');
+    checkout.getState().destroy();
+  });
+
+  // Quasar does not say so on the next load: without the kept hand-over the page would offer to pay again
+  it('stays on the refused transaction after a reload', async () => {
+    const items = new Map<string, string>();
+    vi.stubGlobal('sessionStorage', {
+      getItem: (key: string) => items.get(key) ?? null,
+      setItem: (key: string, value: string) => void items.set(key, value),
+      removeItem: (key: string) => void items.delete(key),
+    });
+    answer(
+      { pendingPayments: 0, rejectedPayments: [] },
+      {
+        submit: async () => json({ error: { code: 'too_many_payments', message: 'Contact the seller' } }, 409),
+      },
+    );
+    const first = store();
+    await first.getState().load();
+    await first.getState().submit({ txKey: '0xfeed', connectorType: 'evm:metamask' });
+    first.getState().destroy();
+
+    const reloaded = store();
+    await reloaded.getState().load();
+    await vi.waitFor(() =>
+      expect(reloaded.getState()).toMatchObject({
+        phase: 'unconfirmed',
+        txKey: '0xfeed',
+        error: { reason: 'too_many_payments' },
+      }),
+    );
+    reloaded.getState().destroy();
+  });
+
+  // Refused because the invoice is full: the step that takes a new price says whom to ask
+  it('leaves the payment step when a new price is refused for an invoice that takes no more', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(view()))
+      .mockResolvedValueOnce(json({ error: { code: 'too_many_payments', message: 'Contact the seller' } }, 409));
+    const checkout = store({ EventSource: null });
+    await checkout.getState().load();
+    checkout.getState().selectMethod('ap_1');
+    checkout.getState().setPayer(QUOTE.payer);
+
+    expect(await checkout.getState().requestQuote()).toBeNull();
+    expect(checkout.getState()).toMatchObject({ phase: 'selectMethod', error: { code: 'too_many_payments' } });
     checkout.getState().destroy();
   });
 
@@ -1614,11 +1662,15 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
     expect(checkout.getState()).toMatchObject({
       phase: 'unconfirmed',
       txKey: '0xfeed',
-      error: { code: 'payment_unconfirmed', reason: 'submit_failed' },
+      error: { code: 'payment_unconfirmed', reason: 'too_many_payments' },
     });
+    // Handed over a few more times, for Quasar to keep its hash once the chain has it, and then no more
+    await vi.advanceTimersByTimeAsync(30 * 60_000);
     const sent = attempts;
-    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(sent).toBeLessThan(10);
+    await vi.advanceTimersByTimeAsync(60 * 60_000);
     expect(attempts).toBe(sent);
+    expect(checkout.getState().phase).toBe('unconfirmed');
     checkout.getState().destroy();
   });
 

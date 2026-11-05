@@ -86,6 +86,12 @@ describe('needsLeaveConfirm after a payment that left the wallet', () => {
 });
 
 describe('methodErrorText', () => {
+  // Names nobody signed for filled the places, and this wallet cannot sign: only a new link helps
+  it('asks for a new link when too many wallets tried the invoice', () => {
+    const text = methodErrorText({ code: 'too_many_payers', message: 'raw' } as never, defaultLabels, 'Shop');
+    expect(text).toBe(defaultLabels.method.tooManyPayers.replace('{merchant}', 'Shop'));
+  });
+
   // The quote is refused before money moves: the buyer must hear whom to ask, not "try again"
   it('sends the buyer to the merchant when the invoice took all the transactions it follows', () => {
     const text = methodErrorText({ code: 'too_many_payments', message: 'raw' } as never, defaultLabels, 'Shop');

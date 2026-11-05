@@ -599,6 +599,10 @@ const SETTLEMENT_FAILED = 'settlement_failed';
  * transaction to the invoice the wallet that sent it confirmed.
  */
 const TAKEN_ELSEWHERE = 'tx_already_used';
+/** The reason of a transaction the invoice refused because it takes no more of them. */
+const INVOICE_FULL = 'too_many_payments';
+/** When a transaction refused for that is handed over again while the page stays open. */
+const REFUSED_OFFERED_AGAIN_MS = [60_000, 5 * 60_000, 15 * 60_000];
 
 /**
  * Rejection reasons of a payment whose tracker lost sight of it, which Quasar reads again for 24 hours: once Quasar
@@ -781,6 +785,8 @@ const PHASE_OF_REFUSAL: Record<string, CheckoutPhase> = {
   payment_on_its_way: 'confirming',
   payer_mismatch: 'underpaid',
   rest_method_mismatch: 'underpaid',
+  // A new price refused because the invoice takes no more payments: the first step says whom to ask
+  too_many_payments: 'selectMethod',
 };
 
 /** Refusals of a quote of a rest that do not lead back to the underpaid outcome. */
@@ -884,6 +890,13 @@ const retryingError = (): CheckoutError => ({
 });
 
 /** The error once the store gave up handing over a transaction the wallet sent. */
+const invoiceFullError = (): CheckoutError => ({
+  code: 'payment_unconfirmed',
+  message:
+    'This invoice takes no more payments, and Quasar does not follow this one. If it left your wallet, contact the merchant with the transaction hash.',
+  reason: INVOICE_FULL,
+});
+
 const submitFailedError = (): CheckoutError => ({
   code: 'payment_unconfirmed',
   message:
@@ -914,12 +927,14 @@ const takenElsewhereError = (): CheckoutError => ({
 });
 
 /**
- * Whether the error is about a payment that left the wallet and may still pay the invoice, for which the page never
+ * Whether the error is about a payment that left the wallet and may still pay the invoice, or an invoice that takes no more of
+ * them, for which the page never
  * goes back to the payment: a transaction another invoice handed over first, or one confirmed on chain whose
  * settlement keeps failing.
  */
 const keepsPaymentShut = (error: CheckoutError | null) =>
-  error?.code === 'payment_unconfirmed' && (error.reason === TAKEN_ELSEWHERE || error.reason === SETTLEMENT_FAILED);
+  error?.code === 'payment_unconfirmed' &&
+  (error.reason === TAKEN_ELSEWHERE || error.reason === SETTLEMENT_FAILED || error.reason === INVOICE_FULL);
 
 /** Whether the error is the store's word on a transaction another invoice handed over first. */
 const isTakenElsewhere = (error: CheckoutError | null) =>
@@ -1552,12 +1567,31 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       // An expired or cancelled one keeps it too, and follows the payment once Quasar takes it
       const closed = () => CLOSED.has(get().invoiceStatus ?? '');
       // The invoice took all the transactions it follows, and the wallet has sent this one: it may have paid, so no second
-      // payment. Quasar keeps its hash for the merchant, and the buyer contacts the merchant
+      // payment. Quasar keeps its hash for the merchant, and the buyer contacts the merchant. Kept in the tab: Quasar does not
+      // say so on the next load, where the page would otherwise offer the payment again
       const refusedForGood = (txKey: string) => {
-        forgetHandOver(txKey);
         if (!quiet()) {
-          update({ txKey, error: submitFailedError(), ...(closed() ? {} : { phase: 'unconfirmed' as const }) });
+          update({ txKey, error: invoiceFullError(), ...(closed() ? {} : { phase: 'unconfirmed' as const }) });
         }
+        offerAgain(0);
+      };
+      // Quasar keeps the hash of a transaction the chain shows paying the merchant, and one just sent is not on chain yet
+      const offerAgain = (attempt: number) => {
+        const pause = REFUSED_OFFERED_AGAIN_MS[attempt];
+        if (pause === undefined || destroyed) return;
+        const timer = setTimeout(() => {
+          submitRetries.delete(body.txKey);
+          if (destroyed) return;
+          api.submit(body).then(
+            (taken) => {
+              if (destroyed) return;
+              forgetHandOver(body.txKey);
+              handOver([body.txKey], body.txKey, taken?.status);
+            },
+            () => offerAgain(attempt + 1),
+          );
+        }, pause);
+        submitRetries.set(body.txKey, timer);
       };
       if (!quiet() && !closed()) update({ phase: 'submitting', error: null });
       // The same transaction handed over again: this hand-over replaces its retries
@@ -1612,7 +1646,12 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
               .catch((again: unknown) => {
                 if (destroyed) return;
                 if (retryable(again)) return retry(attempt + 1);
-                if (tooManyPayments(again)) return refusedForGood(body.txKey);
+                if (tooManyPayments(again)) {
+                  // The page follows a newer payment by now: this one must not take its place
+                  if (waiting()) refusedForGood(body.txKey);
+                  else forgetHandOver(body.txKey);
+                  return;
+                }
                 forgetHandOver(body.txKey);
                 // Another invoice handed it over first: followed while the page still waits for this hand-over
                 if (takenElsewhere(again)) {

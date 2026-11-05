@@ -41,13 +41,18 @@ export function contactHref(
 const LEFT_THE_WALLET: Partial<
   Record<
     UnconfirmedFollowUp,
-    'unconfirmedClosed' | 'unconfirmedTakenElsewhere' | 'unconfirmedSettlementRetrying' | 'unconfirmedSettlementFailed'
+    | 'unconfirmedClosed'
+    | 'unconfirmedTakenElsewhere'
+    | 'unconfirmedSettlementRetrying'
+    | 'unconfirmedSettlementFailed'
+    | 'unconfirmedInvoiceFull'
   >
 > = {
   closed: 'unconfirmedClosed',
   takenElsewhere: 'unconfirmedTakenElsewhere',
   settlementRetrying: 'unconfirmedSettlementRetrying',
   settlementFailed: 'unconfirmedSettlementFailed',
+  invoiceFull: 'unconfirmedInvoiceFull',
 };
 
 /**
@@ -149,6 +154,9 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.method.payerNotExpected;
     case 'too_many_payments':
       return formatLabel(labels.method.tooManyPayments, { merchant });
+    // Only a wallet that cannot sign for Quasar hears this: one that can is asked to
+    case 'too_many_payers':
+      return formatLabel(labels.method.tooManyPayers, { merchant });
     case 'native_from_contract':
       return labels.method.nativeFromSmartWallet;
     case 'rate_limited':

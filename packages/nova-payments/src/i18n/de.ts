@@ -55,6 +55,7 @@ export const deLabels: NovaPaymentsLabels = {
     consentRequired: 'Zum Fortfahren erforderlich.',
     noMethods: 'Diese Rechnung kann derzeit mit keiner Methode bezahlt werden. Wenden Sie sich an den Verkäufer.',
     methodUnavailable: 'Diese Seite kann diese Methode nicht annehmen. Wählen Sie eine andere.',
+    tooManyPayers: 'Zu viele Wallets haben diese Rechnung versucht. Bitten Sie {merchant} um einen neuen Zahlungslink.',
     tooManyPayments: 'Diese Rechnung kann hier keine Zahlung mehr annehmen. Wende dich an {merchant}.',
     nativeFromSmartWallet: 'Eine Smart Wallet kann nicht mit dieser Coin bezahlen: Wähle einen Token.',
     payerNotExpected:
@@ -377,6 +378,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Quasar hat diese Zahlung innerhalb von 24 Stunden nicht im Netzwerk gefunden und prüft sie nicht mehr. Wenn sie Ihr Wallet verlassen hat, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedRetrying:
       'Diese Seite übergibt Ihre Zahlung weiterhin an Quasar. Lassen Sie sie geöffnet, bis die Zahlung hier erscheint.',
+    unconfirmedInvoiceFull:
+      'Diese Rechnung nimmt keine weiteren Zahlungen an, und Quasar verfolgt diese Zahlung nicht. Zahlen Sie nicht erneut; wenn sie Ihr Wallet verlassen hat, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedTakenElsewhere:
       'Diese Transaktion wurde zuerst für eine andere Rechnung übergeben. Quasar schreibt sie der Rechnung gut, die das sendende Wallet bestätigt hat, und diese Seite zeigt das Ergebnis, während sie die Zahlung verfolgt. Zahlen Sie nicht erneut; wenn Ihre Zahlung hier nicht erscheint, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedSettlementFailed:

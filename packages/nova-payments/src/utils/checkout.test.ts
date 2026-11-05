@@ -16,6 +16,7 @@ import {
   lockedPriceOnWallet,
   screensPayingWallets,
   sentBeforeDeadline,
+  takeOverOpens,
   unconfirmedFollowUp,
   unconfirmedTxKey,
 } from './checkout';
@@ -128,6 +129,25 @@ describe('checkoutScreen', () => {
       expect(checkoutScreen({ phase, checkout: replaceable })).not.toBe('autoPay');
       expect(checkoutScreen({ phase, checkout: paying }, { autoPay: true })).not.toBe('autoPay');
     }
+  });
+});
+
+describe('takeOverOpens', () => {
+  // An outcome keeps its own screen: a button there would close the sheet and open nothing
+  it('is true only where the permission screen can open', () => {
+    expect(takeOverOpens('selectMethod')).toBe(true);
+    expect(takeOverOpens('awaitingPayment')).toBe(true);
+    for (const phase of ['unconfirmed', 'blocked', 'paid', 'expired', undefined]) {
+      expect(takeOverOpens(phase)).toBe(false);
+    }
+  });
+});
+
+describe('unconfirmedFollowUp of an invoice that takes no more payments', () => {
+  it('names it for what it is', () => {
+    expect(unconfirmedFollowUp({ code: 'payment_unconfirmed', message: 'm', reason: 'too_many_payments' })).toBe(
+      'invoiceFull',
+    );
   });
 });
 

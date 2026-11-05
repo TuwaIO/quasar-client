@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
+import { takeOverOpens } from '../utils/checkout';
 import { formatTokenAmount, shortAddress } from '../utils/format';
 import { networkName } from '../utils/methods';
 import { addressOfWallet, formatPeriod, isSameWallet } from '../utils/outcome';
@@ -34,6 +35,7 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export function AutoPayOffScreen() {
   const {
     checkout,
+    state,
     store,
     labels,
     locale,
@@ -48,7 +50,8 @@ export function AutoPayOffScreen() {
   const [step, setStep] = useState<'idle' | 'wallet' | 'network'>('idle');
   const [problem, setProblem] = useState<PaymentWalletErrorKind | 'notYet' | 'notAsked' | null>(null);
   const offer = checkout?.autoCharge;
-  const replaceable = offer?.status === 'active' && Boolean(offer.replacement);
+  // Only where the screen that gives a new permission can open: an outcome keeps its own screen
+  const replaceable = offer?.status === 'active' && Boolean(offer.replacement) && takeOverOpens(state.phase);
   if (!checkout || offer?.status !== 'active' || !offer.permission || !offer.revocation) return null;
 
   const { permission, revocation } = offer;
@@ -152,7 +155,7 @@ export function AutoPayOffScreen() {
         ) : (
           <PrimaryButton onClick={() => void connectFamily('eip155')}>{labels.autoPayOff.connect}</PrimaryButton>
         )}
-        {/* Its last charge moved nothing, or it expired: this wallet may take over, with its own permission */}
+        {/* Its wallet cannot pay, or it expired: this wallet may take over, with its own permission */}
         {!payerConnected && wallet && replaceable && (
           <SecondaryButton
             onClick={() => {
