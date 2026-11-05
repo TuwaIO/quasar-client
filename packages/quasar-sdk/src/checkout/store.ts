@@ -583,6 +583,7 @@ const LATE_POLL_MS = 20_000;
  * when Quasar lists the reason without `movedMoney` (it marks the same reasons).
  */
 const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
+  'nonce_spent_unexplained',
   'no_matching_transfer',
   'reference_missing',
   'too_early',
@@ -605,6 +606,11 @@ const MOVED_MONEY_REASONS: ReadonlySet<string> = new Set([
  * invoice", and never a second payment.
  */
 const SETTLEMENT_FAILED = 'settlement_failed';
+/**
+ * A payment whose nonce went to a transaction Quasar could not find, a day after it learned of it: money may have left the
+ * wallet in that one, so the page offers no second payment, and the buyer can name it.
+ */
+const NONCE_SPENT = 'nonce_spent_unexplained';
 
 /**
  * The refusal of `/submit` for a transaction Quasar tracks for another invoice of the app (its hash was handed over
@@ -621,7 +627,7 @@ const REFUSED_OFFERED_AGAIN_MS = [60_000, 5 * 60_000, 15 * 60_000];
  * Rejection reasons of a payment whose tracker lost sight of it, which Quasar reads again for 24 hours: once Quasar
  * reports no payment that may still arrive, such a rejection was resolved (verified, or closed for good).
  */
-const RE_READ_REASONS: ReadonlySet<string> = new Set(['timeout', 'not_found', 'replaced']);
+const RE_READ_REASONS: ReadonlySet<string> = new Set(['timeout', 'not_found', 'replaced', 'nonce_spent']);
 
 /** The `sessionStorage` entry of the hand-overs Quasar has not taken yet, by checkout token. */
 const HAND_OVERS_KEY = 'quasar-sdk:checkoutHandOvers:';
@@ -842,6 +848,7 @@ function endedError(ended: Ending): CheckoutError {
   const reason = ended.reason ? { reason: ended.reason } : {};
   // Confirmed on chain, not recorded yet: the merchant has the money, Quasar may still retry it
   if (ended.reason === SETTLEMENT_FAILED) return settlementFailedError(ended.rechecked);
+  if (ended.reason === NONCE_SPENT) return nonceSpentError();
   if (ended.reason === CHARGE_AFTER_REQUOTE) {
     return {
       code: 'payment_mismatch',
@@ -949,6 +956,14 @@ const settlementFailedError = (rechecked = false): CheckoutError => ({
   ...(rechecked ? { rechecked: true as const } : {}),
 });
 
+/** The error of a payment whose nonce went to a transaction Quasar could not find. */
+const nonceSpentError = (): CheckoutError => ({
+  code: 'payment_unconfirmed',
+  message:
+    'The wallet used the number of this transaction for another one, which Quasar could not find, so money may have left the wallet. Do not pay again yet: name that transaction, or contact the merchant.',
+  reason: NONCE_SPENT,
+});
+
 /** The error of a transaction another invoice handed over first ({@link CheckoutState.submit}). */
 const takenElsewhereError = (): CheckoutError => ({
   code: 'payment_unconfirmed',
@@ -966,7 +981,10 @@ const takenElsewhereError = (): CheckoutError => ({
  */
 const keepsPaymentShut = (error: CheckoutError | null) =>
   error?.code === 'payment_unconfirmed' &&
-  (error.reason === TAKEN_ELSEWHERE || error.reason === SETTLEMENT_FAILED || error.reason === INVOICE_FULL);
+  (error.reason === TAKEN_ELSEWHERE ||
+    error.reason === SETTLEMENT_FAILED ||
+    error.reason === NONCE_SPENT ||
+    error.reason === INVOICE_FULL);
 
 /** Whether the error is the store's word on a transaction another invoice handed over first. */
 const isTakenElsewhere = (error: CheckoutError | null) =>

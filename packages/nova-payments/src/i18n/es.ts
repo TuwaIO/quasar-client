@@ -389,6 +389,8 @@ export const esLabels: NovaPaymentsLabels = {
       'Esta factura no admite más pagos y Quasar no sigue este. No vuelvas a pagar; si salió de tu wallet, contacta con {merchant} indicando el hash de la transacción.',
     unconfirmedTakenElsewhere:
       'Esta transacción se entregó primero para otra factura. Quasar la abona a la factura que confirmó la billetera que la envió, y esta página muestra el resultado mientras sigue el pago. No vuelvas a pagar; si tu pago no aparece aquí, contacta con {merchant} e indica el hash de la transacción.',
+    unconfirmedNonceSpent:
+      'Tu billetera usó el número de esta transacción para otra que Quasar no pudo encontrar, así que puede haber salido dinero de tu billetera. No pagues de nuevo por ahora. Si la aceleraste, indica su hash abajo; si no, contacta a {merchant} con este hash de transacción.',
     unconfirmedSettlementFailed:
       'La red confirmó tu pago, pero Quasar no lo ha registrado. No vuelvas a pagar; contacta con {merchant} e indica el hash de la transacción.',
     unconfirmedSettlementRetrying:

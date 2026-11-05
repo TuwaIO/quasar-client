@@ -801,6 +801,14 @@ export type NovaPaymentsLabels = {
      */
     unconfirmedSettlementFailed: string;
     /**
+     * Instead of `unconfirmedText` and `unconfirmedNote`, when the wallet used the number of the transaction for another one
+     * Quasar could not find (`nonce_spent_unexplained`): money may have left the wallet, so the checkout offers no payment.
+     * `{merchant}` (default: `Your wallet used the number of this transaction for another one, which Quasar could not find,
+     * so money may have left your wallet. Do not pay again yet. If you sped it up, name its hash below; otherwise contact
+     * {merchant} with this transaction hash.`)
+     */
+    unconfirmedNonceSpent: string;
+    /**
      * Instead of `unconfirmedSettlementFailed` while Quasar still settles the payment again daily (`rechecked`, for 30
      * days after it learned of it): `{merchant}` (default: `The network confirmed your payment, but Quasar has not
      * recorded it yet. Quasar tries again daily, for 30 days after it learned of the payment. Do not pay again; contact

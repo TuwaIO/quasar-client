@@ -226,6 +226,13 @@ describe('methodErrorText', () => {
     ).toBe(SETTLEMENT_FAILED);
   });
 
+  // A plain "something went wrong" with a second payment on offer, though money may have left the wallet
+  it('says that money may have left the wallet when a nonce went to a transaction nothing found', () => {
+    const error = { code: 'payment_unconfirmed', message: 'raw', reason: 'nonce_spent_unexplained' } as never;
+    expect(methodErrorText(error, defaultLabels, 'Cosmos')).toContain('money may have left your wallet');
+    expect(needsLeaveConfirm('selectMethod', error)).toBe(false);
+  });
+
   it('says what went wrong and what to do, in the language of the checkout', () => {
     const text = (code: string) => methodErrorText({ code, message: 'raw' }, defaultLabels);
     expect(text('screening_unavailable')).toBe(defaultLabels.pay.screeningUnavailable);

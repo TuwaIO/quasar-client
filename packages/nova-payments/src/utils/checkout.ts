@@ -599,6 +599,7 @@ export function isInvoicePaymentUnresolved(
  * payment.
  */
 export type UnconfirmedFollowUp =
+  | 'nonceSpent'
   | 'rechecked'
   | 'retrying'
   | 'notReceived'
@@ -630,6 +631,7 @@ export function unconfirmedFollowUp(error: CheckoutError | null | undefined): Un
     return rechecked === true ? 'settlementRetrying' : 'settlementFailed';
   }
   if (code !== 'payment_unconfirmed') return null;
+  if (reason === 'nonce_spent_unexplained') return 'nonceSpent';
   if (reason === TAKEN_ELSEWHERE) return 'takenElsewhere';
   if (reason === 'submit_retrying') return 'retrying';
   if (reason === 'submit_failed') return 'notReceived';

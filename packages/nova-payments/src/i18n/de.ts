@@ -408,6 +408,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Diese Rechnung nimmt keine weiteren Zahlungen an, und Quasar verfolgt diese Zahlung nicht. Zahlen Sie nicht erneut; wenn sie Ihr Wallet verlassen hat, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedTakenElsewhere:
       'Diese Transaktion wurde zuerst für eine andere Rechnung übergeben. Quasar schreibt sie der Rechnung gut, die das sendende Wallet bestätigt hat, und diese Seite zeigt das Ergebnis, während sie die Zahlung verfolgt. Zahlen Sie nicht erneut; wenn Ihre Zahlung hier nicht erscheint, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
+    unconfirmedNonceSpent:
+      'Ihre Wallet hat die Nummer dieser Transaktion für eine andere verwendet, die Quasar nicht finden konnte. Es kann also Geld aus Ihrer Wallet abgeflossen sein. Zahlen Sie vorerst nicht erneut. Wenn Sie sie beschleunigt haben, geben Sie unten ihren Hash an, sonst wenden Sie sich mit diesem Transaktions-Hash an {merchant}.',
     unconfirmedSettlementFailed:
       'Das Netzwerk hat Ihre Zahlung bestätigt, aber Quasar hat sie nicht erfasst. Zahlen Sie nicht erneut; wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedSettlementRetrying:

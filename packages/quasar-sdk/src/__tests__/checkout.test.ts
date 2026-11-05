@@ -2327,6 +2327,36 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
     expect(checkout.getState()).toMatchObject({ phase: 'paid', error: null, paymentOnTheWay: false });
   });
 
+  // Money may have left the wallet in a transaction Quasar could not find: "does not pay the invoice" and a second payment
+  // were both wrong, and only the buyer can name that transaction
+  it('offers no second payment for a payment whose nonce went to a transaction nothing found', async () => {
+    const closed = rejection('0xfeed', 'nonce_spent_unexplained', false, { movedMoney: true });
+    answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [closed] });
+    const reopened = store();
+    await reopened.getState().load();
+    expect(reopened.getState()).toMatchObject({
+      phase: 'unconfirmed',
+      error: { code: 'payment_unconfirmed', reason: 'nonce_spent_unexplained' },
+    });
+    expect(reopened.getState().error?.message).not.toMatch(/does not pay/);
+    reopened.getState().payAgain();
+    expect(reopened.getState().phase).toBe('unconfirmed');
+    reopened.getState().destroy();
+  });
+
+  // Seen on the network and not mined for a day: a wallet may still hold it, so the buyer checks it before paying again
+  it('asks to check the wallet for a payment that was seen and not mined for a day', async () => {
+    const closed = rejection('0xfeed', 'unmined_after_24h', false);
+    answer({ pendingPayments: 0, unresolvedPayments: 0, rejectedPayments: [closed] });
+    const reopened = store();
+    await reopened.getState().load();
+    expect(reopened.getState()).toMatchObject({
+      phase: 'unconfirmed',
+      error: { code: 'payment_unconfirmed', reason: 'unmined_after_24h' },
+    });
+    reopened.getState().destroy();
+  });
+
   // M1: a payment confirmed on chain whose settlement keeps failing is not "does not pay the invoice"
   it('asks to contact the merchant, with no second payment, while Quasar retries settling a confirmed payment', async () => {
     const failed = rejection('0xfeed', 'settlement_failed', false, { movedMoney: true });

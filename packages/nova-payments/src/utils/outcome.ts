@@ -42,12 +42,14 @@ const LEFT_THE_WALLET: Partial<
   Record<
     UnconfirmedFollowUp,
     | 'unconfirmedClosed'
+    | 'unconfirmedNonceSpent'
     | 'unconfirmedTakenElsewhere'
     | 'unconfirmedSettlementRetrying'
     | 'unconfirmedSettlementFailed'
     | 'unconfirmedInvoiceFull'
   >
 > = {
+  nonceSpent: 'unconfirmedNonceSpent',
   closed: 'unconfirmedClosed',
   takenElsewhere: 'unconfirmedTakenElsewhere',
   settlementRetrying: 'unconfirmedSettlementRetrying',

@@ -356,8 +356,12 @@ const REFUSAL_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']
 // How long a refund on its way looks normal. After that the window says what it knows: Quasar has not seen it land, and a
 // replacement in the wallet has another hash than the one sent
 const SLOW_REFUND_MS = 10 * 60 * 1000;
-const isSlow = (refund: Refund | null | undefined) =>
-  Boolean(refund?.createdAt) && Date.now() - Date.parse(refund!.createdAt) > SLOW_REFUND_MS;
+// Since it last changed, as Quasar counts before it takes the hash a merchant names: a refund asked for long before it was
+// sent is not slow yet
+const isSlow = (refund: Refund | null | undefined) => {
+  const since = refund?.updatedAt ?? refund?.createdAt;
+  return Boolean(since) && Date.now() - Date.parse(since as string) > SLOW_REFUND_MS;
+};
 
 /** A refusal of Quasar in the words of the window. @internal */
 export const refusalText = (error: { code: string }, text: NovaPaymentsLabels['refund']): string =>

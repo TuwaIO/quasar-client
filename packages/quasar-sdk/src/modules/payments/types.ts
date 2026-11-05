@@ -620,6 +620,8 @@ export interface Refund {
   heldTransfer: string | null;
   /** When it was asked for. */
   createdAt: string;
+  /** When it last changed; absent from an engine that does not send it yet. */
+  updatedAt?: string | null;
   /** When it was confirmed. */
   confirmedAt: string | null;
 }

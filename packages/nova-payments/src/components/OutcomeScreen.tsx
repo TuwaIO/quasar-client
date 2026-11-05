@@ -64,6 +64,7 @@ const isUnconfirmed = (error: { code: string } | null | undefined) => error?.cod
 
 /** The note about a payment Quasar did not confirm, by what Quasar does with it. */
 const FOLLOW_UP_NOTE: Record<UnconfirmedFollowUp, keyof NovaPaymentsLabels['outcome']> = {
+  nonceSpent: 'unconfirmedNonceSpent',
   rechecked: 'unconfirmedNote',
   retrying: 'unconfirmedRetrying',
   notReceived: 'unconfirmedNotReceived',
@@ -80,6 +81,7 @@ const FOLLOW_UP_NOTE: Record<UnconfirmedFollowUp, keyof NovaPaymentsLabels['outc
  * which invoice it pays, or has not recorded it yet.
  */
 const FOR_THE_SELLER: ReadonlySet<UnconfirmedFollowUp> = new Set([
+  'nonceSpent',
   'notReceived',
   'contact',
   'closed',
@@ -94,6 +96,7 @@ const FOR_THE_SELLER: ReadonlySet<UnconfirmedFollowUp> = new Set([
  * payment did not leave my wallet" would not be true, and `payAgain` of the checkout store does nothing for them).
  */
 const LEFT_THE_WALLET: ReadonlySet<UnconfirmedFollowUp> = new Set([
+  'nonceSpent',
   'takenElsewhere',
   'settlementRetrying',
   'settlementFailed',
@@ -285,6 +288,8 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
           <>
             <Text>{followUpNote(followUp)}</Text>
             {transaction(followUp)}
+            {/* Only the buyer's wallet shows the transaction Quasar could not find */}
+            {followUp === 'nonceSpent' && <NameTransaction />}
           </>
         );
       } else {
