@@ -53,8 +53,9 @@ export function PaidScreen() {
   } = context;
   const child = context.customization.childCustomizations;
   const facts = usePaymentFacts();
-  // The time the checkout saw the payment settle: the view carries no payment time
-  const [paidAt] = useState(now);
+  // The clock of the page only for an engine that does not send the time yet: a receipt opened from its link days later
+  // once said the payment came just now
+  const [seenAt] = useState(now);
   const merchant = checkout?.merchant.name ?? '';
   // A modal belongs to the page under it, the seller's: it closes rather than loads that page again, unless the app
   // asks for the return (autoReturnSeconds)
@@ -77,6 +78,7 @@ export function PaidScreen() {
     checkout.invoice.refundedTotalMinor && BigInt(checkout.invoice.refundedTotalMinor) > 0n
       ? formatFiat(minorToDecimal(checkout.invoice.refundedTotalMinor), locale)
       : null;
+  const paidAt = checkout.invoice.paidAt ? Date.parse(checkout.invoice.paidAt) : seenAt;
   const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(paidAt);
 
   return (

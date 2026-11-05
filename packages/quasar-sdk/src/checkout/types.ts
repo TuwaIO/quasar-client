@@ -78,6 +78,8 @@ export interface CheckoutInvoice {
   review: CheckoutReview | null;
   /** What was refunded, in minor units (cents) of the invoice currency. */
   refundedTotalMinor: string | null;
+  /** When the invoice was paid; `null` until then, and absent from an engine that does not send it yet. */
+  paidAt?: string | null;
   /**
    * Payments of the invoice handed over and still on their way, whoever handed them over: tracked transactions
    * settlement has not verified or rejected yet (recorded within the last 25 minutes: Quasar stops counting a stuck
@@ -217,10 +219,13 @@ export interface CheckoutSubscription {
   intervalCount: number;
   /** The period this invoice bills, from 1. */
   period: number;
-  /** When the period starts. */
-  periodStart: string;
-  /** When it ends, which is when the next one is billed. */
-  periodEnd: string;
+  /**
+   * When the period starts; `null` for a period before the subscription was last resumed, as resuming counts the periods
+   * again from that moment.
+   */
+  periodStart: string | null;
+  /** When it ends, which is when the next one is billed; `null` like {@link CheckoutSubscription.periodStart}. */
+  periodEnd: string | null;
   /** How many periods the subscription runs; `null` until it is cancelled. */
   cycles: number | null;
   /** When it ends at the latest, if set. */

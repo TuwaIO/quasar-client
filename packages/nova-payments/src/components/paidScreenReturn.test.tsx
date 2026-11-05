@@ -63,6 +63,39 @@ afterEach(() => unmount());
 
 // After paying for quota in the dashboard, the checkout counted down and loaded the billing page again
 // (its successUrl), closing everything at once. A checkout opened as a modal belongs to the page under it
+// Found on the stand: a receipt opened from its link hours after the payment said it came just now
+describe('the time of a paid invoice', () => {
+  const textOf = (tree: unknown) =>
+    fixture
+      .elements(tree as never)
+      .flatMap((element) => (typeof element.props.children === 'string' ? [element.props.children] : []))
+      .join(' ');
+  const inTree = (tree: unknown) =>
+    JSON.stringify(tree, (_key, value) => (typeof value === 'function' ? undefined : value));
+
+  it('is when it was paid, not when the page was opened', () => {
+    const paidAt = '2020-03-14T09:26:00.000Z';
+    autoReturn.seconds = [];
+    const checkout = {
+      ...fixture.checkout,
+      invoice: { ...fixture.checkout.invoice, status: 'paid', paidAt },
+    } as typeof fixture.checkout;
+    ctx = fixture.checkoutContextValue(
+      {},
+      {
+        checkout,
+        openedPaid: true,
+        state: { ...fixture.checkoutContextValue({}).state, checkout, phase: 'paid' } as never,
+      },
+    );
+    const tree = render(PaidScreen, {});
+    const date = new Intl.DateTimeFormat(ctx.locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
+      Date.parse(paidAt),
+    );
+    expect(inTree(tree) + textOf(tree)).toContain(date);
+  });
+});
+
 describe('the amount of a paid invoice', () => {
   const rest = {
     methodId: 'usdc-base',
