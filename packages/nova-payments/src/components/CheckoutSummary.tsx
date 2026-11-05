@@ -23,15 +23,18 @@ const hostOf = (url: string) => {
 /** The merchant's logo (or the first letter of its name), name and website, and the test badge. @internal */
 export function MerchantBadge({ compact = false }: { compact?: boolean }) {
   const { checkout, state, labels } = useCheckoutContext();
+  // A logo that does not load falls back to the letter, as with no logo at all
+  const [logoFailed, setLogoFailed] = useState(false);
   if (!checkout) return null;
   const { merchant, invoice } = checkout;
   const size = compact ? 'novapay:h-8 novapay:w-8' : 'novapay:h-9 novapay:w-9';
   return (
     <div className="novapay:flex novapay:min-w-0 novapay:items-center novapay:gap-2.5">
-      {state.logoUrl ? (
+      {state.logoUrl && !logoFailed ? (
         <img
           src={state.logoUrl}
           alt=""
+          onError={() => setLogoFailed(true)}
           className={cn(size, 'novapay:shrink-0 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:object-contain')}
         />
       ) : (
@@ -158,7 +161,7 @@ export function DeadlineTimer() {
   }).format(new Date(dueAt));
   return (
     <div className="novapay:flex novapay:items-center novapay:justify-between novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:py-2.5">
-      <div className="novapay:flex novapay:flex-col novapay:gap-0.5">
+      <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-0.5">
         <span className={cn(mono, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
           {state === 'closed' ? labels.summary.refundAfter : labels.summary.payWithin}
         </span>
@@ -167,7 +170,10 @@ export function DeadlineTimer() {
         </span>
       </div>
       {/* role="timer": not announced every second, the checkout announces 10, 5 and 1 minutes left (WCAG 2.2.1) */}
-      <span role="timer" className={cn(mono, 'novapay:text-lg novapay:font-bold')}>
+      <span
+        role="timer"
+        className={cn(mono, 'novapay:shrink-0 novapay:whitespace-nowrap novapay:text-lg novapay:font-bold')}
+      >
         {formatCountdown(Date.parse(dueAt) - now)}
       </span>
     </div>
@@ -367,7 +373,10 @@ export function CompactSummary({ className }: { className?: string } = {}) {
         {dueAt && (
           <span
             role="timer"
-            className={cn(mono, 'novapay:flex novapay:items-center novapay:gap-1 novapay:text-xs novapay:font-bold')}
+            className={cn(
+              mono,
+              'novapay:flex novapay:items-center novapay:gap-1 novapay:whitespace-nowrap novapay:text-xs novapay:font-bold',
+            )}
           >
             <ClockIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5 novapay:text-[var(--tuwa-text-secondary)]" />
             {formatCountdown(dueAt - now)}

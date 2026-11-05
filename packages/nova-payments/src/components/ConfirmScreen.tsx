@@ -70,7 +70,11 @@ export function ConfirmScreen() {
               <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" {...child?.hashLink} />
             </DetailRow>
           )}
-          {facts.from && <DetailRow name={labels.confirm.from}>{facts.from}</DetailRow>}
+          {facts.fromAddress && (
+            <DetailRow name={labels.confirm.from}>
+              <HashLink hash={facts.fromAddress} explorerUrl={facts.fromUrl} variant="compact" {...child?.hashLink} />
+            </DetailRow>
+          )}
         </DetailsCard>
         <p
           role="status"

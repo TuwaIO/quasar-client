@@ -83,7 +83,8 @@ export function shortAddress(address: string, head = address.startsWith('0x') ? 
 const pad = (value: number) => String(value).padStart(2, '0');
 
 /**
- * Time left as a countdown: `mm:ss` under an hour, `hh:mm:ss` under a day, `Nd hh:mm:ss` beyond.
+ * Time left as a countdown: `mm:ss` under an hour, `hh:mm:ss` under a day, `Nd hh:mm` beyond, where seconds say nothing
+ * and would not fit beside the date in the summary.
  *
  * @param ms - Milliseconds left; a negative value counts as zero.
  * @returns The countdown.
@@ -94,7 +95,7 @@ export function formatCountdown(ms: number): string {
   const hours = Math.floor((total % 86_400) / 3600);
   const minutes = Math.floor((total % 3600) / 60);
   const seconds = total % 60;
-  if (days > 0) return `${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  if (days > 0) return `${days}d ${pad(hours)}:${pad(minutes)}`;
   if (hours > 0) return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   return `${pad(minutes)}:${pad(seconds)}`;
 }

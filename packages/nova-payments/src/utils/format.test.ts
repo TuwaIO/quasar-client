@@ -37,6 +37,15 @@ describe('amounts', () => {
 });
 
 describe('addresses', () => {
+  // With days the seconds say nothing, and the countdown must fit beside the date on one line
+  it('counts down in minutes while days are left', () => {
+    const day = 86_400_000;
+    expect(formatCountdown(6 * day + 23 * 3_600_000 + 57 * 60_000 + 51_000)).toBe('6d 23:57');
+    expect(formatCountdown(23 * 3_600_000 + 57 * 60_000 + 51_000)).toBe('23:57:51');
+    expect(formatCountdown(57 * 60_000 + 51_000)).toBe('57:51');
+    expect(formatCountdown(-1)).toBe('00:00');
+  });
+
   it('keeps the start and the end of an address', () => {
     expect(shortAddress('0x1111111111111111111111111111111111112222')).toBe('0x1111…2222');
     expect(shortAddress('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')).toBe('7xKX…gAsU');
@@ -49,7 +58,7 @@ describe('countdown', () => {
     expect(formatCountdown(85_267_000)).toBe('23:41:07');
     expect(formatCountdown(59_000)).toBe('00:59');
     expect(formatCountdown(872_000)).toBe('14:32');
-    expect(formatCountdown(2 * 86_400_000 + 3_723_000)).toBe('2d 01:02:03');
+    expect(formatCountdown(2 * 86_400_000 + 3_723_000)).toBe('2d 01:02');
     expect(formatCountdown(-5)).toBe('00:00');
   });
 });

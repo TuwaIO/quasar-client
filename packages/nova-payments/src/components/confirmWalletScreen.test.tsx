@@ -133,8 +133,11 @@ describe('the step that confirms the paying wallet', () => {
     expect(prompt.props.text).toBe(
       'Sign the message that confirms this wallet pays invoice INV-1 of Cosmos. It is free and moves no money.',
     );
-    // The step under it is out of reach while the wallet asks
-    expect(fixture.elements(tree).some((element) => element.props.inert === true)).toBe(true);
+    // The step leaves the layout while the wallet asks: the window takes its place, never both on the screen
+    const hidden = fixture.elements(tree).find((element) => element.props.inert === true) as ReactElement<{
+      className: string;
+    }>;
+    expect(hidden.props.className).toContain('novapay:hidden');
     (prompt.props.onCancel as () => void)();
     expect(flow.dismiss).toHaveBeenCalled();
   });

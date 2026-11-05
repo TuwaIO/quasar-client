@@ -220,6 +220,10 @@ describe('paymentsEVMAdapter', () => {
     expect(adapter.explorerUrl!({ chainId: BASE_SEPOLIA, txKey: '0xhash' })).toBe(
       'https://sepolia.basescan.org/tx/0xhash',
     );
+    expect(adapter.explorerAddressUrl!({ chainId: BASE_SEPOLIA, address: '0xme' })).toBe(
+      'https://sepolia.basescan.org/address/0xme',
+    );
+    expect(adapter.explorerAddressUrl!({ chainId: 'eip155:1', address: '0xme' })).toBeUndefined();
     expect(adapter.explorerUrl!({ chainId: 'eip155:1', txKey: '0xhash' })).toBeUndefined();
   });
 

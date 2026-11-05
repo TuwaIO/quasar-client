@@ -76,6 +76,7 @@ export function ScreenContent({
  * @internal
  */
 export function ScreenFooter({ children }: { children: ReactNode }) {
+  // With nothing in it (children may all render nothing) neither its rule nor its padding shows: `empty:hidden`
   const context = useOptionalCheckoutContext();
   const ref = useRef<HTMLElement>(null);
   // The scrolling area keeps its bottom padding at the footer's height, so the browser scrolls a focused field above
@@ -97,7 +98,7 @@ export function ScreenFooter({ children }: { children: ReactNode }) {
     <footer
       ref={ref}
       className={cn(
-        'novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center',
+        'novapay:empty:hidden novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center',
         partClass(context, 'footer'),
       )}
     >

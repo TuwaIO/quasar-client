@@ -123,6 +123,13 @@ export interface PaymentsAdapter {
    */
   explorerUrl?: (params: { chainId: string; txKey: string }) => string | undefined;
   /**
+   * The link of a wallet address on a block explorer of its chain.
+   *
+   * @param params - The chain and the address.
+   * @returns The link, or `undefined` when the chain has no known explorer.
+   */
+  explorerAddressUrl?: (params: { chainId: string; address: string }) => string | undefined;
+  /**
    * Asks the wallet for the ERC-7715 permission of a subscription's automatic payments, with the wallet's prompt.
    *
    * @param params - The request of the checkout's auto-charge offer and the granting account.

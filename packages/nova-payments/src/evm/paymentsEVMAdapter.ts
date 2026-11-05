@@ -188,6 +188,12 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       return url ? `${url}/tx/${txKey}` : undefined;
     },
 
+    explorerAddressUrl: ({ chainId, address }) => {
+      const chain = config.chains.find((item) => item.id === toEvmChainId(chainId));
+      const url = chain?.blockExplorers?.default.url;
+      return url ? `${url}/address/${address}` : undefined;
+    },
+
     requestPermission: async ({ request, account }) => {
       // The ERC-7715 request as MetaMask takes it (checked live with the Quasar engine), from the granting account
       const client = await getConnectorClient(config, { chainId: Number.parseInt(request.chainId, 16) });

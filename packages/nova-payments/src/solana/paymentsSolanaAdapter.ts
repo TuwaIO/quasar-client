@@ -229,6 +229,8 @@ export function paymentsSolanaAdapter({ rpcUrls }: PaymentsSolanaAdapterOptions 
 
     explorerUrl: ({ chainId, txKey }) => getSolanaExplorerLink(`/tx/${txKey}`, clusterOf(chainId)),
 
+    explorerAddressUrl: ({ chainId, address }) => getSolanaExplorerLink(`/address/${address}`, clusterOf(chainId)),
+
     pulsarTransaction: ({ txKey, instructions, account, connectorType, title, description, payload }) => {
       const solana = solanaInstructions(instructions);
       const rpcUrl = rpcUrls?.[clusterOf(solana.chainId)];

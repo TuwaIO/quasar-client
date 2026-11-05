@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePayerProof } from '../hooks/usePayerProof';
+import { useStepHeight } from '../hooks/useStepHeight';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal, shortAddress } from '../utils/format';
 import { methodFamily, networkName } from '../utils/methods';
@@ -54,6 +55,7 @@ export function ConfirmWalletScreen() {
   const area = useRef<HTMLDivElement>(null);
   // The window of the wallet took the focus; when it closes, the step's heading takes it back (WCAG 2.4.3)
   const prompting = proof.step !== 'idle';
+  const [stepRef, stepHeight] = useStepHeight(prompting);
   const wasPrompting = useRef(false);
   useEffect(() => {
     if (wasPrompting.current && !prompting) {
@@ -85,7 +87,12 @@ export function ConfirmWalletScreen() {
 
   return (
     <div ref={area} className="novapay:relative novapay:flex novapay:flex-1 novapay:flex-col">
-      <div inert={prompting} className="novapay:flex novapay:flex-1 novapay:flex-col">
+      {/* While the wallet asks, the step leaves the layout (keeping its state): the prompt takes its place */}
+      <div
+        ref={stepRef}
+        inert={prompting}
+        className={cn('novapay:flex novapay:flex-1 novapay:flex-col', prompting && 'novapay:hidden')}
+      >
         <ScreenContent title={labels.payerProof.title} subtitle={labels.payerProof.text}>
           {wallet && (
             <div className="novapay:flex novapay:items-center novapay:gap-2.5 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2">
@@ -155,6 +162,7 @@ export function ConfirmWalletScreen() {
           kind={proof.step === 'switching' ? 'switch' : 'proof'}
           walletName={walletName}
           walletId={wallet?.walletId ?? ''}
+          walletIcon={wallet?.icon}
           amount={amount ?? ''}
           merchant={merchant}
           network={network}
@@ -174,6 +182,7 @@ export function ConfirmWalletScreen() {
           }
           onRetry={retry}
           onCancel={proof.dismiss}
+          stepHeight={stepHeight}
         />
       )}
     </div>

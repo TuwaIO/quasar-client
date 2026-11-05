@@ -74,6 +74,36 @@ The fee, or `null` when it cannot be estimated.
 
 ***
 
+### explorerAddressUrl?
+
+> `optional` **explorerAddressUrl?**: (`params`) => `string` \| `undefined`
+
+Defined in: [nova-payments/src/adapters/types.ts:131](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L131)
+
+The link of a wallet address on a block explorer of its chain.
+
+#### Parameters
+
+##### params
+
+The chain and the address.
+
+###### address
+
+`string`
+
+###### chainId
+
+`string`
+
+#### Returns
+
+`string` \| `undefined`
+
+The link, or `undefined` when the chain has no known explorer.
+
+***
+
 ### explorerUrl?
 
 > `optional` **explorerUrl?**: (`params`) => `string` \| `undefined`
@@ -152,7 +182,7 @@ The balance, in base units.
 
 > `optional` **pulsarTransaction?**: (`params`) => `Transaction`
 
-Defined in: [nova-payments/src/adapters/types.ts:155](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L155)
+Defined in: [nova-payments/src/adapters/types.ts:162](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L162)
 
 Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
 it (and Nova Transactions shows its toast) once the checkout closes.
@@ -177,7 +207,7 @@ The pending transaction, for `injectExternalPendingTxs` of the Pulsar store.
 
 > `optional` **requestPermission?**: (`params`) => `Promise`\<`Omit`\<[`GrantPermissionParams`](?path=/docs/packages-quasar-sdk-checkout-interfaces-grantpermissionparams--docs), `"payer"`\>\>
 
-Defined in: [nova-payments/src/adapters/types.ts:131](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L131)
+Defined in: [nova-payments/src/adapters/types.ts:138](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L138)
 
 Asks the wallet for the ERC-7715 permission of a subscription's automatic payments, with the wallet's prompt.
 
@@ -207,7 +237,7 @@ What the wallet granted, for `grantPermission` of the checkout store (without th
 
 > `optional` **revokePermission?**: (`params`) => `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:142](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L142)
+Defined in: [nova-payments/src/adapters/types.ts:149](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L149)
 
 Sends the transaction that revokes the permission of a subscription's automatic payments, with the wallet's prompt,
 and waits until the network includes it. The wallet pays its network fee.
@@ -253,7 +283,7 @@ permission and what to call once the wallet has sent it: a failure while waiting
 
 > `optional` **sendSponsoredCalls?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:156](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L156)
+Defined in: [nova-payments/src/adapters/types.ts:163](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L163)
 
 #### Parameters
 
