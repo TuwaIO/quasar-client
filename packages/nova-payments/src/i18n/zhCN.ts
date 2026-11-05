@@ -440,6 +440,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     refunded: '已退款',
     creditNote: '贷项通知单',
     done: '完成',
+    failedShort: '部分退款已到达买方。请再次发送退款：只会发送缺少的部分。',
     failedTitle: '退款失败',
     failedText: '交易在 {network} 上失败，只花费了网络费用。请重新发送退款。',
     failedHeldNote: '该转账仍被暂扣。请关闭此窗口，其所在行会说明下一步操作。',

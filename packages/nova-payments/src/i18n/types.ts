@@ -1003,6 +1003,8 @@ export type NovaPaymentsLabels = {
     /** Button that closes the window once refunded (default: `Done`) */
     done: string;
     /** Heading when the transaction failed (default: `The refund failed`) */
+    /** Under the heading when part of the refund reached the buyer: asking again sends only what is missing. */
+    failedShort: string;
     failedTitle: string;
     /** Under it; `{network}` (default: `The transaction failed on {network}; only the network fee was spent. Send the refund again.`) */
     failedText: string;

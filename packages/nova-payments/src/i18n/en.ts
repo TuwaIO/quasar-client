@@ -461,6 +461,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     refunded: 'Refunded',
     creditNote: 'Credit note',
     done: 'Done',
+    failedShort: 'Part of the refund reached the buyer. Send the refund again: only what is missing goes.',
     failedTitle: 'The refund failed',
     failedText: 'The transaction failed on {network}; only the network fee was spent. Send the refund again.',
     failedHeldNote: 'The transfer stays held. Close this window: its row says what to do next.',

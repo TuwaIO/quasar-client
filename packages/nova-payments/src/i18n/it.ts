@@ -476,6 +476,7 @@ export const itLabels: NovaPaymentsLabels = {
     refunded: 'Rimborsato',
     creditNote: 'Nota di credito',
     done: 'Fatto',
+    failedShort: "Parte del rimborso è arrivata all'acquirente. Invia di nuovo il rimborso: parte solo ciò che manca.",
     failedTitle: 'Il rimborso non è riuscito',
     failedText:
       'La transazione non è riuscita su {network}; è stata spesa solo la commissione di rete. Invia di nuovo il rimborso.',

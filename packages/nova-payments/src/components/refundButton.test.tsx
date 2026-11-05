@@ -396,6 +396,30 @@ describe('RefundButton', () => {
       expect(flow.preview).not.toHaveBeenCalled();
     });
 
+    it('tells a refund that arrived short in words, and asks for the same refund: the engine sends only the rest', () => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        refund: {
+          id: 'rf_3',
+          mode: 'fiat_value',
+          amount: '30.00',
+          failureReason: 'amount_short',
+          creditNoteNumber: null,
+        } as never,
+      });
+      const tree = render(FailedStep, {
+        flow,
+        labels: defaultLabels,
+        locale: 'en',
+        values: {},
+        recordAction: 'record',
+        close: vi.fn(),
+      });
+      expect(textOf(tree)).toContain(defaultLabels.refund.failedShort);
+      expect(textOf(tree)).not.toContain('amount_short');
+    });
+
     it('says why when Quasar refused the refund asked again', () => {
       const flow = flowOf({
         step: 'failed',

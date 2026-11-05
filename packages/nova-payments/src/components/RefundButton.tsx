@@ -298,6 +298,16 @@ export function RefundSteps({
   }
 }
 
+// Why it failed, in words for what the merchant can act on: part of it arrived, so asking again sends only the rest
+const failureText = (
+  refund: Refund | null | undefined,
+  text: { failedShort: string; failedText: string },
+  values: Record<string, string>,
+) =>
+  refund?.failureReason === 'amount_short'
+    ? text.failedShort
+    : (refund?.failureReason ?? formatLabel(text.failedText, values));
+
 // The same refund asked for again, after its transaction failed on-chain
 const requestOf = (refund: Refund): RefundRequest => ({
   mode: refund.mode,
@@ -423,7 +433,7 @@ export function FailedStep({
   return (
     <>
       <ScreenContent title={text.failedTitle}>
-        <ScreenError>{flow.refund?.failureReason ?? formatLabel(text.failedText, values)}</ScreenError>
+        <ScreenError>{failureText(flow.refund, text, values)}</ScreenError>
         {flow.error && <ScreenError>{flow.error.message}</ScreenError>}
       </ScreenContent>
       <ScreenFooter>
