@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **checkoutScreen**(`state`, `choices?`): [`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
 
-Defined in: [nova-payments/src/utils/checkout.ts:104](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L104)
+Defined in: [nova-payments/src/utils/checkout.ts:105](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L105)
 
 The screen for the state of a checkout store.
 
@@ -65,4 +65,5 @@ underpaid invoice whose rest another wallet pays, `qr` instead of `pay` when the
 with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller
 corrected, `autoPay` after a paid subscription period while the automatic payments offer is open, `loading` until
 the labels of the invoice's language are loaded, `unconfirmed` in the phase of that name of a current
-`@tuwaio/quasar-sdk` (Quasar could not confirm the payment, which may still arrive).
+`@tuwaio/quasar-sdk` (Quasar could not confirm the payment, which may still arrive). While the store hands a transaction
+over again (`submit_retrying`) it is `confirm`: only Quasar is out of reach, and the payment goes on.

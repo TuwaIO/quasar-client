@@ -592,9 +592,16 @@ export function AmountStep({
           </RadioCards>
           {mode === 'fiat_value' && (
             <label htmlFor={amountId} className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-xs">
-              <span>{formatLabel(text.amount, { currency })}</span>
+              <span>
+                {formatLabel(text.amount, { currency })}
+                <span aria-hidden="true" className="novapay:text-[var(--tuwa-error-text)]">
+                  {' '}
+                  *
+                </span>
+              </span>
               <input
                 id={amountId}
+                required
                 inputMode="decimal"
                 value={amount}
                 placeholder="0.00"
@@ -632,6 +639,19 @@ export function AmountStep({
 }
 
 /** What goes where: the confirmation before the wallet asks, or why it was not sent. @internal */
+/**
+ * A value with a note under it, both to the right edge of the row. An address link takes the whole width it is given, which left
+ * it out of line with the note and with the rows above: the owner saw the step as smeared.
+ */
+function stackedValue(value: ReactNode, note?: string | null) {
+  return (
+    <span className="novapay:flex novapay:flex-col novapay:items-end novapay:gap-1">
+      {value}
+      {note && <span className="novapay:text-[var(--tuwa-text-secondary)]">{note}</span>}
+    </span>
+  );
+}
+
 export function ConfirmStep({
   flow,
   labels,
@@ -675,26 +695,25 @@ export function ConfirmStep({
     <>
       <ScreenContent title={notSent ? text.notSent : text.confirmTitle}>
         <DetailsCard>
-          <DetailRow name={text.send}>{formatLabel(text.sendValue, values)}</DetailRow>
+          <DetailRow name={text.send}>{values.amount}</DetailRow>
+          <DetailRow name={text.network}>{values.network}</DetailRow>
           {transfer && (
             <DetailRow name={text.to}>
-              <span className="novapay:inline-flex novapay:items-center novapay:gap-1">
-                <ChainLink hash={transfer.to} explorerUrl={flow.addressUrl(transfer.to)} labels={labels} /> ·{' '}
-                {flow.refund?.heldTransfer ? text.theSender : text.thePayer}
-              </span>
+              {stackedValue(
+                <ChainLink hash={transfer.to} explorerUrl={flow.addressUrl(transfer.to)} labels={labels} />,
+                flow.refund?.heldTransfer ? text.theSender : text.thePayer,
+              )}
             </DetailRow>
           )}
           {flow.wallet && (
             <DetailRow name={text.from}>
-              <ChainLink
-                hash={flow.wallet.address}
-                explorerUrl={flow.addressUrl(flow.wallet.address)}
-                labels={labels}
-              />
-              {balance && (
-                <span className="novapay:mt-1 novapay:block novapay:text-[var(--tuwa-text-secondary)]">
-                  {formatLabel(text.balance, { amount: balance })}
-                </span>
+              {stackedValue(
+                <ChainLink
+                  hash={flow.wallet.address}
+                  explorerUrl={flow.addressUrl(flow.wallet.address)}
+                  labels={labels}
+                />,
+                balance && formatLabel(text.balance, { amount: balance }),
               )}
             </DetailRow>
           )}

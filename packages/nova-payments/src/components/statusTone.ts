@@ -13,9 +13,11 @@ import type { CheckoutScreen } from '../utils/checkout';
 export function statusToneOf(screen: CheckoutScreen): StatusTone | null {
   switch (screen) {
     case 'confirm':
+      return 'pending';
+    // Something needs the buyer: a running glint would say that it goes on by itself
     case 'unconfirmed':
     case 'underpaid':
-      return 'pending';
+      return 'warning';
     case 'paid':
       return 'success';
     case 'blocked':

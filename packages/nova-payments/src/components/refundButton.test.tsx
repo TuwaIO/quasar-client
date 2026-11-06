@@ -318,7 +318,7 @@ describe('RefundButton', () => {
     const tree = confirm(flow, { details: <span>Frozen 7,950 units</span> });
     const text = textOf(tree);
     expect(button(tree, ScreenContent).props.title).toBe('Confirm the refund');
-    expect(text).toContain('15.89 USDC on Base');
+    expect(text).toContain('15.89 USDC Base');
     expect(text).toContain('the payer');
     expect(text).toContain('Holds 4,210.00 USDC');
     expect(text).toContain('≈ 0.000012 ETH · from your wallet');

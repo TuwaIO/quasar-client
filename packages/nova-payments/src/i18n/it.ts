@@ -495,7 +495,6 @@ export const itLabels: NovaPaymentsLabels = {
     connectUnavailable: 'Questa pagina non può collegare un wallet. Invia il rimborso dal tuo wallet, poi registralo.',
     confirmTitle: 'Conferma il rimborso',
     send: 'Invia',
-    sendValue: '{amount} su {network}',
     to: 'A',
     thePayer: 'chi ha pagato',
     theSender: 'chi ha inviato questo trasferimento',

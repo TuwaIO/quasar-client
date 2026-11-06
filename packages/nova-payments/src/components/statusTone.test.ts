@@ -10,6 +10,12 @@ describe('statusToneOf', () => {
     expect(statusToneOf('blocked')).toBe('error');
   });
 
+  // Under a text asking the buyer to check the wallet, the glint of a payment under way said the opposite
+  it('a warning stands still: something needs the buyer', () => {
+    expect(statusToneOf('unconfirmed')).toBe('warning');
+    expect(statusToneOf('underpaid')).toBe('warning');
+  });
+
   it('what is neither is neutral: the money did not fail, it went another way', () => {
     for (const screen of ['held', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
       expect(statusToneOf(screen)).toBe('neutral');

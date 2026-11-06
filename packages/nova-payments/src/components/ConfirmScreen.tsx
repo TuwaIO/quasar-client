@@ -4,7 +4,12 @@ import { HashLink, TxProgressIndicator, TxStatusVisual } from '@tuwaio/nova-tran
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
-import { isInvoicePaymentOnTheWay, isPaymentOnTheWay, sentBeforeDeadline } from '../utils/checkout';
+import {
+  isInvoicePaymentOnTheWay,
+  isPaymentOnTheWay,
+  sentBeforeDeadline,
+  unconfirmedFollowUp,
+} from '../utils/checkout';
 import { mono } from './classes';
 import { DetailRow, DetailsCard, ScreenFooter, SecondaryButton } from './ScreenParts';
 import { StatusTitle } from './StatusTitle';
@@ -26,7 +31,8 @@ const WAITING_STATUSES: ReadonlySet<string> = new Set(['open', 'underpaid']);
  * decides, `paymentSentInTime` of the checkout store, whatever the clock of the page says; else `paymentCountsUntil`;
  * with a Quasar that reports neither, a payment this page handed over before the deadline by its clock); otherwise it
  * says that the seller accepts or returns a payment that arrives after the invoice closes. A payment that failed or settled is no
- * longer on its way, and the usual note comes back.
+ * longer on its way, and the usual note comes back. While the store hands the transaction over again, as Quasar is out of
+ * reach for a moment, the note asks to keep the page open: closing it is what could lose the hand-over.
  *
  * @returns The confirm step.
  */
@@ -45,6 +51,7 @@ export function ConfirmScreen() {
   const pastDeadline =
     checkout !== null && (own || found) && WAITING_STATUSES.has(status ?? '') && dueAt !== null && now >= dueAt;
   const sentInTime = pastDeadline && sentBeforeDeadline({ state, checkout, handedOverAt, dueAt });
+  const handingOver = unconfirmedFollowUp(state.error) === 'retrying';
   return (
     <TxLabels>
       <section
@@ -99,13 +106,15 @@ export function ConfirmScreen() {
           )}
         >
           <MorphText wrap>
-            {pastDeadline
-              ? formatLabel(sentInTime ? labels.confirm.afterDeadline : labels.confirm.pastDeadline, {
-                  merchant: checkout.merchant.name,
-                })
-              : found
-                ? labels.confirm.invoicePayment
-                : labels.confirm.canClose}
+            {handingOver
+              ? labels.outcome.unconfirmedRetrying
+              : pastDeadline
+                ? formatLabel(sentInTime ? labels.confirm.afterDeadline : labels.confirm.pastDeadline, {
+                    merchant: checkout.merchant.name,
+                  })
+                : found
+                  ? labels.confirm.invoicePayment
+                  : labels.confirm.canClose}
           </MorphText>
         </p>
       </section>

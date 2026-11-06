@@ -99,7 +99,8 @@ const replaceablePermission = (offer: CheckoutView['autoCharge'] | undefined) =>
  * with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller
  * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open, `loading` until
  * the labels of the invoice's language are loaded, `unconfirmed` in the phase of that name of a current
- * `@tuwaio/quasar-sdk` (Quasar could not confirm the payment, which may still arrive).
+ * `@tuwaio/quasar-sdk` (Quasar could not confirm the payment, which may still arrive). While the store hands a transaction
+ * over again (`submit_retrying`) it is `confirm`: only Quasar is out of reach, and the payment goes on.
  */
 export function checkoutScreen(
   state: {
@@ -114,7 +115,11 @@ export function checkoutScreen(
   if (choices.labelsReady === false && state.phase !== 'error') return 'loading';
   if (choices.autoPayOff && state.checkout?.autoCharge?.status === 'active') return 'autoPayOff';
   // `unconfirmed` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
-  if ((state.phase as string) === 'unconfirmed') return 'unconfirmed';
+  if ((state.phase as string) === 'unconfirmed') {
+    // The payment left the wallet and only Quasar is out of reach for a moment: nothing to check or do. A warning with "The
+    // payment did not leave my wallet" under it, seen live, told a buyer whose money had gone the opposite
+    return unconfirmedFollowUp(state.error) === 'retrying' ? 'confirm' : 'unconfirmed';
+  }
   // The wallet the buyer continued with confirms the invoice, then the price is locked on the same step: the step stays
   // between the signature and the price, unless the price was refused
   const proving =

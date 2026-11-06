@@ -453,7 +453,6 @@ export const zhCNLabels: NovaPaymentsLabels = {
     connectUnavailable: '此页面无法连接钱包。请从您的钱包发送退款，然后登记。',
     confirmTitle: '确认退款',
     send: '发送',
-    sendValue: '在 {network} 上发送 {amount}',
     to: '收款方',
     thePayer: '付款人',
     theSender: '此笔转账的发送方',

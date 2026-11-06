@@ -115,6 +115,20 @@ describe('the confirm step at the deadline', () => {
     expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);
   });
 
+  // Quasar is out of reach for a moment and the payment goes on. "You may close this window" would be untrue: a tab closed now
+  // may leave Quasar with nothing to follow until the sweep of the chain
+  it('asks to keep the page open while the store hands the payment over again', () => {
+    confirmingAt('2026-10-29T08:20:00Z');
+    ctx = {
+      ...ctx,
+      state: {
+        ...ctx.state,
+        error: { code: 'payment_unconfirmed', message: '', reason: 'submit_retrying' },
+      } as never,
+    };
+    expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.outcome.unconfirmedRetrying);
+  });
+
   it('says that the payment sent in time is being confirmed once the deadline passed', () => {
     confirmingAt('2026-10-29T08:28:00Z');
     expect(noteOf(render(ConfirmScreen, {}))).toBe('Your payment was sent before the deadline and is being confirmed.');

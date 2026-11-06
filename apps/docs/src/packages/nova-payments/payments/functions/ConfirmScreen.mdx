@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **ConfirmScreen**(): `Element`
 
-Defined in: [nova-payments/src/components/ConfirmScreen.tsx:33](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/ConfirmScreen.tsx#L33)
+Defined in: [nova-payments/src/components/ConfirmScreen.tsx:39](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/ConfirmScreen.tsx#L39)
 
 The confirm step: the transaction is on its way and Quasar follows it until it is final. It reuses the status and
 progress of Nova Transactions (Sent → Confirming → Paid, in the language of the checkout) and shows the network, the
@@ -20,7 +20,8 @@ open for a payment it learned of before the deadline while it confirms: for this
 decides, `paymentSentInTime` of the checkout store, whatever the clock of the page says; else `paymentCountsUntil`;
 with a Quasar that reports neither, a payment this page handed over before the deadline by its clock); otherwise it
 says that the seller accepts or returns a payment that arrives after the invoice closes. A payment that failed or settled is no
-longer on its way, and the usual note comes back.
+longer on its way, and the usual note comes back. While the store hands the transaction over again, as Quasar is out of
+reach for a moment, the note asks to keep the page open: closing it is what could lose the hand-over.
 
 ## Returns
 

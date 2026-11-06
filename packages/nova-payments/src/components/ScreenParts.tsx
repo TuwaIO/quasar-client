@@ -86,11 +86,14 @@ export function ChainLink({
 export function WalletWait({ walletId, walletIcon }: { walletId?: string; walletIcon?: string }) {
   if (!walletId && !walletIcon) return <QuasarLoader size={48} accent="var(--tuwa-pending-icon)" />;
   return (
-    <span className="novapay:relative novapay:block novapay:h-12 novapay:w-12">
-      <CheckoutWalletIcon walletId={walletId ?? ''} icon={walletIcon} />
+    <span className="novapay:relative novapay:flex novapay:h-20 novapay:w-20 novapay:items-center novapay:justify-center novapay:rounded-full novapay:border-2 novapay:border-[var(--tuwa-border-primary)]">
+      {/* Inside the circle: an arc across the corners of the icon read as something wrong with it */}
+      <span className="novapay:block novapay:h-11 novapay:w-11">
+        <CheckoutWalletIcon walletId={walletId ?? ''} icon={walletIcon} />
+      </span>
       <span
         aria-hidden
-        className="novapay:absolute novapay:-inset-1 novapay:animate-spin novapay:rounded-full novapay:border-2 novapay:border-[var(--tuwa-pending-text)] novapay:border-t-transparent novapay:motion-reduce:animate-none"
+        className="novapay:absolute novapay:-inset-0.5 novapay:animate-spin novapay:rounded-full novapay:border-2 novapay:border-transparent novapay:border-t-[var(--tuwa-pending-text)] novapay:motion-reduce:animate-none"
       />
     </span>
   );

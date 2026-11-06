@@ -509,7 +509,6 @@ export const deLabels: NovaPaymentsLabels = {
       'Diese Seite kann kein Wallet verbinden. Senden Sie die Erstattung aus Ihrem Wallet und erfassen Sie sie anschließend.',
     confirmTitle: 'Erstattung bestätigen',
     send: 'Senden',
-    sendValue: '{amount} im Netzwerk {network}',
     to: 'An',
     thePayer: 'den Zahler',
     theSender: 'den Absender dieses Transfers',

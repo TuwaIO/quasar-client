@@ -532,6 +532,21 @@ describe('unconfirmedFollowUp', () => {
 
   it('keeps the page open while the store hands the payment over, and names a hand-over that gave up', () => {
     expect(unconfirmedFollowUp(unconfirmed({ reason: 'submit_retrying' }))).toBe('retrying');
+    // The payment goes on, and only Quasar is out of reach: no warning with "The payment did not leave my wallet" under it
+    expect(
+      checkoutScreen({
+        phase: 'unconfirmed' as never,
+        checkout: null,
+        error: unconfirmed({ reason: 'submit_retrying' }) as never,
+      }),
+    ).toBe('confirm');
+    expect(
+      checkoutScreen({
+        phase: 'unconfirmed' as never,
+        checkout: null,
+        error: unconfirmed({ reason: 'submit_failed' }) as never,
+      }),
+    ).toBe('unconfirmed');
     expect(unconfirmedFollowUp(unconfirmed({ reason: 'submit_failed' }))).toBe('notReceived');
   });
 

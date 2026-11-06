@@ -151,6 +151,13 @@ export function BuyerScreen() {
                     className="novapay:text-xs novapay:font-medium novapay:text-[var(--tuwa-text-primary)]"
                   >
                     {fieldLabel(labels, field.name, company)}
+                    {/* Beside the name: the field itself says it is required to a screen reader */}
+                    {field.required && (
+                      <span aria-hidden="true" className="novapay:text-[var(--tuwa-error-text)]">
+                        {' '}
+                        *
+                      </span>
+                    )}
                     {!field.required && (
                       <span className="novapay:font-normal novapay:text-[var(--tuwa-text-secondary)]">
                         {' '}

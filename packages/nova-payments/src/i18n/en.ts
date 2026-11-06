@@ -480,7 +480,6 @@ export const defaultLabels: NovaPaymentsLabels = {
     connectUnavailable: "This page can't connect a wallet. Send the refund from your wallet, then record it.",
     confirmTitle: 'Confirm the refund',
     send: 'Send',
-    sendValue: '{amount} on {network}',
     to: 'To',
     thePayer: 'the payer',
     theSender: 'the sender of this transfer',

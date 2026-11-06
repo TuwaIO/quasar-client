@@ -489,7 +489,6 @@ export const esLabels: NovaPaymentsLabels = {
       'Esta página no puede conectar una billetera. Envía el reembolso desde tu billetera y luego regístralo.',
     confirmTitle: 'Confirma el reembolso',
     send: 'Enviar',
-    sendValue: '{amount} en {network}',
     to: 'Para',
     thePayer: 'quien pagó',
     theSender: 'quien envió esta transferencia',

@@ -1013,7 +1013,6 @@ export type NovaPaymentsLabels = {
     /** Row: what is sent (default: `Send`) */
     send: string;
     /** Its value; `{amount}`, `{network}` (default: `{amount} on {network}`) */
-    sendValue: string;
     /** Row: the recipient (default: `To`) */
     to: string;
     /** After the recipient (default: `the payer`) */

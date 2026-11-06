@@ -486,7 +486,6 @@ export const ukLabels: NovaPaymentsLabels = {
       'На цій сторінці не можна підключити гаманець. Надішліть повернення зі свого гаманця, потім позначте його.',
     confirmTitle: 'Підтвердіть повернення',
     send: 'Надіслати',
-    sendValue: '{amount} у мережі {network}',
     to: 'Кому',
     thePayer: 'платник',
     theSender: 'відправник цього переказу',
