@@ -336,6 +336,16 @@ const failureText = (
   return label ? text[label] : formatLabel(text.failedText, values);
 };
 
+// A refund the merchant closed is no failure: under "The refund failed" it read as if something had gone wrong with the money
+const FAILURE_TITLES: Readonly<Record<string, keyof NovaPaymentsLabels['refund']>> = {
+  withdrawn: 'failedWithdrawnTitle',
+  cancelled: 'failedCancelledTitle',
+  cancelled_final: 'failedCancelledTitle',
+};
+
+const failureTitle = (refund: Refund | null | undefined, text: NovaPaymentsLabels['refund']) =>
+  text[(refund?.failureReason && FAILURE_TITLES[refund.failureReason]) || 'failedTitle'];
+
 // What Quasar answers in English goes to the logs of an app: a merchant reads a refusal in the language of the window, in words
 // for what can be done. A code this package does not know says that Quasar refused, never the code itself.
 const REFUSAL_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']>> = {
@@ -489,7 +499,7 @@ export function FailedStep({
   if (flow.refund?.heldTransfer) {
     return (
       <>
-        <ScreenContent title={text.failedTitle}>
+        <ScreenContent title={failureTitle(flow.refund, text)}>
           <ScreenError>{failureText(flow.refund, text, values)}</ScreenError>
           <FooterNote>{text.failedHeldNote}</FooterNote>
         </ScreenContent>
@@ -502,7 +512,7 @@ export function FailedStep({
   if (ask.moved) return movedScreen(ask.moved, ask, flow, labels, locale, false);
   return (
     <>
-      <ScreenContent title={text.failedTitle}>
+      <ScreenContent title={failureTitle(flow.refund, text)}>
         <ScreenError>{failureText(flow.refund, text, values)}</ScreenError>
         {flow.error && <ScreenError>{refusalText(flow.error, text)}</ScreenError>}
       </ScreenContent>

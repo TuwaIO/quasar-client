@@ -1063,6 +1063,10 @@ export type NovaPaymentsLabels = {
     /** Under the heading when part of the refund reached the buyer: asking again sends only what is missing. */
     failedShort: string;
     failedTitle: string;
+    /** Heading when the merchant took the refund back before it was sent (default: `You took the refund back`). */
+    failedWithdrawnTitle: string;
+    /** Heading when the merchant cancelled the refund in the wallet (default: `You cancelled the refund`). */
+    failedCancelledTitle: string;
     /** The refund's own transaction cannot settle it (`over_limit`, `tx_of_another_refund`). */
     failedByHand: string;
     /** Under it; `{network}` (default: `The transaction failed on {network}; only the network fee was spent. Send the refund again.`) */

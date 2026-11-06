@@ -614,6 +614,8 @@ export interface Refund {
   reason: string | null;
   /** Why it failed. */
   failureReason: string | null;
+  /** The transaction that took the place of a cancelled one, when Quasar knows it. */
+  replacedBy?: string | null;
   /** Its credit note, once confirmed; none for a held transfer or a payment that stayed on a corrected invoice. */
   creditNoteNumber: string | null;
   /** The held transfer it returns to its sender ({@link HeldTransfer}), or `null` for a refund of the invoice. */

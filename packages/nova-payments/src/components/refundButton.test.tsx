@@ -484,6 +484,35 @@ describe('RefundButton', () => {
       expect(text).not.toContain(failureReason);
     });
 
+    // The merchant chose this: under "The refund failed" it read as if something had gone wrong with the money
+    it.each([
+      ['withdrawn', 'failedWithdrawnTitle'],
+      ['cancelled', 'failedCancelledTitle'],
+      ['cancelled_final', 'failedCancelledTitle'],
+    ] as const)('heads a refund closed by %s with what the merchant did, not with a failure', (failureReason, label) => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        refund: { id: 'rf_6', mode: 'exact_received', failureReason, creditNoteNumber: null } as never,
+      });
+      expect(button(failed(flow), ScreenContent).props.title).toBe(defaultLabels.refund[label]);
+    });
+
+    it('heads a withdrawn refund of a held transfer the same way', () => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        refund: {
+          id: 'rf_7',
+          mode: 'exact_received',
+          heldTransfer: 'ht_1',
+          failureReason: 'withdrawn',
+          creditNoteNumber: null,
+        } as never,
+      });
+      expect(button(failed(flow), ScreenContent).props.title).toBe(defaultLabels.refund.failedWithdrawnTitle);
+    });
+
     it('reads a reason it does not know as a failed transaction, not as a code', () => {
       const flow = flowOf({
         step: 'failed',

@@ -2254,6 +2254,12 @@ The refund's own transaction cannot settle it (`over_limit`, `tx_of_another_refu
 
 Why it failed: `cancelled_final` (cancelled in the wallet, in a final block: nothing can arrive).
 
+#### failedCancelledTitle
+
+> **failedCancelledTitle**: `string`
+
+Heading when the merchant cancelled the refund in the wallet (default: `You cancelled the refund`).
+
 #### failedCancelling
 
 > **failedCancelling**: `string`
@@ -2323,6 +2329,12 @@ Why it failed: `too_early` (older than the payment).
 > **failedWithdrawn**: `string`
 
 Why it failed: `withdrawn` (taken back before it was sent).
+
+#### failedWithdrawnTitle
+
+> **failedWithdrawnTitle**: `string`
+
+Heading when the merchant took the refund back before it was sent (default: `You took the refund back`).
 
 #### feeEstimate
 

@@ -535,6 +535,8 @@ export const deLabels: NovaPaymentsLabels = {
     failedShort:
       'Ein Teil der Rückerstattung hat den Käufer erreicht. Senden Sie sie erneut: Es geht nur der fehlende Betrag.',
     failedTitle: 'Die Erstattung ist fehlgeschlagen',
+    failedWithdrawnTitle: 'Sie haben die Erstattung zurückgezogen',
+    failedCancelledTitle: 'Sie haben die Erstattung abgebrochen',
     failedByHand:
       'Die Transaktion dieser Erstattung kann sie nicht abschließen: Prüfen Sie sie von Hand anhand der Erstattungen der Rechnung.',
     failedText:

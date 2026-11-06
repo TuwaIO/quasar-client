@@ -44,7 +44,7 @@ CAIP-2 chain to send on.
 
 > **confirmedAt**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:626](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L626)
+Defined in: [modules/payments/types.ts:628](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L628)
 
 When it was confirmed.
 
@@ -54,7 +54,7 @@ When it was confirmed.
 
 > **createdAt**: `string`
 
-Defined in: [modules/payments/types.ts:622](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L622)
+Defined in: [modules/payments/types.ts:624](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L624)
 
 When it was asked for.
 
@@ -64,7 +64,7 @@ When it was asked for.
 
 > **creditNoteNumber**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:618](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L618)
+Defined in: [modules/payments/types.ts:620](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L620)
 
 Its credit note, once confirmed; none for a held transfer or a payment that stayed on a corrected invoice.
 
@@ -114,7 +114,7 @@ The address it was sent from.
 
 > **heldTransfer**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:620](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L620)
+Defined in: [modules/payments/types.ts:622](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L622)
 
 The held transfer it returns to its sender ([HeldTransfer](?path=/docs/packages-quasar-sdk-server-interfaces-heldtransfer--docs)), or `null` for a refund of the invoice.
 
@@ -170,6 +170,16 @@ Why.
 
 ***
 
+### replacedBy?
+
+> `optional` **replacedBy?**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:618](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L618)
+
+The transaction that took the place of a cancelled one, when Quasar knows it.
+
+***
+
 ### status
 
 > **status**: `"requested"` \| `"submitted"` \| `"confirmed"` \| `"failed"`
@@ -204,6 +214,6 @@ The refund transaction, once submitted.
 
 > `optional` **updatedAt?**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:624](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L624)
+Defined in: [modules/payments/types.ts:626](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L626)
 
 When it last changed; absent from an engine that does not send it yet.
