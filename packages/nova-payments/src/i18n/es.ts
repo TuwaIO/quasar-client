@@ -524,6 +524,9 @@ export const esLabels: NovaPaymentsLabels = {
     failedTooEarly: 'Su transacción es anterior al pago: no es este reembolso.',
     failedNoTransfer: 'Su transacción no envió nada que Quasar pueda ver a la billetera de destino.',
     failedWithdrawn: 'Lo retiraste antes de enviarlo.',
+    failedCancelling:
+      'Lo cancelaste en tu billetera. Podrás enviarlo de nuevo cuando la cancelación sea definitiva, normalmente en unos minutos.',
+    failedCancelled: 'Lo cancelaste en tu billetera, así que no se envió nada. Puedes enviarlo de nuevo.',
     failedResendConfirmed: 'Confirmaste que no salió de tu billetera: se puede enviar de nuevo.',
     failedHeldNote: 'La transferencia sigue retenida. Cierra esta ventana: su fila indica qué hacer a continuación.',
     notSent: 'No enviado',

@@ -29,7 +29,7 @@ const { defaultLabels } = await import('../i18n');
 const fixture = await import('../testing/checkoutFixture');
 const { PrimaryButton, SecondaryButton, ScreenContent, ScreenError } = await import('./ScreenParts');
 const { RadioCards } = await import('./RadioCards');
-const { isSlow, AmountStep, ConfirmStep, FailedStep, RefundButton, RefundDialog, RefundSteps } =
+const { isSlow, refusalText, AmountStep, ConfirmStep, FailedStep, RefundButton, RefundDialog, RefundSteps } =
   await import('./RefundButton');
 const { refundRateMoved } = await import('../utils/outcome');
 
@@ -125,6 +125,17 @@ const PREVIEW = {
 // Board RefundSendStates of the dashboard sketch: the steps of a refund from the merchant's wallet
 describe('RefundButton', () => {
   // Counted from when it was asked for, the window said slow and offered to name a hash Quasar then refused as too soon
+  // A refusal of the engine read as "Quasar does not answer", and the app's translated reason never reached the window
+  it('says a refusal in the words of the app when it gave them, in its own otherwise', () => {
+    const labels = defaultLabels.refund;
+    expect(refusalText({ code: 'refund_may_have_landed', text: 'In the language of the reader' }, labels)).toBe(
+      'In the language of the reader',
+    );
+    expect(refusalText({ code: 'refund_may_have_landed' }, labels)).toBe(labels.refusedMayHaveLanded);
+    expect(refusalText({ code: 'request_failed' }, labels)).toBe(labels.unreachable);
+    expect(refusalText({ code: 'something_new' }, labels)).toBe(labels.refusedOther);
+  });
+
   it('counts a refund as slow from when it last changed, not from when it was asked for', () => {
     const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
     expect(isSlow({ createdAt: ago(600), updatedAt: ago(1) } as never)).toBe(false);
@@ -434,6 +445,21 @@ describe('RefundButton', () => {
       });
       expect(textOf(tree)).toContain(defaultLabels.refund.failedShort);
       expect(textOf(tree)).not.toContain('amount_short');
+    });
+
+    // Live: a refund cancelled in the wallet read as a failed transaction, with only the network fee spent
+    it.each([
+      ['cancelled', 'failedCancelling'],
+      ['cancelled_final', 'failedCancelled'],
+    ] as const)('says that a refund was cancelled in the wallet: %s', (failureReason, label) => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        refund: { id: 'rf_5', mode: 'fiat_value', amount: '30.00', failureReason, creditNoteNumber: null } as never,
+      });
+      const shown = textOf(failed(flow));
+      expect(shown).toContain(defaultLabels.refund[label]);
+      expect(shown).not.toContain(defaultLabels.refund.failedText.split('{network}')[0]);
     });
 
     // The code Quasar records is for the code that reads it

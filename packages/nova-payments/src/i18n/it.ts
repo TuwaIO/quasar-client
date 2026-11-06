@@ -532,6 +532,9 @@ export const itLabels: NovaPaymentsLabels = {
     failedTooEarly: 'La sua transazione è precedente al pagamento: non è questo rimborso.',
     failedNoTransfer: 'La sua transazione non ha inviato nulla che Quasar possa vedere al wallet di destinazione.',
     failedWithdrawn: "L'hai ritirato prima dell'invio.",
+    failedCancelling:
+      "L'hai annullato nel tuo wallet. Potrai inviarlo di nuovo quando l'annullamento sarà definitivo, di solito in pochi minuti.",
+    failedCancelled: "L'hai annullato nel tuo wallet, quindi non è stato inviato nulla. Puoi inviarlo di nuovo.",
     failedResendConfirmed: 'Hai confermato che non è uscito dal tuo wallet: può essere inviato di nuovo.',
     failedHeldNote: 'Il trasferimento resta trattenuto. Chiudi questa finestra: la sua riga indica cosa fare dopo.',
     notSent: 'Non inviato',

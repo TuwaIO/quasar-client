@@ -547,6 +547,10 @@ export const deLabels: NovaPaymentsLabels = {
     failedTooEarly: 'Die Transaktion ist älter als die Zahlung und gehört nicht zu dieser Rückerstattung.',
     failedNoTransfer: 'Die Transaktion hat nichts an das Ziel-Wallet gesendet, was Quasar sehen könnte.',
     failedWithdrawn: 'Sie haben sie vor dem Senden zurückgezogen.',
+    failedCancelling:
+      'Sie haben sie in Ihrer Wallet abgebrochen. Sie kann erneut gesendet werden, sobald der Abbruch endgültig ist, meist nach wenigen Minuten.',
+    failedCancelled:
+      'Sie haben sie in Ihrer Wallet abgebrochen, es wurde also nichts gesendet. Sie können sie erneut senden.',
     failedResendConfirmed:
       'Sie haben bestätigt, dass sie Ihr Wallet nicht verlassen hat: Sie kann erneut gesendet werden.',
     failedHeldNote:

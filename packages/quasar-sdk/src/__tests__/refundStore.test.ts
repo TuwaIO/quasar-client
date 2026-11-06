@@ -175,6 +175,37 @@ describe('createRefundStore', () => {
     expect(store.getState().error).toBeNull();
   });
 
+  // An app's own route cannot throw this package's class: a refusal of the engine read as "Quasar does not answer"
+  it("keeps the code, the status and the words of a refusal from the app's own route", async () => {
+    const refused = Object.assign(new Error('The refund that failed may still land'), {
+      code: 'refund_may_have_landed',
+      status: 409,
+      text: 'In the language of the reader',
+    });
+    const store = createRefundStore({
+      request: vi.fn().mockRejectedValue(refused),
+      submit: vi.fn(),
+      get: vi.fn(),
+    });
+    await store.getState().start('inv_1');
+    expect(store.getState().error).toEqual({
+      code: 'refund_may_have_landed',
+      message: 'The refund that failed may still land',
+      status: 409,
+      text: 'In the language of the reader',
+    });
+  });
+
+  it('reads any other failure as Quasar not answering', async () => {
+    const store = createRefundStore({
+      request: vi.fn().mockRejectedValue(new Error('Failed to fetch')),
+      submit: vi.fn(),
+      get: vi.fn(),
+    });
+    await store.getState().start('inv_1');
+    expect(store.getState().error).toEqual({ code: 'request_failed', message: 'Failed to fetch' });
+  });
+
   it('keeps the refusal of the server and lets the merchant try again', async () => {
     const refusal = new QuasarSDKError('[Quasar SDK] Request Failed (409): Already used', 409, new Error('x'), {
       code: 'transaction_already_used',

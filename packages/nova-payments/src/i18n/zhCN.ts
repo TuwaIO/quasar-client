@@ -486,6 +486,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
     failedTooEarly: '其交易早于付款：不是这笔退款。',
     failedNoTransfer: '其交易未向接收钱包发送 Quasar 能看到的任何款项。',
     failedWithdrawn: '您在发送前已撤回。',
+    failedCancelling: '您已在钱包中取消此退款。取消最终确认后即可再次发送，通常需要几分钟。',
+    failedCancelled: '您已在钱包中取消此退款，因此未发送任何款项。您可以再次发送。',
     failedResendConfirmed: '您已确认该退款未从您的钱包转出：可以重新发送。',
     failedHeldNote: '该转账仍被暂扣。请关闭此窗口，其所在行会说明下一步操作。',
     notSent: '未发送',

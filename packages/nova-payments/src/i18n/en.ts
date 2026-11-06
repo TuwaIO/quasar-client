@@ -515,6 +515,9 @@ export const defaultLabels: NovaPaymentsLabels = {
     failedTooEarly: 'Its transaction is older than the payment, so it is not this refund.',
     failedNoTransfer: 'Its transaction sent nothing Quasar could see to the wallet the refund goes to.',
     failedWithdrawn: 'You took it back before it was sent.',
+    failedCancelling:
+      'You cancelled it in your wallet. It can be sent again once the cancellation is final, usually in a few minutes.',
+    failedCancelled: 'You cancelled it in your wallet, so nothing was sent. You can send it again.',
     failedResendConfirmed: 'You confirmed that it did not leave your wallet: it can be sent again.',
     failedHeldNote: 'The transfer stays held. Close this window: its row says what to do next.',
     notSent: 'Not sent',

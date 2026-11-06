@@ -2248,6 +2248,18 @@ The wallet failed (default: `The wallet did not send the refund. Try again.`)
 
 The refund's own transaction cannot settle it (`over_limit`, `tx_of_another_refund`).
 
+#### failedCancelled
+
+> **failedCancelled**: `string`
+
+Why it failed: `cancelled_final` (cancelled in the wallet, in a final block: nothing can arrive).
+
+#### failedCancelling
+
+> **failedCancelling**: `string`
+
+Why it failed: `cancelled` (cancelled in the wallet, in a block not final yet: a reorganization may bring it back).
+
 #### failedDropped
 
 > **failedDropped**: `string`

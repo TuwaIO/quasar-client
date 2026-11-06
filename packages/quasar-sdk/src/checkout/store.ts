@@ -97,6 +97,8 @@ export interface CheckoutError {
   message: string;
   /** HTTP status, when the API answered. */
   status?: number;
+  /** What to show in the reader's language, when the app said it: a window prefers it to its own words for the code. */
+  text?: string;
   /** The fields at fault of an invalid request. */
   issues?: QuasarRequestIssue[];
   /**

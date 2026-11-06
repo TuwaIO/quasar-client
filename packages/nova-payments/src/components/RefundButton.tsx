@@ -320,6 +320,8 @@ const FAILURE_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']
   too_early: 'failedTooEarly',
   no_matching_transfer: 'failedNoTransfer',
   withdrawn: 'failedWithdrawn',
+  cancelled: 'failedCancelling',
+  cancelled_final: 'failedCancelled',
   resend_confirmed: 'failedResendConfirmed',
 };
 
@@ -364,9 +366,9 @@ export const isSlow = (refund: Pick<Refund, 'createdAt' | 'updatedAt'> | null | 
   return Boolean(since) && Date.now() - Date.parse(since as string) > SLOW_REFUND_MS;
 };
 
-/** A refusal of Quasar in the words of the window. @internal */
-export const refusalText = (error: { code: string }, text: NovaPaymentsLabels['refund']): string =>
-  text[REFUSAL_LABELS[error.code] ?? 'refusedOther'];
+/** A refusal of Quasar in the words of the window, or of the app when it said it in the reader's language. @internal */
+export const refusalText = (error: { code: string; text?: string }, text: NovaPaymentsLabels['refund']): string =>
+  error.text ?? text[REFUSAL_LABELS[error.code] ?? 'refusedOther'];
 
 // Its own transaction cannot settle it: Quasar refuses another refund until a person checks it
 const byHand = (refund: Refund | null | undefined) =>

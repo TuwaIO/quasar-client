@@ -1079,6 +1079,10 @@ export type NovaPaymentsLabels = {
     failedNoTransfer: string;
     /** Why it failed: `withdrawn` (taken back before it was sent). */
     failedWithdrawn: string;
+    /** Why it failed: `cancelled` (cancelled in the wallet, in a block not final yet: a reorganization may bring it back). */
+    failedCancelling: string;
+    /** Why it failed: `cancelled_final` (cancelled in the wallet, in a final block: nothing can arrive). */
+    failedCancelled: string;
     /** Why it failed: `resend_confirmed` (the merchant confirmed that it did not leave the wallet). */
     failedResendConfirmed: string;
     /** After the failure of a held transfer's refund (default: `The transfer stays held. Close this window: its row says what to do next.`) */

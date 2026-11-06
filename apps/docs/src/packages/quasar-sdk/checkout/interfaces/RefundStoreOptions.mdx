@@ -4,9 +4,11 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # RefundStoreOptions
 
-Defined in: [checkout/refundStore.ts:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L74)
+Defined in: [checkout/refundStore.ts:78](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L78)
 
-Options of [createRefundStore](?path=/docs/packages-quasar-sdk-checkout-functions-createrefundstore--docs): the three calls, which the app runs on its server with the secret key.
+Options of [createRefundStore](?path=/docs/packages-quasar-sdk-checkout-functions-createrefundstore--docs): the three calls, which the app runs on its server with the secret key. A call refuses by
+throwing: the `QuasarSDKError` of the SDK, or from an app's own route an `Error` with the `code` of the refusal, its `status`
+and optionally `text`, what to show in the reader's language. Any other error reads as `request_failed`: Quasar did not answer.
 
 ## Properties
 
@@ -14,7 +16,7 @@ Options of [createRefundStore](?path=/docs/packages-quasar-sdk-checkout-function
 
 > **get**: (`refundId`) => `Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>
 
-Defined in: [checkout/refundStore.ts:82](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L82)
+Defined in: [checkout/refundStore.ts:86](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L86)
 
 Reads the refund, for example through `quasar.payments.getRefund`.
 
@@ -34,7 +36,7 @@ Reads the refund, for example through `quasar.payments.getRefund`.
 
 > `optional` **pollMs?**: `number`
 
-Defined in: [checkout/refundStore.ts:84](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L84)
+Defined in: [checkout/refundStore.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L88)
 
 How often to read a refund being confirmed, in milliseconds. Defaults to `5000`.
 
@@ -44,7 +46,7 @@ How often to read a refund being confirmed, in milliseconds. Defaults to `5000`.
 
 > `optional` **preview?**: (`invoiceId`, `params`) => `Promise`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs)\>
 
-Defined in: [checkout/refundStore.ts:78](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L78)
+Defined in: [checkout/refundStore.ts:82](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L82)
 
 Shows what a refund would send, for example through `quasar.payments.previewRefund`. Optional.
 
@@ -68,7 +70,7 @@ Shows what a refund would send, for example through `quasar.payments.previewRefu
 
 > **request**: (`invoiceId`, `params`) => `Promise`\<[`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\>
 
-Defined in: [checkout/refundStore.ts:76](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L76)
+Defined in: [checkout/refundStore.ts:80](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L80)
 
 Asks for the refund, for example a Server Action that calls `quasar.payments.refund`.
 
@@ -92,7 +94,7 @@ Asks for the refund, for example a Server Action that calls `quasar.payments.ref
 
 > **submit**: (`refundId`, `params`) => `Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>
 
-Defined in: [checkout/refundStore.ts:80](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L80)
+Defined in: [checkout/refundStore.ts:84](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L84)
 
 Hands over its transaction, for example through `quasar.payments.submitRefund`.
 

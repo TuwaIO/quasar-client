@@ -70,7 +70,11 @@ export interface RefundState {
   reset: () => void;
 }
 
-/** Options of {@link createRefundStore}: the three calls, which the app runs on its server with the secret key. */
+/**
+ * Options of {@link createRefundStore}: the three calls, which the app runs on its server with the secret key. A call refuses by
+ * throwing: the `QuasarSDKError` of the SDK, or from an app's own route an `Error` with the `code` of the refusal, its `status`
+ * and optionally `text`, what to show in the reader's language. Any other error reads as `request_failed`: Quasar did not answer.
+ */
 export interface RefundStoreOptions {
   /** Asks for the refund, for example a Server Action that calls `quasar.payments.refund`. */
   request: (invoiceId: string, params: RefundParams) => Promise<RefundStart>;
@@ -98,7 +102,13 @@ function errorOf(error: unknown): CheckoutError {
       ...(typeof other === 'string' ? { otherInvoice: other } : {}),
     };
   }
-  return { code: 'request_failed', message: error instanceof Error ? error.message : String(error) };
+  const told = error as Partial<Pick<CheckoutError, 'code' | 'status' | 'text'>> | null | undefined;
+  return {
+    code: typeof told?.code === 'string' ? told.code : 'request_failed',
+    message: error instanceof Error ? error.message : String(error),
+    ...(typeof told?.status === 'number' && { status: told.status }),
+    ...(typeof told?.text === 'string' && { text: told.text }),
+  };
 }
 
 /**
