@@ -3,8 +3,8 @@
  * preview (`.storybook/preview.tsx`, the stories and docs pages). No React and no Storybook imports, so both builds can
  * bundle it.
  *
- * Privacy: the language is read from Session Storage (written only after the visitor switches it) and from
- * `navigator.languages`. No cookie, no URL parameter and no request.
+ * The language is read from the `lang` parameter of the URL, so a link opens a page in its language, then from Session Storage
+ * (written only after the visitor switches it) and from `navigator.languages`. No cookie and no request.
  */
 
 /** A language of the Storybook, as on the other TUWA documentation sites. */
@@ -21,6 +21,9 @@ export const DEFAULT_LOCALE: StorybookLocale = 'en';
  * language and kept until the tab closes, like `tuwa-storybook-theme` (Cookie Policy).
  */
 export const LOCALE_STORAGE_KEY = 'tuwa-storybook-locale';
+
+/** The parameter of the URL that names the language. English has none, as on the other TUWA documentation sites. */
+export const LOCALE_URL_PARAM = 'lang';
 
 /** Channel event the manager emits with the active language. */
 export const SET_LOCALE_EVENT = 'tuwa/set-locale';
@@ -90,15 +93,33 @@ export function storeLocale(locale: StorybookLocale): void {
 }
 
 /**
- * The language to start with: the one the visitor picked in this tab, otherwise the first supported language of the
- * browser, otherwise English. Nothing is written.
+ * Reads the language of the URL. The stories run in an iframe, so the address of the page is the one of its parent.
+ *
+ * @param win - The window to read.
+ * @returns The language, or `null` when the URL names none.
+ */
+export function readUrlLocale(win: Pick<Window, 'location' | 'parent'> = window): StorybookLocale | null {
+  const read = (search: string) => normalizeLocale(new URLSearchParams(search).get(LOCALE_URL_PARAM));
+  const own = read(win.location.search);
+  if (own) return own;
+  try {
+    return read(win.parent.location.search);
+  } catch {
+    // The parent of another origin: Storybook embedded in another site
+    return null;
+  }
+}
+
+/**
+ * The language to start with: the one the URL names, otherwise the one the visitor picked in this tab, otherwise the first
+ * supported language of the browser, otherwise English. Nothing is written.
  *
  * @returns The initial language.
  */
 export function getInitialLocale(): StorybookLocale {
   if (typeof window === 'undefined') return DEFAULT_LOCALE;
-  const stored = readStoredLocale();
-  if (stored) return stored;
+  const named = readUrlLocale() ?? readStoredLocale();
+  if (named) return named;
   try {
     const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
     return detectBrowserLocale(languages);

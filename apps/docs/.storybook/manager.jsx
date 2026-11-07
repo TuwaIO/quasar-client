@@ -4,7 +4,15 @@ import { addons, types } from 'storybook/manager-api';
 import { create, useTheme } from 'storybook/theming';
 
 import { LOCALE_OPTIONS, storybookLabels } from '../i18n/labels';
-import { getInitialLocale, normalizeLocale, REQUEST_LOCALE_EVENT, SET_LOCALE_EVENT, storeLocale } from '../i18n/locale';
+import {
+  DEFAULT_LOCALE,
+  getInitialLocale,
+  LOCALE_URL_PARAM,
+  normalizeLocale,
+  REQUEST_LOCALE_EVENT,
+  SET_LOCALE_EVENT,
+  storeLocale,
+} from '../i18n/locale';
 
 // ─── Shared Constants ────────────────────────────────────────────────────────
 
@@ -772,8 +780,20 @@ addons.register('tuwa/theme-tools', (api) => {
 
 addons.register('tuwa/locale-sync', (api) => {
   const emitLocale = () => api.emit(SET_LOCALE_EVENT, getManagerLocale());
-  api.on(REQUEST_LOCALE_EVENT, emitLocale);
-  subscribeLocale(emitLocale);
+  // The URL names the language, so a link opens the page in it. English has no parameter. `replace`: the back button leaves the
+  // page and not the language. It waits for the preview, as the URL state of the manager is not ready before
+  const writeUrl = () => {
+    const locale = getManagerLocale();
+    api.applyQueryParams({ [LOCALE_URL_PARAM]: locale === DEFAULT_LOCALE ? null : locale }, { replace: true });
+  };
+  api.on(REQUEST_LOCALE_EVENT, () => {
+    emitLocale();
+    writeUrl();
+  });
+  subscribeLocale(() => {
+    emitLocale();
+    writeUrl();
+  });
 });
 
 // ─── System preference change listener ───────────────────────────────────────
