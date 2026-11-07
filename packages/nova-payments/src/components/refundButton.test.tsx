@@ -39,6 +39,7 @@ const MERCHANT = '0x7a0b0000000000000000000000000000000077e1';
 
 const flowOf = (extra: Partial<RefundFlow> = {}): RefundFlow => ({
   step: 'confirm',
+  sending: false,
   phase: 'awaitingTransfer',
   refund: {
     id: 'rf_1',

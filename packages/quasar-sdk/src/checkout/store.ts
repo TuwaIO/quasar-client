@@ -8,6 +8,7 @@ import { BASE_API_URL } from '../constants';
 import { type QuasarRequestIssue, QuasarSDKError } from '../core/errors';
 import type { Buyer, InvoiceLocale, InvoiceStatus } from '../modules/payments/types';
 import { checkoutApi } from './api';
+import { browserSessionStorage } from './browserStorage';
 import type {
   CheckoutApi,
   CheckoutPayerProof,
@@ -1026,16 +1027,6 @@ const resolvedSince = (rejection: Rejection, signals: Pick<CheckoutStatusEvent, 
   !rejection.rechecked &&
   RE_READ_REASONS.has(rejection.reason ?? '') &&
   signals.unresolvedPayments === 0;
-
-/** The browser's `sessionStorage`, when there is one and the page may use it. */
-function browserSessionStorage(): CheckoutHandOverStorage | null {
-  try {
-    return (globalThis as { sessionStorage?: CheckoutHandOverStorage }).sessionStorage ?? null;
-  } catch {
-    // Blocked storage throws on access
-    return null;
-  }
-}
 
 /** Whether Quasar reports a payment of the invoice that may still arrive (`pendingPayments` with an older Quasar). */
 const unresolvedOf = (signals: Pick<CheckoutStatusEvent, 'pendingPayments' | 'unresolvedPayments'>) =>
@@ -2107,13 +2098,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
 
       setLocale: async (locale) => {
         const before = get().locale;
-        update({ locale, error: null });
+        // Only the language changes. The buyer often switches to read the very text that says "do not pay again", and
+        // without its error the page would offer to pay
+        update({ locale });
         try {
           await api.locale(locale);
           return true;
-        } catch (error) {
+        } catch {
           update({ locale: before });
-          fail(error, get().phase);
           return false;
         }
       },

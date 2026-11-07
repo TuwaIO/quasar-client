@@ -14,6 +14,27 @@ export type PaymentStatus = 'idle' | 'switching' | 'wallet' | 'submitting';
 
 export { OPEN_REQUEST_MS };
 
+/** How long a payment that may have gone out keeps the wallet from being asked: as long as the adapter still follows it. */
+const UNCONFIRMED_HOLD_MS = 35 * 60 * 1000;
+
+/** What waits in the wallet, or may have gone out, for a checkout. */
+interface OpenRequest {
+  /** The wallet asked. */
+  account: string;
+  /** How it was asked: a signature can be asked for again, a transaction cannot. */
+  path: PayPath;
+  /** Settles when the wallet answers and Quasar took it. */
+  paying: Promise<unknown>;
+  /** Until when no other request goes to this wallet. */
+  until: number;
+  /** Whether the wallet took a payment that is not confirmed yet. */
+  unconfirmed: boolean;
+}
+
+// One per checkout store, not per pay step: the step unmounts on every screen change while the wallet keeps its request.
+// A second request next to one that waits could be confirmed too, and the buyer pays twice
+const openRequests = new WeakMap<object, OpenRequest>();
+
 /** What {@link usePayment} needs. */
 export interface UsePaymentParams {
   /** The adapter of the quote's chain family; without it the wallet cannot pay. */
@@ -65,12 +86,13 @@ export interface Payment {
  */
 export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, onSent }: UsePaymentParams): Payment {
   const [status, setStatus] = useState<PaymentStatus>('idle');
-  const [problem, setProblem] = useState<PaymentWalletErrorKind | null>(null);
+  const [problem, setProblem] = useState<PaymentWalletErrorKind | null>(() => {
+    const kept = openRequests.get(store);
+    const stillHeld = kept?.unconfirmed && kept.account === wallet?.address && Date.now() < kept.until;
+    return stillHeld ? 'sentUnconfirmed' : null;
+  });
   // Each request gets a number; a dismissed or replaced one no longer changes the page
   const request = useRef(0);
-  // A transaction waiting in the wallet. Closing our window leaves it open there: another press must not send a second
-  // one next to it, or both could be confirmed and the buyer pays twice. Only a signature (`relay`) may be asked again
-  const open = useRef<{ account: string; paying: Promise<unknown>; since: number } | null>(null);
   const [askedWallet, setAskedWallet] = useState<CheckoutWallet | null>(null);
 
   const run = async (next: PaymentStatus, action: (isCurrent: () => boolean) => Promise<unknown>) => {
@@ -95,8 +117,11 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
       run('wallet', async (isCurrent) => {
         if (!adapter || !quote || !wallet) return setProblem('unsupported');
         setAskedWallet(wallet);
-        const waiting = open.current;
-        if (path !== 'relay' && waiting?.account === wallet.address && Date.now() - waiting.since < OPEN_REQUEST_MS) {
+        // Closing our window leaves the request open in the wallet. Only a repeat of a signature (`relay`) may be asked
+        // again: it pays once however often it is signed. Who pays the gas changes nothing about the rest, both move money
+        const waiting = openRequests.get(store);
+        const repeatsSignature = waiting?.path === 'relay' && path === 'relay';
+        if (waiting?.account === wallet.address && !repeatsSignature && Date.now() < waiting.until) {
           // The window shows again and says that the request waits in the wallet
           await waiting.paying;
           return;
@@ -118,14 +143,23 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
               connectorType: wallet.connectorType,
             }),
         });
-        if (path !== 'relay') {
-          const entry = { account: wallet.address, paying, since: Date.now() };
-          open.current = entry;
-          const settled = () => {
-            if (open.current === entry) open.current = null;
-          };
-          paying.then(settled, settled);
-        }
+        const entry: OpenRequest = {
+          account: wallet.address,
+          path,
+          paying,
+          until: Date.now() + OPEN_REQUEST_MS,
+          unconfirmed: false,
+        };
+        openRequests.set(store, entry);
+        const settled = () => {
+          if (openRequests.get(store) === entry) openRequests.delete(store);
+        };
+        paying.then(settled, (error: unknown) => {
+          if (walletErrorKind(error) !== 'sentUnconfirmed') return settled();
+          // The wallet took it and it may still land: "do not pay again" holds after Back and a new price too
+          entry.unconfirmed = true;
+          entry.until = Date.now() + UNCONFIRMED_HOLD_MS;
+        });
         await paying;
       }),
     switchNetwork: () =>

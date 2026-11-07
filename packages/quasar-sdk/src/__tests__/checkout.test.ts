@@ -389,6 +389,32 @@ describe('createCheckoutStore', () => {
     checkout.getState().destroy();
   });
 
+  // The buyer switches language to read the very text that says "do not pay again"
+  it('keeps what the page says about a payment when the language changes', async () => {
+    fetchMock.mockResolvedValueOnce(json(view())).mockResolvedValueOnce(json({ locale: 'uk' }));
+    const checkout = store();
+    await checkout.getState().load();
+    const error = { code: 'payment_unconfirmed', reason: 'settlement_failed', message: 'Do not pay again' };
+    checkout.setState({ phase: 'unconfirmed', error } as never);
+    await checkout.getState().setLocale('uk');
+    expect(checkout.getState()).toMatchObject({ phase: 'unconfirmed', locale: 'uk', error });
+    checkout.getState().destroy();
+  });
+
+  it('goes back to the language it had when Quasar refuses another, with the page as it was', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(view()))
+      .mockResolvedValueOnce(json({ code: 'payer_blocked', message: 'no' }, 403));
+    const checkout = store();
+    await checkout.getState().load();
+    const before = checkout.getState().locale;
+    const error = { code: 'payment_mismatch', message: 'It may have moved money' };
+    checkout.setState({ phase: 'unconfirmed', error } as never);
+    expect(await checkout.getState().setLocale('uk')).toBe(false);
+    expect(checkout.getState()).toMatchObject({ phase: 'unconfirmed', locale: before, error });
+    checkout.getState().destroy();
+  });
+
   it('hands over the sent transaction and follows the invoice until it is paid', async () => {
     fetchMock
       .mockResolvedValueOnce(json(view({ quote: QUOTE as never })))

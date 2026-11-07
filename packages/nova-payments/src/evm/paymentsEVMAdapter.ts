@@ -1,4 +1,4 @@
-import { OrbitAdapter, toEvmChainId } from '@tuwaio/orbit-core';
+import { delay, OrbitAdapter, toEvmChainId } from '@tuwaio/orbit-core';
 import { type EvmTransaction, TransactionTracker } from '@tuwaio/pulsar-core';
 import type { PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
 import {
@@ -28,6 +28,8 @@ import { PaymentWalletError } from '../utils/walletErrors';
 const CALLS_TIMEOUT_MS = 180_000;
 /** How long a sponsored payment past {@link CALLS_TIMEOUT_MS} is still followed, in milliseconds. */
 const CALLS_LATE_TIMEOUT_MS = 30 * 60_000;
+/** How long to wait before reading a batch again after a read failed. */
+const CALLS_LATE_READ_MS = 15_000;
 
 /** A call that moves nothing, to an address nothing runs at: the batch exists only for the switch it makes the wallet offer. */
 const NO_OP_CALL = { to: '0x000000000000000000000000000000000000dEaD' as Address, value: 0n };
@@ -62,6 +64,21 @@ function transferRequest(instructions: Extract<PaymentInstructions, { family: 'e
 }
 
 /**
+ * Whether the wallet behind a WalletConnect session is a Safe. Safe{Wallet} connects with the connector `walletConnect`
+ * too, and then only the peer's name tells it apart. `SafePal` is another wallet that sends its own transactions, so the
+ * name must be the whole word. A session that cannot be read says nothing about the wallet, which may pay.
+ */
+async function isSafeThroughWalletConnect(connector: ReturnType<typeof getConnection>['connector']): Promise<boolean> {
+  if (connector?.type !== 'walletConnect') return false;
+  try {
+    const provider = (await connector.getProvider()) as { session?: { peer?: { metadata?: { name?: string } } } };
+    return /^safe\b/i.test(provider.session?.peer?.metadata?.name ?? '');
+  } catch {
+    return false;
+  }
+}
+
+/**
  * The adapter that pays EVM methods of a Nova Payments checkout from the wallet connected through wagmi (the config
  * Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
  * switch networks, sends the transfer (native coin or ERC-20 `transfer`), signs the EIP-3009 authorization of a gasless
@@ -87,9 +104,9 @@ function transferRequest(instructions: Extract<PaymentInstructions, { family: 'e
  * ```
  */
 export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
-  const refuseSafe = () => {
+  const refuseSafe = async () => {
     const connector = getConnection(config).connector;
-    if (connector?.id === 'safe' || connector?.type === 'safe') {
+    if (connector?.id === 'safe' || connector?.type === 'safe' || (await isSafeThroughWalletConnect(connector))) {
       throw new PaymentWalletError('unsupported', 'A Safe wallet cannot pay this checkout');
     }
   };
@@ -142,7 +159,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
 
     sendTransfer: async ({ instructions, account }) => {
       const evm = evmInstructions(instructions);
-      refuseSafe();
+      await refuseSafe();
       if (evm.token === 'native') {
         return sendTransaction(config, {
           account: account as Address,
@@ -162,6 +179,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     },
 
     signTransferAuthorization: async ({ typedData, account }) => {
+      await refuseSafe();
       // The wallet must be on the chain of the token's domain; the typed data is signed exactly as Quasar issued it
       const client = await getConnectorClient(config, { chainId: Number(typedData.domain.chainId) });
       return client.request({
@@ -172,12 +190,12 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
 
     signMessage: async ({ message, account }) => {
       // A Safe cannot pay this checkout, so it does not confirm the invoice either
-      refuseSafe();
+      await refuseSafe();
       return signMessage(config, { account: account as Address, message });
     },
 
     sendSponsoredCalls: async ({ calls, paymasterUrl, chainId, account, onSent, onLate }) => {
-      refuseSafe();
+      await refuseSafe();
       const { id } = await sendCalls(config, {
         account: account as Address,
         chainId: evmChainId(chainId),
@@ -185,21 +203,34 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         capabilities: { paymasterService: { url: paymasterUrl } },
       });
       onSent?.();
-      const result = await waitForCallsStatus(config, { id, timeout: CALLS_TIMEOUT_MS }).catch((error: unknown) => {
-        if ((error as { name?: string })?.name !== 'WaitForCallsStatusTimeoutError') throw error;
-        // The wallet sent it and the batch may still land: "it failed" would invite a second payment. Its transaction
-        // still reaches Quasar when it comes
-        void waitForCallsStatus(config, { id, timeout: CALLS_LATE_TIMEOUT_MS }).then(
-          (late) => {
+      // Its transaction still reaches Quasar when it comes. A failed read says nothing about the batch: a dropped
+      // session or a disconnected wallet may come back, and the batch lands either way
+      const followLate = async () => {
+        const until = Date.now() + CALLS_LATE_TIMEOUT_MS;
+        while (Date.now() < until) {
+          try {
+            const late = await waitForCallsStatus(config, { id, timeout: until - Date.now() });
+            if (late.status === 'failure') return;
             const hash = late.status === 'success' ? late.receipts?.at(-1)?.transactionHash : undefined;
-            if (hash) onLate?.(hash);
-          },
-          () => undefined,
-        );
-        throw new PaymentWalletError('sentUnconfirmed', 'The sponsored payment is not confirmed yet', { cause: error });
+            if (hash) return onLate?.(hash);
+          } catch {
+            // Read again below
+          }
+          await delay(undefined, CALLS_LATE_READ_MS);
+        }
+      };
+      // From here on the wallet has the batch and it may still land: "nothing was sent" would invite a second payment.
+      // Only a batch whose own status says that it failed is a failure
+      const notConfirmed = (cause?: unknown) => {
+        void followLate().catch(() => undefined);
+        return new PaymentWalletError('sentUnconfirmed', 'The sponsored payment is not confirmed yet', { cause });
+      };
+      const result = await waitForCallsStatus(config, { id, timeout: CALLS_TIMEOUT_MS }).catch((error: unknown) => {
+        throw notConfirmed(error);
       });
+      if (result.status === 'failure') throw new PaymentWalletError('failed', 'The sponsored payment failed');
       const hash = result.status === 'success' ? result.receipts?.at(-1)?.transactionHash : undefined;
-      if (!hash) throw new PaymentWalletError('failed', 'The sponsored payment failed');
+      if (!hash) throw notConfirmed();
       return hash;
     },
 

@@ -80,7 +80,9 @@ function setup(
     refund: options.heldTransfer ? ({ ...(refund as object), heldTransfer: options.heldTransfer } as never) : refund,
     instructions: { ...instructions, to: options.to === undefined ? PAYER : options.to },
   }));
-  const submit = vi.fn(options.submit ?? (async () => ({ ...(refund as object), status: 'submitted' }) as never));
+  const submit = vi.fn(
+    options.submit ?? (async () => ({ ...(refund as object), status: 'submitted', txHash: '0xrefund' }) as never),
+  );
   const get = vi.fn(async () => refund);
   const store = createRefundStore({ request, submit, get, pollMs: 60_000 });
   const params = { store, invoiceId: 'inv_1', invoice: 'INV-2026-7', labels: defaultLabels, locale: 'en' };
@@ -270,6 +272,70 @@ describe('useRefund', () => {
     expect(submit).toHaveBeenCalledTimes(2);
     expect(flow().step).toBe('confirming');
     store.getState().reset();
+  });
+
+  it('asks the wallet once when "Send refund" is pressed twice', async () => {
+    const { adapter, flow, store } = setup();
+    wallet = merchantWallet();
+    await flow().start({ mode: 'exact_received' });
+    const shown = flow();
+    await Promise.all([shown.send(), shown.send()]);
+    expect(adapter.sendTransfer).toHaveBeenCalledOnce();
+    store.getState().reset();
+  });
+
+  it('shows the button as busy while the refund is read again, before the wallet is asked', async () => {
+    const { flow, get, store } = setup();
+    let answer!: (value: never) => void;
+    get.mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)));
+    wallet = merchantWallet();
+    await flow().start({ mode: 'exact_received' });
+    const sending = flow().send();
+    expect(flow().sending).toBe(true);
+    answer(refund);
+    await sending;
+    expect(flow().sending).toBe(false);
+    store.getState().reset();
+  });
+
+  it('asks the wallet nothing after a reload lost the page: the transaction it sent is handed over', async () => {
+    const handOverStorage = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => handOverStorage.get(key) ?? null,
+      setItem: (key: string, value: string) => void handOverStorage.set(key, value),
+      removeItem: (key: string) => void handOverStorage.delete(key),
+    };
+    const { adapter } = setup();
+    const before = createRefundStore({
+      request: vi.fn(async () => ({ refund, instructions })),
+      submit: vi.fn().mockRejectedValue(new Error('Quasar did not answer')),
+      get: vi.fn(async () => refund),
+      handOverStorage: storage,
+    });
+    wallet = merchantWallet();
+    const first = { store: before, invoiceId: 'inv_1', labels: defaultLabels, locale: 'en' };
+    await (render(useRefund, first) as ReturnType<typeof useRefund>).start({ mode: 'exact_received' });
+    await (render(useRefund, first) as ReturnType<typeof useRefund>).send();
+    expect(adapter.sendTransfer).toHaveBeenCalledOnce();
+    unmount();
+
+    // A new page, and another wallet connected: the refund goes on under the wallet that sent it
+    const submit = vi.fn(async () => ({ ...(refund as object), status: 'submitted' }) as never);
+    const after = createRefundStore({
+      request: vi.fn(),
+      submit,
+      get: vi.fn(async () => refund),
+      handOverStorage: storage,
+      pollMs: 60_000,
+    });
+    after.getState().resume(refund, instructions);
+    wallet = { ...merchantWallet(), address: '0x5555555555555555555555555555555555555555' };
+    const second = { store: after, invoiceId: 'inv_1', labels: defaultLabels, locale: 'en' };
+    expect((render(useRefund, second) as ReturnType<typeof useRefund>).txKey).toBe('0xrefund');
+    await (render(useRefund, second) as ReturnType<typeof useRefund>).send();
+    expect(adapter.sendTransfer).toHaveBeenCalledOnce();
+    expect(submit).toHaveBeenCalledWith('rf_1', { txHash: '0xrefund', from: MERCHANT });
+    after.getState().reset();
   });
 
   it('cannot send a refund whose payer Quasar does not know', async () => {

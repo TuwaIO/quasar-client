@@ -24,6 +24,157 @@ describe('createRefundStore', () => {
     vi.useRealTimers();
   });
 
+  describe('a transaction the wallet sent', () => {
+    const SENT = { txHash: '0xsent', from: '0xmerchant' };
+    const memory = () => {
+      const items = new Map<string, string>();
+      return {
+        getItem: (key: string) => items.get(key) ?? null,
+        setItem: (key: string, value: string) => void items.set(key, value),
+        removeItem: (key: string) => void items.delete(key),
+      };
+    };
+    const noAnswer = () => vi.fn().mockRejectedValue(new Error('Quasar did not answer'));
+    const refusal = (status: number, code: string) =>
+      vi.fn().mockRejectedValue(Object.assign(new Error(code), { status, code }));
+    const page = (
+      handOverStorage: ReturnType<typeof memory>,
+      calls: Partial<Parameters<typeof createRefundStore>[0]> = {},
+    ) =>
+      createRefundStore({
+        request: vi.fn().mockResolvedValue(START),
+        submit: noAnswer(),
+        get: vi.fn().mockResolvedValue(refund('requested')),
+        pollMs: 60_000,
+        handOverStorage,
+        ...calls,
+      });
+
+    it('is kept through a reload when Quasar did not answer, so the wallet is not asked again', async () => {
+      const storage = memory();
+      const first = page(storage);
+      await first.getState().start('inv_1');
+      expect(await first.getState().submit(SENT)).toBe(false);
+      expect(first.getState()).toMatchObject({ phase: 'awaitingTransfer', sentTransaction: SENT });
+
+      const reloaded = page(storage);
+      reloaded.getState().resume(refund('requested'), START.instructions);
+      expect(reloaded.getState().sentTransaction).toEqual(SENT);
+      // Quasar still says that the refund waits, and a wallet asked now would send it a second time
+      expect(await reloaded.getState().recheck()).toBe(false);
+      expect(reloaded.getState().phase).toBe('awaitingTransfer');
+    });
+
+    it('is forgotten once Quasar took it', async () => {
+      const storage = memory();
+      const first = page(storage, { submit: vi.fn().mockResolvedValue(refund('submitted')) });
+      await first.getState().start('inv_1');
+      expect(await first.getState().submit(SENT)).toBe(true);
+      first.getState().reset();
+      const reloaded = page(storage);
+      reloaded.getState().resume(refund('requested'), START.instructions);
+      expect(reloaded.getState().sentTransaction).toBeNull();
+    });
+
+    it('is forgotten when Quasar refused it for good, and the page says why', async () => {
+      const storage = memory();
+      const first = page(storage, { submit: refusal(409, 'refund_from_buyer') });
+      await first.getState().start('inv_1');
+      await first.getState().submit(SENT);
+      expect(first.getState()).toMatchObject({ sentTransaction: null, error: { code: 'refund_from_buyer' } });
+      const reloaded = page(storage);
+      reloaded.getState().resume(refund('requested'), START.instructions);
+      expect(reloaded.getState().sentTransaction).toBeNull();
+    });
+
+    it.each([401, 403, 408, 425, 429])(
+      'stays kept on a %i, which says nothing about the transaction',
+      async (status) => {
+        const storage = memory();
+        const first = page(storage, { submit: refusal(status, 'not_now') });
+        await first.getState().start('inv_1');
+        await first.getState().submit(SENT);
+        expect(first.getState().sentTransaction).toEqual(SENT);
+      },
+    );
+
+    it('comes back on a new start for the invoice, with no second refund asked for', async () => {
+      const storage = memory();
+      const first = page(storage);
+      await first.getState().start('inv_1');
+      await first.getState().submit(SENT);
+
+      const request = vi.fn();
+      const reloaded = page(storage, { request });
+      expect(await reloaded.getState().start('inv_1', { amount: '5.00' } as never)).toBe(true);
+      expect(request).not.toHaveBeenCalled();
+      expect(reloaded.getState()).toMatchObject({
+        phase: 'awaitingTransfer',
+        sentTransaction: SENT,
+        instructions: START.instructions,
+        refund: { id: 'ref_1' },
+      });
+    });
+
+    it('follows a refund Quasar turns out to have taken, when the answer was lost', async () => {
+      const storage = memory();
+      const first = page(storage);
+      await first.getState().start('inv_1');
+      await first.getState().submit(SENT);
+
+      const request = vi.fn();
+      const reloaded = page(storage, { request, get: vi.fn().mockResolvedValue(refund('submitted')) });
+      await reloaded.getState().start('inv_1');
+      expect(request).not.toHaveBeenCalled();
+      expect(reloaded.getState().phase).toBe('confirming');
+      reloaded.getState().reset();
+    });
+
+    it('asks for no second refund while Quasar does not say what became of the first', async () => {
+      const storage = memory();
+      const first = page(storage);
+      await first.getState().start('inv_1');
+      await first.getState().submit(SENT);
+
+      const request = vi.fn();
+      const reloaded = page(storage, { request, get: noAnswer() });
+      expect(await reloaded.getState().start('inv_1')).toBe(false);
+      expect(request).not.toHaveBeenCalled();
+      expect(reloaded.getState().error).not.toBeNull();
+    });
+
+    it('asks for a new refund once the kept one is over', async () => {
+      const storage = memory();
+      const first = page(storage);
+      await first.getState().start('inv_1');
+      await first.getState().submit(SENT);
+
+      const request = vi.fn().mockResolvedValue(START);
+      const reloaded = page(storage, { request, get: vi.fn().mockResolvedValue(refund('confirmed')) });
+      expect(await reloaded.getState().start('inv_1')).toBe(true);
+      expect(request).toHaveBeenCalledOnce();
+      expect(reloaded.getState().sentTransaction).toBeNull();
+    });
+
+    it('works without a storage: a full or blocked one only loses the reload', async () => {
+      const blocked = {
+        getItem: () => {
+          throw new Error('blocked');
+        },
+        setItem: () => {
+          throw new Error('blocked');
+        },
+        removeItem: () => {
+          throw new Error('blocked');
+        },
+      };
+      const first = page(blocked);
+      await first.getState().start('inv_1');
+      await first.getState().submit(SENT);
+      expect(first.getState().sentTransaction).toEqual(SENT);
+    });
+  });
+
   describe('recheck, before a wallet is asked', () => {
     const started = async (get: () => Promise<Refund>) => {
       const store = createRefundStore({

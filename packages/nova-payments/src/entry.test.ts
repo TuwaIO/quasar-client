@@ -14,4 +14,5 @@ it("does not load Nova Connect's modals with the package: only Nova's own connec
   const { loadOwnConnection } = await import('./providers/ownConnectionLoader');
   await loadOwnConnection();
   expect(loaded.novaConnectRoot).toBe(true);
-});
+  // The first import of the whole package takes seconds while the other test files run next to it
+}, 30_000);

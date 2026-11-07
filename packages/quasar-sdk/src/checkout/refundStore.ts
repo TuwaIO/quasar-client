@@ -6,7 +6,8 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 
 import { QuasarSDKError } from '../core/errors';
 import type { Refund, RefundParams, RefundPreview, RefundStart, SubmitRefundParams } from '../modules/payments/types';
-import type { CheckoutError } from './store';
+import { browserSessionStorage } from './browserStorage';
+import type { CheckoutError, CheckoutHandOverStorage } from './store';
 
 /**
  * Where a refund stands: `idle`; `requesting` (Quasar prices it); `awaitingTransfer` (send `instructions` from the
@@ -15,6 +16,14 @@ import type { CheckoutError } from './store';
  */
 export type RefundPhase =
   'idle' | 'requesting' | 'awaitingTransfer' | 'submitting' | 'confirming' | 'confirmed' | 'failed';
+
+/** A refund transaction the wallet sent, kept until Quasar takes it or refuses it for good. */
+export interface SentRefundTransaction {
+  /** The transaction (hash or Solana signature). */
+  txHash: string;
+  /** The wallet that sent it, which may not be the one connected now. */
+  from: string;
+}
 
 /** The state and actions of {@link createRefundStore}. */
 export interface RefundState {
@@ -27,6 +36,11 @@ export interface RefundState {
   /** Why the last action failed; cleared by the next one. */
   error: CheckoutError | null;
   /**
+   * The transaction the wallet sent for this refund that Quasar has not taken yet. While it is set, never ask a wallet
+   * again: hand it over with {@link RefundState.submit}, or the buyer is refunded twice.
+   */
+  sentTransaction: SentRefundTransaction | null;
+  /**
    * What a refund would send, through the option `preview`: nothing is asked for.
    *
    * @param invoiceId - The paid or held invoice.
@@ -35,11 +49,13 @@ export interface RefundState {
    */
   preview: (invoiceId: string, params?: RefundParams) => Promise<RefundPreview | null>;
   /**
-   * Asks for a refund of an invoice through `request`.
+   * Asks for a refund of an invoice through `request`. When a transaction sent for an earlier refund of the invoice was
+   * not handed over, that refund comes back instead (`sentTransaction`), or is followed when Quasar took it after all, and
+   * nothing new is asked for while Quasar does not say what became of it.
    *
    * @param invoiceId - The paid or held invoice.
    * @param params - Amount (everything left when omitted), mode and reason.
-   * @returns Whether it was asked for; `phase` is then `awaitingTransfer`.
+   * @returns Whether it was asked for or came back; `phase` is then `awaitingTransfer` (`confirming` when taken).
    */
   start: (invoiceId: string, params?: RefundParams) => Promise<boolean>;
   /**
@@ -55,12 +71,14 @@ export interface RefundState {
    *
    * Side effects: one `get`; follows a refund it finds submitted.
    *
-   * @returns Whether the refund still waits for its transaction: `false` also when Quasar does not answer (`error` says so), as
-   * it cannot be known then.
+   * @returns Whether a wallet may send the refund now: `false` when Quasar does not answer (`error` says so), as it cannot be
+   * known then, and while `sentTransaction` holds a transaction already sent for it.
    */
   recheck: () => Promise<boolean>;
   /**
-   * Hands over the refund transaction through `submit`, then follows the refund through `get` until it is final.
+   * Hands over the refund transaction through `submit`, then follows the refund through `get` until it is final. The
+   * transaction stays in `sentTransaction`, and in {@link RefundStoreOptions.handOverStorage}, until Quasar takes it or
+   * refuses it for good: a refusal of 4xx, other than one that says nothing about it (401, 403, 408, 425, 429).
    *
    * @param params - The transaction and the merchant wallet it was sent from.
    * @returns Whether it was taken; `phase` is then `confirming`.
@@ -86,10 +104,33 @@ export interface RefundStoreOptions {
   get: (refundId: string) => Promise<Refund>;
   /** How often to read a refund being confirmed, in milliseconds. Defaults to `5000`. */
   pollMs?: number;
+  /**
+   * Where a transaction the wallet sent is kept until Quasar takes or refuses it, so that a page closed or reloaded meanwhile
+   * hands it over instead of having the wallet send the refund again. Defaults to the browser's `sessionStorage` (the tab,
+   * until it closes); `null` keeps it in memory only.
+   */
+  handOverStorage?: CheckoutHandOverStorage | null;
 }
 
 /** The store {@link createRefundStore} returns: a vanilla Zustand store. */
 export type RefundStore = StoreApi<RefundState>;
+
+/** The `sessionStorage` entry of the refund transactions Quasar has not taken yet. */
+const HAND_OVERS_KEY = 'quasar-sdk:refundHandOvers';
+
+/** A sent transaction as kept, with what it takes to show its refund again after a reload. */
+interface KeptRefundTransaction extends SentRefundTransaction {
+  refundId: string;
+  invoiceId: string;
+  instructions: RefundStart['instructions'];
+}
+
+/** Statuses that say nothing about the transaction: the session, a limit or a wait. It may still be taken. */
+const NOT_ABOUT_THE_TRANSACTION = new Set([401, 403, 408, 425, 429]);
+
+/** Whether Quasar refused a transaction for good, so that handing it over again cannot help. */
+const refusedForGood = ({ status }: CheckoutError) =>
+  status !== undefined && status >= 400 && status < 500 && !NOT_ABOUT_THE_TRANSACTION.has(status);
 
 function errorOf(error: unknown): CheckoutError {
   if (error instanceof QuasarSDKError) {
@@ -119,7 +160,8 @@ function errorOf(error: unknown): CheckoutError {
  * Actions or its own routes calling `quasar.payments`).
  *
  * Side effects: the calls the app supplies; while `confirming`, `get` every `pollMs` until the refund is final or
- * `reset` is called.
+ * `reset` is called; `sessionStorage` under `quasar-sdk:refundHandOvers` for a sent transaction Quasar has not taken
+ * ({@link RefundStoreOptions.handOverStorage}).
  *
  * @param options - The three calls and the poll interval.
  * @returns The store.
@@ -138,11 +180,31 @@ function errorOf(error: unknown): CheckoutError {
 export function createRefundStore(options: RefundStoreOptions): RefundStore {
   const pollMs = options.pollMs ?? 5_000;
   let poll: ReturnType<typeof setInterval> | null = null;
+  const storage = options.handOverStorage !== undefined ? options.handOverStorage : browserSessionStorage();
 
   const stop = () => {
     if (poll) clearInterval(poll);
     poll = null;
   };
+
+  const keptTransactions = (): KeptRefundTransaction[] => {
+    try {
+      const kept: unknown = JSON.parse(storage?.getItem(HAND_OVERS_KEY) ?? '[]');
+      return Array.isArray(kept) ? (kept as KeptRefundTransaction[]) : [];
+    } catch {
+      return [];
+    }
+  };
+  const writeKept = (entries: KeptRefundTransaction[]) => {
+    try {
+      if (entries.length > 0) storage?.setItem(HAND_OVERS_KEY, JSON.stringify(entries));
+      else storage?.removeItem(HAND_OVERS_KEY);
+    } catch {
+      // A full or blocked storage: the transaction is kept while the page lives
+    }
+  };
+  const forgetTransaction = (refundId: string) =>
+    writeKept(keptTransactions().filter((entry) => entry.refundId !== refundId));
 
   return createStore<RefundState>()((set, get) => {
     const follow = (refundId: string) => {
@@ -170,6 +232,7 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
       refund: null,
       instructions: null,
       error: null,
+      sentTransaction: null,
 
       preview: async (invoiceId, params = {}) => {
         // A refusal of an earlier try is over, whether or not this store can look first
@@ -185,7 +248,33 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
 
       start: async (invoiceId, params = {}) => {
         stop();
-        set({ phase: 'requesting', error: null, refund: null, instructions: null });
+        set({ phase: 'requesting', error: null, refund: null, instructions: null, sentTransaction: null });
+        // A transaction went out for an earlier refund of this invoice and Quasar never took it. Quasar still holds that
+        // refund open and knows nothing of the transaction, so a new one would refund the buyer twice
+        const kept = keptTransactions().find((entry) => entry.invoiceId === invoiceId);
+        if (kept) {
+          try {
+            const refund = await options.get(kept.refundId);
+            if (refund.status === 'requested') {
+              const { txHash, from, instructions } = kept;
+              set({ phase: 'awaitingTransfer', refund, instructions, sentTransaction: { txHash, from } });
+              return true;
+            }
+            forgetTransaction(kept.refundId);
+            if (refund.status === 'submitted') {
+              set({ phase: 'confirming', refund });
+              follow(refund.id);
+              return true;
+            }
+          } catch (error) {
+            const told = errorOf(error);
+            if (told.status !== 404) {
+              set({ phase: 'idle', error: told });
+              return false;
+            }
+            forgetTransaction(kept.refundId);
+          }
+        }
         try {
           const { refund, instructions } = await options.request(invoiceId, params);
           set({ phase: 'awaitingTransfer', refund, instructions });
@@ -198,7 +287,13 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
 
       resume: (refund, instructions) => {
         stop();
-        set({ phase: 'awaitingTransfer', refund, instructions, error: null });
+        const kept = keptTransactions().find((entry) => entry.refundId === refund.id);
+        const sentTransaction = kept
+          ? { txHash: kept.txHash, from: kept.from }
+          : get().refund?.id === refund.id
+            ? get().sentTransaction
+            : null;
+        set({ phase: 'awaitingTransfer', refund, instructions, error: null, sentTransaction });
       },
 
       recheck: async () => {
@@ -209,13 +304,15 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
           if (get().refund?.id !== asked.id) return false;
           if (refund.status === 'requested') {
             set({ refund, error: null });
-            return true;
+            // A transaction already went out for it, which Quasar does not know yet: a wallet asked now sends a second one
+            return !get().sentTransaction;
           }
+          forgetTransaction(asked.id);
           if (refund.status === 'submitted') {
-            set({ phase: 'confirming', refund, error: null });
+            set({ phase: 'confirming', refund, error: null, sentTransaction: null });
             follow(asked.id);
           } else {
-            set({ phase: refund.status, refund, error: null });
+            set({ phase: refund.status, refund, error: null, sentTransaction: null });
           }
           return false;
         } catch (error) {
@@ -230,21 +327,37 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
           set({ error: { code: 'refund_required', message: 'Ask for the refund first' } });
           return false;
         }
-        set({ phase: 'submitting', error: null });
+        const sentTransaction = { txHash: params.txHash, from: params.from };
+        // Kept before the call: a tab closed on the way must not lose the only record of money that left the wallet
+        const instructions = get().instructions;
+        if (instructions) {
+          writeKept([
+            ...keptTransactions().filter((entry) => entry.refundId !== refund.id),
+            { refundId: refund.id, invoiceId: refund.invoiceId, instructions, ...sentTransaction },
+          ]);
+        }
+        set({ phase: 'submitting', error: null, sentTransaction });
         try {
           const submitted = await options.submit(refund.id, params);
-          set({ phase: 'confirming', refund: submitted });
+          forgetTransaction(refund.id);
+          set({ phase: 'confirming', refund: submitted, sentTransaction: null });
           follow(refund.id);
           return true;
         } catch (error) {
-          set({ phase: 'awaitingTransfer', error: errorOf(error) });
+          const refused = errorOf(error);
+          if (refusedForGood(refused)) {
+            forgetTransaction(refund.id);
+            set({ phase: 'awaitingTransfer', error: refused, sentTransaction: null });
+          } else {
+            set({ phase: 'awaitingTransfer', error: refused });
+          }
           return false;
         }
       },
 
       reset: () => {
         stop();
-        set({ phase: 'idle', refund: null, instructions: null, error: null });
+        set({ phase: 'idle', refund: null, instructions: null, error: null, sentTransaction: null });
       },
     };
   });

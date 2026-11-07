@@ -15,6 +15,7 @@ import { formatTokenAmount } from '../utils/format';
 import { type CheckoutWallet, networkName, type PaymentFamily } from '../utils/methods';
 import { instructionsChainId } from '../utils/pay';
 import { refundTransfer } from '../utils/refund';
+import { OPEN_REQUEST_MS } from '../utils/settlesWithin';
 import { walletErrorKind } from '../utils/walletErrors';
 import { useAsyncValue } from './useAsyncValue';
 import { useConnectedWallet } from './useConnectedWallet';
@@ -57,9 +58,8 @@ function refundProblemOf(error: unknown): RefundProblem {
   return kind;
 }
 
-// The transaction a wallet sent for a refund of a store, kept past the window that sent it: until Quasar takes it,
-// the next send hands it over again instead of sending a second one
-const sentTransactions = new WeakMap<RefundStore, { refundId: string; txKey: string }>();
+// A send under way, per store and not per window: the window can be opened again while the wallet still has the request
+const sendsUnderWay = new WeakMap<RefundStore, { settled: Promise<void> }>();
 
 /** What {@link useRefund} needs. */
 export interface UseRefundParams {
@@ -141,6 +141,8 @@ export interface RefundFlow {
   switchNetwork: () => Promise<void>;
   /** Sends the refund from the wallet (switching its network first) and hands its transaction to Quasar. */
   send: () => Promise<void>;
+  /** Whether a send is under way, from the press on: the button shows it, and another press sends nothing. */
+  sending: boolean;
 }
 
 /**
@@ -174,11 +176,11 @@ export function useRefund({
   const [status, setStatus] = useState<'idle' | 'switching' | 'wallet'>('idle');
   const [problem, setProblem] = useState<RefundProblem | null>(null);
   const [, rerender] = useState(0);
+  const sending = sendsUnderWay.has(store);
   // A refund the app worked out is asked for once
   const started = useRef(false);
 
-  const sent = sentTransactions.get(store);
-  const txKey = sent && sent.refundId === state.refund?.id ? sent.txKey : null;
+  const txKey = state.sentTransaction?.txHash ?? state.refund?.txHash ?? null;
   const transfer = state.instructions ? refundTransfer(state.instructions) : null;
   const family: PaymentFamily | null = transfer?.family ?? null;
   const chainId = transfer ? instructionsChainId(transfer) : (state.instructions?.chainId ?? null);
@@ -203,6 +205,17 @@ export function useRefund({
     started.current = true;
     void store.getState().start(invoiceId, params);
   }, [params, store, invoiceId]);
+
+  // A window opened while a send is under way: it learns when that send ends
+  useEffect(() => {
+    let mounted = true;
+    void sendsUnderWay.get(store)?.settled.then(() => {
+      if (mounted) rerender((count) => count + 1);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [store]);
 
   const handOver = async (sent: string, from: CheckoutWallet, sentTransfer: PaymentInstructions) => {
     if (!pulsar || !adapter?.pulsarTransaction || !state.refund) return;
@@ -241,13 +254,14 @@ export function useRefund({
     }
   };
 
-  const send = async () => {
+  const sendOnce = async () => {
     setProblem(null);
     if (!transfer) return setProblem('noRecipient');
     if (!wallet || !adapter) return setProblem('unsupported');
-    // Quasar did not take the transaction the wallet sent: hand it over again, never send a second one
-    if (txKey) {
-      await store.getState().submit({ txHash: txKey, from: wallet.address });
+    // Quasar did not take the transaction the wallet sent: hand it over again under the wallet that sent it, never send a
+    // second one
+    if (state.sentTransaction) {
+      await store.getState().submit(state.sentTransaction);
       return;
     }
     const needed = BigInt(transfer.amount) + (transfer.token === 'native' && fee ? fee.amount : 0n);
@@ -255,7 +269,7 @@ export function useRefund({
     // The window may have stood open while the refund was withdrawn or sent elsewhere: a wallet asked now would pay out money
     // nobody asks for any more. Nothing goes out unless Quasar says that the refund still waits.
     if (!(await store.getState().recheck())) {
-      if (store.getState().phase === 'awaitingTransfer') setProblem('unreachable');
+      if (store.getState().phase === 'awaitingTransfer' && !store.getState().sentTransaction) setProblem('unreachable');
       return;
     }
     try {
@@ -269,14 +283,34 @@ export function useRefund({
         account: wallet.address,
         connection: wallet.connection,
       });
-      if (state.refund) sentTransactions.set(store, { refundId: state.refund.id, txKey: hash });
       setStatus('idle');
-      rerender((count) => count + 1);
       void handOver(hash, wallet, transfer);
       await store.getState().submit({ txHash: hash, from: wallet.address });
     } catch (error) {
       setStatus('idle');
       setProblem(refundProblemOf(error));
+    }
+  };
+
+  const send = async () => {
+    // A double click, or a press after the window was opened again, must not ask the wallet for a second transfer: the
+    // merchant could confirm both, and the buyer is refunded twice. A wallet that never answers stops holding it in the end
+    if (sendsUnderWay.has(store)) return;
+    let finish!: () => void;
+    const entry = { settled: new Promise<void>((resolve) => (finish = resolve)) };
+    const end = () => {
+      if (sendsUnderWay.get(store) === entry) sendsUnderWay.delete(store);
+      finish();
+      rerender((count) => count + 1);
+    };
+    const limit = setTimeout(end, OPEN_REQUEST_MS);
+    sendsUnderWay.set(store, entry);
+    rerender((count) => count + 1);
+    try {
+      await sendOnce();
+    } finally {
+      clearTimeout(limit);
+      end();
     }
   };
 
@@ -317,7 +351,6 @@ export function useRefund({
     },
     start: async (request) => {
       setProblem(null);
-      sentTransactions.delete(store);
       await store.getState().start(invoiceId, request);
     },
     connect: () => {
@@ -325,5 +358,6 @@ export function useRefund({
     },
     switchNetwork,
     send,
+    sending,
   };
 }

@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **createRefundStore**(`options`): [`RefundStore`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-refundstore--docs)
 
-Defined in: [checkout/refundStore.ts:138](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L138)
+Defined in: [checkout/refundStore.ts:180](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L180)
 
 Creates the headless refund of a payment from the merchant's connected wallet: ask for the refund, send its
 `instructions` with the wallet (Pulsar or the wallet itself; the store sends nothing on-chain), hand over the
@@ -15,7 +15,8 @@ reaches the browser: the store calls `request`, `submit` and `get`, which the ap
 Actions or its own routes calling `quasar.payments`).
 
 Side effects: the calls the app supplies; while `confirming`, `get` every `pollMs` until the refund is final or
-`reset` is called.
+`reset` is called; `sessionStorage` under `quasar-sdk:refundHandOvers` for a sent transaction Quasar has not taken
+([RefundStoreOptions.handOverStorage](?path=/docs/packages-quasar-sdk-checkout-interfaces-refundstoreoptions--docs#handoverstorage)).
 
 ## Parameters
 

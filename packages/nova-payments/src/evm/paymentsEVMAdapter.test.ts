@@ -358,6 +358,120 @@ describe('paymentsEVMAdapter', () => {
     await vi.waitFor(() => expect(onLate).toHaveBeenCalledWith('0xlate'));
   });
 
+  // The wallet took the batch: from here on nothing may say that nothing was sent, or the buyer pays again
+  it('says a sponsored payment may have gone out when the status read fails after the wallet took it', async () => {
+    let lands!: (value: unknown) => void;
+    wagmi.sendCalls.mockResolvedValue({ id: 'batch-1' });
+    wagmi.waitForCallsStatus
+      .mockRejectedValueOnce(new Error('ConnectorNotConnectedError'))
+      .mockImplementationOnce(() => new Promise((resolve) => (lands = resolve)));
+    const onLate = vi.fn();
+    await expect(
+      paymentsEVMAdapter(config).sendSponsoredCalls!({
+        calls: [],
+        paymasterUrl: 'https://quasar/paymaster',
+        chainId: BASE_SEPOLIA,
+        account: ACCOUNT,
+        onLate,
+      }),
+    ).rejects.toMatchObject({ kind: 'sentUnconfirmed' });
+    lands({ status: 'success', receipts: [{ transactionHash: '0xlate' }] });
+    await vi.waitFor(() => expect(onLate).toHaveBeenCalledWith('0xlate'));
+  });
+
+  it('says a sponsored payment may have gone out when the wallet reports success with no receipt', async () => {
+    wagmi.sendCalls.mockResolvedValue({ id: 'batch-1' });
+    wagmi.waitForCallsStatus
+      .mockResolvedValueOnce({ status: 'success', receipts: [] })
+      .mockImplementationOnce(() => new Promise(() => undefined));
+    await expect(
+      paymentsEVMAdapter(config).sendSponsoredCalls!({
+        calls: [],
+        paymasterUrl: 'https://quasar/paymaster',
+        chainId: BASE_SEPOLIA,
+        account: ACCOUNT,
+      }),
+    ).rejects.toMatchObject({ kind: 'sentUnconfirmed' });
+  });
+
+  it('keeps following a batch after a failed read until its hash comes', async () => {
+    vi.useFakeTimers();
+    try {
+      wagmi.sendCalls.mockResolvedValue({ id: 'batch-1' });
+      wagmi.waitForCallsStatus
+        .mockRejectedValueOnce(new Error('session dropped'))
+        .mockRejectedValueOnce(new Error('session dropped'))
+        .mockResolvedValueOnce({ status: 'success', receipts: [{ transactionHash: '0xlate' }] });
+      const onLate = vi.fn();
+      await expect(
+        paymentsEVMAdapter(config).sendSponsoredCalls!({
+          calls: [],
+          paymasterUrl: 'https://quasar/paymaster',
+          chainId: BASE_SEPOLIA,
+          account: ACCOUNT,
+          onLate,
+        }),
+      ).rejects.toMatchObject({ kind: 'sentUnconfirmed' });
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(onLate).toHaveBeenCalledWith('0xlate');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  describe('a Safe connected through WalletConnect', () => {
+    const connectedThrough = (name: string) =>
+      wagmi.getConnection.mockReturnValue({
+        connector: {
+          id: 'walletConnect',
+          type: 'walletConnect',
+          getProvider: async () => ({ session: { peer: { metadata: { name } } } }),
+        },
+      });
+
+    it.each(['Safe{Wallet}', 'Safe', 'safe wallet'])(
+      'refuses %s: its hash is not a transaction Quasar can follow',
+      async (name) => {
+        connectedThrough(name);
+        const adapter = paymentsEVMAdapter(config);
+        await expect(adapter.sendTransfer({ instructions: usdc, account: ACCOUNT })).rejects.toMatchObject({
+          kind: 'unsupported',
+        });
+        await expect(
+          adapter.signMessage!({ message: 'm', account: ACCOUNT, chainId: BASE_SEPOLIA }),
+        ).rejects.toMatchObject({
+          kind: 'unsupported',
+        });
+        await expect(
+          adapter.signTransferAuthorization!({ typedData: { domain: { chainId: 84532 } } as never, account: ACCOUNT }),
+        ).rejects.toMatchObject({ kind: 'unsupported' });
+        await expect(
+          adapter.sendSponsoredCalls!({ calls: [], paymasterUrl: 'u', chainId: BASE_SEPOLIA, account: ACCOUNT }),
+        ).rejects.toMatchObject({ kind: 'unsupported' });
+        expect(wagmi.writeContract).not.toHaveBeenCalled();
+        expect(wagmi.getConnectorClient).not.toHaveBeenCalled();
+      },
+    );
+
+    it('lets SafePal pay: it is another wallet that sends its own transactions', async () => {
+      connectedThrough('SafePal');
+      wagmi.writeContract.mockResolvedValue('0xhash');
+      await expect(paymentsEVMAdapter(config).sendTransfer({ instructions: usdc, account: ACCOUNT })).resolves.toBe(
+        '0xhash',
+      );
+    });
+
+    it('lets a wallet pay when its session cannot be read: nothing says it is a Safe', async () => {
+      wagmi.getConnection.mockReturnValue({
+        connector: { id: 'walletConnect', type: 'walletConnect', getProvider: () => Promise.reject(new Error('no')) },
+      });
+      wagmi.writeContract.mockResolvedValue('0xhash');
+      await expect(paymentsEVMAdapter(config).sendTransfer({ instructions: usdc, account: ACCOUNT })).resolves.toBe(
+        '0xhash',
+      );
+    });
+  });
+
   it('refuses a chain that is not EVM', async () => {
     await expect(
       paymentsEVMAdapter(config).getBalance({

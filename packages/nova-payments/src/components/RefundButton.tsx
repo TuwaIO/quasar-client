@@ -737,6 +737,10 @@ export function ConfirmStep({
           <FooterNote>{text.nothingSent}</FooterNote>
         )}
         {handOver && flow.error && <ScreenError>{text.notHandedOver}</ScreenError>}
+        {/* Quasar refused the transaction for good: it is forgotten, and the page says why instead of offering it again */}
+        {!handOver && flow.error && flow.problem !== 'unreachable' && (
+          <ScreenError>{refusalText(flow.error, text)}</ScreenError>
+        )}
       </ScreenContent>
       <ScreenFooter>
         {flow.problem !== 'noRecipient' &&
@@ -745,7 +749,9 @@ export function ConfirmStep({
               {formatLabel(text.switchTo, values)}
             </PrimaryButton>
           ) : (
-            <PrimaryButton onClick={() => void flow.send()}>{handOver ? text.handOver : text.sendRefund}</PrimaryButton>
+            <PrimaryButton busy={flow.sending} onClick={() => void flow.send()}>
+              {handOver ? text.handOver : text.sendRefund}
+            </PrimaryButton>
           ))}
         {(notSent || handOver) && recordAction}
         {!notSent && !handOver && flow.wallet && (

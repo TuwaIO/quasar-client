@@ -11,6 +11,9 @@ vi.mock('react', async () => ({
 
 const { render, unmount } = await import('../testing/hookHarness');
 const { OPEN_REQUEST_MS, usePayment } = await import('./usePayment');
+const { PaymentWalletError } = await import('../utils/walletErrors');
+
+const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 const ACCOUNT = '0x1111111111111111111111111111111111111111';
 const wallet: CheckoutWallet = {
@@ -99,6 +102,84 @@ describe('usePayment', () => {
     expect(adapter.sendTransfer).toHaveBeenCalledOnce();
     expect(submit).toHaveBeenCalledOnce();
     expect(renderHook().status).toBe('idle');
+  });
+
+  // The guard lives with the checkout store: PayScreen unmounts on every screen change, and a request in the wallet stays
+  it('does not send a second transaction after the pay step was left and opened again', async () => {
+    const { transfer, adapter, renderHook } = setup();
+    const first = renderHook().pay();
+    renderHook().dismiss();
+    unmount();
+    const second = renderHook().pay();
+    await vi.waitFor(() => expect(adapter.sendTransfer).toHaveBeenCalledOnce());
+    transfer.resolve('0xhash');
+    await Promise.all([first, second]);
+    expect(adapter.sendTransfer).toHaveBeenCalledOnce();
+  });
+
+  // Who pays the gas does not change what the buyer may approve twice: both requests move money
+  it('asks for no gasless signature while a transaction waits in the wallet', async () => {
+    const { transfer, adapter, renderHook, props } = setup();
+    adapter.signTransferAuthorization = vi.fn(async () => '0xsigned');
+    const relayQuote = { ...quote, gasless: { relay: { typedData: {} } } } as unknown as CheckoutQuote;
+    const first = renderHook().pay();
+    renderHook().dismiss();
+    props.path = 'relay';
+    props.quote = relayQuote;
+    const second = renderHook().pay();
+    await tick();
+    expect(adapter.signTransferAuthorization).not.toHaveBeenCalled();
+    transfer.resolve('0xhash');
+    await Promise.all([first, second]);
+  });
+
+  it('sends no transaction while a gasless signature waits in the wallet', async () => {
+    const { adapter, renderHook, props } = setup();
+    const signature = deferred<string>();
+    adapter.signTransferAuthorization = vi.fn(() => signature.promise);
+    props.path = 'relay';
+    props.quote = { ...quote, gasless: { relay: { typedData: {} } } } as unknown as CheckoutQuote;
+    const first = renderHook().pay();
+    renderHook().dismiss();
+    props.path = 'transfer';
+    const second = renderHook().pay();
+    await tick();
+    expect(adapter.sendTransfer).not.toHaveBeenCalled();
+    signature.resolve('0xsigned');
+    await Promise.all([first, second]);
+  });
+
+  it('asks for a gasless signature again: a repeat of the same signature moves nothing twice', async () => {
+    const { adapter, renderHook, props } = setup();
+    const signature = deferred<string>();
+    adapter.signTransferAuthorization = vi.fn(() => signature.promise);
+    props.path = 'relay';
+    props.quote = { ...quote, gasless: { relay: { typedData: {} } } } as unknown as CheckoutQuote;
+    const first = renderHook().pay();
+    renderHook().dismiss();
+    const second = renderHook().pay();
+    await vi.waitFor(() => expect(adapter.signTransferAuthorization).toHaveBeenCalledTimes(2));
+    signature.resolve('0xsigned');
+    await Promise.all([first, second]);
+  });
+
+  // "Do not pay again" must hold after Back and a new price: the sponsored batch can still land
+  it('keeps saying the payment may have gone out after the pay step was left, and asks the wallet nothing', async () => {
+    const { adapter, renderHook, props } = setup();
+    const unconfirmed = Object.assign(new PaymentWalletError('sentUnconfirmed', 'not confirmed yet'));
+    adapter.sendSponsoredCalls = vi.fn(async () => {
+      throw unconfirmed;
+    });
+    props.path = 'paymaster';
+    props.paymasterUrl = 'https://quasar/paymaster';
+    props.quote = { ...quote, gasless: { paymaster: { calls: [] } } } as unknown as CheckoutQuote;
+    await renderHook().pay();
+    expect(renderHook().problem).toBe('sentUnconfirmed');
+    unmount();
+    expect(renderHook().problem).toBe('sentUnconfirmed');
+    await renderHook().pay();
+    expect(adapter.sendSponsoredCalls).toHaveBeenCalledOnce();
+    expect(renderHook().problem).toBe('sentUnconfirmed');
   });
 
   it('sends again once the wallet refused the first one', async () => {
