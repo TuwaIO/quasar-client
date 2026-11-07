@@ -21,7 +21,7 @@
     "@solana/react": "^8.5.0",
     "@solana/webcrypto-ed25519-polyfill": "^8.5.0",
     "@tuwaio/nova-connect": "^0.13.0",
-    "@tuwaio/nova-core": "^0.13.0",
+    "@tuwaio/nova-core": "^0.13.1",
     "@tuwaio/nova-payments": "workspace:^",
     "@tuwaio/nova-transactions": "^0.13.1",
     "@tuwaio/orbit-core": "^0.6.2",

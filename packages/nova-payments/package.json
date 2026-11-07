@@ -123,7 +123,7 @@
     "@solana/kit": "^8.5.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tuwaio/nova-connect": "^0.13.0",
-    "@tuwaio/nova-core": "^0.13.0",
+    "@tuwaio/nova-core": "^0.13.1",
     "@tuwaio/nova-transactions": "^0.13.1",
     "@tuwaio/orbit-core": "^0.6.2",
     "@tuwaio/orbit-solana": "^0.7.4",
