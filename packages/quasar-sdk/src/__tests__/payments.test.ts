@@ -185,6 +185,11 @@ describe('quasar.payments', () => {
     ]);
     expect(await sent(0).body()).toEqual({ amount: '10.00', reason: 'Partial refund' });
     expect(await sent(2).body()).toEqual({ txHash: '0xfeed', from: '0x2' });
+
+    // Fastify refuses an empty JSON body with 400 before any handler runs
+    fetchMock.mockResolvedValueOnce(json({ id: 'ref_1', status: 'failed' }));
+    await quasar.payments.withdrawRefund(refund.id);
+    expect(await sent(3).body()).toEqual({});
   });
 
   it('downloads documents byte for byte, with their type and file name', async () => {

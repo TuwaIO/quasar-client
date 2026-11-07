@@ -1,3 +1,4 @@
+import { isSameAddress } from '@tuwaio/orbit-core';
 import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type {
   CheckoutError,
@@ -17,7 +18,7 @@ import { instructionsChainId } from '../utils/pay';
 import { refundTransfer } from '../utils/refund';
 import { OPEN_REQUEST_MS } from '../utils/settlesWithin';
 import { walletErrorKind } from '../utils/walletErrors';
-import { useAsyncValue } from './useAsyncValue';
+import { useAsyncValue, useRereadValue } from './useAsyncValue';
 import { useConnectedWallet } from './useConnectedWallet';
 import { useNovaPayments } from './useNovaPayments';
 import { useWalletConnection } from './useWalletConnection';
@@ -45,10 +46,19 @@ export type RefundStep =
 /**
  * Why a refund was not sent: the wallet holds too little (`notEnough`), the merchant declined, the wallet cannot send
  * it or sent it on another network, it failed, Quasar does not know the payer (`noRecipient`), or Quasar did not answer when
- * the window looked again before asking the wallet (`unreachable`).
+ * the window looked again before asking the wallet (`unreachable`), the wallet is the one that paid and would only pay the
+ * fee (`fromBuyer`), or the merchant closed the wait while the request stays open in the wallet (`stillInWallet`).
  */
 export type RefundProblem =
-  'notEnough' | 'declined' | 'unsupported' | 'wrongNetwork' | 'failed' | 'noRecipient' | 'unreachable';
+  | 'notEnough'
+  | 'declined'
+  | 'unsupported'
+  | 'wrongNetwork'
+  | 'failed'
+  | 'noRecipient'
+  | 'unreachable'
+  | 'fromBuyer'
+  | 'stillInWallet';
 
 /** What the refund window says about a wallet that did not send: it has one text for a network, one for the rest. */
 function refundProblemOf(error: unknown): RefundProblem {
@@ -57,6 +67,9 @@ function refundProblemOf(error: unknown): RefundProblem {
   if (kind === 'notAuthorized' || kind === 'alreadyPending' || kind === 'sentUnconfirmed') return 'failed';
   return kind;
 }
+
+// The invoice a store was asked a refund for with `params`: once per store and invoice, whatever the window does
+const askedWithParams = new WeakMap<RefundStore, string>();
 
 // A send under way, per store and not per window: the window can be opened again while the wallet still has the request
 const sendsUnderWay = new WeakMap<RefundStore, { settled: Promise<void> }>();
@@ -71,6 +84,8 @@ export interface UseRefundParams {
   invoice?: string;
   /** The refund the app worked out: asked for at once, without the amount step. */
   params?: RefundRequest;
+  /** Whether the window is open: when it opens again after a confirmed refund, it starts over for another one. */
+  open?: boolean;
   /** The labels of the language. */
   labels: NovaPaymentsLabels;
   /** The language, for amounts. */
@@ -141,6 +156,11 @@ export interface RefundFlow {
   switchNetwork: () => Promise<void>;
   /** Sends the refund from the wallet (switching its network first) and hands its transaction to Quasar. */
   send: () => Promise<void>;
+  /**
+   * Closes the wait for the wallet. Its request stays open there: a transaction it sends later is still handed to Quasar, a
+   * refusal is not shown, and {@link RefundFlow.send} asks it nothing more meanwhile.
+   */
+  dismiss: () => void;
   /** Whether a send is under way, from the press on: the button shows it, and another press sends nothing. */
   sending: boolean;
 }
@@ -165,6 +185,7 @@ export function useRefund({
   invoiceId,
   invoice,
   params,
+  open,
   labels,
   locale,
   onConnectWallet,
@@ -174,11 +195,12 @@ export function useRefund({
   const connected = useConnectedWallet();
   const connection = useWalletConnection(onConnectWallet);
   const [status, setStatus] = useState<'idle' | 'switching' | 'wallet'>('idle');
-  const [problem, setProblem] = useState<RefundProblem | null>(null);
+  const [why, setWhy] = useState<{ problem: RefundProblem; account: string | undefined } | null>(null);
   const [, rerender] = useState(0);
   const sending = sendsUnderWay.has(store);
-  // A refund the app worked out is asked for once
-  const started = useRef(false);
+  // Each wallet request gets a number; a dismissed one no longer changes the page
+  const request = useRef(0);
+  const wasOpen = useRef(open);
 
   const txKey = state.sentTransaction?.txHash ?? state.refund?.txHash ?? null;
   const transfer = state.instructions ? refundTransfer(state.instructions) : null;
@@ -187,13 +209,18 @@ export function useRefund({
   const adapter = adapters?.find((item) => item.family === family);
   const wallet = connected && connected.family === family ? connected : null;
   const network = chainId ? networkName(chainId) : '';
+  // Said of one wallet: "not enough on this address" must not stay when another connects
+  const problem = why && why.account === wallet?.address ? why.problem : null;
+  const setProblem = (next: RefundProblem | null) => setWhy(next ? { problem: next, account: wallet?.address } : null);
   const wrongNetwork = Boolean(wallet && family === 'eip155' && chainId && wallet.chainId !== chainId);
   const asked = state.instructions;
   const amount = asked ? `${formatTokenAmount(asked.amount, asked.decimals, locale)} ${asked.symbol}` : '';
 
-  const balance = useAsyncValue(
+  // Read again when the merchant comes back: "not enough" tells them to top up, and it must clear when they did
+  const balance = useRereadValue(
     transfer && wallet && adapter ? `balance|${chainId}|${wallet.address}|${transfer.token}` : null,
     () => adapter!.getBalance({ chainId: chainId!, account: wallet!.address, token: transfer!.token }),
+    state.refund?.id,
   );
   const fee = useAsyncValue(
     transfer && wallet && adapter?.estimateFee ? `fee|${chainId}|${wallet.address}|${transfer.token}` : null,
@@ -201,10 +228,22 @@ export function useRefund({
   );
 
   useEffect(() => {
-    if (!params || started.current || store.getState().phase !== 'idle') return;
-    started.current = true;
+    if (!params || askedWithParams.get(store) === invoiceId || store.getState().phase !== 'idle') return;
+    askedWithParams.set(store, invoiceId);
     void store.getState().start(invoiceId, params);
   }, [params, store, invoiceId]);
+
+  // Refunding a part leaves the rest to refund: opened again, the window starts over instead of showing the old result
+  useEffect(() => {
+    if (open && !wasOpen.current && !params && store.getState().phase === 'confirmed') store.getState().reset();
+    wasOpen.current = open;
+  }, [open, params, store]);
+
+  // A refund can stay on its way for days: nobody reads it for a window that went away
+  useEffect(() => {
+    store.getState().keepFollowing();
+    return () => store.getState().stopFollowing();
+  }, [store]);
 
   // A window opened while a send is under way: it learns when that send ends
   useEffect(() => {
@@ -266,29 +305,39 @@ export function useRefund({
     }
     const needed = BigInt(transfer.amount) + (transfer.token === 'native' && fee ? fee.amount : 0n);
     if (typeof balance === 'bigint' && balance < needed) return setProblem('notEnough');
+    if (family && transfer.to && isSameAddress(family, wallet.address, transfer.to)) return setProblem('fromBuyer');
     // The window may have stood open while the refund was withdrawn or sent elsewhere: a wallet asked now would pay out money
     // nobody asks for any more. Nothing goes out unless Quasar says that the refund still waits.
     if (!(await store.getState().recheck())) {
-      if (store.getState().phase === 'awaitingTransfer' && !store.getState().sentTransaction) setProblem('unreachable');
+      const after = store.getState();
+      const repriced = after.error?.code === 'refund_repriced';
+      if (after.phase === 'awaitingTransfer' && !after.sentTransaction && !repriced) setProblem('unreachable');
       return;
     }
+    const id = ++request.current;
+    const isCurrent = () => request.current === id;
     try {
       if (wrongNetwork && adapter.switchChain) {
         setStatus('switching');
         await adapter.switchChain(chainId!);
       }
-      setStatus('wallet');
+      if (isCurrent()) setStatus('wallet');
       const hash = await adapter.sendTransfer({
         instructions: transfer,
         account: wallet.address,
         connection: wallet.connection,
       });
-      setStatus('idle');
+      if (isCurrent()) setStatus('idle');
+      else setWhy(null);
       void handOver(hash, wallet, transfer);
       await store.getState().submit({ txHash: hash, from: wallet.address });
     } catch (error) {
-      setStatus('idle');
-      setProblem(refundProblemOf(error));
+      if (isCurrent()) {
+        setStatus('idle');
+        setProblem(refundProblemOf(error));
+      } else {
+        setWhy(null);
+      }
     }
   };
 
@@ -318,7 +367,7 @@ export function useRefund({
   const step: RefundStep =
     state.phase === 'idle'
       ? // A refund the page asked for by itself that was refused: the buyer's page says why, instead of waiting for ever
-        params && !state.error
+        params && !state.error && askedWithParams.get(store) !== invoiceId
         ? 'requesting'
         : 'amount'
       : state.phase === 'awaitingTransfer'
@@ -358,6 +407,11 @@ export function useRefund({
     },
     switchNetwork,
     send,
+    dismiss: () => {
+      request.current++;
+      setStatus('idle');
+      setProblem('stillInWallet');
+    },
     sending,
   };
 }

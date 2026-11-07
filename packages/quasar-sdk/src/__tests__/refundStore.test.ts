@@ -175,6 +175,78 @@ describe('createRefundStore', () => {
     });
   });
 
+  describe('following a submitted refund', () => {
+    const following = async (get: () => Promise<Refund>) => {
+      vi.useFakeTimers();
+      const store = createRefundStore({
+        request: vi.fn().mockResolvedValue(START),
+        submit: vi.fn().mockResolvedValue(refund('submitted')),
+        get,
+        pollMs: 5_000,
+        handOverStorage: null,
+      });
+      await store.getState().start('inv_1');
+      await store.getState().submit({ txHash: '0x1', from: '0x2' });
+      return store;
+    };
+
+    it('reads calmly once the refund has been on its way for minutes: it can stay for days', async () => {
+      const get = vi.fn(async () => refund('submitted'));
+      const store = await following(get);
+      await vi.advanceTimersByTimeAsync(5 * 60_000);
+      const atFirst = get.mock.calls.length;
+      expect(atFirst).toBeGreaterThanOrEqual(59);
+      await vi.advanceTimersByTimeAsync(5 * 60_000);
+      expect(get.mock.calls.length - atFirst).toBeLessThanOrEqual(10);
+      store.getState().reset();
+    });
+
+    it.each([401, 403, 404])('stops on a %i: reading again cannot help', async (status) => {
+      const get = vi.fn().mockRejectedValue(Object.assign(new Error('no'), { status, code: 'no' }));
+      const store = await following(get);
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(get).toHaveBeenCalledOnce();
+      expect(store.getState().phase).toBe('confirming');
+    });
+
+    it('goes on after a read that failed for now', async () => {
+      const get = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Quasar did not answer'))
+        .mockResolvedValueOnce(refund('confirmed'));
+      const store = await following(get);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(store.getState().phase).toBe('confirmed');
+    });
+
+    it('stops on stopFollowing and goes on with keepFollowing', async () => {
+      const get = vi.fn(async () => refund('submitted'));
+      const store = await following(get);
+      store.getState().stopFollowing();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(get).not.toHaveBeenCalled();
+      store.getState().keepFollowing();
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(get).toHaveBeenCalledOnce();
+      store.getState().reset();
+    });
+
+    it('keepFollowing starts nothing for a refund that is not on its way', async () => {
+      const get = vi.fn(async () => refund('submitted'));
+      vi.useFakeTimers();
+      const store = createRefundStore({
+        request: vi.fn().mockResolvedValue(START),
+        submit: vi.fn(),
+        get,
+        handOverStorage: null,
+      });
+      await store.getState().start('inv_1');
+      store.getState().keepFollowing();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(get).not.toHaveBeenCalled();
+    });
+  });
+
   describe('recheck, before a wallet is asked', () => {
     const started = async (get: () => Promise<Refund>) => {
       const store = createRefundStore({
@@ -191,6 +263,19 @@ describe('createRefundStore', () => {
       const store = await started(async () => refund('requested'));
       expect(await store.getState().recheck()).toBe(true);
       expect(store.getState().phase).toBe('awaitingTransfer');
+    });
+
+    // Another tab continued the refund and Quasar priced it again: the old amount would over- or under-refund the buyer
+    it('says no to a refund priced again meanwhile, and shows the new amount', async () => {
+      const store = await started(async () => refund('requested', { cryptoAmount: '12000000' }));
+      expect(await store.getState().recheck()).toBe(false);
+      expect(store.getState()).toMatchObject({
+        phase: 'awaitingTransfer',
+        instructions: { amount: '12000000' },
+        error: { code: 'refund_repriced' },
+      });
+      expect(await store.getState().recheck()).toBe(true);
+      expect(store.getState().error).toBeNull();
     });
 
     it('says no to a refund withdrawn meanwhile, and shows why: a window left open would pay out money nobody asks for', async () => {

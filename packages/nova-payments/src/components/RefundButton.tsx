@@ -142,6 +142,7 @@ export function RefundDialog({ open, onOpenChange, locale = 'en', onRefunded, ..
     invoiceId: props.invoiceId,
     invoice: props.invoice,
     params: open ? props.params : undefined,
+    open,
     labels,
     locale,
     onConnectWallet: props.onConnectWallet,
@@ -217,12 +218,18 @@ export function RefundSteps({
     case 'switching':
     case 'wallet':
       return (
-        <Waiting walletId={flow.wallet?.walletId} walletIcon={flow.wallet?.icon}>
-          <strong className={cn(mono, 'novapay:text-sm')}>
-            {formatLabel(flow.step === 'switching' ? text.switchTitle : text.walletTitle, values)}
-          </strong>
-          {flow.step === 'wallet' && <span>{formatLabel(text.walletText, values)}</span>}
-        </Waiting>
+        <>
+          <Waiting walletId={flow.wallet?.walletId} walletIcon={flow.wallet?.icon}>
+            <strong className={cn(mono, 'novapay:text-sm')}>
+              {formatLabel(flow.step === 'switching' ? text.switchTitle : text.walletTitle, values)}
+            </strong>
+            {flow.step === 'wallet' && <span>{formatLabel(text.walletText, values)}</span>}
+          </Waiting>
+          {/* A wallet can lose the request and never answer: the merchant must not be trapped here */}
+          <ScreenFooter>
+            <SecondaryButton onClick={flow.dismiss}>{labels.walletPrompt.cancel}</SecondaryButton>
+          </ScreenFooter>
+        </>
       );
     case 'connect':
       return (
@@ -349,6 +356,7 @@ const failureTitle = (refund: Refund | null | undefined, text: NovaPaymentsLabel
 // What Quasar answers in English goes to the logs of an app: a merchant reads a refusal in the language of the window, in words
 // for what can be done. A code this package does not know says that Quasar refused, never the code itself.
 const REFUSAL_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']>> = {
+  refund_repriced: 'movedTitle',
   request_failed: 'unreachable',
   amount_exceeds_refundable: 'refusedAmount',
   invoice_not_refundable: 'refusedNotRefundable',
@@ -698,6 +706,8 @@ export function ConfirmStep({
     wrongNetwork: formatLabel(text.wrongNetwork, values),
     failed: text.failed,
     noRecipient: text.noRecipient,
+    fromBuyer: text.failedFromBuyer,
+    stillInWallet: formatLabel(labels.walletPrompt.stillWaiting, values),
     unreachable: text.unreachable,
   };
   const notSent = Boolean(flow.problem);
@@ -733,7 +743,7 @@ export function ConfirmStep({
           {details}
         </DetailsCard>
         {flow.problem && <ScreenError>{problems[flow.problem]}</ScreenError>}
-        {flow.problem && flow.problem !== 'noRecipient' && flow.problem !== 'unreachable' && (
+        {flow.problem && !['noRecipient', 'unreachable', 'stillInWallet'].includes(flow.problem) && (
           <FooterNote>{text.nothingSent}</FooterNote>
         )}
         {handOver && flow.error && <ScreenError>{text.notHandedOver}</ScreenError>}

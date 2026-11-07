@@ -317,7 +317,10 @@ export class PaymentsModule {
    * @throws {QuasarSDKError} `refund_not_found` (404), `refund_not_waiting` (409), a timeout or a network error.
    */
   async withdrawRefund(refundId: string): Promise<Refund> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/refunds/${segment(refundId)}/withdraw`, { method: 'POST' });
+    return this.client.request(`${PAYMENTS_ENDPOINT}/refunds/${segment(refundId)}/withdraw`, {
+      method: 'POST',
+      body: {},
+    });
   }
 
   /**

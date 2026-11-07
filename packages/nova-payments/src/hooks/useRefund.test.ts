@@ -338,6 +338,161 @@ describe('useRefund', () => {
     after.getState().reset();
   });
 
+  it('asks the wallet nothing when it is the wallet that paid: the transfer would only cost the fee', async () => {
+    const { adapter, flow, store } = setup({ to: MERCHANT.toUpperCase().replace('0X', '0x') });
+    wallet = merchantWallet();
+    await flow().start({ mode: 'exact_received' });
+    await flow().send();
+    expect(flow().problem).toBe('fromBuyer');
+    expect(adapter.sendTransfer).not.toHaveBeenCalled();
+    store.getState().reset();
+  });
+
+  it('forgets why a wallet did not send when another one connects', async () => {
+    const { flow, store } = setup({ balance: 1n });
+    wallet = merchantWallet();
+    await flow().start({ mode: 'exact_received' });
+    flow();
+    await tick();
+    await flow().send();
+    expect(flow().problem).toBe('notEnough');
+    wallet = { ...merchantWallet(), address: '0x5555555555555555555555555555555555555555' };
+    expect(flow().problem).toBeNull();
+    store.getState().reset();
+  });
+
+  it('reads the balance again when the merchant comes back after a top-up', async () => {
+    const listeners = new Map<string, () => void>();
+    const target = {
+      addEventListener: (type: string, listener: () => void) => listeners.set(type, listener),
+      removeEventListener: () => undefined,
+    };
+    vi.stubGlobal('window', target);
+    vi.stubGlobal('document', { ...target, visibilityState: 'visible' });
+    try {
+      const { adapter, flow, store } = setup({ balance: 1n });
+      wallet = merchantWallet();
+      await flow().start({ mode: 'exact_received' });
+      flow();
+      await tick();
+      expect(flow().balance).toBe(1n);
+      vi.mocked(adapter.getBalance).mockResolvedValue(100_000_000n);
+      listeners.get('focus')?.();
+      flow();
+      await tick();
+      expect(flow().balance).toBe(100_000_000n);
+      store.getState().reset();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  describe('a wallet that does not answer', () => {
+    const waiting = async () => {
+      const context = setup();
+      let answer!: { resolve: (hash: string) => void; reject: (error: unknown) => void };
+      vi.mocked(context.adapter.sendTransfer).mockImplementation(
+        () => new Promise((resolve, reject) => (answer = { resolve, reject })),
+      );
+      wallet = merchantWallet();
+      await context.flow().start({ mode: 'exact_received' });
+      const sending = context.flow().send();
+      await vi.waitFor(() => expect(context.adapter.sendTransfer).toHaveBeenCalledOnce());
+      expect(context.flow().step).toBe('wallet');
+      return { ...context, sending, answer: () => answer };
+    };
+
+    it('lets the merchant out, and a press then asks the wallet nothing more', async () => {
+      const { flow, adapter, sending, answer, store } = await waiting();
+      flow().dismiss();
+      expect(flow()).toMatchObject({ step: 'confirm', sending: true, problem: 'stillInWallet' });
+      await flow().send();
+      expect(adapter.sendTransfer).toHaveBeenCalledOnce();
+      answer().resolve('0xrefund');
+      await sending;
+      store.getState().reset();
+    });
+
+    it('still hands over a transaction the wallet sends after that', async () => {
+      const { flow, submit, sending, answer, store } = await waiting();
+      flow().dismiss();
+      answer().resolve('0xrefund');
+      await sending;
+      expect(submit).toHaveBeenCalledWith('rf_1', { txHash: '0xrefund', from: MERCHANT });
+      expect(flow()).toMatchObject({ sending: false, problem: null });
+      store.getState().reset();
+    });
+
+    it('shows no refusal that comes after that, and the button is live again', async () => {
+      const { flow, sending, answer, store } = await waiting();
+      flow().dismiss();
+      answer().reject(Object.assign(new Error('rejected'), { code: 4001 }));
+      await sending;
+      expect(flow()).toMatchObject({ step: 'confirm', sending: false, problem: null });
+      store.getState().reset();
+    });
+  });
+
+  it('asks for the refund the app worked out on each invoice the same window shows', async () => {
+    const first = setup();
+    wallet = merchantWallet();
+    first.flow({ params: { mode: 'exact_received' } });
+    await tick();
+    expect(first.request).toHaveBeenCalledWith('inv_1', { mode: 'exact_received' });
+    const second = setup();
+    second.flow({ params: { mode: 'exact_received' }, invoiceId: 'inv_2' });
+    await tick();
+    expect(second.request).toHaveBeenCalledWith('inv_2', { mode: 'exact_received' });
+    first.store.getState().reset();
+    second.store.getState().reset();
+  });
+
+  it('does not wait for ever after the app reset a store it asked a refund through', async () => {
+    const { flow, store, request } = setup();
+    wallet = merchantWallet();
+    flow({ params: { mode: 'exact_received' } });
+    await tick();
+    store.getState().reset();
+    expect(flow({ params: { mode: 'exact_received' } }).step).toBe('amount');
+    expect(request).toHaveBeenCalledOnce();
+  });
+
+  it('starts another partial refund when the window opens again after a confirmed one', async () => {
+    const { flow, store } = setup();
+    wallet = merchantWallet();
+    flow({ open: true });
+    await flow({ open: true }).start({ mode: 'exact_received' });
+    store.setState({ phase: 'confirmed' });
+    expect(flow({ open: true }).step).toBe('confirmed');
+    flow({ open: false });
+    await tick();
+    expect(flow({ open: false }).step).toBe('confirmed');
+    flow({ open: true });
+    await tick();
+    expect(flow({ open: true }).step).toBe('amount');
+  });
+
+  it('keeps asking Quasar only while the window lives, and goes on when it comes back', async () => {
+    const { flow, store, get } = setup();
+    wallet = merchantWallet();
+    await flow().start({ mode: 'exact_received' });
+    await flow().send();
+    expect(store.getState().phase).toBe('confirming');
+    vi.useFakeTimers();
+    try {
+      unmount();
+      get.mockClear();
+      await vi.advanceTimersByTimeAsync(180_000);
+      expect(get).not.toHaveBeenCalled();
+      flow();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(get).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+      store.getState().reset();
+    }
+  });
+
   it('cannot send a refund whose payer Quasar does not know', async () => {
     const { adapter, flow } = setup({ to: null });
     wallet = merchantWallet();

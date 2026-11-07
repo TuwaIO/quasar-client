@@ -189,8 +189,8 @@ describe('the checkout names and shows the wallet as it calls itself', () => {
       labels: defaultLabels,
       locale: 'en',
       close: vi.fn(),
-    }) as { props: Props };
-    expect(tree.props).toMatchObject({ walletId: 'switchwallet', walletIcon: ICON });
+    }) as { props: { children: { props: Props }[] } };
+    expect(tree.props.children[0]?.props).toMatchObject({ walletId: 'switchwallet', walletIcon: ICON });
     expect(textOf(tree)).toContain('Switch Wallet');
   });
 });

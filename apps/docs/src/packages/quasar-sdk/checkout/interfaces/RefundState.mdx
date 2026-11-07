@@ -30,6 +30,20 @@ What to send where: chain, asset, recipient (the payer) and amount in base units
 
 ***
 
+### keepFollowing
+
+> **keepFollowing**: () => `void`
+
+Defined in: [checkout/refundStore.ts:90](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L90)
+
+Reads the refund again after [RefundState.stopFollowing](#stopfollowing), while it is `confirming`.
+
+#### Returns
+
+`void`
+
+***
+
 ### phase
 
 > **phase**: [`RefundPhase`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-refundphase--docs)
@@ -104,7 +118,7 @@ The refund, once asked for.
 
 > **reset**: () => `void`
 
-Defined in: [checkout/refundStore.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L88)
+Defined in: [checkout/refundStore.ts:92](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L92)
 
 Stops following and returns to `idle`.
 
@@ -182,6 +196,20 @@ Amount (everything left when omitted), mode and reason.
 `Promise`\<`boolean`\>
 
 Whether it was asked for or came back; `phase` is then `awaitingTransfer` (`confirming` when taken).
+
+***
+
+### stopFollowing
+
+> **stopFollowing**: () => `void`
+
+Defined in: [checkout/refundStore.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L88)
+
+Stops reading the refund and keeps everything else, for when the window goes away.
+
+#### Returns
+
+`void`
 
 ***
 

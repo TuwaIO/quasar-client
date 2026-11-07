@@ -84,6 +84,10 @@ export interface RefundState {
    * @returns Whether it was taken; `phase` is then `confirming`.
    */
   submit: (params: SubmitRefundParams) => Promise<boolean>;
+  /** Stops reading the refund and keeps everything else, for when the window goes away. */
+  stopFollowing: () => void;
+  /** Reads the refund again after {@link RefundState.stopFollowing}, while it is `confirming`. */
+  keepFollowing: () => void;
   /** Stops following and returns to `idle`. */
   reset: () => void;
 }
@@ -117,6 +121,11 @@ export type RefundStore = StoreApi<RefundState>;
 
 /** The `sessionStorage` entry of the refund transactions Quasar has not taken yet. */
 const HAND_OVERS_KEY = 'quasar-sdk:refundHandOvers';
+
+/** How long a submitted refund is read every `pollMs`. */
+const FOLLOW_CALMLY_AFTER_MS = 5 * 60_000;
+/** How often it is read after that, in milliseconds. */
+const CALM_READ_MS = 30_000;
 
 /** A sent transaction as kept, with what it takes to show its refund again after a reload. */
 interface KeptRefundTransaction extends SentRefundTransaction {
@@ -159,8 +168,8 @@ function errorOf(error: unknown): CheckoutError {
  * reaches the browser: the store calls `request`, `submit` and `get`, which the app runs on its server (Server
  * Actions or its own routes calling `quasar.payments`).
  *
- * Side effects: the calls the app supplies; while `confirming`, `get` every `pollMs` until the refund is final or
- * `reset` is called; `sessionStorage` under `quasar-sdk:refundHandOvers` for a sent transaction Quasar has not taken
+ * Side effects: the calls the app supplies; while `confirming`, `get` every `pollMs` for five minutes and every 30 seconds
+ * after that, until the refund is final, `reset` or `stopFollowing` is called, or a read answers 401, 403 or 404; `sessionStorage` under `quasar-sdk:refundHandOvers` for a sent transaction Quasar has not taken
  * ({@link RefundStoreOptions.handOverStorage}).
  *
  * @param options - The three calls and the poll interval.
@@ -179,11 +188,11 @@ function errorOf(error: unknown): CheckoutError {
  */
 export function createRefundStore(options: RefundStoreOptions): RefundStore {
   const pollMs = options.pollMs ?? 5_000;
-  let poll: ReturnType<typeof setInterval> | null = null;
+  let poll: ReturnType<typeof setTimeout> | null = null;
   const storage = options.handOverStorage !== undefined ? options.handOverStorage : browserSessionStorage();
 
   const stop = () => {
-    if (poll) clearInterval(poll);
+    if (poll) clearTimeout(poll);
     poll = null;
   };
 
@@ -209,22 +218,34 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
   return createStore<RefundState>()((set, get) => {
     const follow = (refundId: string) => {
       stop();
-      poll = setInterval(() => {
-        void options
-          .get(refundId)
-          .then((refund) => {
-            if (get().refund?.id !== refundId) return;
-            if (refund.status === 'confirmed' || refund.status === 'failed') {
-              stop();
-              set({ refund, phase: refund.status });
-            } else {
-              set({ refund });
-            }
-          })
-          .catch(() => {
-            // A missed read is retried on the next tick
-          });
-      }, pollMs);
+      const since = Date.now();
+      const readNext = () => {
+        // A refund with no result yet can stay for days: past the first minutes a later answer costs the page nothing
+        const wait = Date.now() - since < FOLLOW_CALMLY_AFTER_MS ? pollMs : Math.max(pollMs, CALM_READ_MS);
+        const timer: ReturnType<typeof setTimeout> = setTimeout(() => {
+          void options.get(refundId).then(
+            (refund) => {
+              if (poll !== timer || get().refund?.id !== refundId) return;
+              if (refund.status === 'confirmed' || refund.status === 'failed') {
+                stop();
+                set({ refund, phase: refund.status });
+              } else {
+                set({ refund });
+                readNext();
+              }
+            },
+            (error: unknown) => {
+              if (poll !== timer) return;
+              // A session that ended or a refund that is gone: reading again cannot help
+              const { status } = errorOf(error);
+              if (status === 401 || status === 403 || status === 404) stop();
+              else readNext();
+            },
+          );
+        }, wait);
+        poll = timer;
+      };
+      readNext();
     };
 
     return {
@@ -303,6 +324,22 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
           const refund = await options.get(asked.id);
           if (get().refund?.id !== asked.id) return false;
           if (refund.status === 'requested') {
+            // Another tab continued it and Quasar priced it again: the wallet would send the old amount. The page shows the
+            // new one, and the next press sends it
+            const instructions = get().instructions;
+            if (
+              instructions &&
+              refund.cryptoAmount &&
+              refund.cryptoAmount !== instructions.amount &&
+              !get().sentTransaction
+            ) {
+              set({
+                refund,
+                instructions: { ...instructions, amount: refund.cryptoAmount },
+                error: { code: 'refund_repriced', message: 'Quasar priced this refund again: check the new amount' },
+              });
+              return false;
+            }
             set({ refund, error: null });
             // A transaction already went out for it, which Quasar does not know yet: a wallet asked now sends a second one
             return !get().sentTransaction;
@@ -353,6 +390,13 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
           }
           return false;
         }
+      },
+
+      stopFollowing: stop,
+
+      keepFollowing: () => {
+        const { phase, refund } = get();
+        if (phase === 'confirming' && refund && !poll) follow(refund.id);
       },
 
       reset: () => {
