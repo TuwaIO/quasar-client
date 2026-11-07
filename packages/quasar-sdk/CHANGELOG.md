@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.7.3...quasar-sdk-v0.8.0) (2026-11-07)
+
+
+### Features
+
+* stable TUWA packages and the audit fixes of the checkout and refunds ([6bfb6aa](https://github.com/TuwaIO/quasar-client/commit/6bfb6aadb80460d573522eec1dc35e05ba320d6f))
+* stable TUWA packages and the audit fixes of the checkout and refunds ([6bfb6aa](https://github.com/TuwaIO/quasar-client/commit/6bfb6aadb80460d573522eec1dc35e05ba320d6f))
+
 ## [0.7.3](https://github.com/TuwaIO/sdk/compare/quasar-sdk-v0.7.2...quasar-sdk-v0.7.3) (2026-10-28)
 
 
