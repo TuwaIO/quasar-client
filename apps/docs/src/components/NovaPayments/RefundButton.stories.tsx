@@ -65,6 +65,8 @@ function simulatedRefundStore({
   let sentAt = 0;
   let refused = false;
   return createRefundStore({
+    // Each story starts clean: a kept transaction would carry over to the next one, as it does over a reload
+    handOverStorage: null,
     // The token fell since the payment: the amount takes more of it, and the window shows that before asking
     preview: async (invoiceId, params) => {
       await wait(400);
