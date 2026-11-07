@@ -421,6 +421,25 @@ describe('paymentsEVMAdapter', () => {
     }
   });
 
+  it('tells when the wallet took a batch, and follows one taken before a reload', async () => {
+    wagmi.sendCalls.mockResolvedValue({ id: 'batch-1' });
+    wagmi.waitForCallsStatus.mockResolvedValueOnce({ status: 'success', receipts: [{ transactionHash: '0xdone' }] });
+    const onAccepted = vi.fn();
+    await paymentsEVMAdapter(config).sendSponsoredCalls!({
+      calls: [],
+      paymasterUrl: 'u',
+      chainId: BASE_SEPOLIA,
+      account: ACCOUNT,
+      onAccepted,
+    });
+    expect(onAccepted).toHaveBeenCalledWith('batch-1');
+
+    wagmi.waitForCallsStatus.mockResolvedValueOnce({ status: 'success', receipts: [{ transactionHash: '0xlate' }] });
+    const onLate = vi.fn();
+    paymentsEVMAdapter(config).followSponsoredCalls!({ batchId: 'batch-1', until: Date.now() + 60_000, onLate });
+    await vi.waitFor(() => expect(onLate).toHaveBeenCalledWith('0xlate'));
+  });
+
   describe('revoking a permission', () => {
     const revoke = () =>
       paymentsEVMAdapter(config).revokePermission!({

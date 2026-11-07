@@ -1,3 +1,4 @@
+import { delay } from '@tuwaio/orbit-core';
 import { useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
@@ -22,8 +23,6 @@ import {
 /** How many times Quasar is asked after the network included the transaction, and how far apart: RPC nodes lag. */
 const CHECKS = 5;
 const CHECK_EVERY_MS = 2000;
-
-const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Turns off the automatic payments of a subscription: what it means, then the wallet that allowed them sends the
@@ -81,7 +80,7 @@ export function AutoPayOffScreen() {
       const revoked = await store.getState().permissionRevoked();
       if (revoked === true) return setAutoPayOff('done');
       answered ||= revoked === false;
-      if (i < CHECKS - 1) await pause(CHECK_EVERY_MS);
+      if (i < CHECKS - 1) await delay(undefined, CHECK_EVERY_MS);
     }
     // Quasar never answered: nobody asked the network, so it cannot be said what the network shows
     setProblem(answered ? 'notYet' : 'notAsked');

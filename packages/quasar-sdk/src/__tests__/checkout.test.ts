@@ -3,6 +3,9 @@ import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'v
 import { type CheckoutApi, createCheckoutStore } from '../checkout';
 import type { CheckoutInvoice, CheckoutRejectedPayment, CheckoutStatusEvent, CheckoutView } from '../checkout/types';
 
+// Node 26 has a `sessionStorage` of its own, which would carry the hand-overs of one test into the next
+beforeEach(() => globalThis.sessionStorage?.clear?.());
+
 const BASE = 'https://quasar.example';
 const fetchMock = vi.fn();
 const json = (body: unknown, status = 200) =>

@@ -114,6 +114,8 @@ describe('Quasar SDK', () => {
       vi.spyOn(globalThis, 'fetch').mockRejectedValue(networkError);
 
       const error = await preFlightTxCheck('https://api.tuwa.io/').catch((e: unknown) => e);
+      // Pulsar awaits this before it asks the wallet: a Quasar that hangs must not hold the prompt back
+      expect((vi.mocked(globalThis.fetch).mock.calls.at(-1)?.[1] as RequestInit).signal).toBeInstanceOf(AbortSignal);
       expect(error).toBeInstanceOf(Error);
       expect((error as Error).message).toBe('[QuasarSDK] Quasar Cloud Engine is currently unreachable.');
       expect((error as Error).cause).toBe(networkError);

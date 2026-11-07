@@ -2,6 +2,8 @@
  * @file Why a wallet did not pay: the buyer declined, the wallet cannot do it, it is on another network, or it failed.
  */
 
+import { errorChain } from '@tuwaio/orbit-core';
+
 /**
  * Why a wallet request did not go through: `declined` by the buyer, `unsupported` by the wallet, `wrongNetwork` when it
  * was on another network than the request, `switchFailed` when it did not switch, `notAuthorized` when it has not allowed
@@ -76,11 +78,7 @@ const field = (value: unknown, key: string): unknown =>
  * @returns The kind.
  */
 export function walletErrorKind(error: unknown): PaymentWalletErrorKind {
-  const chain: unknown[] = [];
-  for (let current = error; current !== undefined && current !== null && !chain.includes(current);) {
-    chain.push(current);
-    current = field(current, 'cause');
-  }
+  const chain = errorChain(error);
   const named = (test: (item: unknown) => boolean) => chain.find(test);
   const given = named((item) => item instanceof PaymentWalletError);
   if (given) return (given as PaymentWalletError).kind;

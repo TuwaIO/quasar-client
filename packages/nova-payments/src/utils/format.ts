@@ -2,6 +2,8 @@
  * @file Numbers, amounts, addresses and countdowns as the checkout shows them, in the language of the page.
  */
 
+import { formatBaseUnits } from '@tuwaio/orbit-core';
+
 /**
  * A decimal string from an integer amount of minor units (cents), without floating point.
  *
@@ -77,23 +79,10 @@ export function formatFeeAmount(baseUnits: string, decimals: number, locale: str
  * @returns For example `89.54` for `89540000` with 6 decimals, `5` for `5000000`.
  */
 export function baseUnitsToDecimal(baseUnits: string, decimals: number): string {
-  const value = BigInt(baseUnits);
-  const scale = 10n ** BigInt(decimals);
-  const fraction = (value % scale).toString().padStart(decimals, '0').replace(/0+$/, '');
-  return fraction ? `${value / scale}.${fraction}` : String(value / scale);
+  return formatBaseUnits(baseUnits, decimals) ?? '0';
 }
 
-/**
- * An address shortened to its start and end, as wallets show it.
- *
- * @param address - The address (`0x…` or base58).
- * @param head - Characters kept at the start; `0x` counts toward it (default `6` for `0x`, `4` otherwise).
- * @param tail - Characters kept at the end (default `4`).
- * @returns For example `0x1111…2222`; a short address unchanged.
- */
-export function shortAddress(address: string, head = address.startsWith('0x') ? 6 : 4, tail = 4): string {
-  return address.length <= head + tail + 1 ? address : `${address.slice(0, head)}…${address.slice(-tail)}`;
-}
+export { shortAddress } from '@tuwaio/orbit-core';
 
 const pad = (value: number) => String(value).padStart(2, '0');
 

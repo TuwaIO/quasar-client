@@ -190,6 +190,7 @@ export function PayScreen() {
     wallet,
     path,
     paymasterUrl: state.paymasterUrl,
+    invoiceId: checkout?.invoice.id,
     onSent: onPaymentSent,
   });
   // A transfer or a paymaster payment of a method the gasless relay could pay: the wallet confirms the invoice first

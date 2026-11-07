@@ -112,6 +112,22 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     }
   };
 
+  // A batch's transaction still reaches Quasar when it comes. A failed read says nothing about the batch: a dropped session or
+  // a disconnected wallet may come back, and the batch lands either way
+  const followBatch = async (id: string, until: number, onLate?: (txKey: string) => void) => {
+    while (Date.now() < until) {
+      try {
+        const late = await waitForCallsStatus(config, { id, timeout: until - Date.now() });
+        if (late.status === 'failure') return;
+        const hash = late.status === 'success' ? late.receipts?.at(-1)?.transactionHash : undefined;
+        if (hash) return onLate?.(hash);
+      } catch {
+        // Read again below
+      }
+      await delay(undefined, CALLS_LATE_READ_MS);
+    }
+  };
+
   return {
     family: 'eip155',
 
@@ -195,7 +211,11 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       return signMessage(config, { account: account as Address, message });
     },
 
-    sendSponsoredCalls: async ({ calls, paymasterUrl, chainId, account, onSent, onLate }) => {
+    followSponsoredCalls: ({ batchId, until, onLate }) => {
+      void followBatch(batchId, until, onLate).catch(() => undefined);
+    },
+
+    sendSponsoredCalls: async ({ calls, paymasterUrl, chainId, account, onSent, onAccepted, onLate }) => {
       await refuseSafe();
       const { id } = await sendCalls(config, {
         account: account as Address,
@@ -203,27 +223,12 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         calls: calls.map((call) => ({ to: call.to as Address, value: BigInt(call.value), data: call.data as Hex })),
         capabilities: { paymasterService: { url: paymasterUrl } },
       });
+      onAccepted?.(id);
       onSent?.();
-      // Its transaction still reaches Quasar when it comes. A failed read says nothing about the batch: a dropped
-      // session or a disconnected wallet may come back, and the batch lands either way
-      const followLate = async () => {
-        const until = Date.now() + CALLS_LATE_TIMEOUT_MS;
-        while (Date.now() < until) {
-          try {
-            const late = await waitForCallsStatus(config, { id, timeout: until - Date.now() });
-            if (late.status === 'failure') return;
-            const hash = late.status === 'success' ? late.receipts?.at(-1)?.transactionHash : undefined;
-            if (hash) return onLate?.(hash);
-          } catch {
-            // Read again below
-          }
-          await delay(undefined, CALLS_LATE_READ_MS);
-        }
-      };
       // From here on the wallet has the batch and it may still land: "nothing was sent" would invite a second payment.
       // Only a batch whose own status says that it failed is a failure
       const notConfirmed = (cause?: unknown) => {
-        void followLate().catch(() => undefined);
+        void followBatch(id, Date.now() + CALLS_LATE_TIMEOUT_MS, onLate).catch(() => undefined);
         return new PaymentWalletError('sentUnconfirmed', 'The sponsored payment is not confirmed yet', { cause });
       };
       const result = await waitForCallsStatus(config, { id, timeout: CALLS_TIMEOUT_MS }).catch((error: unknown) => {

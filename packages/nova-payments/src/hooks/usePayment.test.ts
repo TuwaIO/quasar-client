@@ -217,6 +217,87 @@ describe('usePayment', () => {
     expect(isPaymentAccepted(props.store)).toBe(false);
   });
 
+  // A batch has no hash for the hand-over storage of the store: a reload must not reopen Pay next to it
+  describe('a sponsored batch the wallet took, after a reload', () => {
+    const memory = () => {
+      const items = new Map<string, string>();
+      return {
+        getItem: (key: string) => items.get(key) ?? null,
+        setItem: (key: string, value: string) => void items.set(key, value),
+        removeItem: (key: string) => void items.delete(key),
+      };
+    };
+    const paymasterQuote = {
+      ...quote,
+      methodId: 'ap_1',
+      gasless: { paymaster: { calls: [] } },
+    } as unknown as CheckoutQuote;
+    afterEach(() => vi.unstubAllGlobals());
+
+    const paidBeforeTheReload = async () => {
+      vi.stubGlobal('sessionStorage', memory());
+      const { adapter, renderHook, props } = setup();
+      adapter.sendSponsoredCalls = vi.fn(async ({ onAccepted, onSent }) => {
+        onAccepted?.('batch-1');
+        onSent?.();
+        throw new PaymentWalletError('sentUnconfirmed', 'not confirmed yet');
+      });
+      Object.assign(props, {
+        path: 'paymaster',
+        paymasterUrl: 'https://quasar/paymaster',
+        quote: paymasterQuote,
+        invoiceId: 'inv_1',
+      });
+      await renderHook().pay();
+      unmount();
+    };
+
+    it('keeps Pay shut, asks the wallet nothing and hands over the hash when it comes', async () => {
+      await paidBeforeTheReload();
+      const reloaded = setup();
+      const sendSponsoredCalls = vi.fn(async () => '0xsecond');
+      let lands!: (txKey: string) => void;
+      const followSponsoredCalls = vi.fn(({ onLate }: { onLate: (txKey: string) => void }) => {
+        lands = onLate;
+      });
+      Object.assign(reloaded.adapter, { sendSponsoredCalls, followSponsoredCalls });
+      Object.assign(reloaded.props, {
+        path: 'paymaster',
+        paymasterUrl: 'https://quasar/paymaster',
+        quote: paymasterQuote,
+        invoiceId: 'inv_1',
+      });
+      expect(reloaded.renderHook().problem).toBe('sentUnconfirmed');
+      await tick();
+      expect(followSponsoredCalls).toHaveBeenCalledWith(expect.objectContaining({ batchId: 'batch-1' }));
+      await reloaded.renderHook().pay();
+      expect(sendSponsoredCalls).not.toHaveBeenCalled();
+      lands('0xlate');
+      expect(reloaded.submit).toHaveBeenCalledWith(expect.objectContaining({ txKey: '0xlate', methodId: 'ap_1' }));
+      expect(sessionStorage.getItem('nova-payments:sponsoredBatches')).toBeNull();
+    });
+
+    it('says nothing of it for another invoice', async () => {
+      await paidBeforeTheReload();
+      const reloaded = setup();
+      Object.assign(reloaded.props, { invoiceId: 'inv_2' });
+      expect(reloaded.renderHook().problem).toBeNull();
+    });
+
+    it('lets it go once the wait is over', async () => {
+      await paidBeforeTheReload();
+      const later = Date.now() + 36 * 60_000;
+      const now = vi.spyOn(Date, 'now').mockReturnValue(later);
+      try {
+        const reloaded = setup();
+        Object.assign(reloaded.props, { invoiceId: 'inv_1' });
+        expect(reloaded.renderHook().problem).toBeNull();
+      } finally {
+        now.mockRestore();
+      }
+    });
+  });
+
   it('sends again once the wallet refused the first one', async () => {
     const { transfer, adapter, renderHook } = setup();
     const first = renderHook().pay();

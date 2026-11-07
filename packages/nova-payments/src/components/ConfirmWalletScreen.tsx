@@ -8,7 +8,7 @@ import { useStepHeight } from '../hooks/useStepHeight';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal, shortAddress } from '../utils/format';
 import { methodFamily, networkName, payerFor } from '../utils/methods';
-import { isSameWallet } from '../utils/outcome';
+import { addressOfWallet, isSameWallet } from '../utils/outcome';
 import { isConfirmationError, isSmartWallet, payerProofErrorText } from '../utils/payerProof';
 import { focusRing, mono } from './classes';
 import {
@@ -175,7 +175,7 @@ export function ConfirmWalletScreen() {
           {confirmedOther && (
             <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-primary)]">
               {formatLabel(labels.payerProof.alreadyConfirmed, {
-                wallet: shortAddress(confirmedOther.split(':').pop() ?? confirmedOther),
+                wallet: shortAddress(addressOfWallet(confirmedOther)),
               })}
             </p>
           )}

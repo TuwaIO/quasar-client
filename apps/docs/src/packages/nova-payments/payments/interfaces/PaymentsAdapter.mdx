@@ -144,6 +144,38 @@ The chain family it pays on.
 
 ***
 
+### followSponsoredCalls?
+
+> `optional` **followSponsoredCalls?**: (`params`) => `void`
+
+Defined in: [nova-payments/src/adapters/types.ts:184](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L184)
+
+Follows a batch the wallet took before the page was reloaded, until its transaction comes or `until` passes.
+
+#### Parameters
+
+##### params
+
+The batch, until when to follow it (a timestamp) and what to call with its transaction.
+
+###### batchId
+
+`string`
+
+###### onLate
+
+(`txKey`) => `void`
+
+###### until
+
+`number`
+
+#### Returns
+
+`void`
+
+***
+
 ### getBalance
 
 > **getBalance**: (`params`) => `Promise`\<`bigint`\>
@@ -283,7 +315,7 @@ permission and what to call once the wallet has sent it: a failure while waiting
 
 > `optional` **sendSponsoredCalls?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:179](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L179)
+Defined in: [nova-payments/src/adapters/types.ts:185](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L185)
 
 #### Parameters
 
@@ -300,6 +332,12 @@ Defined in: [nova-payments/src/adapters/types.ts:179](https://github.com/TuwaIO/
 ###### chainId
 
 `string`
+
+###### onAccepted?
+
+(`batchId`) => `void`
+
+Called with the ID of the batch as soon as the wallet took it, before it has a transaction.
 
 ###### onLate?
 

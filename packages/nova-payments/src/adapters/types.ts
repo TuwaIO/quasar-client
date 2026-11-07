@@ -176,12 +176,20 @@ export interface PaymentsAdapter {
    * @returns The pending transaction, for `injectExternalPendingTxs` of the Pulsar store.
    */
   pulsarTransaction?: (params: PulsarTransactionParams) => Transaction;
+  /**
+   * Follows a batch the wallet took before the page was reloaded, until its transaction comes or `until` passes.
+   *
+   * @param params - The batch, until when to follow it (a timestamp) and what to call with its transaction.
+   */
+  followSponsoredCalls?: (params: { batchId: string; until: number; onLate: (txKey: string) => void }) => void;
   sendSponsoredCalls?: (params: {
     calls: { to: string; value: string; data: string }[];
     paymasterUrl: string;
     chainId: string;
     account: string;
     onSent?: () => void;
+    /** Called with the ID of the batch as soon as the wallet took it, before it has a transaction. */
+    onAccepted?: (batchId: string) => void;
     /** Called with the transaction of a batch that landed after the adapter gave up waiting (`sentUnconfirmed`). */
     onLate?: (txKey: string) => void;
   }) => Promise<string>;

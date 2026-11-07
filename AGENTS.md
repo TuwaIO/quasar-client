@@ -62,7 +62,7 @@ Stories run in Chromium with axe only in the `Tests` workflow (`pnpm --filter @t
 - After changing the API types or endpoints of the Quasar API: `pnpm openapi:gen`.
 - After changing `apps/docs/src/Introduction.mdx`, update both translations in the same change: a translation keeps the code blocks and links of its English page, and never use «рушій».
 - Never install new packages without explicit permission.
-- Never push to `main`: it goes through the owner. Payments work goes to `feat/payments`.
+- Never push to `main`: it goes through the owner, by a pull request he merges.
 - Do **NOT** import `@tuwaio/sdk` in `quasar-sdk` or `nova-payments`: only `payments-sdk` knows it.
 - Do **NOT** add a Quasar Cloud or TUWA secret to anything that runs in the browser.
 - Do **NOT** import React, SIWX or `zustand` in the root entry point of `@tuwaio/quasar-sdk`; browser code goes to `/react` and `/checkout`. Do **NOT** use the secret-key client (`QuasarClient`) in `/checkout`: the checkout opens one invoice with its token, and the refund store calls functions the app runs on its server.

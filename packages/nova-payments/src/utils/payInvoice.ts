@@ -27,6 +27,12 @@ export interface PayInvoiceParams {
   /** Called when the wallet answered, before the payment is handed to Quasar. */
   onWalletDone?: () => void;
   /**
+   * Called with the ID of a sponsored batch as soon as the wallet took it, before it has a transaction.
+   *
+   * @param batchId - The ID of the batch.
+   */
+  onBatchAccepted?: (batchId: string) => void;
+  /**
    * Called with the transaction the wallet sent (its hash), before Quasar takes it; not for a gasless signature, whose
    * transaction Quasar sends.
    *
@@ -58,6 +64,7 @@ export async function payInvoice({
   path,
   paymasterUrl,
   onWalletDone,
+  onBatchAccepted,
   onSent,
 }: PayInvoiceParams): Promise<boolean> {
   const account = wallet.address;
@@ -78,6 +85,7 @@ export async function payInvoice({
       chainId,
       account,
       onSent: onWalletDone,
+      onAccepted: onBatchAccepted,
       // It landed after the adapter gave up waiting: Quasar still gets it, and the page follows the invoice
       onLate: (late) => {
         onSent?.(late);

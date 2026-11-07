@@ -20,11 +20,33 @@ The adapter of the quote's chain family.
 
 ***
 
+### onBatchAccepted?
+
+> `optional` **onBatchAccepted?**: (`batchId`) => `void`
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L34)
+
+Called with the ID of a sponsored batch as soon as the wallet took it, before it has a transaction.
+
+#### Parameters
+
+##### batchId
+
+`string`
+
+The ID of the batch.
+
+#### Returns
+
+`void`
+
+***
+
 ### onSent?
 
 > `optional` **onSent?**: (`txKey`) => `void`
 
-Defined in: [nova-payments/src/utils/payInvoice.ts:35](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L35)
+Defined in: [nova-payments/src/utils/payInvoice.ts:41](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L41)
 
 Called with the transaction the wallet sent (its hash), before Quasar takes it; not for a gasless signature, whose
 transaction Quasar sends.
