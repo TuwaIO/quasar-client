@@ -7,6 +7,9 @@
 
 It goes on top of the SDK the way `@tuwaio/evm-sdk` and `@tuwaio/solana-sdk` do: Nova, Satellite, Pulsar and Orbit come from the entries of `@tuwaio/sdk`, so the app has one copy of each and the checkout sees the wallet connection and the transaction store of the app.
 
+> [!IMPORTANT]
+> Docs only, not live in production: Quasar Payments is still being built, so what this page describes is not available yet and may change.
+
 ---
 
 ## 💾 Installation

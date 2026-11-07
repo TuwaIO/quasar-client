@@ -84,6 +84,9 @@ const stop = watchBatchHashes(pulsarStore, (tx) => syncBatchHash(tx.txKey, tx.ha
 
 ### Payments
 
+> [!IMPORTANT]
+> Docs only, not live in production: Quasar Payments is still being built, so what this page describes is not available yet and may change.
+
 A Payments app (chosen when the app is created, on a node that runs Payments) issues invoices that buyers pay in crypto on its payment page; Quasar checks the payment on-chain, issues the receipt and sends `payments.v1` webhooks.
 
 ```ts
