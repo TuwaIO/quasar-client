@@ -40,7 +40,8 @@ const unsupported = (what: string) => new PaymentWalletError('unsupported', `${w
 /**
  * Pays a locked quote: `transfer` sends the transfer and hands its key to Quasar (`submit`), `relay` signs the
  * authorization for Quasar to send (`relay`), `paymaster` sends the sponsored calls and hands their transaction hash
- * to Quasar. A transaction the wallet sent is always handed over, whatever the page shows meanwhile.
+ * to Quasar. A transaction the wallet sent is always handed over, whatever the page shows meanwhile, with the method it
+ * was quoted for: the buyer may have gone on to a price on another network while the wallet asked.
  *
  * Side effects: a wallet prompt; requests to the checkout routes of Quasar.
  *
@@ -80,12 +81,12 @@ export async function payInvoice({
       // It landed after the adapter gave up waiting: Quasar still gets it, and the page follows the invoice
       onLate: (late) => {
         onSent?.(late);
-        void store.getState().submit({ txKey: late, connectorType: wallet.connectorType });
+        void store.getState().submit({ txKey: late, connectorType: wallet.connectorType, methodId: quote.methodId });
       },
     });
     onWalletDone?.();
     onSent?.(txKey);
-    return store.getState().submit({ txKey, connectorType: wallet.connectorType });
+    return store.getState().submit({ txKey, connectorType: wallet.connectorType, methodId: quote.methodId });
   }
   const txKey = await adapter.sendTransfer({
     instructions: quote.instructions,
@@ -94,5 +95,5 @@ export async function payInvoice({
   });
   onWalletDone?.();
   onSent?.(txKey);
-  return store.getState().submit({ txKey, connectorType: wallet.connectorType });
+  return store.getState().submit({ txKey, connectorType: wallet.connectorType, methodId: quote.methodId });
 }

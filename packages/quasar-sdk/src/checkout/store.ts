@@ -440,7 +440,7 @@ export interface CheckoutState {
    *   {@link CheckoutState.paymentOnTheWay} `true`. `false` while the hand-over is retried, after a refusal, and for
    *   `tx_already_used` (followed all the same).
    */
-  submit: (params: { txKey: string; from?: string; connectorType?: string }) => Promise<boolean>;
+  submit: (params: { txKey: string; from?: string; connectorType?: string; methodId?: string }) => Promise<boolean>;
   /**
    * Sends the payer's signature of `quote.gasless.relay.typedData` (`POST relay`): Quasar sends the transfer and the
    * merchant pays the gas.
@@ -588,6 +588,26 @@ const LATE_FOLLOW_WITHOUT_DUE_MS = 60 * 60_000;
 /** How often the store reads an expired invoice whose payment is on its way, at least. */
 const LATE_POLL_MS = 20_000;
 
+/** How long after a stream closed for good the store tries one again. */
+const STREAM_RETRY_MS = 3 * 60_000;
+
+/** With no message for this long the stream is taken for dead: Quasar sends a `ping` every 15 seconds. */
+const STREAM_SILENCE_MS = 45_000;
+
+/** Whether two expiries are of one price lock, however they are written. */
+const samePriceLock = (left: string | null, right: string | null) =>
+  left === right || Date.parse(left ?? '') === Date.parse(right ?? '');
+
+/** Phases that wait for an answer, which end with it. */
+const UNDER_WAY: ReadonlySet<CheckoutPhase> = new Set(['quoting', 'submitting']);
+
+/** Refusals that say nothing of the transaction: the link was replaced, the origin or Payments are off. It may have paid. */
+const NOT_ABOUT_THE_TRANSACTION: ReadonlySet<string> = new Set([
+  'checkout_not_found',
+  'origin_not_allowed',
+  'payments_disabled',
+]);
+
 /**
  * Rejection reasons of a transaction that succeeded on chain without paying the invoice: it may have moved money. Read
  * when Quasar lists the reason without `movedMoney` (it marks the same reasons).
@@ -647,6 +667,7 @@ interface KeptHandOver {
   txKey: string;
   from?: string;
   connectorType?: string;
+  methodId?: string;
   at: number;
 }
 
@@ -1108,6 +1129,10 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
 
   let source: EventSourceLike | null = null;
   let poll: ReturnType<typeof setInterval> | null = null;
+  let silence: ReturnType<typeof setTimeout> | null = null;
+  let streamRetry: ReturnType<typeof setTimeout> | null = null;
+  let streamLost = false;
+  let otherPriceSeen: string | null = null;
   let pollEvery = pollMs;
   let destroyed = false;
   /** The keys of the payment this page handed over: its `txKey`, a relay's `userOpHash` and hash. */
@@ -1181,7 +1206,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
     }
   };
   /** Keeps a hand-over until Quasar takes or refuses it: the transaction, its sender and connector, when first kept. */
-  const keepHandOver = (params: { txKey: string; from?: string; connectorType?: string }) => {
+  const keepHandOver = (params: { txKey: string; from?: string; connectorType?: string; methodId?: string }) => {
     if (!handOverStorage) return;
     const kept = keptHandOvers();
     const before = kept.find(({ txKey }) => txKey === params.txKey);
@@ -1191,6 +1216,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         txKey: params.txKey,
         ...(params.from ? { from: params.from } : {}),
         ...(params.connectorType ? { connectorType: params.connectorType } : {}),
+        ...(params.methodId ? { methodId: params.methodId } : {}),
         at: before?.at ?? Date.now(),
       },
     ]);
@@ -1262,6 +1288,13 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
 
     const fail = (error: unknown, fallback: CheckoutPhase) => {
       const refusal = errorOf(error);
+      const status = get().invoiceStatus;
+      // An invoice that no longer takes a payment keeps its outcome: a refused offer on a paid invoice, or a relay answered
+      // after it expired, says why and hides no receipt
+      if (status && (SETTLED.has(status) || CLOSED.has(status))) {
+        update({ error: refusal, ...(UNDER_WAY.has(get().phase) ? { phase: phaseOfStatus(status) } : {}) });
+        return;
+      }
       update({ error: refusal, phase: PHASE_OF_REFUSAL[refusal.code] ?? fallback });
     };
 
@@ -1278,6 +1311,10 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       source = null;
       if (poll) clearInterval(poll);
       poll = null;
+      if (silence) clearTimeout(silence);
+      silence = null;
+      if (streamRetry) clearTimeout(streamRetry);
+      streamRetry = null;
       stopLate();
     };
 
@@ -1342,24 +1379,64 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       return !FINAL.has(invoiceStatus ?? '') || (CLOSED.has(invoiceStatus ?? '') && (paymentOnTheWay || adopted));
     };
 
+    /** The link was replaced: nothing can be read or taken any more. A payment followed may still have paid. */
+    const linkRetired = (error: unknown) => {
+      const onItsWay = get().paymentOnTheWay || adopted;
+      stopWatching();
+      update(
+        onItsWay
+          ? { ...paymentEnded(), error: submitFailedError(), phase: 'unconfirmed' }
+          : { error: errorOf(error), phase: 'error' },
+      );
+    };
+
     const startPolling = () => {
       if (poll || destroyed) return;
-      // An expired invoice whose payment is on its way changes once at most: read it calmly
-      pollEvery = lateUntil === null ? pollMs : Math.max(pollMs, LATE_POLL_MS);
-      poll = setInterval(() => {
+      // An expired invoice whose payment is on its way changes once at most, and an invoice nothing is on its way to whose
+      // stream ended waits for a stream again: read them calmly. Each read is the whole checkout on the server
+      const calm = lateUntil !== null || (streamLost && !get().paymentOnTheWay && !adopted);
+      pollEvery = calm ? Math.max(pollMs, LATE_POLL_MS) : pollMs;
+      let reading = false;
+      const timer = setInterval(() => {
+        // A slow read is not joined by another: an older answer must not overwrite a newer one
+        if (reading) return;
+        reading = true;
         // A read that started before the last hand-over may not count the payment yet
         const startedAt = handOvers;
         void api
           .view()
           .then((view) => {
-            if (destroyed) return;
-            update({ checkout: view, quote: view.quote ?? get().quote });
+            if (destroyed || poll !== timer) return;
+            // As after a stream event: the buyer's quote stays as the actions left it, and on an underpaid invoice what
+            // is left, and the method that paid, are Quasar's
+            const rest = view.invoice.status === 'underpaid' && view.quote;
+            update({ checkout: view, ...(rest ? { quote: rest, methodId: rest.methodId } : {}) });
             onStatus(statusOfView(view), view, startedAt === handOvers);
+            priceLockedElsewhere(view.quote);
           })
-          .catch(() => {
-            // A missed read is retried on the next tick
+          .catch((error: unknown) => {
+            if (poll !== timer) return;
+            // A missed read is retried on the next tick; a link that is gone never answers again
+            if (error instanceof QuasarSDKError && error.code === 'checkout_not_found') linkRetired(error);
+          })
+          .finally(() => {
+            reading = false;
           });
       }, pollEvery);
+      poll = timer;
+    };
+
+    /**
+     * Quasar holds one price per invoice, and another tab or device may have replaced the one this page shows. Paying the old
+     * price would be judged against the new one: from another wallet the transfer ends held, on another network unseen.
+     * The same wallet and method simply see the new price.
+     */
+    const priceLockedElsewhere = (current: CheckoutQuote | null) => {
+      const { phase, quote } = get();
+      if (phase !== 'awaitingPayment' || !quote || !current) return;
+      if (samePriceLock(current.expiresAt, quote.expiresAt)) return;
+      if (current.payer === quote.payer && current.methodId === quote.methodId) update({ quote: current });
+      else update({ quote: null, phase: 'selectMethod' });
     };
 
     /**
@@ -1376,7 +1453,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         status === 'cancelled'
           ? Math.max(Date.now(), handedOverAt) + CANCELLED_FOLLOW_MS
           : Number.isFinite(dueAt)
-            ? Math.max(dueAt, handedOverAt) + LATE_FOLLOW_MS
+            ? // An underpaid invoice the merchant closed early is past nothing yet: its old due date says nothing
+              Math.max(Math.min(dueAt, Date.now()), handedOverAt) + LATE_FOLLOW_MS
             : Date.now() + LATE_FOLLOW_WITHOUT_DUE_MS;
       // Set once; a hand-over of this page moves it on, never back
       if (lateUntil === null || (handedOver && until > lateUntil)) {
@@ -1573,6 +1651,26 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         }
       }
       if (!view && event.status !== previous && OUTCOMES.has(event.status)) void refreshView();
+      // The event carries the identity of the price Quasar holds: another one is worth one read
+      const shown = get().quote;
+      if (
+        !view &&
+        get().phase === 'awaitingPayment' &&
+        shown &&
+        event.quoteExpiresAt &&
+        event.quoteExpiresAt !== otherPriceSeen &&
+        !samePriceLock(event.quoteExpiresAt, shown.expiresAt)
+      ) {
+        otherPriceSeen = event.quoteExpiresAt;
+        void api
+          .view()
+          .then((read) => {
+            if (!destroyed) priceLockedElsewhere(read.quote);
+          })
+          .catch(() => {
+            // Seen again with the next read
+          });
+      }
     };
 
     const watch = () => {
@@ -1580,7 +1678,31 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       if (!EventSourceClass) return startPolling();
       const events = new EventSourceClass(api.url('events'));
       source = events;
+      // A phone that changes networks loses the connection with no end the browser hears of: `error` never fires, and the
+      // page would wait on a payment that settled. The keepalive shows that the stream still lives
+      const heard = () => {
+        if (silence) clearTimeout(silence);
+        silence = setTimeout(() => {
+          silence = null;
+          if (source !== events || destroyed) return;
+          events.close();
+          source = null;
+          void api
+            .view()
+            .then((view) => {
+              if (destroyed) return;
+              onStatus(statusOfView(view), view);
+            })
+            .catch(() => {
+              // The stream opened again brings the state
+            });
+          watch();
+        }, STREAM_SILENCE_MS);
+      };
+      heard();
+      events.addEventListener('ping', heard);
       events.addEventListener('status', (message) => {
+        heard();
         try {
           onStatus(JSON.parse(message.data) as CheckoutStatusEvent);
         } catch {
@@ -1593,10 +1715,25 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         // does not follow (the browser would reconnect every few seconds to a stream that ends at once): read it
         const { invoiceStatus, paymentOnTheWay } = get();
         const onItsWay = paymentOnTheWay || adopted;
-        if (events.readyState === 2 || (CLOSED.has(invoiceStatus ?? '') && onItsWay && !streamFollows)) {
+        const closedForGood = events.readyState === 2;
+        if (closedForGood || (CLOSED.has(invoiceStatus ?? '') && onItsWay && !streamFollows)) {
           events.close();
           source = null;
+          if (silence) clearTimeout(silence);
+          silence = null;
+          streamLost = closedForGood;
           startPolling();
+          // Streams end every few minutes, and one deploy would move every open page to reads for the rest of its life
+          if (closedForGood && !streamRetry) {
+            streamRetry = setTimeout(() => {
+              streamRetry = null;
+              if (destroyed || !poll || lateUntil !== null) return;
+              clearInterval(poll);
+              poll = null;
+              streamLost = false;
+              watch();
+            }, STREAM_RETRY_MS);
+          }
         }
       };
     };
@@ -1615,7 +1752,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       status?: string,
       elsewhere = false,
     ) => {
-      if (SETTLED.has(status ?? get().invoiceStatus ?? '')) {
+      // Either says it: the answer may be older than the event that settled the invoice
+      if (SETTLED.has(status ?? '') || SETTLED.has(get().invoiceStatus ?? '')) {
         const { error, txKey: shown } = get();
         if (error?.reason?.startsWith('submit_') && shown && keys.includes(shown)) update({ error: null });
         void api
@@ -1644,6 +1782,12 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         phase: closed ? phaseOfStatus(closed) : elsewhere ? 'unconfirmed' : 'confirming',
       });
       if (closed) followLate(closed, true);
+      if (poll && streamLost && lateUntil === null && pollEvery > pollMs) {
+        // A payment is on its way now: the calm reads are over
+        clearInterval(poll);
+        poll = null;
+        startPolling();
+      }
       watch();
     };
 
@@ -1652,13 +1796,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
      * `before` is the phase a refusal goes back to.
      */
     const sendHandOver = async (
-      params: { txKey: string; from?: string; connectorType?: string },
+      params: { txKey: string; from?: string; connectorType?: string; methodId?: string },
       before: CheckoutPhase,
     ): Promise<boolean> => {
       const body = {
         txKey: params.txKey,
         ...(params.from ? { from: params.from } : {}),
         ...(params.connectorType ? { connectorType: params.connectorType } : {}),
+        ...(params.methodId ? { methodId: params.methodId } : {}),
       };
       // Kept in the tab first: a page closed before Quasar answers hands it over on the next load
       keepHandOver(body);
@@ -1693,7 +1838,10 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         }, pause);
         submitRetries.set(body.txKey, timer);
       };
-      if (!quiet() && !closed()) update({ phase: 'submitting', error: null });
+      // A hash named on the unconfirmed page changes nothing there until Quasar takes it: the page says what it says about the
+      // payment, and the form that named it stays to show a refusal
+      const named = before === 'unconfirmed';
+      if (!quiet() && !closed() && !named) update({ phase: 'submitting', error: null });
       // The same transaction handed over again: this hand-over replaces its retries
       clearTimeout(submitRetries.get(body.txKey));
       submitRetries.delete(body.txKey);
@@ -1713,8 +1861,20 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           refusedForGood(body.txKey);
           return false;
         }
+        if (error instanceof QuasarSDKError && NOT_ABOUT_THE_TRANSACTION.has(error.code ?? '')) {
+          // Kept for the next load: it says nothing of the money that left the wallet, so no second payment
+          if (!quiet()) {
+            update({
+              txKey: body.txKey,
+              error: submitFailedError(),
+              ...(closed() ? {} : { phase: 'unconfirmed' as const }),
+            });
+          }
+          return false;
+        }
         if (!retryable(error)) {
           forgetHandOver(body.txKey);
+          if (named && !nonceStillOpen) return false;
           // A hash the buyer named was refused, which says nothing of the nonce. `NameTransaction` says it was refused
           if (nonceStillOpen && !quiet()) update({ ...shutByNonce(), ...(closed() ? {} : { phase: 'unconfirmed' }) });
           else if (!quiet()) fail(error, before === 'submitting' ? 'awaitingPayment' : before);
@@ -1753,6 +1913,10 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
               .catch((again: unknown) => {
                 if (destroyed) return;
                 if (retryable(again)) return retry(attempt + 1);
+                if (again instanceof QuasarSDKError && NOT_ABOUT_THE_TRANSACTION.has(again.code ?? '')) {
+                  if (waiting()) update({ error: submitFailedError() });
+                  return;
+                }
                 if (tooManyPayments(again)) {
                   // The page follows a newer payment by now: this one must not take its place
                   if (waiting()) refusedForGood(body.txKey);
@@ -1991,8 +2155,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           });
           // The invoice settled meanwhile: its outcome stands, and nothing follows it any more
           if (settledMeanwhile()) return outcomeStands();
-          // The buyer changed wallets meanwhile: this price is locked for the last one, whose page is gone
-          if (get().payer !== payer) {
+          // The buyer changed wallets or the method meanwhile: this price is locked for the last ones, whose page is gone
+          if (get().payer !== payer || get().methodId !== methodId) {
             update({ phase: rest ? 'underpaid' : 'selectMethod' });
             return null;
           }

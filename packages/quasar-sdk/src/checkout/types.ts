@@ -613,6 +613,7 @@ export interface CheckoutApi {
     txKey: string;
     from?: string;
     connectorType?: string;
+    methodId?: string;
   }) => Promise<{ txKey: string; status: string }>;
   /** Relays the signed EIP-3009 authorization (`POST relay`). */
   relay: (signature: string) => Promise<{ status: 'submitted' | 'sending'; userOpHash?: string; txHash?: string }>;

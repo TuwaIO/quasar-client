@@ -17,6 +17,12 @@ import type {
   PayerProofMessage,
 } from './types';
 
+// A request that hangs would never reach the retries: a hand-over with no answer is the case they are for
+/** How long a checkout call may take: pricing and screening a wallet take seconds. */
+const REQUEST_TIMEOUT_MS = 45_000;
+/** How long a relay may take: Quasar waits up to 25 seconds for the receipt. */
+const RELAY_TIMEOUT_MS = 90_000;
+
 /** Path of a checkout route: `/v1/payments/checkout/:token` and below. */
 export const checkoutPath = (token: string, route = '') =>
   `/v1/payments/checkout/${encodeURIComponent(token)}${route ? `/${route}` : ''}`;
@@ -30,11 +36,12 @@ export const checkoutPath = (token: string, route = '') =>
  * @internal
  */
 export function checkoutApi(token: string, baseUrl: string = BASE_API_URL): CheckoutApi {
-  const call = async <T>(route: string, body?: object): Promise<T> => {
+  const call = async <T>(route: string, body?: object, timeout = REQUEST_TIMEOUT_MS): Promise<T> => {
     try {
       return await ofetch<T>(checkoutPath(token, route), {
         baseURL: baseUrl,
         method: body ? 'POST' : 'GET',
+        timeout,
         ...(body ? { body } : {}),
       });
     } catch (error) {
@@ -49,10 +56,14 @@ export function checkoutApi(token: string, baseUrl: string = BASE_API_URL): Chec
       call<PayerProofConfirmation>('payer-proof', body),
     buyer: (body: { buyer: Buyer; company?: boolean }) => call<CheckoutView>('buyer', body),
     locale: (locale: InvoiceLocale) => call<{ locale: InvoiceLocale }>('locale', { locale }),
-    submit: (body: { txKey: string; from?: string; connectorType?: string }) =>
+    submit: (body: { txKey: string; from?: string; connectorType?: string; methodId?: string }) =>
       call<{ txKey: string; status: string }>('submit', body),
     relay: (signature: string) =>
-      call<{ status: 'submitted' | 'sending'; userOpHash?: string; txHash?: string }>('relay', { signature }),
+      call<{ status: 'submitted' | 'sending'; userOpHash?: string; txHash?: string }>(
+        'relay',
+        { signature },
+        RELAY_TIMEOUT_MS,
+      ),
     permission: (body: GrantPermissionParams) =>
       call<{ permission: unknown; autoCharge: AutoChargeOffer | null }>('permission', body),
     permissionRevoked: () => call<{ autoCharge: AutoChargeOffer | null }>('permission/revoked', {}),

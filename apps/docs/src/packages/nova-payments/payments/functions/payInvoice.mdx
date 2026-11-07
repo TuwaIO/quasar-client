@@ -6,11 +6,12 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **payInvoice**(`params`): `Promise`\<`boolean`\>
 
-Defined in: [nova-payments/src/utils/payInvoice.ts:52](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L52)
+Defined in: [nova-payments/src/utils/payInvoice.ts:53](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L53)
 
 Pays a locked quote: `transfer` sends the transfer and hands its key to Quasar (`submit`), `relay` signs the
 authorization for Quasar to send (`relay`), `paymaster` sends the sponsored calls and hands their transaction hash
-to Quasar. A transaction the wallet sent is always handed over, whatever the page shows meanwhile.
+to Quasar. A transaction the wallet sent is always handed over, whatever the page shows meanwhile, with the method it
+was quoted for: the buyer may have gone on to a price on another network while the wallet asked.
 
 Side effects: a wallet prompt; requests to the checkout routes of Quasar.
 

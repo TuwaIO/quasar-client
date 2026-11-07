@@ -656,7 +656,10 @@ describe('createCheckoutStore', () => {
     const checkout = store();
     await checkout.getState().load();
     await checkout.getState().submit({ txKey: '0xfeed' });
-    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    for (let minute = 0; minute < 40; minute += 1) {
+      await vi.advanceTimersByTimeAsync(15_000);
+      FakeEventSource.instances[0].emit('ping', {});
+    }
     expect(checkout.getState()).toMatchObject({ phase: 'confirming', error: null });
     expect(FakeEventSource.instances[0].closed).toBe(false);
     checkout.getState().destroy();
@@ -778,7 +781,10 @@ describe('createCheckoutStore', () => {
     const checkout = store();
     await checkout.getState().load();
     await checkout.getState().submit({ txKey: '0xfeed' });
-    await vi.advanceTimersByTimeAsync(2 * 60_000);
+    for (let tick = 0; tick < 8; tick += 1) {
+      await vi.advanceTimersByTimeAsync(15_000);
+      FakeEventSource.instances[0].emit('ping', {});
+    }
     const events = FakeEventSource.instances[0];
     // A Quasar that ends the stream on `expired` (it says nothing of the payments on their way)
     events.emit('status', signal('expired', 5));
@@ -875,7 +881,7 @@ describe('createCheckoutStore', () => {
     const checkout = store();
     await checkout.getState().load();
     FakeEventSource.instances[0].fail();
-    await vi.advanceTimersByTimeAsync(1_000);
+    await vi.advanceTimersByTimeAsync(20_000);
     expect(checkout.getState().phase).toBe('expired');
   });
 
@@ -2042,9 +2048,10 @@ describe('createCheckoutStore: honest re-check states, moved money, hand-overs k
       error: { code: 'payment_unconfirmed', reason: 'submit_failed' },
     });
     expect(checkout.getState().error?.message).toMatch(/contact the merchant/);
-    const calls = paths().length;
+    const submits = () => paths().filter((path: string) => path.endsWith('/submit'));
+    const calls = submits().length;
     await vi.advanceTimersByTimeAsync(10 * 60_000);
-    expect(paths()).toHaveLength(calls);
+    expect(submits()).toHaveLength(calls);
     checkout.getState().destroy();
   });
 
@@ -3711,5 +3718,307 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
       checkout.getState().clearError();
       expect(checkout.getState().error).toBeNull();
     });
+  });
+});
+
+describe('createCheckoutStore: a page left open', () => {
+  const pathOf = (input: string | Request) => new URL(input instanceof Request ? input.url : input).pathname;
+  const reads = () =>
+    fetchMock.mock.calls.filter(([input]) => pathOf(input as string | Request) === '/v1/payments/checkout/tok_1')
+      .length;
+  const answerReadsWith = (body: unknown) => fetchMock.mockImplementation(async () => json(body));
+  const OTHER_QUOTE = {
+    ...QUOTE,
+    payer: 'eip155:8453:0x2222222222222222222222222222222222222222',
+    expiresAt: '2099-10-11T12:15:00.000Z',
+  };
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+    FakeEventSource.instances = [];
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('stays on the outcome when a slower hand-over answers with the status it read before', async () => {
+    answerReadsWith(view({ quote: QUOTE as never }));
+    const checkout = store();
+    await checkout.getState().load();
+    let answer!: (response: Response) => void;
+    fetchMock.mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)));
+    const sending = checkout.getState().submit({ txKey: '0xfeed' });
+    FakeEventSource.instances[0].emit('status', { status: 'paid' });
+    answer(json({ txKey: '0xfeed', status: 'open' }, 202));
+    answerReadsWith(view({ invoice: { ...view().invoice, status: 'paid' } }));
+    await sending;
+    await vi.advanceTimersByTimeAsync(0);
+    expect(checkout.getState().phase).toBe('paid');
+    checkout.getState().destroy();
+  });
+
+  describe('a retired link', () => {
+    const gone = (code: string, status: number) => json({ error: { code, message: code } }, status);
+
+    it('stops being read and says so', async () => {
+      answerReadsWith(view());
+      const checkout = store({ EventSource: null });
+      await checkout.getState().load();
+      fetchMock.mockImplementation(async () => gone('checkout_not_found', 404));
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(checkout.getState()).toMatchObject({ phase: 'error', error: { code: 'checkout_not_found' } });
+      const before = reads();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(reads()).toBe(before);
+      checkout.getState().destroy();
+    });
+
+    it.each([
+      ['checkout_not_found', 404],
+      ['origin_not_allowed', 403],
+      ['payments_disabled', 403],
+    ])(
+      'offers no second payment after a transaction sent from it: %s says nothing of the transaction',
+      async (code, status) => {
+        answerReadsWith(view({ quote: QUOTE as never }));
+        const checkout = store();
+        await checkout.getState().load();
+        fetchMock.mockImplementation(async () => gone(code, status));
+        expect(await checkout.getState().submit({ txKey: '0xfeed' })).toBe(false);
+        expect(checkout.getState()).toMatchObject({
+          phase: 'unconfirmed',
+          txKey: '0xfeed',
+          error: { code: 'payment_unconfirmed', reason: 'submit_failed' },
+        });
+        checkout.getState().destroy();
+      },
+    );
+  });
+
+  it('keeps a paid invoice on its outcome when a later action is refused', async () => {
+    answerReadsWith(view({ invoice: { ...view().invoice, status: 'paid' } }));
+    const checkout = store();
+    await checkout.getState().load();
+    expect(checkout.getState().phase).toBe('paid');
+    const { receiptUrl } = checkout.getState();
+    fetchMock.mockImplementation(async () =>
+      json({ error: { code: 'payer_not_expected', message: 'Another wallet is expected' } }, 403),
+    );
+    await checkout.getState().grantPermission({ payer: QUOTE.payer } as never);
+    expect(checkout.getState()).toMatchObject({ phase: 'paid', receiptUrl, error: { code: 'payer_not_expected' } });
+    checkout.getState().destroy();
+  });
+
+  it('keeps an expired invoice on its outcome when a relay fails after the event', async () => {
+    answerReadsWith(view({ quote: QUOTE as never }));
+    const checkout = store();
+    await checkout.getState().load();
+    let answer!: (response: Response) => void;
+    fetchMock.mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)));
+    const relaying = checkout.getState().relay('0xsigned');
+    FakeEventSource.instances[0].emit('status', { status: 'expired', pendingPayments: 0 });
+    answer(json({ error: { code: 'invoice_not_payable', message: 'no' } }, 409));
+    await relaying;
+    expect(checkout.getState().phase).toBe('expired');
+    checkout.getState().destroy();
+  });
+
+  describe('a stream that ended', () => {
+    it('reads calmly with nothing on its way and goes back to the stream after a while', async () => {
+      answerReadsWith(view());
+      const checkout = store();
+      await checkout.getState().load();
+      const atLoad = reads();
+      FakeEventSource.instances[0].fail();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(reads() - atLoad).toBeLessThanOrEqual(3);
+      await vi.advanceTimersByTimeAsync(2 * 60_000);
+      expect(FakeEventSource.instances).toHaveLength(2);
+      const onStream = reads();
+      await vi.advanceTimersByTimeAsync(40_000);
+      expect(reads()).toBe(onStream);
+      checkout.getState().destroy();
+    });
+
+    it('reads at its usual rate once a payment is on its way', async () => {
+      answerReadsWith(view({ quote: QUOTE as never }));
+      const checkout = store();
+      await checkout.getState().load();
+      FakeEventSource.instances[0].fail();
+      fetchMock.mockImplementationOnce(async () => json({ txKey: '0xfeed', status: 'open' }, 202));
+      await checkout.getState().submit({ txKey: '0xfeed' });
+      const before = reads();
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(reads() - before).toBeGreaterThanOrEqual(4);
+      checkout.getState().destroy();
+    });
+  });
+
+  describe('a stream that went silent', () => {
+    it('is opened again, and the invoice read: a phone that changed networks hears nothing of its end', async () => {
+      answerReadsWith(view());
+      const checkout = store();
+      await checkout.getState().load();
+      const atLoad = reads();
+      answerReadsWith(view({ invoice: { ...view().invoice, status: 'paid' } }));
+      await vi.advanceTimersByTimeAsync(46_000);
+      expect(FakeEventSource.instances[0].closed).toBe(true);
+      expect(reads()).toBeGreaterThan(atLoad);
+      expect(checkout.getState().phase).toBe('paid');
+      checkout.getState().destroy();
+    });
+
+    it('stays open while its pings come', async () => {
+      answerReadsWith(view());
+      const checkout = store();
+      await checkout.getState().load();
+      for (let i = 0; i < 8; i += 1) {
+        await vi.advanceTimersByTimeAsync(15_000);
+        FakeEventSource.instances[0].emit('ping', {});
+      }
+      expect(FakeEventSource.instances).toHaveLength(1);
+      expect(FakeEventSource.instances[0].closed).toBe(false);
+      checkout.getState().destroy();
+    });
+  });
+
+  describe('a price locked elsewhere', () => {
+    const payingOnStream = async () => {
+      answerReadsWith(view({ quote: QUOTE as never }));
+      const checkout = store();
+      await checkout.getState().load();
+      expect(checkout.getState().phase).toBe('awaitingPayment');
+      checkout.setState({ quote: QUOTE as never, methodId: 'ap_1' } as never);
+      return checkout;
+    };
+
+    it('takes this page back to the methods when another wallet locked it', async () => {
+      const checkout = await payingOnStream();
+      answerReadsWith(view({ quote: OTHER_QUOTE as never }));
+      FakeEventSource.instances[0].emit('status', { status: 'open', quoteExpiresAt: OTHER_QUOTE.expiresAt });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(checkout.getState()).toMatchObject({ phase: 'selectMethod', quote: null });
+      checkout.getState().destroy();
+    });
+
+    it('shows the new price when the same wallet locked it for the same method', async () => {
+      const checkout = await payingOnStream();
+      const later = { ...QUOTE, expiresAt: OTHER_QUOTE.expiresAt, amountToSend: '50000000' };
+      answerReadsWith(view({ quote: later as never }));
+      FakeEventSource.instances[0].emit('status', { status: 'open', quoteExpiresAt: later.expiresAt });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(checkout.getState()).toMatchObject({ phase: 'awaitingPayment', quote: { amountToSend: '50000000' } });
+      checkout.getState().destroy();
+    });
+
+    it('reads nothing for the price it already shows', async () => {
+      const checkout = await payingOnStream();
+      const before = reads();
+      FakeEventSource.instances[0].emit('status', { status: 'open', quoteExpiresAt: QUOTE.expiresAt });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(reads()).toBe(before);
+      checkout.getState().destroy();
+    });
+  });
+
+  describe('reads without a stream', () => {
+    it('do not bring back a price the buyer dropped', async () => {
+      answerReadsWith(view({ quote: QUOTE as never }));
+      const checkout = store({ EventSource: null });
+      await checkout.getState().load();
+      checkout.setState({ quote: null, phase: 'selectMethod' } as never);
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(checkout.getState()).toMatchObject({ phase: 'selectMethod', quote: null });
+      checkout.getState().destroy();
+    });
+
+    it('wait for each other: an older answer never overwrites a newer one', async () => {
+      answerReadsWith(view());
+      const checkout = store({ EventSource: null });
+      await checkout.getState().load();
+      let answer!: (response: Response) => void;
+      fetchMock.mockImplementation(() => new Promise((resolve) => (answer = resolve)));
+      const before = reads();
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(reads() - before).toBe(1);
+      answer(json(view()));
+      checkout.getState().destroy();
+    });
+  });
+
+  it('gives each call a time limit, so that a request that hangs reaches the retries', async () => {
+    answerReadsWith(view());
+    const checkout = store();
+    await checkout.getState().load();
+    const [input, init] = fetchMock.mock.calls[0] as [Request | string, RequestInit | undefined];
+    expect(init?.signal ?? (input as Request).signal).toBeInstanceOf(AbortSignal);
+    checkout.getState().destroy();
+  });
+
+  it('drops a price that comes back after the method changed', async () => {
+    answerReadsWith(view());
+    const checkout = store();
+    await checkout.getState().load();
+    checkout.setState({ methodId: 'ap_1', payer: QUOTE.payer } as never);
+    let answer!: (response: Response) => void;
+    fetchMock.mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)));
+    const quoting = checkout.getState().requestQuote();
+    checkout.setState({ methodId: 'ap_2' } as never);
+    answer(json(QUOTE));
+    expect(await quoting).toBeNull();
+    expect(checkout.getState()).toMatchObject({ phase: 'selectMethod', quote: null });
+    checkout.getState().destroy();
+  });
+
+  it('follows an underpaid invoice closed early from now on, not from its old due date', async () => {
+    const dueAt = new Date(Date.now() + 10 * 24 * 3_600_000).toISOString();
+    answerReadsWith(view({ invoice: { ...view().invoice, status: 'underpaid', dueAt } }));
+    const checkout = store();
+    await checkout.getState().load();
+    checkout.setState({ paymentOnTheWay: true } as never);
+    FakeEventSource.instances[0].emit('status', { status: 'expired', pendingPayments: 1 });
+    const until = Date.parse(checkout.getState().followingUntil ?? '');
+    expect(until - Date.now()).toBeLessThanOrEqual(36 * 60_000);
+    checkout.getState().destroy();
+  });
+
+  it('names the method a transaction was quoted for, and keeps it for the next load', async () => {
+    answerReadsWith(view({ quote: QUOTE as never }));
+    const stored = new Map<string, string>();
+    const checkout = createCheckoutStore({
+      token: 'tok_1',
+      baseUrl: BASE,
+      pollMs: 1_000,
+      EventSource: FakeEventSource as never,
+      handOverStorage: {
+        getItem: (key) => stored.get(key) ?? null,
+        setItem: (key, value) => void stored.set(key, value),
+        removeItem: (key) => void stored.delete(key),
+      },
+    });
+    await checkout.getState().load();
+    const calls = fetchMock.mock.calls.length;
+    fetchMock.mockImplementationOnce(() => new Promise(() => undefined));
+    void checkout.getState().submit({ txKey: '0xfeed', methodId: 'ap_1' });
+    expect((await sent(calls)).body).toEqual({ txKey: '0xfeed', methodId: 'ap_1' });
+    expect(JSON.parse([...stored.values()][0] ?? '[]')[0]).toMatchObject({ txKey: '0xfeed', methodId: 'ap_1' });
+    checkout.getState().destroy();
+  });
+
+  it('keeps its word on the payment when a hash the buyer named is refused', async () => {
+    answerReadsWith(view({ quote: QUOTE as never }));
+    const checkout = store();
+    await checkout.getState().load();
+    const error = { code: 'payment_unconfirmed', message: 'Checks again for 24 hours', rechecked: true };
+    checkout.setState({ phase: 'unconfirmed', error } as never);
+    fetchMock.mockImplementationOnce(async () => json({ error: { code: 'invalid_transaction', message: 'no' } }, 400));
+    const sending = checkout.getState().submit({ txKey: '0xnamed' });
+    expect(checkout.getState().phase).toBe('unconfirmed');
+    expect(await sending).toBe(false);
+    expect(checkout.getState()).toMatchObject({ phase: 'unconfirmed', error });
+    checkout.getState().destroy();
   });
 });
