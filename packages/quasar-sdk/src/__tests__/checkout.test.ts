@@ -4029,6 +4029,24 @@ describe('createCheckoutStore: a page left open', () => {
     checkout.getState().destroy();
   });
 
+  // Self-hosted engines are updated apart from this package, and one that refuses the field must not cost the hand-over: the
+  // page would forget a transaction that left the wallet, and offer to pay again
+  it('hands over without the method to an engine that refuses it', async () => {
+    answerReadsWith(view({ quote: QUOTE as never }));
+    const checkout = store();
+    await checkout.getState().load();
+    const calls = fetchMock.mock.calls.length;
+    fetchMock
+      .mockImplementationOnce(async () =>
+        json({ error: { code: 'invalid_request', message: 'Unrecognized key' } }, 400),
+      )
+      .mockImplementationOnce(async () => json({ txKey: '0xfeed', status: 'open' }, 202));
+    expect(await checkout.getState().submit({ txKey: '0xfeed', methodId: 'ap_1' })).toBe(true);
+    expect((await sent(calls + 1)).body).toEqual({ txKey: '0xfeed' });
+    expect(checkout.getState().phase).toBe('confirming');
+    checkout.getState().destroy();
+  });
+
   it('keeps its word on the payment when a hash the buyer named is refused', async () => {
     answerReadsWith(view({ quote: QUOTE as never }));
     const checkout = store();

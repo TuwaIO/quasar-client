@@ -5,7 +5,7 @@
 import { ofetch } from 'ofetch';
 
 import { BASE_API_URL } from '../constants';
-import { toQuasarSDKError } from '../core/errors';
+import { QuasarSDKError, toQuasarSDKError } from '../core/errors';
 import type { Buyer, InvoiceLocale } from '../modules/payments/types';
 import type {
   AutoChargeOffer,
@@ -56,8 +56,24 @@ export function checkoutApi(token: string, baseUrl: string = BASE_API_URL): Chec
       call<PayerProofConfirmation>('payer-proof', body),
     buyer: (body: { buyer: Buyer; company?: boolean }) => call<CheckoutView>('buyer', body),
     locale: (locale: InvoiceLocale) => call<{ locale: InvoiceLocale }>('locale', { locale }),
-    submit: (body: { txKey: string; from?: string; connectorType?: string; methodId?: string }) =>
-      call<{ txKey: string; status: string }>('submit', body),
+    submit: async ({
+      methodId,
+      ...body
+    }: {
+      txKey: string;
+      from?: string;
+      connectorType?: string;
+      methodId?: string;
+    }) => {
+      if (!methodId) return call<{ txKey: string; status: string }>('submit', body);
+      try {
+        return await call<{ txKey: string; status: string }>('submit', { ...body, methodId });
+      } catch (error) {
+        // An engine older than the field refuses what it does not know. A real refusal comes again, with one more request
+        if (!(error instanceof QuasarSDKError) || error.status !== 400) throw error;
+        return call<{ txKey: string; status: string }>('submit', body);
+      }
+    },
     relay: (signature: string) =>
       call<{ status: 'submitted' | 'sending'; userOpHash?: string; txHash?: string }>(
         'relay',
