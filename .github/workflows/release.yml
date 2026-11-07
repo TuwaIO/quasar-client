@@ -22,6 +22,8 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           include-component-in-tag: true
+          # Named here: the action otherwise follows the default branch of the repository, whatever branch this run is on
+          target-branch: main
 
   call-stable-publish:
     needs: release-please
