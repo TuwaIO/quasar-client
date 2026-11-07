@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.8.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.7.3...quasar-sdk-v0.8.0) (2026-11-07)
+
+
+### Features
+
+* **nova-payments:** the checkout moves as Nova 0.11 does — Quasar loader, status strip, marks that draw themselves ([eeb31f3](https://github.com/TuwaIO/quasar-client/commit/eeb31f36b28a6045a37c8c50aae4fb067318f0e7))
+* **payments-sdk:** Quasar Client, with the Payments module of the TUWA SDK and its short documentation ([79d5148](https://github.com/TuwaIO/quasar-client/commit/79d514852d22afd0b1a0c8f89f8c7e1c7a98b25c))
+* **payments:** a smart wallet is told to choose a token; new reasons a transfer pays nothing ([acc0021](https://github.com/TuwaIO/quasar-client/commit/acc002185737e49469748109067a958c3fbaa582))
+* **payments:** another wallet can take over a permission that holds nothing, the merchant can end one, and a refund key sends nothing twice ([2417847](https://github.com/TuwaIO/quasar-client/commit/241784770ad91d22ccd828d7eede60184b35b295))
+* **payments:** take back a refund that waits, ask for one with an idempotency key, and say when one needs a check by hand ([4094077](https://github.com/TuwaIO/quasar-client/commit/409407721dbe4752960a94c04dad38a1f5817e9c))
+* **quasar-sdk:** subscription.invoice_refused tells that the next invoice was refused ([db4b92f](https://github.com/TuwaIO/quasar-client/commit/db4b92ff3f0b85490126f2efc5e4cbce64881cbc))
+
+
+### Bug Fixes
+
+* **nova-payments:** a receipt says when the invoice was paid, not when the page was opened ([37eab2b](https://github.com/TuwaIO/quasar-client/commit/37eab2b45cfa3c47f52478df10ed8db5321952f7))
+* **nova-payments:** a refund the merchant closed is headed by what the merchant did, not by a failure ([9ec35c7](https://github.com/TuwaIO/quasar-client/commit/9ec35c76c46e719af6d10dd217260139106ed716))
+* **nova-payments:** a withdrawn refund sends nothing, a buyer names the real hash, and no plain Pay after 24 hours ([ee49d6a](https://github.com/TuwaIO/quasar-client/commit/ee49d6a5c1814c95be57e9cc7536e821f4b5d2a3))
+* **nova-payments:** no second payment when money may have left in a transaction nothing found ([a1b88cd](https://github.com/TuwaIO/quasar-client/commit/a1b88cd30d74bfface568bff2961579ba2b6766b))
+* **nova-payments:** the page stays shut live as on a reload, names the right transaction and says when Quasar still reads it ([10fa4cc](https://github.com/TuwaIO/quasar-client/commit/10fa4cc111c9a5f54b970c0ff49f439c755bb4e5))
+* **nova-payments:** the page stays shut while a nonce is unexplained, whatever is named, and says what Quasar reads ([94722ef](https://github.com/TuwaIO/quasar-client/commit/94722efaf578198d5f47832cfd0cc5c74f096648))
+* **nova-payments:** the wallet step follows the wallet, and automatic payments ask on their own network ([3d32abd](https://github.com/TuwaIO/quasar-client/commit/3d32abdcd340b473fad1c1df878452b8d995c5eb))
+* **payments:** a refund window says why it was refused, and that a refund was cancelled in the wallet ([717b5f1](https://github.com/TuwaIO/quasar-client/commit/717b5f1e89106a759d055920bb5a684dfb51dece))
+* **payments:** the checkout says what really happened to a payment, and a refund shows why it was refused ([a86ccdf](https://github.com/TuwaIO/quasar-client/commit/a86ccdf7d312b9156305502af40cf736401bf719))
+* **quasar-sdk,nova-payments:** a transaction the invoice refused stays on the page and is offered again ([0862ae7](https://github.com/TuwaIO/quasar-client/commit/0862ae79a4a504bbd9a143ab3777fb5ad4d3fab3))
+* **quasar-sdk,nova-payments:** another wallet can reach the take-over, and a full invoice never offers a second payment ([043c332](https://github.com/TuwaIO/quasar-client/commit/043c3322b54e67406a031be2786552071d886d16))
+* **quasar-sdk,nova-payments:** the wallet confirms the invoice when it gives a permission ([64549c2](https://github.com/TuwaIO/quasar-client/commit/64549c24e19b2e722cb3f049fb906394f0a25d93))
+* **quasar-sdk:** a new wallet leaves a refusal of the last one, and a late answer of a closed window changes nothing ([c0d679e](https://github.com/TuwaIO/quasar-client/commit/c0d679e06f6a3888fd263d18a93ec4dffb3014d6))
+* **quasar-sdk:** a payment method has no finality option ([d4c8a07](https://github.com/TuwaIO/quasar-client/commit/d4c8a07fceef9063fb19e2a303842908d15e16d2))
+* **quasar-sdk:** a payment Quasar no longer follows offers no second payment ([f9dd455](https://github.com/TuwaIO/quasar-client/commit/f9dd455216d55559b5beaa5cbab32198f9ff43b0))
+* **quasar-sdk:** the page waits for a payment on its way when Quasar refuses a new price ([3505ce4](https://github.com/TuwaIO/quasar-client/commit/3505ce4d8a3d841fe12df69723d4713fe1ec6b6f))
+
 ## [0.7.3](https://github.com/TuwaIO/sdk/compare/quasar-sdk-v0.7.2...quasar-sdk-v0.7.3) (2026-10-28)
 
 
