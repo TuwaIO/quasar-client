@@ -10,7 +10,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "node i18n/checkTranslations.mjs && storybook build",
     "i18n:check": "node i18n/checkTranslations.mjs",
-    "test:stories": "vitest run --project=storybook"
+    "test": "vitest run --project=unit",
+    "test:stories": "vitest run"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.4.0",
