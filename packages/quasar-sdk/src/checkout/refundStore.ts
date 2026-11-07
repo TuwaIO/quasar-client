@@ -95,17 +95,18 @@ export interface RefundState {
 /**
  * Options of {@link createRefundStore}: the three calls, which the app runs on its server with the secret key. A call refuses by
  * throwing: the `QuasarSDKError` of the SDK, or from an app's own route an `Error` with the `code` of the refusal, its `status`
- * and optionally `text`, what to show in the reader's language. Any other error reads as `request_failed`: Quasar did not answer.
+ * and optionally `text`, what to show in the reader's language. A Server Action cannot pass such an error to the browser: wrap it
+ * in {@link refundAction}. Any other error reads as `request_failed`: Quasar did not answer.
  */
 export interface RefundStoreOptions {
   /** Asks for the refund, for example a Server Action that calls `quasar.payments.refund`. */
-  request: (invoiceId: string, params: RefundParams) => Promise<RefundStart>;
+  request: (invoiceId: string, params: RefundParams) => Promise<RefundStart | RefusedRefundCall>;
   /** Shows what a refund would send, for example through `quasar.payments.previewRefund`. Optional. */
-  preview?: (invoiceId: string, params: RefundParams) => Promise<RefundPreview>;
+  preview?: (invoiceId: string, params: RefundParams) => Promise<RefundPreview | RefusedRefundCall>;
   /** Hands over its transaction, for example through `quasar.payments.submitRefund`. */
-  submit: (refundId: string, params: SubmitRefundParams) => Promise<Refund>;
+  submit: (refundId: string, params: SubmitRefundParams) => Promise<Refund | RefusedRefundCall>;
   /** Reads the refund, for example through `quasar.payments.getRefund`. */
-  get: (refundId: string) => Promise<Refund>;
+  get: (refundId: string) => Promise<Refund | RefusedRefundCall>;
   /** How often to read a refund being confirmed, in milliseconds. Defaults to `5000`. */
   pollMs?: number;
   /**
@@ -114,6 +115,40 @@ export interface RefundStoreOptions {
    * until it closes); `null` keeps it in memory only.
    */
   handOverStorage?: CheckoutHandOverStorage | null;
+}
+
+/** What {@link refundAction} returns for a call Quasar refused. */
+export interface RefusedRefundCall {
+  /** The refusal: its `code`, HTTP `status` and message. */
+  refused: { code: string; message: string; status?: number };
+}
+
+/**
+ * Wraps a call of the refund store for a Server Action: React passes no fields of a thrown error to the browser, so without it
+ * every refusal reads as "Quasar did not answer". The action returns the refusal, and the store takes it as thrown.
+ *
+ * @param call - The call, for example `quasar.payments.refund` bound to its client.
+ * @returns The same call, which returns a refusal of Quasar instead of throwing it. Any other error is thrown as it was.
+ *
+ * @example
+ * ```ts
+ * 'use server';
+ * export const refundInvoice = refundAction((invoiceId: string, params: RefundParams) =>
+ *   quasar.payments.refund(invoiceId, params),
+ * );
+ * ```
+ */
+export function refundAction<Args extends unknown[], Result>(
+  call: (...args: Args) => Promise<Result>,
+): (...args: Args) => Promise<Result | RefusedRefundCall> {
+  return async (...args) => {
+    try {
+      return await call(...args);
+    } catch (error) {
+      if (!(error instanceof QuasarSDKError) || !error.code) throw error;
+      return { refused: { code: error.code, message: error.message, status: error.status } };
+    }
+  };
 }
 
 /** The store {@link createRefundStore} returns: a vanilla Zustand store. */
@@ -140,6 +175,14 @@ const NOT_ABOUT_THE_TRANSACTION = new Set([401, 403, 408, 425, 429]);
 /** Whether Quasar refused a transaction for good, so that handing it over again cannot help. */
 const refusedForGood = ({ status }: CheckoutError) =>
   status !== undefined && status >= 400 && status < 500 && !NOT_ABOUT_THE_TRANSACTION.has(status);
+
+/** The answer of a call, or the refusal {@link refundAction} returned, thrown as the store takes refusals. */
+function answerOf<Result>(answer: Result | RefusedRefundCall): Result {
+  if (answer && typeof answer === 'object' && 'refused' in answer) {
+    throw Object.assign(new Error(answer.refused.message), answer.refused);
+  }
+  return answer as Result;
+}
 
 function errorOf(error: unknown): CheckoutError {
   if (error instanceof QuasarSDKError) {
@@ -223,25 +266,28 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
         // A refund with no result yet can stay for days: past the first minutes a later answer costs the page nothing
         const wait = Date.now() - since < FOLLOW_CALMLY_AFTER_MS ? pollMs : Math.max(pollMs, CALM_READ_MS);
         const timer: ReturnType<typeof setTimeout> = setTimeout(() => {
-          void options.get(refundId).then(
-            (refund) => {
-              if (poll !== timer || get().refund?.id !== refundId) return;
-              if (refund.status === 'confirmed' || refund.status === 'failed') {
-                stop();
-                set({ refund, phase: refund.status });
-              } else {
-                set({ refund });
-                readNext();
-              }
-            },
-            (error: unknown) => {
-              if (poll !== timer) return;
-              // A session that ended or a refund that is gone: reading again cannot help
-              const { status } = errorOf(error);
-              if (status === 401 || status === 403 || status === 404) stop();
-              else readNext();
-            },
-          );
+          void options
+            .get(refundId)
+            .then(answerOf<Refund>)
+            .then(
+              (refund) => {
+                if (poll !== timer || get().refund?.id !== refundId) return;
+                if (refund.status === 'confirmed' || refund.status === 'failed') {
+                  stop();
+                  set({ refund, phase: refund.status });
+                } else {
+                  set({ refund });
+                  readNext();
+                }
+              },
+              (error: unknown) => {
+                if (poll !== timer) return;
+                // A session that ended or a refund that is gone: reading again cannot help
+                const { status } = errorOf(error);
+                if (status === 401 || status === 403 || status === 404) stop();
+                else readNext();
+              },
+            );
         }, wait);
         poll = timer;
       };
@@ -260,7 +306,7 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
         set({ error: null });
         if (!options.preview) return null;
         try {
-          return await options.preview(invoiceId, params);
+          return answerOf<RefundPreview>(await options.preview(invoiceId, params));
         } catch (error) {
           set({ error: errorOf(error) });
           return null;
@@ -275,7 +321,7 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
         const kept = keptTransactions().find((entry) => entry.invoiceId === invoiceId);
         if (kept) {
           try {
-            const refund = await options.get(kept.refundId);
+            const refund = answerOf<Refund>(await options.get(kept.refundId));
             if (refund.status === 'requested') {
               const { txHash, from, instructions } = kept;
               set({ phase: 'awaitingTransfer', refund, instructions, sentTransaction: { txHash, from } });
@@ -297,7 +343,7 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
           }
         }
         try {
-          const { refund, instructions } = await options.request(invoiceId, params);
+          const { refund, instructions } = answerOf<RefundStart>(await options.request(invoiceId, params));
           set({ phase: 'awaitingTransfer', refund, instructions });
           return true;
         } catch (error) {
@@ -321,7 +367,7 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
         const asked = get().refund;
         if (!asked) return false;
         try {
-          const refund = await options.get(asked.id);
+          const refund = answerOf<Refund>(await options.get(asked.id));
           if (get().refund?.id !== asked.id) return false;
           if (refund.status === 'requested') {
             // Another tab continued it and Quasar priced it again: the wallet would send the old amount. The page shows the
@@ -375,7 +421,7 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
         }
         set({ phase: 'submitting', error: null, sentTransaction });
         try {
-          const submitted = await options.submit(refund.id, params);
+          const submitted = answerOf<Refund>(await options.submit(refund.id, params));
           forgetTransaction(refund.id);
           set({ phase: 'confirming', refund: submitted, sentTransaction: null });
           follow(refund.id);

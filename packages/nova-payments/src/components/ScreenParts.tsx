@@ -347,13 +347,22 @@ export function DetailRow({ name, children }: { name: ReactNode; children: React
 }
 
 /** A link styled as a small secondary action in a screen footer. @internal */
-export function FooterAction({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+export function FooterAction({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
-        'novapay:min-h-6 novapay:cursor-pointer novapay:border-0 novapay:bg-transparent novapay:p-0 novapay:text-xs novapay:text-[var(--tuwa-text-accent)] novapay:underline novapay:hover:no-underline',
+        'novapay:disabled:cursor-default novapay:disabled:opacity-50 novapay:min-h-6 novapay:cursor-pointer novapay:border-0 novapay:bg-transparent novapay:p-0 novapay:text-xs novapay:text-[var(--tuwa-text-accent)] novapay:underline novapay:hover:no-underline',
         focusRing,
       )}
     >

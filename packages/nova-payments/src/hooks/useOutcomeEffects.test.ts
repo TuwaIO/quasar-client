@@ -23,11 +23,49 @@ describe('usePaidCallback', () => {
     renderHook('paid');
     renderHook('paid');
     expect(onPaid).toHaveBeenCalledTimes(1);
-    expect(onPaid).toHaveBeenCalledWith(invoice);
+    expect(onPaid).toHaveBeenCalledWith({ ...invoice, status: 'paid' });
+  });
+
+  it('calls with the status the event gave: the read of the invoice comes after it', () => {
+    const onPaid = vi.fn();
+    const stale = { ...invoice, status: 'processing' } as CheckoutView['invoice'];
+    render(({ i }: { i: CheckoutView['invoice'] }) => usePaidCallback('paid', i, onPaid), { i: stale });
+    expect(onPaid.mock.calls[0]?.[0]).toMatchObject({ status: 'paid' });
+  });
+
+  it('tells the app about each invoice the same window shows', () => {
+    const onPaid = vi.fn();
+    const renderHook = (i: CheckoutView['invoice']) =>
+      render(({ v }: { v: CheckoutView['invoice'] }) => usePaidCallback('paid', v, onPaid), { v: i });
+    renderHook(invoice);
+    renderHook({ ...invoice, id: 'inv_2' });
+    expect(onPaid).toHaveBeenCalledTimes(2);
+  });
+
+  it('says nothing of a link opened on an invoice already paid: it is a receipt being read', () => {
+    const onPaid = vi.fn();
+    render(() => usePaidCallback('paid', invoice, onPaid, true), {});
+    expect(onPaid).not.toHaveBeenCalled();
   });
 });
 
 describe('useAutoReturn', () => {
+  it('counts from when the reason to stay ended, not from the mount', () => {
+    const navigate = vi.fn();
+    const renderHook = (seconds: number, now: number) =>
+      render(
+        ({ s, n }: { s: number; n: number }) =>
+          useAutoReturn({ url: 'https://shop.example', seconds: s, now: n, navigate }),
+        { s: seconds, n: now },
+      ) as ReturnType<typeof useAutoReturn>;
+    expect(renderHook(0, 0).left).toBeNull();
+    // The buyer read the offer for a minute, then the reason to stay ended
+    renderHook(5, 60_000);
+    expect(renderHook(5, 60_000).left).toBe(5);
+    expect(navigate).not.toHaveBeenCalled();
+    expect(renderHook(5, 62_000).left).toBe(3);
+  });
+
   const START = 1_000_000;
   const setup = () => {
     const navigate = vi.fn();

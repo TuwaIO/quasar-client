@@ -3985,6 +3985,24 @@ describe('createCheckoutStore: a page left open', () => {
     checkout.getState().destroy();
   });
 
+  it('measures a wrong clock on the price it locks, and takes a small difference for the way of the answer', async () => {
+    answerReadsWith(view());
+    const checkout = store();
+    await checkout.getState().load();
+    checkout.setState({ methodId: 'ap_1', payer: QUOTE.payer } as never);
+    fetchMock.mockImplementationOnce(async () =>
+      json({ ...QUOTE, lockedAt: new Date(Date.now() - 20 * 60_000).toISOString() }),
+    );
+    await checkout.getState().requestQuote();
+    expect(checkout.getState().clockSkewMs).toBe(20 * 60_000);
+    fetchMock.mockImplementationOnce(async () =>
+      json({ ...QUOTE, lockedAt: new Date(Date.now() - 2_000).toISOString() }),
+    );
+    await checkout.getState().requestQuote();
+    expect(checkout.getState().clockSkewMs).toBe(0);
+    checkout.getState().destroy();
+  });
+
   it('names the method a transaction was quoted for, and keeps it for the next load', async () => {
     answerReadsWith(view({ quote: QUOTE as never }));
     const stored = new Map<string, string>();

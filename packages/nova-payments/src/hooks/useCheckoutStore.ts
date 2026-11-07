@@ -38,6 +38,8 @@ export interface UseCheckoutStoreOptions {
   EventSource?: EventSourceConstructor | null;
   /** How often to read the invoice without an event stream, in milliseconds. */
   pollMs?: number;
+  /** Whether to load and follow the invoice; `false` keeps the idle store, which makes no requests. Defaults to `true`. */
+  enabled?: boolean;
 }
 
 /**
@@ -52,19 +54,20 @@ export interface UseCheckoutStoreOptions {
  * @returns The store.
  */
 export function useCheckoutStore(options: UseCheckoutStoreOptions): CheckoutStore {
-  const { token, baseUrl, api, EventSource, pollMs } = options;
+  const { token, baseUrl, api, EventSource, pollMs, enabled = true } = options;
   const [store, setStore] = useState<CheckoutStore>(IDLE_STORE);
   // The other options are read when the store is created, so a new object in every render recreates nothing
   const create = useEffectEvent(() => createCheckoutStore({ token, baseUrl, api, EventSource, pollMs }));
 
   useEffect(() => {
+    if (!enabled) return;
     // A new store per mount: a destroyed one no longer follows the invoice (React runs effects twice in StrictMode)
     const created = create();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setStore(created);
     void created.getState().load();
     return () => created.getState().destroy();
-  }, [token, baseUrl]);
+  }, [token, baseUrl, enabled]);
 
   return store;
 }

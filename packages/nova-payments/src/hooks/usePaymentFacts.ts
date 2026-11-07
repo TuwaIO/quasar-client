@@ -5,6 +5,8 @@ import { networkName } from '../utils/methods';
 import { instructionsChainId } from '../utils/pay';
 import { useCheckoutContext } from './useCheckoutContext';
 
+const SETTLED_STATUSES: ReadonlySet<string> = new Set(['paid', 'held', 'refunded', 'partially_refunded']);
+
 /**
  * What the confirm and paid steps show of the payment: its network and amount (from the locked quote), the
  * transaction (Quasar's hash, else the submitted key) with its explorer link from the chain adapter, and the sender.
@@ -13,7 +15,10 @@ import { useCheckoutContext } from './useCheckoutContext';
  */
 export function usePaymentFacts() {
   const { state, locale, adapterFor } = useCheckoutContext();
-  const quote = state.quote;
+  // A settled invoice was paid at its own price, which another tab or device may have locked: this tab's price is not the
+  // payment that happened
+  const settled = state.invoiceStatus && SETTLED_STATUSES.has(state.invoiceStatus);
+  const quote = (settled ? state.checkout?.quote : null) ?? state.quote;
   const chainId = quote ? instructionsChainId(quote.instructions) : null;
   const txKey = state.txHash ?? state.txKey;
   const sender = quote?.payer ? parseCaip10AccountId(quote.payer)?.address : undefined;

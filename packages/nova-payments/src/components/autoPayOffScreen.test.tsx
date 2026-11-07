@@ -19,6 +19,7 @@ const { defaultLabels: en } = await import('../i18n/en');
 const { PrimaryButton, SecondaryButton } = await import('./ScreenParts');
 const { AutoPayOffScreen } = await import('./AutoPayOffScreen');
 const { checkoutScreen } = await import('../utils/checkout');
+const { PaymentWalletError } = await import('../utils/walletErrors');
 
 /** The text a rendered tree shows. */
 function textOf(node: unknown): string {
@@ -128,6 +129,28 @@ describe('turning off automatic payments', () => {
     await vi.advanceTimersByTimeAsync(11 * 60 * 1000);
     expect(setAutoPayOff).toHaveBeenCalledWith('done');
     vi.useRealTimers();
+  });
+
+  // A transaction went out and its fee was spent: "nothing was sent" would be untrue
+  it('asks the chain when the wait for a sent transaction fails, and keeps it from being sent again', async () => {
+    const revokePermission = vi.fn(async ({ onSent }: { onSent: () => void }) => {
+      onSent();
+      throw new Error('The RPC did not answer');
+    });
+    const { primary, setAutoPayOff, setRevokeSent } = screen(PAYER, { revokePermission });
+    (primary.props.onClick as () => void)();
+    await vi.waitFor(() => expect(setAutoPayOff).toHaveBeenCalledWith('done'));
+    expect(setRevokeSent).not.toHaveBeenCalledWith(false);
+  });
+
+  it('lets the wallet be asked again after a revert, which left nothing to wait for', async () => {
+    const revokePermission = vi.fn(async ({ onSent }: { onSent: () => void }) => {
+      onSent();
+      throw new PaymentWalletError('failed', 'The revocation reverted');
+    });
+    const { primary, setRevokeSent } = screen(PAYER, { revokePermission });
+    (primary.props.onClick as () => void)();
+    await vi.waitFor(() => expect(setRevokeSent).toHaveBeenCalledWith(false));
   });
 
   it('stops waiting for a wallet that never answers, and says that the request waits there', async () => {

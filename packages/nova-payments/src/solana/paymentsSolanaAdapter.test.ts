@@ -63,15 +63,21 @@ const mint = (owner: string, extensions: unknown[] = []) => ({
 const signer = { address: address(PAYER), signAndSendTransactions: vi.fn() };
 const connection = { connectedAccount: { address: PAYER } };
 
-beforeEach(() => {
+beforeEach(async () => {
+  const [associated] = await findAssociatedTokenPda({
+    owner: address(PAYER),
+    mint: address(USDC),
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+  });
   solana.rpc = {
     getBalance: answers({ value: 2_000_000_000n }),
     getTokenAccountsByOwner: answers({
       value: [
-        { account: { data: { parsed: { info: { tokenAmount: { amount: '40000000' } } } } } },
-        { account: { data: { parsed: { info: { tokenAmount: { amount: '12100000' } } } } } },
+        { pubkey: REFERENCE, account: { data: { parsed: { info: { tokenAmount: { amount: '12100000' } } } } } },
+        { pubkey: associated, account: { data: { parsed: { info: { tokenAmount: { amount: '40000000' } } } } } },
       ],
     }),
+    isBlockhashValid: answers({ value: true }),
     getAccountInfo: answers(mint(TOKEN_PROGRAM_ADDRESS)),
     getMinimumBalanceForRentExemption: answers(2_039_280n),
     getLatestBlockhash: answers({
@@ -92,17 +98,41 @@ const sentInstructions = () =>
   ).instructions;
 
 describe('paymentsSolanaAdapter', () => {
-  it("reads SOL and a token's balance over all of the account's token accounts of that mint", async () => {
+  // The transfer spends the associated account only: tokens elsewhere would keep Pay live for a transfer the wallet refuses
+  it("reads SOL and a token's balance on the account the transfer spends", async () => {
     const adapter = paymentsSolanaAdapter({ rpcUrls: { devnet: 'https://devnet.example' } });
     await expect(adapter.getBalance({ chainId: DEVNET, account: PAYER, token: 'native' })).resolves.toBe(
       2_000_000_000n,
     );
-    await expect(adapter.getBalance({ chainId: DEVNET, account: PAYER, token: USDC })).resolves.toBe(52_100_000n);
+    await expect(adapter.getBalance({ chainId: DEVNET, account: PAYER, token: USDC })).resolves.toBe(40_000_000n);
     expect(solana.rpc.getTokenAccountsByOwner).toHaveBeenCalledWith(PAYER, { mint: USDC }, { encoding: 'jsonParsed' });
     expect(solana.createClient).toHaveBeenCalledWith({
       rpcUrlOrMoniker: 'devnet',
       rpcUrls: { devnet: 'https://devnet.example' },
     });
+  });
+
+  it('counts nothing when the wallet has no associated account of the mint', async () => {
+    solana.rpc.getTokenAccountsByOwner = answers({
+      value: [{ pubkey: REFERENCE, account: { data: { parsed: { info: { tokenAmount: { amount: '12100000' } } } } } }],
+    });
+    await expect(paymentsSolanaAdapter().getBalance({ chainId: DEVNET, account: PAYER, token: USDC })).resolves.toBe(
+      0n,
+    );
+  });
+
+  // A slow prompt, not a wrong setting: the buyer must not go looking for a network that is right
+  it('tells a blockhash that expired in the wallet from a wallet on another network', async () => {
+    solana.rpc.isBlockhashValid = answers({ value: false });
+    solana.signAndSend.mockRejectedValueOnce(new Error('Transaction simulation failed: Blockhash not found'));
+    await expect(
+      paymentsSolanaAdapter().sendTransfer({ instructions: sol, account: PAYER, connection }),
+    ).rejects.toMatchObject({ kind: 'failed' });
+  });
+
+  it('asks for a blockhash that lives longer than the default: a buyer may take time in the wallet', async () => {
+    await paymentsSolanaAdapter().sendTransfer({ instructions: sol, account: PAYER, connection });
+    expect(solana.rpc.getLatestBlockhash).toHaveBeenCalledWith({ commitment: 'confirmed' });
   });
 
   it('estimates the fee: one signature, plus the rent of the merchant token account when it does not exist yet', async () => {

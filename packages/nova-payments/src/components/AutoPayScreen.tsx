@@ -78,6 +78,7 @@ export function AutoPayScreen() {
   }, [address]);
   // The request waiting in the wallet, and what it granted: asked once per wallet, whatever the buyer presses meanwhile
   const open = useRef<{ account: string; asked: Promise<Granted> } | null>(null);
+  const upgrading = useRef<{ account: string; done: Promise<unknown> } | null>(null);
   const kept = useRef<{ account: string; granted: Granted } | null>(null);
   const prompting = step !== 'idle' && wallet !== null;
   // On a phone the prompt keeps the height of the offer
@@ -115,13 +116,27 @@ export function AutoPayScreen() {
       if (needsUpgrade) {
         setStep('upgrading');
         try {
-          await adapter.upgradeToSmartAccount!({ chainId: terms.chainId, account });
+          // A Cancel leaves the upgrade open in the wallet: a second one next to it costs a second fee
+          if (upgrading.current?.account !== account) {
+            const entry = {
+              account,
+              done: adapter.upgradeToSmartAccount!({ chainId: terms.chainId, account }).then((result) => {
+                setUpgradedFor(account);
+                return result;
+              }),
+            };
+            upgrading.current = entry;
+            const settled = () => {
+              if (upgrading.current === entry) upgrading.current = null;
+            };
+            entry.done.then(settled, settled);
+          }
+          await upgrading.current?.done;
         } catch (error) {
           const kind = walletErrorKind(error);
           // What the buyer can still do by hand: the wallet has this switch among the details of the account
           throw kind === 'failed' ? new UpgradeFailed() : error;
         }
-        if (isCurrent()) setUpgradedFor(account);
         if (!isCurrent()) return;
       }
       setStep('permission');

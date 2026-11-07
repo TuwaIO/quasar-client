@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # usePaidCallback()
 
-> **usePaidCallback**(`phase`, `invoice`, `onPaid`): `void`
+> **usePaidCallback**(`phase`, `invoice`, `onPaid`, `openedPaid?`): `void`
 
 Defined in: [nova-payments/src/hooks/useOutcomeEffects.ts:11](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useOutcomeEffects.ts#L11)
 
@@ -29,6 +29,10 @@ The invoice of the checkout.
 ((`invoice`) => `void`) \| `undefined`
 
 The app's callback, if any.
+
+### openedPaid?
+
+`boolean` = `false`
 
 ## Returns
 

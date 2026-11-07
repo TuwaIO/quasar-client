@@ -292,6 +292,11 @@ export interface CheckoutState {
   /** Why the last action failed; cleared by the next one. */
   error: CheckoutError | null;
   /** The receipt PDF of a paid invoice (a plain `GET`, for a link); `null` before. */
+  /**
+   * How far this machine's clock is ahead of Quasar's, in milliseconds, as measured on the last price locked here; `0` until
+   * then and within a few seconds. Countdowns subtract it: a wrong clock must not end a price at once or keep an ended one live.
+   */
+  clockSkewMs: number;
   receiptUrl: string | null;
   /** The ERC-7677 paymaster URL for `wallet_sendCalls` when the quote offers sponsored calls; `null` otherwise. */
   paymasterUrl: string | null;
@@ -593,6 +598,9 @@ const STREAM_RETRY_MS = 3 * 60_000;
 
 /** With no message for this long the stream is taken for dead: Quasar sends a `ping` every 15 seconds. */
 const STREAM_SILENCE_MS = 45_000;
+
+/** A skew up to this is the way of the answer, not the machine's clock. */
+const CLOCK_SKEW_IGNORED_MS = 10_000;
 
 /** Whether two expiries are of one price lock, however they are written. */
 const samePriceLock = (left: string | null, right: string | null) =>
@@ -1995,6 +2003,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       txHash: null,
       error: null,
       receiptUrl: null,
+      clockSkewMs: 0,
       paymasterUrl: null,
       logoUrl: null,
 
@@ -2160,7 +2169,12 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
             update({ phase: rest ? 'underpaid' : 'selectMethod' });
             return null;
           }
-          update({ quote, phase: get().invoicePaymentOnTheWay ? 'confirming' : 'awaitingPayment' });
+          const skew = Date.now() - Date.parse(quote.lockedAt ?? '');
+          update({
+            quote,
+            phase: get().invoicePaymentOnTheWay ? 'confirming' : 'awaitingPayment',
+            clockSkewMs: Number.isFinite(skew) && Math.abs(skew) > CLOCK_SKEW_IGNORED_MS ? skew : 0,
+          });
           return quote;
         } catch (error) {
           // A wallet Quasar wants confirmed first, although the checkout did not say so (read before the method changed)

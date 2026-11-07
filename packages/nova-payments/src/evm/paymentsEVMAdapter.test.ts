@@ -18,6 +18,8 @@ const wagmi = vi.hoisted(() => ({
   writeContract: vi.fn(),
   getConnectorClient: vi.fn(),
   getConnection: vi.fn(),
+  getTransactionReceipt: vi.fn(),
+  waitForTransactionReceipt: vi.fn(),
   sendCalls: vi.fn(),
   waitForCallsStatus: vi.fn(),
   signMessage: vi.fn(),
@@ -417,6 +419,47 @@ describe('paymentsEVMAdapter', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('revoking a permission', () => {
+    const revoke = () =>
+      paymentsEVMAdapter(config).revokePermission!({
+        revocation: { to: MERCHANT, data: '0x3ed01015' },
+        chainId: BASE_SEPOLIA,
+        account: ACCOUNT,
+      });
+    beforeEach(() => {
+      wagmi.sendTransaction.mockResolvedValue('0xrevoke');
+    });
+
+    it('gives the wait for the receipt a limit: it reads the network for as long as it runs', async () => {
+      wagmi.waitForTransactionReceipt.mockResolvedValue({ status: 'success' });
+      await revoke();
+      expect(wagmi.waitForTransactionReceipt).toHaveBeenCalledWith(config, {
+        chainId: 84532,
+        hash: '0xrevoke',
+        timeout: 180_000,
+      });
+    });
+
+    it('says failed for a revert, as nothing is left to wait for', async () => {
+      wagmi.waitForTransactionReceipt.mockRejectedValue(new Error('unknown reason'));
+      wagmi.getTransactionReceipt.mockResolvedValue({ status: 'reverted' });
+      await expect(revoke()).rejects.toMatchObject({ kind: 'failed' });
+    });
+
+    it('passes on any other end of the wait: the transaction may still land', async () => {
+      const ranOut = new Error('timed out');
+      wagmi.waitForTransactionReceipt.mockRejectedValue(ranOut);
+      wagmi.getTransactionReceipt.mockRejectedValue(new Error('not found'));
+      await expect(revoke()).rejects.toBe(ranOut);
+    });
+
+    it('refuses a Safe', async () => {
+      wagmi.getConnection.mockReturnValue({ connector: { id: 'safe', type: 'safe' } });
+      await expect(revoke()).rejects.toMatchObject({ kind: 'unsupported' });
+      expect(wagmi.sendTransaction).not.toHaveBeenCalled();
+    });
   });
 
   describe('a Safe connected through WalletConnect', () => {

@@ -12,16 +12,21 @@ export function usePaidCallback(
   phase: CheckoutPhase,
   invoice: CheckoutView['invoice'] | undefined,
   onPaid: ((invoice: CheckoutView['invoice']) => void) | undefined,
+  openedPaid = false,
 ): void {
-  const notified = useRef(false);
+  // Per invoice: one window can show another invoice later, and it is paid in its own time
+  const notified = useRef<string | null>(null);
+  const invoiceId = invoice?.id ?? null;
+  // The event comes before the read of the invoice: the status is the one the event gave, not the one last read
   const notify = useEffectEvent(() => {
-    if (invoice) onPaid?.(invoice);
+    if (invoice) onPaid?.({ ...invoice, status: 'paid' });
   });
   useEffect(() => {
-    if (phase !== 'paid' || notified.current) return;
-    notified.current = true;
-    notify();
-  }, [phase]);
+    if (phase !== 'paid' || !invoiceId || notified.current === invoiceId) return;
+    notified.current = invoiceId;
+    // A link opened on an invoice already paid is a receipt being read, not a payment
+    if (!openedPaid) notify();
+  }, [phase, invoiceId, openedPaid]);
 }
 
 /** What {@link useAutoReturn} needs. */
@@ -54,7 +59,11 @@ export function useAutoReturn({
   now,
   navigate = (target) => window.location.assign(target),
 }: UseAutoReturnParams): { left: number | null; stay: () => void } {
-  const [startedAt] = useState(now);
+  const [started, setStarted] = useState<number | null>(seconds > 0 ? now : null);
+  // A reason to stay that ended starts the countdown now: from the mount it could already be over, and the page would leave
+  // with no "Stay here"
+  if (seconds > 0 !== (started !== null)) setStarted(seconds > 0 ? now : null);
+  const startedAt = seconds > 0 ? (started ?? now) : now;
   const [stayed, setStayed] = useState(false);
   const left = url && seconds > 0 && !stayed ? Math.max(0, seconds - Math.floor((now - startedAt) / 1000)) : null;
   const leave = useEffectEvent(() => {

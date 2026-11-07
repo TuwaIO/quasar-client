@@ -12,6 +12,7 @@ import { useHandOverTime } from '../hooks/useHandOverTime';
 import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
 import { usePaidCallback } from '../hooks/useOutcomeEffects';
+import { isPaymentAccepted } from '../hooks/usePayment';
 import { usePaymentHandOver } from '../hooks/usePaymentHandOver';
 import { usePaymentSent } from '../hooks/usePaymentSent';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
@@ -27,7 +28,7 @@ import {
 } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
-import { isSameWallet, needsLeaveConfirm } from '../utils/outcome';
+import { isSameWallet, needsLeaveConfirm, needsTheClock } from '../utils/outcome';
 import { lockPrice } from '../utils/payerProof';
 import { AutoPayOffScreen } from './AutoPayOffScreen';
 import { AutoPayScreen } from './AutoPayScreen';
@@ -346,19 +347,27 @@ export function PaymentCheckout({
   // The invoice shown: the token's, or the one that replaced it after the buyer opened it ("Open <number>")
   const [opened, setOpened] = useState({ from: token, token });
   const activeToken = opened.from === token ? opened.token : token;
+  // A closed window nobody opened costs nothing: a page can have one per row of a list, and each would hold an event stream
+  // and read the invoice on the server. Opened once it stays, so that a payment under way is still followed when closed
+  const [everOpened, setEverOpened] = useState(display !== 'modal' || open);
+  if (!everOpened && (display !== 'modal' || open)) setEverOpened(true);
   const store = useCheckoutStore({
     token: activeToken,
     baseUrl: baseUrl ?? settings.baseUrl,
     api,
     EventSource,
     pollMs,
+    enabled: everOpened,
   });
   const state = useCheckoutState(store, (value) => value);
   const checkout = state.checkout;
   const locale = state.locale ?? checkout?.invoice.locale ?? 'en';
   const labels = usePaymentsLabels(locale);
   // Ticks while the checkout shows: the deadline, the price lock and the return countdown count down
-  const now = useNow(1000, Boolean(checkout));
+  const ticking = Boolean(checkout) && everOpened && needsTheClock(state.phase, autoReturnSeconds, hasLabels(locale));
+  const tick = useNow(1000, ticking);
+  // Countdowns compare Quasar's timestamps with this clock, which the machine may have set wrong
+  const now = tick - (state.clockSkewMs ?? 0);
   const wallet = useConnectedWallet();
   const connection = useWalletConnection(onConnectWallet);
   const adapters = settings.adapters;
@@ -436,7 +445,7 @@ export function PaymentCheckout({
     state,
     walletTxKey: walletSent?.store === store ? walletSent.txKey : null,
   });
-  usePaidCallback(state.phase, checkout?.invoice, onPaid);
+  usePaidCallback(state.phase, checkout?.invoice, onPaid, firstRead?.store === store && firstRead.paid);
   useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
   const handOverOnClose = usePaymentHandOver({
@@ -509,14 +518,20 @@ export function PaymentCheckout({
   if (screen === 'buyer' && !askedBuyer) setAskedBuyer(true);
 
   const closeNow = useMemo(() => {
-    if (display === 'modal') return () => (onOpenChange ? onOpenChange(false) : onClose?.());
+    // Both, as the window does on Escape: `onClose` may release the app's own state
+    if (display === 'modal')
+      return () => {
+        onOpenChange?.(false);
+        onClose?.();
+      };
     return onClose;
   }, [display, onOpenChange, onClose]);
   // Before anything is sent the checkout asks first; once a transaction is on its way it closes at once
   const close =
     closeNow &&
     (() =>
-      needsLeaveConfirm(store.getState().phase, store.getState().error, store.getState().invoiceStatus)
+      needsLeaveConfirm(store.getState().phase, store.getState().error, store.getState().invoiceStatus) &&
+      !isPaymentAccepted(store)
         ? setAskLeave(true)
         : closeNow());
   const leave = askLeave
@@ -541,7 +556,8 @@ export function PaymentCheckout({
     now,
     handedOverAt,
     qrShown,
-    paymentSent,
+    // A sponsored batch the wallet took has no hash yet: an invoice that expires meanwhile must not say that nothing was charged
+    paymentSent: paymentSent || isPaymentAccepted(store),
     close,
     wallet,
     payWith,
@@ -607,7 +623,8 @@ export function PaymentCheckout({
           if (!next && askLeave) return setAskLeave(false);
           if (
             !next &&
-            needsLeaveConfirm(store.getState().phase, store.getState().error, store.getState().invoiceStatus)
+            needsLeaveConfirm(store.getState().phase, store.getState().error, store.getState().invoiceStatus) &&
+            !isPaymentAccepted(store)
           ) {
             return setAskLeave(true);
           }

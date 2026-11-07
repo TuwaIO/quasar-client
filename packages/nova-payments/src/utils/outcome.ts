@@ -363,3 +363,22 @@ export function refundRateMoved(
   if (then === 0n) return false;
   return (now > then ? now - then : then - now) * 200n >= then;
 }
+
+/** The phases nothing counts down on: their page stays as it is until the invoice changes. */
+const STILL_PHASES: ReadonlySet<string> = new Set(['held', 'refunded', 'expired', 'cancelled', 'blocked', 'error']);
+
+/**
+ * Whether the checkout needs its second tick: for the deadline, the price lock and the return countdown. A receipt or an
+ * expired page left open would otherwise render everything once a second for nothing.
+ *
+ * @param phase - The checkout's phase.
+ * @param autoReturnSeconds - The seconds before the paid outcome returns to the seller, when set.
+ * @param labelsShown - Whether the labels of the language are there: their file shows with a render.
+ * @returns Whether to tick.
+ * @internal
+ */
+export function needsTheClock(phase: string, autoReturnSeconds: number | undefined, labelsShown: boolean): boolean {
+  if (!labelsShown) return true;
+  if (phase === 'paid') return autoReturnSeconds !== 0;
+  return !STILL_PHASES.has(phase);
+}

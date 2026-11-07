@@ -7,7 +7,7 @@ import { formatTokenAmount, shortAddress } from '../utils/format';
 import { networkName } from '../utils/methods';
 import { addressOfWallet, formatPeriod, isSameWallet } from '../utils/outcome';
 import { OPEN_REQUEST_MS, settlesWithin } from '../utils/settlesWithin';
-import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
+import { PaymentWalletError, type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
 import {
   ChainLink,
   DetailRow,
@@ -68,7 +68,8 @@ export function AutoPayOffScreen() {
   const chainId = permission.chainId ?? '';
   const network = networkName(chainId);
   const payer = addressOfWallet(permission.payer ?? '');
-  const method = checkout.methods.find((item) => item.id === permission.methodId) ?? checkout.methods[0];
+  // Without its method the row is left out: another token's decimals and symbol would name a wrong amount
+  const method = checkout.methods.find((item) => item.id === permission.methodId);
   const adapter = adapterFor('eip155');
   const payerConnected = Boolean(wallet && isSameWallet(wallet.address, payer));
 
@@ -89,6 +90,7 @@ export function AutoPayOffScreen() {
   const turnOff = async () => {
     if (!wallet) return;
     setProblem(null);
+    let wentOut = false;
     try {
       if (!sent) {
         // Revoked already, from another tab or the wallet's own page: a second transaction reverts at the buyer's cost
@@ -99,7 +101,6 @@ export function AutoPayOffScreen() {
         if (revoked === null) return setProblem('notAsked');
         if (!adapter?.revokePermission) return setProblem('unsupported');
         setStep('wallet');
-        let wentOut = false;
         const settled = await settlesWithin(
           adapter.revokePermission({
             revocation,
@@ -119,7 +120,14 @@ export function AutoPayOffScreen() {
       }
       await check();
     } catch (error) {
-      setProblem(walletErrorKind(error));
+      if (wentOut) {
+        // A transaction went out and its fee was spent, so "nothing was sent" would be untrue. A reverted one left nothing to
+        // wait for: the wallet may be asked again. Otherwise the chain has the answer
+        if (error instanceof PaymentWalletError && error.kind === 'failed') setRevokeSent(false);
+        await check().catch(() => setProblem('notYet'));
+      } else {
+        setProblem(walletErrorKind(error));
+      }
     } finally {
       setStep('idle');
     }

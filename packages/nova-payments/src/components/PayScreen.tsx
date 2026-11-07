@@ -43,6 +43,7 @@ import {
   FooterAction,
   FooterNote,
   PrimaryButton,
+  ScreenContent,
   ScreenError,
   ScreenFooter,
   SecondaryButton,
@@ -211,12 +212,29 @@ export function PayScreen() {
     state.phase === 'submitting';
   const [stepRef, stepHeight] = useStepHeight(prompting);
 
+  // The merchant turned the method of a locked price off: a page reloaded on it must not be an empty pane with no way on
+  if (checkout && quote && !method) {
+    return (
+      <>
+        <ScreenContent title={labels.method.methodUnavailable}>{null}</ScreenContent>
+        <ScreenFooter>
+          <SecondaryButton onClick={backToMethods}>{labels.pay.back}</SecondaryButton>
+        </ScreenFooter>
+      </>
+    );
+  }
   if (!checkout || !quote || !method) return null;
 
   const merchant = checkout.merchant.name;
   const network = networkName(chainId);
   const token = (amount: string) => `${formatTokenAmount(amount, quote.decimals, locale)} ${quote.instructions.symbol}`;
   const amounts = quoteAmounts(quote);
+  // A request that waits in the wallet keeps its amount: under a new price the page must name what the wallet shows
+  const inWallet = payment.askedInstructions;
+  const askedAmount =
+    inWallet && inWallet.amount !== quote.instructions.amount
+      ? `${formatTokenAmount(inWallet.amount, inWallet.decimals, locale)} ${inWallet.symbol}`
+      : token(amounts.send);
   const left = quote.expiresAt ? Date.parse(quote.expiresAt) - now : Number.POSITIVE_INFINITY;
   const expired = left <= 0;
   const ending = isQuoteEnding(left);
@@ -433,7 +451,11 @@ export function PayScreen() {
                   time: formatCountdown(left),
                 })}
               </span>
-              {!rest && <FooterAction onClick={renew}>{labels.pay.refreshPrice}</FooterAction>}
+              {!rest && (
+                <FooterAction disabled={quoting} onClick={renew}>
+                  {labels.pay.refreshPrice}
+                </FooterAction>
+              )}
             </div>
           )}
 
@@ -590,7 +612,7 @@ export function PayScreen() {
           walletName={asked?.name ?? ''}
           walletId={asked?.walletId ?? ''}
           walletIcon={asked?.icon}
-          amount={token(amounts.send)}
+          amount={askedAmount}
           merchant={merchant}
           network={network}
           to={shortAddress(quote.instructions.to)}
@@ -620,7 +642,7 @@ export function PayScreen() {
           walletName={asked?.name ?? ''}
           walletId={asked?.walletId ?? ''}
           walletIcon={asked?.icon}
-          amount={token(amounts.send)}
+          amount={askedAmount}
           merchant={merchant}
           network={network}
           to={shortAddress(quote.instructions.to)}

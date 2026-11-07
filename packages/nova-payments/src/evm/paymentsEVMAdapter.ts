@@ -10,6 +10,7 @@ import {
   getCapabilities,
   getConnection,
   getConnectorClient,
+  getTransactionReceipt,
   readContract,
   sendCalls,
   sendTransaction,
@@ -261,7 +262,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     },
 
     upgradeToSmartAccount: async ({ chainId, account }) => {
-      refuseSafe();
+      await refuseSafe();
       const id = evmChainId(chainId);
       const address = account as Address;
       await switchChain(config, { chainId: id });
@@ -313,7 +314,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     },
 
     revokePermission: async ({ revocation, chainId, account, onSent }) => {
-      refuseSafe();
+      await refuseSafe();
       const chain = evmChainId(chainId);
       await switchChain(config, { chainId: chain });
       const hash = await sendTransaction(config, {
@@ -323,7 +324,17 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         data: revocation.data as Hex,
       });
       onSent?.();
-      await waitForTransactionReceipt(config, { chainId: chain, hash });
+      try {
+        await waitForTransactionReceipt(config, { chainId: chain, hash, timeout: CALLS_TIMEOUT_MS });
+      } catch (error) {
+        // wagmi throws a plain error on a reverted receipt, and so does a wait that ran out. Only the receipt tells them
+        // apart: a reverted revocation left nothing to wait for, and the wallet may be asked again
+        const receipt = await getTransactionReceipt(config, { chainId: chain, hash }).catch(() => null);
+        if (receipt?.status === 'reverted') {
+          throw new PaymentWalletError('failed', 'The revocation reverted', { cause: error });
+        }
+        throw error;
+      }
     },
 
     pulsarTransaction: ({ txKey, instructions, account, connectorType, title, description, payload }) => {

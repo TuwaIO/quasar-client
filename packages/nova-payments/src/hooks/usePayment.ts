@@ -1,4 +1,4 @@
-import type { CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutQuote, PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
 import { useRef, useState } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
@@ -29,11 +29,28 @@ interface OpenRequest {
   until: number;
   /** Whether the wallet took a payment that is not confirmed yet. */
   unconfirmed: boolean;
+  /** What the wallet was asked to send: a new price on the page does not change it. */
+  instructions: PaymentInstructions;
+  /** Whether the wallet took a sponsored batch, whose hash comes later: money may be on its way with no key to show. */
+  accepted: boolean;
 }
 
 // One per checkout store, not per pay step: the step unmounts on every screen change while the wallet keeps its request.
 // A second request next to one that waits could be confirmed too, and the buyer pays twice
 const openRequests = new WeakMap<object, OpenRequest>();
+
+/**
+ * Whether the wallet took a sponsored batch of this checkout that has no hash yet: nothing the store knows of, and still the
+ * page must not say that nothing was sent.
+ *
+ * @param store - The checkout store.
+ * @returns Whether such a batch may be on its way.
+ * @internal
+ */
+export function isPaymentAccepted(store: object): boolean {
+  const open = openRequests.get(store);
+  return Boolean(open?.accepted && Date.now() < open.until);
+}
 
 /** What {@link usePayment} needs. */
 export interface UsePaymentParams {
@@ -65,6 +82,8 @@ export interface Payment {
   problem: PaymentWalletErrorKind | null;
   /** The wallet asked, for the window: it keeps its name when the buyer disconnects it while the request waits there. */
   askedWallet: CheckoutWallet | null;
+  /** What the wallet was asked to send, for the window: a request that waits keeps its amount under a new price. */
+  askedInstructions: PaymentInstructions | null;
   /** Pays the quote from the wallet; resolves when Quasar took it or the wallet refused. */
   pay: () => Promise<void>;
   /** Asks the wallet to switch to the quote's chain. */
@@ -94,6 +113,7 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
   // Each request gets a number; a dismissed or replaced one no longer changes the page
   const request = useRef(0);
   const [askedWallet, setAskedWallet] = useState<CheckoutWallet | null>(null);
+  const [askedInstructions, setAskedInstructions] = useState<PaymentInstructions | null>(null);
 
   const run = async (next: PaymentStatus, action: (isCurrent: () => boolean) => Promise<unknown>) => {
     const id = ++request.current;
@@ -113,6 +133,7 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
     status,
     problem,
     askedWallet,
+    askedInstructions,
     pay: () =>
       run('wallet', async (isCurrent) => {
         if (!adapter || !quote || !wallet) return setProblem('unsupported');
@@ -122,10 +143,22 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
         const waiting = openRequests.get(store);
         const repeatsSignature = waiting?.path === 'relay' && path === 'relay';
         if (waiting?.account === wallet.address && !repeatsSignature && Date.now() < waiting.until) {
-          // The window shows again and says that the request waits in the wallet
+          // The window shows again and says that the request waits in the wallet, with what that request sends
+          setAskedInstructions(waiting.instructions);
           await waiting.paying;
           return;
         }
+        setAskedInstructions(quote.instructions);
+        const entry: OpenRequest = {
+          account: wallet.address,
+          path,
+          paying: Promise.resolve(),
+          until: Date.now() + OPEN_REQUEST_MS,
+          unconfirmed: false,
+          instructions: quote.instructions,
+          accepted: false,
+        };
+        openRequests.set(store, entry);
         const paying = payInvoice({
           adapter,
           store,
@@ -133,7 +166,10 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
           wallet,
           path,
           paymasterUrl,
-          onWalletDone: () => isCurrent() && setStatus('submitting'),
+          onWalletDone: () => {
+            if (path === 'paymaster') entry.accepted = true;
+            if (isCurrent()) setStatus('submitting');
+          },
           // Reported even after a cancel: the checkout follows the transaction until Quasar settles it
           onSent: (txKey) =>
             onSent?.({
@@ -143,14 +179,7 @@ export function usePayment({ adapter, store, quote, wallet, path, paymasterUrl, 
               connectorType: wallet.connectorType,
             }),
         });
-        const entry: OpenRequest = {
-          account: wallet.address,
-          path,
-          paying,
-          until: Date.now() + OPEN_REQUEST_MS,
-          unconfirmed: false,
-        };
-        openRequests.set(store, entry);
+        entry.paying = paying;
         const settled = () => {
           if (openRequests.get(store) === entry) openRequests.delete(store);
         };

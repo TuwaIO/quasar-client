@@ -1,0 +1,45 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Functions/refundAction" />
+
+# refundAction()
+
+> **refundAction**\<`Args`, `Result`\>(`call`): (...`args`) => `Promise`\<`Result` \| [`RefusedRefundCall`](?path=/docs/packages-quasar-sdk-checkout-interfaces-refusedrefundcall--docs)\>
+
+Defined in: [checkout/refundStore.ts:141](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L141)
+
+Wraps a call of the refund store for a Server Action: React passes no fields of a thrown error to the browser, so without it
+every refusal reads as "Quasar did not answer". The action returns the refusal, and the store takes it as thrown.
+
+## Type Parameters
+
+### Args
+
+`Args` *extends* `unknown`[]
+
+### Result
+
+`Result`
+
+## Parameters
+
+### call
+
+(...`args`) => `Promise`\<`Result`\>
+
+The call, for example `quasar.payments.refund` bound to its client.
+
+## Returns
+
+The same call, which returns a refusal of Quasar instead of throwing it. Any other error is thrown as it was.
+
+(...`args`) => `Promise`\<`Result` \| [`RefusedRefundCall`](?path=/docs/packages-quasar-sdk-checkout-interfaces-refusedrefundcall--docs)\>
+
+## Example
+
+```ts
+'use server';
+export const refundInvoice = refundAction((invoiceId: string, params: RefundParams) =>
+  quasar.payments.refund(invoiceId, params),
+);
+```

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createRefundStore } from '../checkout';
+import { createRefundStore, refundAction } from '../checkout';
 import { QuasarSDKError } from '../core/errors';
 import type { Refund, RefundStart } from '../modules/payments/types';
 
@@ -172,6 +172,30 @@ describe('createRefundStore', () => {
       await first.getState().start('inv_1');
       await first.getState().submit(SENT);
       expect(first.getState().sentTransaction).toEqual(SENT);
+    });
+  });
+
+  describe('a Server Action, which passes no fields of an error to the browser', () => {
+    it('returns a refusal of Quasar, and the store takes it as thrown', async () => {
+      const refused = new QuasarSDKError('Too much', 409, new Error('x'), { code: 'amount_exceeds_refundable' });
+      const request = refundAction(async (): Promise<RefundStart> => {
+        throw refused;
+      });
+      expect(await request()).toEqual({
+        refused: { code: 'amount_exceeds_refundable', message: 'Too much', status: 409 },
+      });
+      const store = createRefundStore({ request, submit: vi.fn(), get: vi.fn(), handOverStorage: null });
+      expect(await store.getState().start('inv_1')).toBe(false);
+      expect(store.getState().error).toMatchObject({ code: 'amount_exceeds_refundable', status: 409 });
+    });
+
+    it('throws any other error as it was: Quasar did not answer', async () => {
+      const lost = new Error('network');
+      await expect(
+        refundAction(async () => {
+          throw lost;
+        })(),
+      ).rejects.toBe(lost);
     });
   });
 

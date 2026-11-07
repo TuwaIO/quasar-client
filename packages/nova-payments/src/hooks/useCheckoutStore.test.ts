@@ -36,6 +36,26 @@ const Probe = (props: { token: string; api: CheckoutApi }) =>
 describe('useCheckoutStore', () => {
   beforeEach(() => unmount());
 
+  // A page can have a closed window per row of a list, and each would hold an event stream on the server
+  it('reads nothing until enabled, and stays once it was', async () => {
+    const api = apiFor('t1');
+    const Off = (props: { enabled: boolean }) =>
+      useCheckoutStore({
+        token: 't1',
+        api,
+        EventSource: null,
+        pollMs: 60_000,
+        enabled: props.enabled,
+      }) as CheckoutStore;
+    expect((render(Off, { enabled: false }) as CheckoutStore).getState().phase).toBe('loading');
+    render(Off, { enabled: false });
+    expect(api.view).not.toHaveBeenCalled();
+    render(Off, { enabled: true });
+    const store = render(Off, { enabled: true }) as CheckoutStore;
+    await vi.waitFor(() => expect(store.getState().phase).toBe('selectMethod'));
+    expect(api.view).toHaveBeenCalledOnce();
+  });
+
   it('shows a loading store that makes no request until mounted, then creates and loads the real one', async () => {
     const api = apiFor('t1');
     const idle = render(Probe, { token: 't1', api }) as CheckoutStore;

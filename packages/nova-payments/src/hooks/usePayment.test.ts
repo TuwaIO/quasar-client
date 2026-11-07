@@ -10,7 +10,7 @@ vi.mock('react', async () => ({
 }));
 
 const { render, unmount } = await import('../testing/hookHarness');
-const { OPEN_REQUEST_MS, usePayment } = await import('./usePayment');
+const { isPaymentAccepted, OPEN_REQUEST_MS, usePayment } = await import('./usePayment');
 const { PaymentWalletError } = await import('../utils/walletErrors');
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -180,6 +180,41 @@ describe('usePayment', () => {
     await renderHook().pay();
     expect(adapter.sendSponsoredCalls).toHaveBeenCalledOnce();
     expect(renderHook().problem).toBe('sentUnconfirmed');
+  });
+
+  // The page must not name a price the wallet does not show: the buyer is told to check it there
+  it('names what the wallet was asked to send after a new price on the page', async () => {
+    const { transfer, renderHook, props } = setup();
+    const first = renderHook().pay();
+    renderHook().dismiss();
+    const newer = {
+      ...quote,
+      instructions: { ...quote.instructions, amount: '2' },
+    } as unknown as CheckoutQuote;
+    props.quote = newer;
+    const second = renderHook().pay();
+    expect(renderHook().askedInstructions?.amount).toBe('1');
+    transfer.resolve('0xhash');
+    await Promise.all([first, second]);
+  });
+
+  it('counts a sponsored batch the wallet took as on its way, with no hash yet', async () => {
+    const { adapter, renderHook, props } = setup();
+    let finish!: () => void;
+    adapter.sendSponsoredCalls = vi.fn(async ({ onSent }) => {
+      onSent?.();
+      await new Promise<void>((resolve) => (finish = resolve));
+      return '0xhash';
+    });
+    props.path = 'paymaster';
+    props.paymasterUrl = 'https://quasar/paymaster';
+    props.quote = { ...quote, gasless: { paymaster: { calls: [] } } } as unknown as CheckoutQuote;
+    expect(isPaymentAccepted(props.store)).toBe(false);
+    const paying = renderHook().pay();
+    await vi.waitFor(() => expect(isPaymentAccepted(props.store)).toBe(true));
+    finish();
+    await paying;
+    expect(isPaymentAccepted(props.store)).toBe(false);
   });
 
   it('sends again once the wallet refused the first one', async () => {

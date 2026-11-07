@@ -11,6 +11,7 @@ import { BASE_API_URL } from '../constants';
 
 /** Path of the public health endpoint of the Quasar API. */
 const HEALTH_ENDPOINT = '/v1/engine/monitoring/health';
+const HEALTH_TIMEOUT_MS = 5_000;
 
 /**
  * Checks, before a transaction starts, that the user is signed in with SIWX and that the Quasar API responds. Use it
@@ -44,6 +45,8 @@ export async function preFlightTxCheck(customApiUrl?: string): Promise<void> {
     response = await fetch(`${apiUrl}${HEALTH_ENDPOINT}`, {
       method: 'GET',
       cache: 'no-store',
+      // Pulsar awaits this before it asks the wallet: a Quasar that hangs must not hold the prompt back
+      signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),
     });
   } catch (error) {
     throw new Error('[QuasarSDK] Quasar Cloud Engine is currently unreachable.', { cause: error });

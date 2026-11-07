@@ -182,10 +182,16 @@ export function paymentsSolanaAdapter({ rpcUrls }: PaymentsSolanaAdapterOptions 
     getBalance: async ({ chainId, account, token }) => {
       const rpc = rpcOf(chainId);
       if (token === 'native') return (await rpc.getBalance(address(account)).send()).value;
+      const mint = address(token);
       const { value } = await rpc
-        .getTokenAccountsByOwner(address(account), { mint: address(token) }, { encoding: 'jsonParsed' })
+        .getTokenAccountsByOwner(address(account), { mint }, { encoding: 'jsonParsed' })
         .send();
-      return value.reduce((sum, item) => sum + BigInt(item.account.data.parsed.info.tokenAmount.amount), 0n);
+      // The transfer spends the associated token account only: tokens elsewhere cannot pay, and a balance that counts them
+      // would keep Pay live for a transfer the wallet refuses
+      const tokenProgram = await tokenProgramOf(chainId, mint);
+      const [spends] = await findAssociatedTokenPda({ owner: address(account), mint, tokenProgram });
+      const source = value.find((item) => item.pubkey === spends);
+      return BigInt(source?.account.data.parsed.info.tokenAmount.amount ?? 0);
     },
 
     estimateFee: async ({ instructions }) => {
@@ -212,7 +218,8 @@ export function paymentsSolanaAdapter({ rpcUrls }: PaymentsSolanaAdapterOptions 
         throw new PaymentWalletError('unsupported', 'The wallet cannot send this transaction', { cause: error });
       }
       const transfer = await transferInstructions(solana, signer);
-      const { value: blockhash } = await rpcOf(solana.chainId).getLatestBlockhash().send();
+      // `confirmed` lives about a minute longer than the default, for a buyer who takes time in the wallet
+      const { value: blockhash } = await rpcOf(solana.chainId).getLatestBlockhash({ commitment: 'confirmed' }).send();
       const message = pipe(
         createTransactionMessage({ version: 0 }),
         (draft) => setTransactionMessageFeePayerSigner(signer, draft),
@@ -223,6 +230,15 @@ export function paymentsSolanaAdapter({ rpcUrls }: PaymentsSolanaAdapterOptions 
         return getBase58Decoder().decode(await signAndSendTransactionMessageWithSigners(message));
       } catch (error) {
         if (!isUnknownBlockhash(error)) throw error;
+        // Unknown has two causes. Still valid on this network means that the wallet sent it to another one; otherwise it
+        // expired in a slow prompt, and the buyer must not go looking for a setting that is right
+        const stillValid = await rpcOf(solana.chainId)
+          .isBlockhashValid(blockhash.blockhash, { commitment: 'confirmed' })
+          .send()
+          .then(({ value }) => value)
+          .catch(() => true);
+        if (!stillValid)
+          throw new PaymentWalletError('failed', 'The transaction expired in the wallet', { cause: error });
         throw new PaymentWalletError('wrongNetwork', `The wallet is not on ${solana.chainId}`, { cause: error });
       }
     },

@@ -149,6 +149,16 @@ describe('allowing automatic payments', () => {
       expect(upgradeToSmartAccount).not.toHaveBeenCalled();
     });
 
+    // A Cancel leaves the upgrade open in the wallet, and each one costs the buyer a fee
+    it('asks for no second switch while the first waits in the wallet', () => {
+      accountKind = 'upgradable';
+      const upgradeToSmartAccount = vi.fn(() => new Promise(() => undefined));
+      const { press } = setup({ upgradeToSmartAccount });
+      press();
+      press();
+      expect(upgradeToSmartAccount).toHaveBeenCalledOnce();
+    });
+
     it('shows the switch while the wallet asks for it', () => {
       accountKind = 'upgradable';
       const { press, prompt } = setup({ upgradeToSmartAccount: () => new Promise(() => undefined) });
