@@ -92,8 +92,8 @@
     }
   },
   "devDependencies": {
-    "@tuwaio/pulsar-core": "^0.12.1",
-    "@tuwaio/siwx-react": "^0.6.5",
+    "@tuwaio/pulsar-core": "^0.12.4",
+    "@tuwaio/siwx-react": "^0.6.6",
     "tsup": "^9.0.0",
     "typescript": "6.0.3",
     "zustand": "^5.0.15"

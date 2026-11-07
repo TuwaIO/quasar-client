@@ -489,14 +489,17 @@ describe('RefundButton', () => {
       ['withdrawn', 'failedWithdrawnTitle'],
       ['cancelled', 'failedCancelledTitle'],
       ['cancelled_final', 'failedCancelledTitle'],
-    ] as const)('heads a refund closed by %s with what the merchant did, not with a failure', (failureReason, label) => {
-      const flow = flowOf({
-        step: 'failed',
-        phase: 'failed',
-        refund: { id: 'rf_6', mode: 'exact_received', failureReason, creditNoteNumber: null } as never,
-      });
-      expect(button(failed(flow), ScreenContent).props.title).toBe(defaultLabels.refund[label]);
-    });
+    ] as const)(
+      'heads a refund closed by %s with what the merchant did, not with a failure',
+      (failureReason, label) => {
+        const flow = flowOf({
+          step: 'failed',
+          phase: 'failed',
+          refund: { id: 'rf_6', mode: 'exact_received', failureReason, creditNoteNumber: null } as never,
+        });
+        expect(button(failed(flow), ScreenContent).props.title).toBe(defaultLabels.refund[label]);
+      },
+    );
 
     it('heads a withdrawn refund of a held transfer the same way', () => {
       const flow = flowOf({

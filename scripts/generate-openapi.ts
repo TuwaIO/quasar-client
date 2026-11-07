@@ -59,7 +59,6 @@ const TransactionTrackerSchema: z.ZodType<TransactionTracker> = z
   .enum([
     TransactionTracker.Ethereum,
     TransactionTracker.Safe,
-    TransactionTracker.Gelato,
     TransactionTracker.Solana,
     TransactionTracker.ERC4337,
     TransactionTracker.EIP5792,
@@ -125,7 +124,6 @@ const BaseTransactionSchema = z.object({
     .union([z.number(), z.string(), z.null()])
     .optional()
     .openapi({ description: 'Number of confirmations or finality status.' }),
-  rpcUrl: z.string().optional().openapi({ description: 'RPC URL used for submission.' }),
   syncStatus: z
     .enum(['synced', 'pending-sync'])
     .optional()

@@ -16,3 +16,4 @@ minimumReleaseAgeExclude:
   - vitest@5.0.5
   - react-dom@19.3.1
   - react@19.3.1
+  - zustand@5.1.0

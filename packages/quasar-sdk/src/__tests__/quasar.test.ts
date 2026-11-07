@@ -54,7 +54,6 @@ describe('Quasar SDK', () => {
     expect(TransactionTracker.ERC4337).toBe('erc4337');
     expect(TransactionTracker.Ethereum).toBe('ethereum');
     expect(TransactionTracker.Safe).toBe('safe');
-    expect(TransactionTracker.Gelato).toBe('gelato');
     expect(TransactionTracker.Solana).toBe('solana');
 
     expect(TransactionStatus.Success).toBe('Success');
