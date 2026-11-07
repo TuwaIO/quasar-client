@@ -1,6 +1,6 @@
 import { Meta } from '@storybook/addon-docs/blocks';
 
-<Meta title="Packages/quasar-sdk/server/Functions/watchBatchHashes" />
+<Meta title="Packages/quasar-sdk/pulsar/Functions/watchBatchHashes" />
 
 # watchBatchHashes()
 
@@ -26,7 +26,7 @@ Side effects: subscribes to the store until the returned function is called; kee
 
 ### store
 
-[`PulsarPoolStore`](?path=/docs/packages-quasar-sdk-server-interfaces-pulsarpoolstore--docs)\<`T`\>
+[`PulsarPoolStore`](?path=/docs/packages-quasar-sdk-pulsar-interfaces-pulsarpoolstore--docs)\<`T`\>
 
 The Pulsar store, for example the one `createPulsarStore` returns.
 
@@ -45,7 +45,7 @@ A function that stops watching.
 ## Example
 
 ```ts
-import { watchBatchHashes } from '@tuwaio/quasar-sdk';
+import { watchBatchHashes } from '@tuwaio/quasar-sdk/pulsar';
 
 // In the browser, next to the store; `syncBatchHash` is a Server Action that calls `quasar.pulsar.syncHash`
 const stop = watchBatchHashes(pulsarStore, (tx) => syncBatchHash(tx.txKey, tx.hash));

@@ -35,7 +35,7 @@ export interface PulsarPoolStore<T extends Transaction> {
  *
  * @example
  * ```ts
- * import { watchBatchHashes } from '@tuwaio/quasar-sdk';
+ * import { watchBatchHashes } from '@tuwaio/quasar-sdk/pulsar';
  *
  * // In the browser, next to the store; `syncBatchHash` is a Server Action that calls `quasar.pulsar.syncHash`
  * const stop = watchBatchHashes(pulsarStore, (tx) => syncBatchHash(tx.txKey, tx.hash));

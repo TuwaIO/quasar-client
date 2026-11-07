@@ -68,5 +68,10 @@ export interface PaginatedResult<T> {
   hasPrevPage: boolean;
 }
 
-export type { Transaction, UpdatableTransactionFields } from '@tuwaio/pulsar-core';
-export { TransactionStatus, TransactionTracker } from '@tuwaio/pulsar-core';
+// Types only: their values are in `@tuwaio/quasar-sdk/pulsar`, so that this entry loads no Pulsar
+export type {
+  Transaction,
+  TransactionStatus,
+  TransactionTracker,
+  UpdatableTransactionFields,
+} from '@tuwaio/pulsar-core';

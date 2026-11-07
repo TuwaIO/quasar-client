@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { QuasarClient } from '../core/client';
-import { pulsarSyncHashEndpoint, Quasar, type Transaction, TransactionTracker, watchBatchHashes } from '../index';
+import { pulsarSyncHashEndpoint, Quasar, type Transaction } from '../index';
+import { TransactionTracker, watchBatchHashes } from '../pulsar';
 
 const HASH = `0x${'ab'.repeat(32)}` as const;
 const now = () => Math.floor(Date.now() / 1000);

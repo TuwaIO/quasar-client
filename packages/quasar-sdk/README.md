@@ -24,16 +24,19 @@
 ## 💾 Installation
 
 ```bash
-pnpm add @tuwaio/quasar-sdk @tuwaio/pulsar-core
+pnpm add @tuwaio/quasar-sdk
+# To sync Pulsar transactions:
+pnpm add @tuwaio/pulsar-core
 ```
 
-| Import path                   | Provides                                                                                                                            | Peer dependencies                                         |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `@tuwaio/quasar-sdk`          | `Quasar`, `PulsarModule`, `PaymentsModule`, `verifyWebhook`, `watchBatchHashes`, `QuasarSDKError`, the endpoint constants and types | `@tuwaio/pulsar-core` (>=0.10), for the transaction types |
-| `@tuwaio/quasar-sdk/checkout` | `createCheckoutStore`, `createRefundStore` and their types                                                                          | Also `zustand` (5.x, optional for the other entries)      |
-| `@tuwaio/quasar-sdk/react`    | `preFlightTxCheck`                                                                                                                  | Also `@tuwaio/siwx-react` (>=0.5, optional for the root)  |
+| Import path                   | Provides                                                                                                        | Peer dependencies                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `@tuwaio/quasar-sdk`          | `Quasar`, `PulsarModule`, `PaymentsModule`, `verifyWebhook`, `QuasarSDKError`, the endpoint constants and types | `@tuwaio/pulsar-core` (>=0.10, optional), for the transaction types |
+| `@tuwaio/quasar-sdk/pulsar`   | `TransactionStatus`, `TransactionTracker`, `watchBatchHashes`                                                   | `@tuwaio/pulsar-core` (>=0.10)                                      |
+| `@tuwaio/quasar-sdk/checkout` | `createCheckoutStore`, `createRefundStore` and their types                                                      | Also `zustand` (5.x, optional for the other entries)                |
+| `@tuwaio/quasar-sdk/react`    | `preFlightTxCheck`                                                                                              | Also `@tuwaio/siwx-react` (>=0.5, optional for the root)            |
 
-The root entry point imports neither React, SIWX nor `zustand`, so it runs in Node.js, Next.js Server Actions and route handlers, and Edge runtimes. Its HTTP client, `ofetch`, is a dependency.
+The root entry point imports neither React, SIWX, Pulsar nor `zustand`, so it runs in Node.js, Next.js Server Actions and route handlers, and Edge runtimes. Its HTTP client, `ofetch`, is a dependency.
 
 ---
 
@@ -73,7 +76,7 @@ export async function syncBatchHash(txKey: string, hash: `0x${string}`) {
 ```
 
 ```ts
-import { watchBatchHashes } from '@tuwaio/quasar-sdk';
+import { watchBatchHashes } from '@tuwaio/quasar-sdk/pulsar';
 
 // In the browser, next to the Pulsar store
 const stop = watchBatchHashes(pulsarStore, (tx) => syncBatchHash(tx.txKey, tx.hash));

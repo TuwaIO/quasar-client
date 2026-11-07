@@ -7,6 +7,7 @@ export default defineConfig([
     format: ['cjs', 'esm'],
     entry: {
       index: './src/index.ts',
+      pulsar: './src/pulsar/index.ts',
       react: './src/react/index.ts',
       checkout: './src/checkout/index.ts',
     },

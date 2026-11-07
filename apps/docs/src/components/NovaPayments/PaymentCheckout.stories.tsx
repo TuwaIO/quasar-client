@@ -334,7 +334,8 @@ export const OwnConnection: Story = {
   args: { connection: 'own' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByTestId('payments-connection')).toHaveTextContent(/^own$/);
+    // Nova's own connection loads on demand: the first load can take seconds
+    await expect(await canvas.findByTestId('payments-connection', {}, { timeout: 5000 })).toHaveTextContent(/^own$/);
     await userEvent.click(await canvas.findByRole('button', { name: 'Continue' }));
     const page = within(canvasElement.ownerDocument.body);
     await expect(await page.findByRole('dialog', { name: /Connect Wallet/i })).toBeVisible();

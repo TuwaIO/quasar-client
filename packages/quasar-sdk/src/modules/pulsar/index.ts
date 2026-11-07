@@ -60,7 +60,7 @@ export class PulsarModule {
    * Sends the hash of the transaction that executed an EIP-5792 batch (`POST /v1/engine/pulsar/sync/:txKey/hash`). A
    * batch is synced by its batch ID (`TransactionTracker.EIP5792`), which only the wallet can resolve; with the hash,
    * Quasar tracks it on-chain until it reaches a final status. Get the hashes in the browser with
-   * {@link watchBatchHashes} and send each through a Server Action. Without a hash, Quasar marks the batch `Failed`
+   * `watchBatchHashes` from `@tuwaio/quasar-sdk/pulsar` and send each through a Server Action. Without a hash, Quasar marks the batch `Failed`
    * an hour after it was synced.
    *
    * @param txKey - The batch ID, the `txKey` of the transaction.

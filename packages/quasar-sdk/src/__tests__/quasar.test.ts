@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Quasar, TransactionStatus, TransactionTracker } from '../index';
+import { Quasar } from '../index';
+import { TransactionStatus, TransactionTracker } from '../pulsar';
 import { preFlightTxCheck } from '../react';
 
 describe('Quasar SDK', () => {
