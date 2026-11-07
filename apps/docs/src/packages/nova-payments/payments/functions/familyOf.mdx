@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/familyOf" />
+
+# familyOf()
+
+> **familyOf**(`chainId`): [`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs) \| `null`
+
+Defined in: [nova-payments/src/utils/methods.ts:127](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L127)
+
+The family of a CAIP-2 chain.
+
+## Parameters
+
+### chainId
+
+`string`
+
+A CAIP-2 chain ID.
+
+## Returns
+
+[`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs) \| `null`
+
+`eip155` or `solana`; `null` for another namespace.

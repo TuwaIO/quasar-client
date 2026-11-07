@@ -1,0 +1,49 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/SubscriptionStart" />
+
+# SubscriptionStart
+
+Defined in: [modules/payments/types.ts:996](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L996)
+
+A started or resumed subscription with the invoice of its period and that invoice's payment page.
+
+## Properties
+
+### checkoutToken
+
+> **checkoutToken**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:1002](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L1002)
+
+That invoice's checkout token.
+
+***
+
+### invoice
+
+> **invoice**: [`Invoice`](?path=/docs/packages-quasar-sdk-server-interfaces-invoice--docs) \| `null`
+
+Defined in: [modules/payments/types.ts:1000](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L1000)
+
+The invoice of its first (or resumed) period; `null` during a trial.
+
+***
+
+### payUrl
+
+> **payUrl**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:1004](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L1004)
+
+That invoice's payment page.
+
+***
+
+### subscription
+
+> **subscription**: [`Subscription`](?path=/docs/packages-quasar-sdk-server-interfaces-subscription--docs)
+
+Defined in: [modules/payments/types.ts:998](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L998)
+
+The subscription.

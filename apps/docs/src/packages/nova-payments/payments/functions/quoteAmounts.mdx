@@ -1,0 +1,26 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/quoteAmounts" />
+
+# quoteAmounts()
+
+> **quoteAmounts**(`quote`): [`QuoteAmounts`](?path=/docs/packages-nova-payments-payments-interfaces-quoteamounts--docs)
+
+Defined in: [nova-payments/src/utils/pay.ts:49](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L49)
+
+What the buyer sends and the merchant receives for this payment: the same amount, unless the token keeps a fee on
+every transfer. On the quote of a rest that is what is left of the invoice, not its total.
+
+## Parameters
+
+### quote
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+
+The locked quote.
+
+## Returns
+
+[`QuoteAmounts`](?path=/docs/packages-nova-payments-payments-interfaces-quoteamounts--docs)
+
+The amounts.

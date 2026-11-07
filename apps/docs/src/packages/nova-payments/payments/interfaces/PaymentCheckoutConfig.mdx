@@ -1,0 +1,58 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/PaymentCheckoutConfig" />
+
+# PaymentCheckoutConfig
+
+Defined in: [nova-payments/src/components/customization.ts:377](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L377)
+
+Options of [PaymentCheckout](?path=/docs/packages-nova-payments-payments-functions-paymentcheckout--docs). Every text and accessible name comes from the labels, and amounts and dates
+follow the language of the checkout.
+
+## Properties
+
+### animation?
+
+> `optional` **animation?**: `object`
+
+Defined in: [nova-payments/src/components/customization.ts:379](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L379)
+
+Animations. They always follow `prefers-reduced-motion`; `disabled: true` turns them off for everyone.
+
+#### disabled?
+
+> `optional` **disabled?**: `boolean`
+
+Turns the animations off.
+
+***
+
+### balanceCheck?
+
+> `optional` **balanceCheck?**: `boolean`
+
+Defined in: [nova-payments/src/components/customization.ts:389](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L389)
+
+Whether the pay step reads the wallet's balance (through the chain adapter) and, when it is short, offers what the
+wallet can pay with (default `true`).
+
+***
+
+### deadlineAnnouncements?
+
+> `optional` **deadlineAnnouncements?**: readonly `number`[]
+
+Defined in: [nova-payments/src/components/customization.ts:394](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L394)
+
+Minutes before the invoice deadline at which screen readers hear the time left, while the buyer can still pay (not
+once the payment is on its way) (default `[10, 5, 1]`).
+
+***
+
+### showSteps?
+
+> `optional` **showSteps?**: `boolean`
+
+Defined in: [nova-payments/src/components/customization.ts:384](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L384)
+
+Whether the header shows the steps of the payment (default `true`).

@@ -1,0 +1,40 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/RefundButton" />
+
+# RefundButton()
+
+> **RefundButton**(`props`): `Element`
+
+Defined in: [nova-payments/src/components/RefundButton.tsx:108](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L108)
+
+A button that refunds a paid invoice from the merchant's connected wallet: it opens [RefundDialog](?path=/docs/packages-nova-payments-payments-functions-refunddialog--docs). Put it
+inside [NovaPaymentsProvider](?path=/docs/packages-nova-payments-payments-functions-novapaymentsprovider--docs): it uses the provider's wallet connection (the app's Satellite store and Nova
+Connect when the app has them, else Nova's own `ownConnection`) and its adapters. In an app whose wallets connect
+without Nova Connect, pass `onConnectWallet` here or to the provider.
+
+## Parameters
+
+### props
+
+[`RefundButtonProps`](?path=/docs/packages-nova-payments-payments-interfaces-refundbuttonprops--docs)
+
+See [RefundButtonProps](?path=/docs/packages-nova-payments-payments-interfaces-refundbuttonprops--docs).
+
+## Returns
+
+`Element`
+
+The button and its window.
+
+## Example
+
+```tsx
+import { createRefundStore } from '@tuwaio/quasar-sdk/checkout';
+import { RefundButton } from '@tuwaio/nova-payments';
+
+// refundInvoice, submitRefund and getRefund are Server Actions calling quasar.payments
+const refunds = createRefundStore({ request: refundInvoice, submit: submitRefund, get: getRefund });
+
+<RefundButton store={refunds} invoiceId={invoice.id} invoice={invoice.number} currency="USD" />;
+```

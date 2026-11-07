@@ -1,0 +1,42 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/needsLeaveConfirm" />
+
+# needsLeaveConfirm()
+
+> **needsLeaveConfirm**(`phase`, `error?`, `status?`): `boolean`
+
+Defined in: [nova-payments/src/utils/outcome.ts:127](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L127)
+
+Whether closing the checkout asks first: only while nothing has been sent. Once a transaction is on its way, or the
+invoice is settled, the checkout closes without a question; also after a payment that left the wallet, or may have
+([leftTheWalletText](?path=/docs/packages-nova-payments-payments-functions-leftthewallettext--docs): a transaction that does not pay the invoice, a payment Quasar closed without a result on
+chain within 24 hours, a transaction another invoice handed over first, a confirmed payment Quasar has not recorded
+yet), so the question's "Nothing is sent yet" would not be true. Nor is it on the rest of an underpaid invoice, whose
+price stays as it is.
+
+## Parameters
+
+### phase
+
+[`CheckoutPhase`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutphase--docs)
+
+Where the payment stands.
+
+### error?
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null`
+
+The store's last error, if any.
+
+### status?
+
+`string` \| `null`
+
+The state of the invoice, when known.
+
+## Returns
+
+`boolean`
+
+`true` to ask.

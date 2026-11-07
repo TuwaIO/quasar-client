@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/isMovedMoneyFailure" />
+
+# isMovedMoneyFailure()
+
+> **isMovedMoneyFailure**(`error`): `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:549](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L549)
+
+Whether the last error says that the transaction succeeded on chain but does not pay the invoice (a wrong amount,
+asset or recipient, no Solana Pay reference, sent before the price was locked…): `payment_mismatch` of a current
+`@tuwaio/quasar-sdk`, or `payment_failed` with such a reason from an older one. It may have moved money, so the
+checkout never says that it did not go through or that nothing was charged: it says that the transaction does not pay
+the invoice, and to contact the seller if money left the wallet. A payment the network confirmed that Quasar has not
+recorded yet (`settlement_failed`, which an older store reports as `payment_mismatch`) is not one: it pays the
+invoice once Quasar records it.
+
+## Parameters
+
+### error
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null` \| `undefined`
+
+The store's error.
+
+## Returns
+
+`boolean`
+
+`true` for a transaction that does not pay the invoice.

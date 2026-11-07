@@ -1,0 +1,26 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/refundRateMoved" />
+
+# refundRateMoved()
+
+> **refundRateMoved**(`preview`): `boolean`
+
+Defined in: [nova-payments/src/utils/outcome.ts:354](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L354)
+
+Whether a refund sends more tokens than came in, or a noticeably different number of tokens than its amount took at the rate of the payment: half a
+percent or more, so a stablecoin at par never asks.
+
+## Parameters
+
+### preview
+
+`Pick`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs), `"cryptoAmount"` \| `"atPaymentRate"`\> & `Partial`\<`Pick`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs), `"received"`\>\>
+
+What the refund would send.
+
+## Returns
+
+`boolean`
+
+Whether the merchant should look first.

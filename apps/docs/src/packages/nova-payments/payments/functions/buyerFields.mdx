@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/buyerFields" />
+
+# buyerFields()
+
+> **buyerFields**(`collect`, `company`): [`BuyerField`](?path=/docs/packages-nova-payments-payments-interfaces-buyerfield--docs)[]
+
+Defined in: [nova-payments/src/utils/buyer.ts:47](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/buyer.ts#L47)
+
+The fields of the form, in order.
+
+## Parameters
+
+### collect
+
+[`BuyerCollect`](?path=/docs/packages-nova-payments-payments-type-aliases-buyercollect--docs)
+
+What the checkout collects.
+
+### company
+
+`boolean`
+
+The buyer wants an invoice for a company: name, address line, country and tax ID are needed.
+
+## Returns
+
+[`BuyerField`](?path=/docs/packages-nova-payments-payments-interfaces-buyerfield--docs)[]
+
+The fields.

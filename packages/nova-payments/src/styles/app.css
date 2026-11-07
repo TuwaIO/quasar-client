@@ -1,0 +1,196 @@
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme) prefix(novapay);
+@import 'tailwindcss/utilities.css' layer(utilities) prefix(novapay);
+
+/* The `font-mono` rule of `@tuwaio/nova-core` sets `line-height: 1 !important`: a heading that wraps (a long
+   translation, a narrow screen) keeps room between its lines. A more specific rule of the same layer wins. */
+@layer base {
+  h2.novapay-title {
+    line-height: 1.3 !important;
+  }
+}
+
+@keyframes novapay-page-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* display="page" only: no part of a modal or an inline checkout carries these classes. After the utilities of this
+   package in the same layer, so a rule here wins over a utility of the part. */
+@layer utilities {
+  .novapay-page {
+    --novapay-page-h: var(--novapay-page-height, 100svh);
+    box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    min-height: var(--novapay-page-h);
+    flex-direction: column;
+    align-items: center;
+  }
+  .novapay-page-block {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+  .novapay-page-header-phone {
+    padding-top: 12px;
+  }
+  .novapay-page-amount-row {
+    flex-wrap: wrap;
+  }
+  .novapay-page-amount {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .novapay-page-fade {
+    animation: novapay-page-fade 120ms ease-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .novapay-page-fade {
+      animation: none;
+    }
+  }
+
+  /* Two panes. Below 720 px of height: the density of the modal, in a 600 px floor */
+  @media (width >= 640px) {
+    .novapay-page {
+      --novapay-page-gutter: 12px;
+      --novapay-page-floor: min(600px, calc(var(--novapay-page-h) - 2 * var(--novapay-page-gutter)));
+      padding-inline: 24px;
+      padding-block-end: var(--novapay-page-gutter);
+      /* From the floor, not the block: a taller step extends downward and the top stays */
+      padding-block-start: max(
+        var(--novapay-page-gutter),
+        calc((var(--novapay-page-h) - var(--novapay-page-floor)) / 2)
+      );
+    }
+    .novapay-page-block {
+      display: block;
+      flex: none;
+      /* Keeps the rounded corners, and is no scroll container: the sticky footer sticks to the window */
+      overflow: clip;
+      border: 1px solid var(--tuwa-border-primary);
+      border-radius: var(--tuwa-rounded-corners);
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.04),
+        0 16px 40px -12px rgb(0 0 0 / 0.08),
+        0 40px 80px -32px rgb(0 0 0 / 0.1);
+    }
+    .dark .novapay-page-block {
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.3),
+        0 24px 64px -16px rgb(0 0 0 / 0.55);
+    }
+    .novapay-page-aside {
+      padding-block: 10px 14px;
+    }
+    .novapay-page-status {
+      padding-top: 4px;
+    }
+    .novapay-page-visual {
+      margin-block: -8px;
+    }
+  }
+
+  /* Room in the window: the page's own density */
+  @media (width >= 640px) and (height >= 720px) {
+    .novapay-page {
+      --novapay-page-gutter: 24px;
+      --novapay-page-floor: min(680px, calc(var(--novapay-page-h) - 2 * var(--novapay-page-gutter)));
+    }
+    .novapay-page .novapay-title {
+      font-size: 20px;
+    }
+    .novapay-page-aside {
+      padding-block: 20px;
+    }
+    .novapay-page-header {
+      padding-block: 24px 8px;
+      border-bottom-color: transparent;
+    }
+    .novapay-page-screen {
+      padding-block: 12px 20px;
+    }
+    .novapay-page-status {
+      padding-block: 4px 20px;
+    }
+    .novapay-page-subtitle {
+      font-size: 13px;
+      line-height: 20px;
+    }
+    .novapay-page-group {
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .novapay-page-token {
+      padding-block: 12px;
+    }
+    .novapay-page-way {
+      padding-block: 10px;
+    }
+    .novapay-page-row {
+      font-size: 13px;
+      line-height: 18px;
+    }
+    .novapay-page-pay {
+      gap: 14px;
+    }
+    .novapay-page-amount {
+      font-size: 32px;
+    }
+    .novapay-page-footer {
+      padding-block: 16px 20px;
+    }
+    .novapay-page-footer > :is(button, a) {
+      height: 48px;
+    }
+    .novapay-page-footer p {
+      font-size: 12px;
+    }
+    .novapay-page-qr {
+      width: 200px;
+      height: 200px;
+    }
+    .novapay-page-qr-handoff {
+      width: 216px;
+      height: 216px;
+    }
+  }
+
+  @media (width >= 768px) {
+    .novapay-page-aside {
+      padding-inline: 28px;
+    }
+    .novapay-page-header {
+      padding-left: 32px;
+      padding-right: 20px;
+    }
+    .novapay-page-screen,
+    .novapay-page-status,
+    .novapay-page-footer {
+      padding-inline: 32px;
+    }
+  }
+
+  /* A narrow order panel: the countdown under its label, not squeezing it to three lines */
+  @media (width < 900px) {
+    .novapay-page-deadline {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+  }
+
+  /* A short window: no floor, and a footer that would eat the screen scrolls with the page (WCAG 1.4.10) */
+  @media (width >= 640px) and (height < 560px) {
+    .novapay-page {
+      --novapay-page-floor: 0px;
+    }
+  }
+  @media (height < 560px) {
+    .novapay-page-footer {
+      position: static;
+    }
+  }
+}

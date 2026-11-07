@@ -1,0 +1,92 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/NovaPaymentsSettings" />
+
+# NovaPaymentsSettings
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:23](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L23)
+
+The settings `NovaPaymentsProvider` gives the checkouts below it.
+
+## Properties
+
+### adapters?
+
+> `optional` **adapters?**: [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)[]
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L34)
+
+The chain families the checkouts pay from a connected wallet on: the `adapters` prop, or those of `ownConnection`
+when Nova runs its own connection.
+
+***
+
+### baseUrl?
+
+> `optional` **baseUrl?**: `string`
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:25](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L25)
+
+The Quasar API, if set.
+
+***
+
+### connection?
+
+> `optional` **connection?**: [`PaymentsConnectionMode`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentsconnectionmode--docs)
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:38](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L38)
+
+Whose wallet connection the checkouts use; unset without `NovaPaymentsProvider`.
+
+***
+
+### customization?
+
+> `optional` **customization?**: [`NovaPaymentsProviderCustomization`](?path=/docs/packages-nova-payments-payments-type-aliases-novapaymentsprovidercustomization--docs)
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:29](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L29)
+
+Customization of the labels.
+
+***
+
+### labels?
+
+> `optional` **labels?**: [`NovaPaymentsLabelOverrides`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabeloverrides--docs)
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:27](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L27)
+
+Texts to replace in every language.
+
+***
+
+### onConnectWallet?
+
+> `optional` **onConnectWallet?**: (`family`) => `void`
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:44](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L44)
+
+The app's handler that connects a wallet, for the checkouts and refunds below without Nova Connect.
+
+#### Parameters
+
+##### family
+
+[`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs)
+
+The chain family of the payment.
+
+#### Returns
+
+`void`
+
+***
+
+### pulsar?
+
+> `optional` **pulsar?**: [`PaymentsPulsar`](?path=/docs/packages-nova-payments-payments-interfaces-paymentspulsar--docs)
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:36](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L36)
+
+The app's Pulsar store, which takes over the payments a checkout closed on.

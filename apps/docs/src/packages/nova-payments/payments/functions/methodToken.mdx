@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/methodToken" />
+
+# methodToken()
+
+> **methodToken**(`method`): `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:231](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L231)
+
+The token of a method as a chain reads its balance, from its CAIP-19 asset.
+
+## Parameters
+
+### method
+
+[`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+
+The payment method.
+
+## Returns
+
+`string`
+
+The token contract or mint, or `native` for the coin of the chain (a `slip44` asset, or none).

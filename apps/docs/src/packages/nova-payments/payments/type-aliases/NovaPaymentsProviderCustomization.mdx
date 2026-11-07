@@ -1,0 +1,48 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Type Aliases/NovaPaymentsProviderCustomization" />
+
+# NovaPaymentsProviderCustomization
+
+> **NovaPaymentsProviderCustomization** = `object`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L20)
+
+Customization of [NovaPaymentsProvider](?path=/docs/packages-nova-payments-payments-functions-novapaymentsprovider--docs).
+
+## Properties
+
+### labels?
+
+> `optional` **labels?**: `object`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L22)
+
+Labels.
+
+#### transform?
+
+> `optional` **transform?**: (`labels`, `context`) => [`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+Changes the labels of a language after the built-in ones and `labels` are applied, for example to translate a
+language the package does not have.
+
+##### Parameters
+
+###### labels
+
+[`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+The labels of the language with `labels` applied.
+
+###### context
+
+[`NovaPaymentsLabelsContext`](?path=/docs/packages-nova-payments-payments-interfaces-novapaymentslabelscontext--docs)
+
+The language.
+
+##### Returns
+
+[`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+The labels to use.

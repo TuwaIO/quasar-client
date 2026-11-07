@@ -1,0 +1,13 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Type Aliases/RefundStep" />
+
+# RefundStep
+
+> **RefundStep** = `"amount"` \| `"requesting"` \| `"connect"` \| `"confirm"` \| `"switching"` \| `"wallet"` \| `"submitting"` \| `"confirming"` \| `"confirmed"` \| `"failed"`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L34)
+
+Where a refund stands for the merchant: `amount` (what to refund), `requesting`, `connect` (a wallet of the
+payment's network), `confirm`, `switching` and `wallet` (the wallet asks), `submitting`, `confirming` (the network
+confirms it), `confirmed` or `failed`.

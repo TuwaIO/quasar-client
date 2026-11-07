@@ -1,0 +1,39 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/ListSubscriptionsParams" />
+
+# ListSubscriptionsParams
+
+Defined in: [modules/payments/types.ts:1008](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L1008)
+
+Filters and paging of [PaymentsModule.listSubscriptions](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#listsubscriptions).
+
+## Properties
+
+### cursor?
+
+> `optional` **cursor?**: `string`
+
+Defined in: [modules/payments/types.ts:1014](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L1014)
+
+`nextCursor` of the previous page.
+
+***
+
+### limit?
+
+> `optional` **limit?**: `number`
+
+Defined in: [modules/payments/types.ts:1012](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L1012)
+
+Page size, 1 to 100. Defaults to `20`.
+
+***
+
+### status?
+
+> `optional` **status?**: [`SubscriptionStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-subscriptionstatus--docs) \| [`SubscriptionStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-subscriptionstatus--docs)[]
+
+Defined in: [modules/payments/types.ts:1010](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L1010)
+
+One status or several.

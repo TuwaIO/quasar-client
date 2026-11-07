@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/isSmartWallet" />
+
+# isSmartWallet()
+
+> **isSmartWallet**(`wallet`): `boolean`
+
+Defined in: [nova-payments/src/utils/payerProof.ts:29](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payerProof.ts#L29)
+
+Whether the wallet is a smart account that signs with a passkey (or a fingerprint), by its connector type.
+
+## Parameters
+
+### wallet
+
+`Pick`\<[`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs), `"connectorType"`\> \| `null` \| `undefined`
+
+The connected wallet.
+
+## Returns
+
+`boolean`
+
+`true` for Coinbase Smart Wallet, Base Account and Porto.

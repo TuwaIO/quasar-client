@@ -1,0 +1,109 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/LedgerEvent" />
+
+# LedgerEvent
+
+Defined in: [modules/payments/types.ts:511](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L511)
+
+One step of an invoice ledger. Each step's `hash` covers the step and `prevHash`.
+
+## Properties
+
+### actor
+
+> **actor**: `string`
+
+Defined in: [modules/payments/types.ts:521](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L521)
+
+Who acted: `merchant_api`, `system`, `checkout`, `dashboard:<userId>`, `admin:<userId>`…
+
+***
+
+### chainId
+
+> **chainId**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:523](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L523)
+
+Chain of an on-chain step.
+
+***
+
+### createdAt
+
+> **createdAt**: `string`
+
+Defined in: [modules/payments/types.ts:527](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L527)
+
+When.
+
+***
+
+### data
+
+> **data**: `unknown`
+
+Defined in: [modules/payments/types.ts:519](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L519)
+
+Details of the step.
+
+***
+
+### hash
+
+> **hash**: `string`
+
+Defined in: [modules/payments/types.ts:531](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L531)
+
+Hash of this step.
+
+***
+
+### id
+
+> **id**: `string`
+
+Defined in: [modules/payments/types.ts:513](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L513)
+
+Event ID; webhooks of this step carry it as their `id`.
+
+***
+
+### prevHash
+
+> **prevHash**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:529](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L529)
+
+Hash of the previous step.
+
+***
+
+### seq
+
+> **seq**: `number`
+
+Defined in: [modules/payments/types.ts:515](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L515)
+
+Position in the ledger, from 1.
+
+***
+
+### txHash
+
+> **txHash**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:525](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L525)
+
+Transaction of an on-chain step.
+
+***
+
+### type
+
+> **type**: `string`
+
+Defined in: [modules/payments/types.ts:517](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L517)
+
+What happened, for example `invoice.issued`, `quote.locked`, `invoice.paid`.

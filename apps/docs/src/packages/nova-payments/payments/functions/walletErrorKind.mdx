@@ -1,0 +1,38 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/walletErrorKind" />
+
+# walletErrorKind()
+
+> **walletErrorKind**(`error`): [`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:80](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L80)
+
+Why a wallet request failed, from the error the wallet library threw and the causes it wraps, whichever of them names
+it: EIP-1193 code `4001` and viem's `UserRejectedRequestError`, and the "user rejected" messages of Wallet Standard
+wallets, are `declined`. A request the wallet already has waiting (code `-32002`) is `alreadyPending`, also inside a
+failed switch: the buyer answers it there. wagmi's `ChainNotConfiguredError` (the network of the payment is not in the
+wagmi config of `paymentsEVMAdapter`; the buyer can still pay with the QR code) and `ConnectorNotConnectedError` (that
+config has no connection of the wallet) are `unsupported`, as is a wallet that does not know the request (codes 4200,
+-32601, -32004). `ConnectorChainMismatchError` and `ChainMismatchError` are `wrongNetwork`; `SwitchChainError` and
+`SwitchChainNotSupportedError` are `switchFailed`; code `4100` is `notAuthorized`. Named apart so that the page never
+says a payment failed, or that a fee was spent, about a request that never left the wallet.
+
+Side effects: in development (`NODE_ENV` is `development`), a failure it cannot name logs to the console, and a
+`ConnectorNotConnectedError` logs a `console.error`:
+the app gave `NovaPaymentsProvider` an EVM adapter built on another wagmi config than the one its wallet connection
+(its Satellite EVM adapter) uses.
+
+## Parameters
+
+### error
+
+`unknown`
+
+What the wallet library threw.
+
+## Returns
+
+[`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
+
+The kind.

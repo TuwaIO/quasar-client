@@ -1,0 +1,14 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Type Aliases/RefundProblem" />
+
+# RefundProblem
+
+> **RefundProblem** = `"notEnough"` \| `"declined"` \| `"unsupported"` \| `"wrongNetwork"` \| `"failed"` \| `"noRecipient"` \| `"unreachable"` \| `"fromBuyer"` \| `"stillInWallet"`
+
+Defined in: [nova-payments/src/hooks/useRefund.ts:52](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useRefund.ts#L52)
+
+Why a refund was not sent: the wallet holds too little (`notEnough`), the merchant declined, the wallet cannot send
+it or sent it on another network, it failed, Quasar does not know the payer (`noRecipient`), or Quasar did not answer when
+the window looked again before asking the wallet (`unreachable`), the wallet is the one that paid and would only pay the
+fee (`fromBuyer`), or the merchant closed the wait while the request stays open in the wallet (`stillInWallet`).

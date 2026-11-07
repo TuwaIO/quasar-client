@@ -1,0 +1,29 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/ListHeldTransfersParams" />
+
+# ListHeldTransfersParams
+
+Defined in: [modules/payments/types.ts:683](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L683)
+
+What [PaymentsModule.listHeldTransfers](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#listheldtransfers) takes.
+
+## Properties
+
+### invoice?
+
+> `optional` **invoice?**: `string`
+
+Defined in: [modules/payments/types.ts:685](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L685)
+
+Only the held transfers of one invoice.
+
+***
+
+### status?
+
+> `optional` **status?**: [`HeldTransferStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-heldtransferstatus--docs)
+
+Defined in: [modules/payments/types.ts:687](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L687)
+
+Only those in one state; `held` for those still to refund.

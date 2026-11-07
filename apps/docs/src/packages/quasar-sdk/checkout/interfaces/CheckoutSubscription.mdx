@@ -1,0 +1,100 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/CheckoutSubscription" />
+
+# CheckoutSubscription
+
+Defined in: [checkout/types.ts:213](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L213)
+
+The subscription period an invoice bills, as the checkout shows it.
+
+## Properties
+
+### cancelAtPeriodEnd
+
+> **cancelAtPeriodEnd**: `boolean`
+
+Defined in: [checkout/types.ts:234](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L234)
+
+Whether it ends with the current period.
+
+***
+
+### cycles
+
+> **cycles**: `number` \| `null`
+
+Defined in: [checkout/types.ts:230](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L230)
+
+How many periods the subscription runs; `null` until it is cancelled.
+
+***
+
+### endsAt
+
+> **endsAt**: `string` \| `null`
+
+Defined in: [checkout/types.ts:232](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L232)
+
+When it ends at the latest, if set.
+
+***
+
+### interval
+
+> **interval**: [`SubscriptionInterval`](?path=/docs/packages-quasar-sdk-server-type-aliases-subscriptioninterval--docs)
+
+Defined in: [checkout/types.ts:217](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L217)
+
+Unit of a period.
+
+***
+
+### intervalCount
+
+> **intervalCount**: `number`
+
+Defined in: [checkout/types.ts:219](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L219)
+
+Units in a period (`3` with `month` is a quarter).
+
+***
+
+### period
+
+> **period**: `number`
+
+Defined in: [checkout/types.ts:221](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L221)
+
+The period this invoice bills, from 1.
+
+***
+
+### periodEnd
+
+> **periodEnd**: `string` \| `null`
+
+Defined in: [checkout/types.ts:228](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L228)
+
+When it ends, which is when the next one is billed; `null` like [CheckoutSubscription.periodStart](#periodstart).
+
+***
+
+### periodStart
+
+> **periodStart**: `string` \| `null`
+
+Defined in: [checkout/types.ts:226](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L226)
+
+When the period starts; `null` for a period before the subscription was last resumed, as resuming counts the periods
+again from that moment.
+
+***
+
+### status
+
+> **status**: [`SubscriptionStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-subscriptionstatus--docs)
+
+Defined in: [checkout/types.ts:215](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L215)
+
+State of the subscription.

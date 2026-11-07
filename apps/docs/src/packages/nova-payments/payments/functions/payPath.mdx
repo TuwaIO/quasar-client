@@ -1,0 +1,42 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/payPath" />
+
+# payPath()
+
+> **payPath**(`quote`, `options`): [`PayPath`](?path=/docs/packages-nova-payments-payments-type-aliases-paypath--docs)
+
+Defined in: [nova-payments/src/utils/pay.ts:25](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/pay.ts#L25)
+
+How the wallet pays a quote. A smart wallet that takes a paymaster sends sponsored calls; any other wallet signs the
+authorization; the buyer may choose to pay the gas instead.
+
+## Parameters
+
+### quote
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+
+The locked quote.
+
+### options
+
+What the buyer and the wallet allow.
+
+#### canSponsorCalls
+
+`boolean`
+
+The wallet sends `wallet_sendCalls` with the `paymasterService` capability.
+
+#### withGas
+
+`boolean`
+
+The buyer chose "Pay with gas instead".
+
+## Returns
+
+[`PayPath`](?path=/docs/packages-nova-payments-payments-type-aliases-paypath--docs)
+
+The path.

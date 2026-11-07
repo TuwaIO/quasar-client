@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/needsPayerProof" />
+
+# needsPayerProof()
+
+> **needsPayerProof**(`payerProof`, `path`): `boolean`
+
+Defined in: [nova-payments/src/utils/payerProof.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payerProof.ts#L42)
+
+Whether the wallet confirms the invoice before it pays from the pay step: while the checkout store says it must
+(`required`, `confirming`), and for a method the gasless relay could pay (`unless_relayed`) when the wallet sends the
+transfer or the paymaster's calls itself; the relay's signed authorization confirms the wallet on its own.
+
+## Parameters
+
+### payerProof
+
+`string` \| `undefined`
+
+`payerProof` of the checkout store (left out by older stores).
+
+### path
+
+[`PayPath`](?path=/docs/packages-nova-payments-payments-type-aliases-paypath--docs)
+
+How the wallet pays the quote.
+
+## Returns
+
+`boolean`
+
+`true` to ask for the confirmation first.

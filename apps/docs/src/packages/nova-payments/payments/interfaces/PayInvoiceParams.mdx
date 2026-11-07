@@ -1,0 +1,136 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/PayInvoiceParams" />
+
+# PayInvoiceParams
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:14](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L14)
+
+What [payInvoice](?path=/docs/packages-nova-payments-payments-functions-payinvoice--docs) needs.
+
+## Properties
+
+### adapter
+
+> **adapter**: [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:16](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L16)
+
+The adapter of the quote's chain family.
+
+***
+
+### onBatchAccepted?
+
+> `optional` **onBatchAccepted?**: (`batchId`) => `void`
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L34)
+
+Called with the ID of a sponsored batch as soon as the wallet took it, before it has a transaction.
+
+#### Parameters
+
+##### batchId
+
+`string`
+
+The ID of the batch.
+
+#### Returns
+
+`void`
+
+***
+
+### onSent?
+
+> `optional` **onSent?**: (`txKey`) => `void`
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:41](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L41)
+
+Called with the transaction the wallet sent (its hash), before Quasar takes it; not for a gasless signature, whose
+transaction Quasar sends.
+
+#### Parameters
+
+##### txKey
+
+`string`
+
+The transaction hash (EVM) or signature (Solana).
+
+#### Returns
+
+`void`
+
+***
+
+### onWalletDone?
+
+> `optional` **onWalletDone?**: () => `void`
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:28](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L28)
+
+Called when the wallet answered, before the payment is handed to Quasar.
+
+#### Returns
+
+`void`
+
+***
+
+### path
+
+> **path**: [`PayPath`](?path=/docs/packages-nova-payments-payments-type-aliases-paypath--docs)
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L24)
+
+How the wallet pays, from `payPath`.
+
+***
+
+### paymasterUrl
+
+> **paymasterUrl**: `string` \| `null`
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:26](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L26)
+
+The checkout's ERC-7677 paymaster URL, for the `paymaster` path.
+
+***
+
+### quote
+
+> **quote**: [`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L20)
+
+The locked quote.
+
+***
+
+### store
+
+> **store**: `object`
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:18](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L18)
+
+The checkout store (only `submit` and `relay` are used).
+
+#### getState
+
+> **getState**: () => `Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"submit"` \| `"relay"`\>
+
+##### Returns
+
+`Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"submit"` \| `"relay"`\>
+
+***
+
+### wallet
+
+> **wallet**: [`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs)
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L22)
+
+The wallet the quote is locked to.

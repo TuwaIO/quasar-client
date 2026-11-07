@@ -1,0 +1,24 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/useConnectedWallet" />
+
+# useConnectedWallet()
+
+> **useConnectedWallet**(): [`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/useConnectedWallet.ts:31](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useConnectedWallet.ts#L31)
+
+The wallet connected through Satellite Connect (the active connection of `SatelliteConnectProvider` from
+`@tuwaio/satellite-react`), in CAIP identifiers, named and shown as the wallet calls itself: the name and icon of
+its wallet in the wallet lists of the store (`getConnectors()`, the wallet with exactly the connector type of the
+connection), as Nova Connect lists it; `null` without a connection or without the provider, in which case the
+checkout offers the QR code and the wallet connection only.
+
+Side effects: while mounted in the browser, a subscription to the wallet lists of the store (`watchConnectors` of
+`@tuwaio/satellite-core`, when the store has it), so a wallet that announces itself later is named too.
+
+## Returns
+
+[`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs) \| `null`
+
+The wallet, or `null`. The same object while the connection, the name and the icon stay the same.

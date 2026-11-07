@@ -1,0 +1,45 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/evm/Functions/paymentsEVMAdapter" />
+
+# paymentsEVMAdapter()
+
+> **paymentsEVMAdapter**(`config`): [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)
+
+Defined in: [nova-payments/src/evm/paymentsEVMAdapter.ts:107](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/evm/paymentsEVMAdapter.ts#L107)
+
+The adapter that pays EVM methods of a Nova Payments checkout from the wallet connected through wagmi (the config
+Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
+switch networks, sends the transfer (native coin or ERC-20 `transfer`), signs the EIP-3009 authorization of a gasless
+quote with `eth_signTypedData_v4` exactly as Quasar issued it, signs Quasar's message that confirms the paying wallet
+with `personal_sign`, and sends sponsored calls with `wallet_sendCalls` and the checkout's ERC-7677 paymaster. A Safe wallet is refused: it returns a Safe transaction hash, not the transaction
+Quasar follows. Pass it in `adapters` of `NovaPaymentsProvider`.
+
+Side effects: RPC reads through the wagmi transports; wallet prompts.
+
+## Parameters
+
+### config
+
+`Config`
+
+The wagmi config of the app.
+
+## Returns
+
+[`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)
+
+The EVM adapter.
+
+## Example
+
+```tsx
+import { NovaPaymentsProvider } from '@tuwaio/nova-payments';
+import { paymentsEVMAdapter } from '@tuwaio/nova-payments/evm';
+
+const adapters = [paymentsEVMAdapter(wagmiConfig)];
+
+export function Payments({ children }: { children: React.ReactNode }) {
+  return <NovaPaymentsProvider adapters={adapters}>{children}</NovaPaymentsProvider>;
+}
+```

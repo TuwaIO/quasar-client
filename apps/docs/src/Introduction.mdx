@@ -1,0 +1,95 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+import { LocalizedPage } from '../i18n/LocalizedPage';
+import IntroductionUk from '../i18n/uk/Introduction.mdx';
+import IntroductionZhCN from '../i18n/zh-CN/Introduction.mdx';
+
+<Meta title="Introduction" />
+
+{/* The translations in ../i18n/<language>/Introduction.mdx follow this page: change them together */}
+
+<LocalizedPage translations={{ uk: IntroductionUk, 'zh-CN': IntroductionZhCN }}>
+
+# Introduction
+
+**Quasar Client** is the client side of [Quasar](https://docs.tuwa.io/quasar): the API client for your server, the Nova Payments checkout for React, and the Payments module of the TUWA SDK.
+
+This site is the short documentation: the **Nova Payments** section shows the live checkout and refunds on a simulated invoice, and the **Packages** section documents every package and export. The guides and the API reference are in the docs hub.
+
+---
+
+## 🧩 Packages
+
+- **`@tuwaio/payments-sdk`**, when your app uses `@tuwaio/sdk`: the checkout and the refunds, with Nova, Satellite, Pulsar and Orbit from the entries of the SDK.
+- **`@tuwaio/nova-payments`**, when you install the Nova packages one by one: React components of the checkout and the refunds.
+- **`@tuwaio/quasar-sdk`**, when your server calls the Quasar API: the API client, webhook verification, the headless checkout stores and the webhook relay CLI.
+
+---
+
+## 🚀 Quick Start
+
+```bash
+pnpm add @tuwaio/payments-sdk @tuwaio/sdk @tuwaio/quasar-sdk react
+```
+
+Issue the invoice on your server, with the secret key of your Quasar app:
+
+```ts
+'use server';
+
+import { Quasar } from '@tuwaio/quasar-sdk';
+
+const quasar = new Quasar({ secretKey: process.env.QUASAR_SECRET_KEY ?? '' });
+
+export async function issueInvoice(orderId: string, email: string) {
+  const { checkoutToken } = await quasar.payments.createInvoice(
+    {
+      currency: 'EUR',
+      lineItems: [{ name: 'Pro plan, October', quantity: '1', unitPrice: '49.00' }],
+      buyer: { email },
+      metadata: { orderId },
+    },
+    { idempotencyKey: `order_${orderId}` },
+  );
+  return checkoutToken;
+}
+```
+
+Show the checkout in the browser, with the token of the invoice:
+
+```tsx
+'use client';
+
+import { PaymentCheckout } from '@tuwaio/payments-sdk';
+import { useState } from 'react';
+
+export function Checkout({ token }: { token: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Pay
+      </button>
+      <PaymentCheckout token={token} open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
+```
+
+And import the stylesheets:
+
+```css
+@import '@tuwaio/sdk/styles/all.css';
+@import '@tuwaio/payments-sdk/styles.css';
+```
+
+---
+
+## 📚 Next Steps
+
+- Pay from a wallet in the browser: see **[`@tuwaio/nova-payments`](?path=/docs/packages-nova-payments-overview--docs)**.
+- Verify webhooks and read the ledger of an invoice: see **[`@tuwaio/quasar-sdk`](?path=/docs/packages-quasar-sdk-overview--docs)**.
+- Read the **[Quasar documentation](https://docs.tuwa.io/quasar)**, its **[API reference](https://docs.tuwa.io/quasar/api)** and **[webhooks](https://docs.tuwa.io/quasar/webhooks)**.
+- Read the source on **[GitHub](https://github.com/TuwaIO/quasar-client)**.
+
+</LocalizedPage>

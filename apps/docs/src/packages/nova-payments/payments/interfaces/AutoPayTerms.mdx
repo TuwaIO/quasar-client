@@ -1,0 +1,80 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/AutoPayTerms" />
+
+# AutoPayTerms
+
+Defined in: [nova-payments/src/utils/outcome.ts:193](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L193)
+
+The terms of an automatic payments offer, as the checkout shows them.
+
+## Properties
+
+### chainId
+
+> **chainId**: `string`
+
+Defined in: [nova-payments/src/utils/outcome.ts:195](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L195)
+
+The CAIP-2 chain of the charges.
+
+***
+
+### decimals
+
+> **decimals**: `number`
+
+Defined in: [nova-payments/src/utils/outcome.ts:204](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L204)
+
+Decimals of the token.
+
+***
+
+### expiresAt
+
+> **expiresAt**: `number` \| `null`
+
+Defined in: [nova-payments/src/utils/outcome.ts:210](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L210)
+
+When the permission ends, in milliseconds; `null` without an expiry rule.
+
+***
+
+### limit
+
+> **limit**: `string`
+
+Defined in: [nova-payments/src/utils/outcome.ts:202](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L202)
+
+The most it takes in a period, in base units of the token.
+
+***
+
+### periodSeconds
+
+> **periodSeconds**: `number`
+
+Defined in: [nova-payments/src/utils/outcome.ts:208](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L208)
+
+The length of a period, in seconds.
+
+***
+
+### symbol
+
+> **symbol**: `string`
+
+Defined in: [nova-payments/src/utils/outcome.ts:206](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L206)
+
+Symbol of the token.
+
+***
+
+### to
+
+> **to**: `string`
+
+Defined in: [nova-payments/src/utils/outcome.ts:200](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L200)
+
+The wallet the charges are paid to: the merchant's, as the `payee` rule of the request names it (the app's
+collector, which sends the charges, when the request names no payee).

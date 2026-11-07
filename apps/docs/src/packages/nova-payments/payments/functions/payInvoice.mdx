@@ -1,0 +1,35 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/payInvoice" />
+
+# payInvoice()
+
+> **payInvoice**(`params`): `Promise`\<`boolean`\>
+
+Defined in: [nova-payments/src/utils/payInvoice.ts:59](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payInvoice.ts#L59)
+
+Pays a locked quote: `transfer` sends the transfer and hands its key to Quasar (`submit`), `relay` signs the
+authorization for Quasar to send (`relay`), `paymaster` sends the sponsored calls and hands their transaction hash
+to Quasar. A transaction the wallet sent is always handed over, whatever the page shows meanwhile, with the method it
+was quoted for: the buyer may have gone on to a price on another network while the wallet asked.
+
+Side effects: a wallet prompt; requests to the checkout routes of Quasar.
+
+## Parameters
+
+### params
+
+[`PayInvoiceParams`](?path=/docs/packages-nova-payments-payments-interfaces-payinvoiceparams--docs)
+
+See [PayInvoiceParams](?path=/docs/packages-nova-payments-payments-interfaces-payinvoiceparams--docs).
+
+## Returns
+
+`Promise`\<`boolean`\>
+
+Whether Quasar took the payment (the store's `error` says why not).
+
+## Throws
+
+[PaymentWalletError](?path=/docs/packages-nova-payments-payments-classes-paymentwalleterror--docs) `unsupported` when the adapter or the quote cannot take the path; the wallet's
+  error when it refuses or fails.

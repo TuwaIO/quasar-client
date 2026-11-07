@@ -1,0 +1,112 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/NovaPaymentsProviderProps" />
+
+# NovaPaymentsProviderProps
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:86](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L86)
+
+Props of [NovaPaymentsProvider](?path=/docs/packages-nova-payments-payments-functions-novapaymentsprovider--docs).
+
+## Properties
+
+### adapters?
+
+> `optional` **adapters?**: [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)[]
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:101](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L101)
+
+The chain families the checkouts pay from the app's connected wallet on: `paymentsEVMAdapter` of
+`@tuwaio/nova-payments/evm` (on the wagmi config of the app's Satellite EVM adapter), `paymentsSolanaAdapter` of
+`@tuwaio/nova-payments/solana`. Without the adapter of a method's family, the buyer pays that method with a QR
+code. When Nova uses its own connection, the `adapters` of `ownConnection` replace them. Without `adapters`, a
+provider on the connection of a `NovaPaymentsProvider` above (the app's, or Nova's own) uses the adapters of that
+provider; `[]` asks for QR codes only.
+
+***
+
+### baseUrl?
+
+> `optional` **baseUrl?**: `string`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L88)
+
+The Quasar API (Quasar Cloud by default, the address of your node for the Community Edition).
+
+***
+
+### children
+
+> **children**: `ReactNode`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:123](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L123)
+
+The app.
+
+***
+
+### customization?
+
+> `optional` **customization?**: [`NovaPaymentsProviderCustomization`](?path=/docs/packages-nova-payments-payments-type-aliases-novapaymentsprovidercustomization--docs)
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:92](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L92)
+
+Customization of the labels.
+
+***
+
+### labels?
+
+> `optional` **labels?**: [`NovaPaymentsLabelOverrides`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabeloverrides--docs)
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:90](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L90)
+
+Texts to replace in every language.
+
+***
+
+### onConnectWallet?
+
+> `optional` **onConnectWallet?**: (`family`) => `void`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:121](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L121)
+
+Connects a wallet of a chain family when there is no Nova Connect to open (an app that connects wallets its own
+way): the default of every `PaymentCheckout`, `RefundButton` and `RefundDialog` below, which their own
+`onConnectWallet` overrides.
+
+#### Parameters
+
+##### family
+
+[`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs)
+
+The chain family of the payment.
+
+#### Returns
+
+`void`
+
+***
+
+### ownConnection?
+
+> `optional` **ownConnection?**: [`NovaPaymentsOwnConnection`](?path=/docs/packages-nova-payments-payments-interfaces-novapaymentsownconnection--docs)
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:113](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L113)
+
+The wallet connection Nova brings when the app has none: used only when no `SatelliteConnectProvider` is above
+(see [NovaPaymentsOwnConnection](?path=/docs/packages-nova-payments-payments-interfaces-novapaymentsownconnection--docs)). Inside the app's Satellite store, Nova uses the app's connection and never
+adds a second one.
+
+***
+
+### pulsar?
+
+> `optional` **pulsar?**: [`PaymentsPulsar`](?path=/docs/packages-nova-payments-payments-interfaces-paymentspulsar--docs)
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:107](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L107)
+
+The app's Pulsar store (`injectExternalPendingTxs` of `createPulsarStore` from `@tuwaio/pulsar-core`). While a
+checkout is open it tracks the payment itself; when it closes before Quasar settled a payment the wallet sent, the
+payment goes to this store, which tracks it and keeps it in the history, and Nova Transactions shows its toast.

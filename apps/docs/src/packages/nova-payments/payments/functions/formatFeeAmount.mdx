@@ -1,0 +1,38 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/formatFeeAmount" />
+
+# formatFeeAmount()
+
+> **formatFeeAmount**(`baseUnits`, `decimals`, `locale`): `string` \| `null`
+
+Defined in: [nova-payments/src/utils/format.ts:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/format.ts#L68)
+
+A network fee for a line of text: an estimate, so six decimals at most. A fee below that says nothing a reader can use
+(the wallet sets its own and may well charge more), so it has no number.
+
+## Parameters
+
+### baseUnits
+
+`string`
+
+Base units, as a decimal integer string (not negative).
+
+### decimals
+
+`number`
+
+Decimals of the native token.
+
+### locale
+
+`string`
+
+BCP 47 language of the page.
+
+## Returns
+
+`string` \| `null`
+
+For example `0.000036` for 36082500481100 with 18 decimals; `null` for a fee below `0.000001`.

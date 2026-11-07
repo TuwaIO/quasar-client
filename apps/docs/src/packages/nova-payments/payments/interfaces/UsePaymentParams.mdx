@@ -1,0 +1,101 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/UsePaymentParams" />
+
+# UsePaymentParams
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:54](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L54)
+
+What [usePayment](?path=/docs/packages-nova-payments-payments-functions-usepayment--docs) needs.
+
+## Properties
+
+### adapter
+
+> **adapter**: [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs) \| `undefined`
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:56](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L56)
+
+The adapter of the quote's chain family; without it the wallet cannot pay.
+
+***
+
+### invoiceId?
+
+> `optional` **invoiceId?**: `string`
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L68)
+
+The invoice: a sponsored batch the wallet took is kept in the tab under it until its hash comes.
+
+***
+
+### onSent?
+
+> `optional` **onSent?**: (`payment`) => `void`
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L74)
+
+Called with the payment the wallet sent (not a gasless signature, whose transaction Quasar sends).
+
+#### Parameters
+
+##### payment
+
+[`SentPayment`](?path=/docs/packages-nova-payments-payments-interfaces-sentpayment--docs)
+
+The transaction and what it pays.
+
+#### Returns
+
+`void`
+
+***
+
+### path
+
+> **path**: [`PayPath`](?path=/docs/packages-nova-payments-payments-type-aliases-paypath--docs)
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:64](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L64)
+
+How the wallet pays.
+
+***
+
+### paymasterUrl
+
+> **paymasterUrl**: `string` \| `null`
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L66)
+
+The checkout's ERC-7677 paymaster URL.
+
+***
+
+### quote
+
+> **quote**: [`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L60)
+
+The locked quote.
+
+***
+
+### store
+
+> **store**: [`PayInvoiceParams`](?path=/docs/packages-nova-payments-payments-interfaces-payinvoiceparams--docs)\[`"store"`\]
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:58](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L58)
+
+The checkout store.
+
+***
+
+### wallet
+
+> **wallet**: [`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/usePayment.ts:62](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L62)
+
+The wallet the quote is locked to.

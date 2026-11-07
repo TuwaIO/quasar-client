@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/useNow" />
+
+# useNow()
+
+> **useNow**(`intervalMs`, `active?`): `number`
+
+Defined in: [nova-payments/src/hooks/useNow.ts:12](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useNow.ts#L12)
+
+The current time, updated every `intervalMs` while `active`.
+
+Side effect: an interval timer while active.
+
+## Parameters
+
+### intervalMs
+
+`number`
+
+How often to update, in milliseconds.
+
+### active?
+
+`boolean` = `true`
+
+Whether to update (stop on a final state to save renders).
+
+## Returns
+
+`number`
+
+`Date.now()` of the latest update.

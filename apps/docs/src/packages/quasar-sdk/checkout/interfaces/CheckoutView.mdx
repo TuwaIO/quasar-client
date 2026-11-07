@@ -1,0 +1,144 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/CheckoutView" />
+
+# CheckoutView
+
+Defined in: [checkout/types.ts:554](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L554)
+
+What the checkout token opens, as [CheckoutState.checkout](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#checkout) holds it.
+
+## Properties
+
+### amlScreening
+
+> **amlScreening**: `boolean`
+
+Defined in: [checkout/types.ts:574](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L574)
+
+`true` when the merchant checks paying wallets before payment (its AML mode is `block` or `flag`); the checkout
+says so to the buyer only then.
+
+***
+
+### autoCharge
+
+> **autoCharge**: [`AutoChargeOffer`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-autochargeoffer--docs) \| `null`
+
+Defined in: [checkout/types.ts:587](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L587)
+
+The automatic-charge offer of a subscription invoice; `null` otherwise.
+
+***
+
+### buyer
+
+> **buyer**: `object`
+
+Defined in: [checkout/types.ts:567](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L567)
+
+Whether the page collects the buyer: `collect` is `off`, `email` or `full`; `required` while the invoice document
+waits for them; `companyInvoice` when the page may offer an invoice for a company.
+
+#### collect
+
+> **collect**: `"off"` \| `"email"` \| `"full"`
+
+#### companyInvoice
+
+> **companyInvoice**: `boolean`
+
+#### required
+
+> **required**: `boolean`
+
+***
+
+### consent
+
+> **consent**: [`CheckoutConsent`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutconsent--docs) \| `null`
+
+Defined in: [checkout/types.ts:569](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L569)
+
+The line the buyer ticks before paying; `null` when the merchant asks none.
+
+***
+
+### invoice
+
+> **invoice**: [`CheckoutInvoice`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs)
+
+Defined in: [checkout/types.ts:562](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L562)
+
+The invoice.
+
+***
+
+### merchant
+
+> **merchant**: [`CheckoutMerchant`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmerchant--docs)
+
+Defined in: [checkout/types.ts:558](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L558)
+
+Who is paid and on what terms.
+
+***
+
+### methods
+
+> **methods**: [`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)[]
+
+Defined in: [checkout/types.ts:576](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L576)
+
+The methods that take this invoice.
+
+***
+
+### object
+
+> **object**: `"checkout"`
+
+Defined in: [checkout/types.ts:556](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L556)
+
+Always `checkout`.
+
+***
+
+### payerProofs?
+
+> `optional` **payerProofs?**: [`CheckoutPayerProof`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutpayerproof--docs)[]
+
+Defined in: [checkout/types.ts:581](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L581)
+
+The wallets that confirmed this invoice ([CheckoutState.confirmPayer](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#confirmpayer)), oldest first: a page reopened with
+one of them asks for no new signature. Quasar versions before October 29, 2026 leave it out.
+
+***
+
+### quote
+
+> **quote**: [`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs) \| `null`
+
+Defined in: [checkout/types.ts:585](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L585)
+
+The locked quote, if any.
+
+***
+
+### quoteTtlSeconds
+
+> **quoteTtlSeconds**: `number`
+
+Defined in: [checkout/types.ts:583](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L583)
+
+How long a quote holds once locked, in seconds (never past the invoice deadline).
+
+***
+
+### theme
+
+> **theme**: [`CheckoutTheme`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouttheme--docs)
+
+Defined in: [checkout/types.ts:560](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L560)
+
+The look the merchant chose.

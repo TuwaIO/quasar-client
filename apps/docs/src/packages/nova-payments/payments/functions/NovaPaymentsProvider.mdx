@@ -1,0 +1,64 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/NovaPaymentsProvider" />
+
+# NovaPaymentsProvider()
+
+> **NovaPaymentsProvider**(`props`): `Element`
+
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:172](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L172)
+
+Gives the checkouts and refunds below it the Quasar API, the labels, the chain adapters and a wallet connection. A
+checkout works without it, with Quasar Cloud, the built-in labels and QR payments only.
+
+The wallet connection is chosen once, on the first render (see [PaymentsConnectionMode](?path=/docs/packages-nova-payments-payments-type-aliases-paymentsconnectionmode--docs) and
+[usePaymentsConnection](?path=/docs/packages-nova-payments-payments-functions-usepaymentsconnection--docs)): Nova brings its own connection only when the app has none.
+
+- Inside the app's `SatelliteConnectProvider` (from `@tuwaio/satellite-react`) and `NovaConnectProvider` (from
+  `@tuwaio/nova-connect`): the app's wallet, network, connect modal and SIWX, with the `adapters` prop. Nova mounts
+  nothing of its own.
+- Inside the app's Satellite store without Nova Connect: the app's wallet; "Connect wallet" calls `onConnectWallet`.
+  Nova never adds a second store.
+- Without a Satellite store, with `ownConnection`: Nova's own store, watchers and connect modal (never SIWX), with
+  the adapters of `ownConnection`. It runs Satellite's start-up only when `autoConnect` is set. That part loads on
+  demand: until it is loaded, nothing below the provider is rendered.
+- Without either: QR payments, and `onConnectWallet`.
+
+A `NovaPaymentsProvider` inside another one's own connection sees that connection as the app's, so two stores never
+stack, and without `adapters` it pays with those of the provider above. A later change of the providers above never
+remounts the checkouts on another connection.
+
+Side effects: with its own connection, those of the Satellite store, kept in memory for the life of the page (the
+last wallet in `sessionStorage`, or in `localStorage` with `rememberWallet`, under keys shared with every Satellite
+store of the site), of the watchers and of Nova Connect. In development (`NODE_ENV` is `development`),
+`console.warn` once when the providers above change after the first render, when `ownConnection` is given inside the
+app's store without Nova Connect, and when `ownConnection` is given but the app's connection is used without
+`adapters` (its own or those of a `NovaPaymentsProvider` above).
+
+## Parameters
+
+### props
+
+[`NovaPaymentsProviderProps`](?path=/docs/packages-nova-payments-payments-interfaces-novapaymentsproviderprops--docs)
+
+See [NovaPaymentsProviderProps](?path=/docs/packages-nova-payments-payments-interfaces-novapaymentsproviderprops--docs).
+
+## Returns
+
+`Element`
+
+The provider.
+
+## Example
+
+```tsx
+import { NovaPaymentsProvider, PaymentCheckout } from '@tuwaio/nova-payments';
+
+export function Checkout({ token }: { token: string }) {
+  return (
+    <NovaPaymentsProvider baseUrl="https://quasar.example.com" labels={{ steps: { pay: 'Payment' } }}>
+      <PaymentCheckout token={token} display="inline" />
+    </NovaPaymentsProvider>
+  );
+}
+```

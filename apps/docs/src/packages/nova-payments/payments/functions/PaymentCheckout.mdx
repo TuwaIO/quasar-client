@@ -1,0 +1,47 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/PaymentCheckout" />
+
+# PaymentCheckout()
+
+> **PaymentCheckout**(`props`): `Element`
+
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:328](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L328)
+
+The checkout of a Quasar Payments invoice, opened by its checkout token: the order, the steps of the payment and
+its outcome, in the language of the invoice. It reads the invoice with `createCheckoutStore` of
+`@tuwaio/quasar-sdk/checkout` and follows it until it is final; no secret key reaches the browser.
+
+Side effects: requests to the checkout routes of the Quasar API (`baseUrl`) and an `EventSource` on the invoice
+events while the invoice can change; changing the language saves it on the invoice (`POST locale`).
+
+## Parameters
+
+### props
+
+[`PaymentCheckoutProps`](?path=/docs/packages-nova-payments-payments-interfaces-paymentcheckoutprops--docs)
+
+See [PaymentCheckoutProps](?path=/docs/packages-nova-payments-payments-interfaces-paymentcheckoutprops--docs).
+
+## Returns
+
+`Element`
+
+The checkout.
+
+## Example
+
+```tsx
+import { PaymentCheckout } from '@tuwaio/nova-payments';
+import { useState } from 'react';
+
+export function PayButton({ token }: { token: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(true)}>Pay</button>
+      <PaymentCheckout token={token} open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
+```

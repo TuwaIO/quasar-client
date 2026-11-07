@@ -1,0 +1,49 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/CheckoutTokenGroup" />
+
+# CheckoutTokenGroup
+
+Defined in: [nova-payments/src/utils/checkout.ts:223](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L223)
+
+The methods of one token, as the method step shows it: the token first, then its network.
+
+## Properties
+
+### featured
+
+> **featured**: `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:229](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L229)
+
+The merchant marks one of its methods Popular.
+
+***
+
+### inWallet
+
+> **inWallet**: `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:231](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L231)
+
+One of its methods is on the network of the connected wallet.
+
+***
+
+### methods
+
+> **methods**: [`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)[]
+
+Defined in: [nova-payments/src/utils/checkout.ts:227](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L227)
+
+Its methods, one per network: the connected wallet's network first, then the Popular ones.
+
+***
+
+### symbol
+
+> **symbol**: `string`
+
+Defined in: [nova-payments/src/utils/checkout.ts:225](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L225)
+
+Token symbol.

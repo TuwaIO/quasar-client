@@ -1,0 +1,29 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/SentRefundTransaction" />
+
+# SentRefundTransaction
+
+Defined in: [checkout/refundStore.ts:21](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L21)
+
+A refund transaction the wallet sent, kept until Quasar takes it or refuses it for good.
+
+## Properties
+
+### from
+
+> **from**: `string`
+
+Defined in: [checkout/refundStore.ts:25](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L25)
+
+The wallet that sent it, which may not be the one connected now.
+
+***
+
+### txHash
+
+> **txHash**: `string`
+
+Defined in: [checkout/refundStore.ts:23](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L23)
+
+The transaction (hash or Solana signature).

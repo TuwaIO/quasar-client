@@ -1,0 +1,20 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/QrScreen" />
+
+# QrScreen()
+
+> **QrScreen**(): `Element` \| `null`
+
+Defined in: [nova-payments/src/components/QrScreen.tsx:58](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/QrScreen.tsx#L58)
+
+The QR code step. For Solana, a Solana Pay transfer request a phone wallet scans (or opens with "Open in wallet
+app"), with the exact amount, the recipient, the price lock and a warning against paying from an exchange; the page
+waits for the payment, which Quasar finds by the reference key. For an EVM method, the QR code of the payment page
+opens this checkout on the phone, before any price.
+
+## Returns
+
+`Element` \| `null`
+
+The QR code step.

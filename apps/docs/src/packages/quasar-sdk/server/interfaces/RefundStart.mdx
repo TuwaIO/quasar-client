@@ -1,0 +1,65 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/RefundStart" />
+
+# RefundStart
+
+Defined in: [modules/payments/types.ts:691](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L691)
+
+The answer of [PaymentsModule.refund](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#refund): the refund and what to send where.
+
+## Properties
+
+### instructions
+
+> **instructions**: `object`
+
+Defined in: [modules/payments/types.ts:695](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L695)
+
+The transfer to make from your wallet, then pass its hash to [PaymentsModule.submitRefund](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#submitrefund).
+
+#### amount
+
+> **amount**: `string`
+
+Amount in base units.
+
+#### assetId
+
+> **assetId**: `string`
+
+CAIP-19 asset.
+
+#### chainId
+
+> **chainId**: `string`
+
+CAIP-2 chain.
+
+#### decimals
+
+> **decimals**: `number`
+
+Decimals of the token.
+
+#### symbol
+
+> **symbol**: `string`
+
+Symbol of the token.
+
+#### to
+
+> **to**: `string` \| `null`
+
+Recipient: the payer.
+
+***
+
+### refund
+
+> **refund**: [`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)
+
+Defined in: [modules/payments/types.ts:693](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L693)
+
+The refund, `requested`.

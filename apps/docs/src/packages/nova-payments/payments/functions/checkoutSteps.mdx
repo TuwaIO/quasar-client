@@ -1,0 +1,35 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/checkoutSteps" />
+
+# checkoutSteps()
+
+> **checkoutSteps**(`screen`, `options?`): [`CheckoutStep`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstep--docs)[] \| `null`
+
+Defined in: [nova-payments/src/utils/checkout.ts:190](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L190)
+
+The steps of the stepper for a screen.
+
+## Parameters
+
+### screen
+
+[`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
+
+The current screen.
+
+### options?
+
+Steps that apply to this invoice.
+
+#### withDetails?
+
+`boolean`
+
+The checkout asked for the buyer details first.
+
+## Returns
+
+[`CheckoutStep`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutstep--docs)[] \| `null`
+
+The steps, or `null` on an outcome screen, whose header shows its title instead.

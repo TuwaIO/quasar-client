@@ -1,0 +1,83 @@
+{/* Ukrainian translation of src/Introduction.mdx, shown by its LocalizedPage: change it together with the English page */}
+
+# Вступ
+
+**Quasar Client** — клієнтська частина [Quasar](https://docs.tuwa.io/quasar): клієнт API для вашого сервера, оформлення оплати Nova Payments для React і модуль Payments для TUWA SDK.
+
+Цей сайт — коротка документація: розділ **Nova Payments** показує живе оформлення оплати й повернення на змодельованому рахунку, а розділ **Packages** описує кожен пакет і кожен експорт. Гайди й довідник API — у центрі документації.
+
+---
+
+## 🧩 Пакети
+
+- **`@tuwaio/payments-sdk`**, коли ваш застосунок використовує `@tuwaio/sdk`: оформлення оплати й повернення, де Nova, Satellite, Pulsar і Orbit надходять із входів SDK.
+- **`@tuwaio/nova-payments`**, коли ви встановлюєте пакети Nova окремо: React-компоненти оформлення оплати й повернень.
+- **`@tuwaio/quasar-sdk`**, коли ваш сервер звертається до API Quasar: клієнт API, перевірка вебхуків, сховища оплати без інтерфейсу та CLI для ретрансляції вебхуків.
+
+---
+
+## 🚀 Швидкий старт
+
+```bash
+pnpm add @tuwaio/payments-sdk @tuwaio/sdk @tuwaio/quasar-sdk react
+```
+
+Виставте рахунок на сервері за допомогою секретного ключа вашого застосунку Quasar:
+
+```ts
+'use server';
+
+import { Quasar } from '@tuwaio/quasar-sdk';
+
+const quasar = new Quasar({ secretKey: process.env.QUASAR_SECRET_KEY ?? '' });
+
+export async function issueInvoice(orderId: string, email: string) {
+  const { checkoutToken } = await quasar.payments.createInvoice(
+    {
+      currency: 'EUR',
+      lineItems: [{ name: 'Pro plan, October', quantity: '1', unitPrice: '49.00' }],
+      buyer: { email },
+      metadata: { orderId },
+    },
+    { idempotencyKey: `order_${orderId}` },
+  );
+  return checkoutToken;
+}
+```
+
+Покажіть оформлення оплати в браузері, передавши токен рахунку:
+
+```tsx
+'use client';
+
+import { PaymentCheckout } from '@tuwaio/payments-sdk';
+import { useState } from 'react';
+
+export function Checkout({ token }: { token: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Pay
+      </button>
+      <PaymentCheckout token={token} open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
+```
+
+І імпортуйте таблиці стилів:
+
+```css
+@import '@tuwaio/sdk/styles/all.css';
+@import '@tuwaio/payments-sdk/styles.css';
+```
+
+---
+
+## 📚 Що далі
+
+- Оплата з гаманця в браузері: див. **[`@tuwaio/nova-payments`](?path=/docs/packages-nova-payments-overview--docs)**.
+- Перевірка вебхуків і журнал рахунку: див. **[`@tuwaio/quasar-sdk`](?path=/docs/packages-quasar-sdk-overview--docs)**.
+- Прочитайте **[документацію Quasar](https://docs.tuwa.io/quasar)**, її **[довідник API](https://docs.tuwa.io/quasar/api)** і **[вебхуки](https://docs.tuwa.io/quasar/webhooks)**.
+- Вихідний код — на **[GitHub](https://github.com/TuwaIO/quasar-client)**.

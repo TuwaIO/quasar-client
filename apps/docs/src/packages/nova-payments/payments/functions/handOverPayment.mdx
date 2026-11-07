@@ -1,0 +1,30 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/handOverPayment" />
+
+# handOverPayment()
+
+> **handOverPayment**(`params`): `Promise`\<`boolean`\>
+
+Defined in: [nova-payments/src/utils/handOver.ts:92](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/handOver.ts#L92)
+
+Hands a sent payment over to the app's Pulsar store as a pending transaction: Pulsar tracks it and keeps it in the
+history, and Nova Transactions shows its toast. Without a Pulsar store, or an adapter that describes its
+transactions, nothing happens.
+
+Side effects: writes the transaction to the Pulsar store (persisted to `localStorage` by `createPulsarStore`) and
+starts its tracker (network reads).
+
+## Parameters
+
+### params
+
+[`HandOverParams`](?path=/docs/packages-nova-payments-payments-interfaces-handoverparams--docs)
+
+See [HandOverParams](?path=/docs/packages-nova-payments-payments-interfaces-handoverparams--docs).
+
+## Returns
+
+`Promise`\<`boolean`\>
+
+Whether the payment was handed over.

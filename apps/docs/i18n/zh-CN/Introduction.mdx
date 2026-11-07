@@ -1,0 +1,83 @@
+{/* Simplified Chinese translation of src/Introduction.mdx, shown by its LocalizedPage: change it together with the English page */}
+
+# 简介
+
+**Quasar Client** 是 [Quasar](https://docs.tuwa.io/quasar) 的客户端部分:面向服务器的 API 客户端、面向 React 的 Nova Payments 结账组件,以及 TUWA SDK 的 Payments 模块。
+
+本站是简明文档:**Nova Payments** 部分在模拟发票上展示实时的结账和退款,**Packages** 部分介绍每个包和每个导出。指南和 API 参考位于文档中心。
+
+---
+
+## 🧩 软件包
+
+- **`@tuwaio/payments-sdk`**,当您的应用使用 `@tuwaio/sdk` 时:结账和退款,Nova、Satellite、Pulsar 和 Orbit 来自 SDK 的入口。
+- **`@tuwaio/nova-payments`**,当您逐个安装 Nova 软件包时:结账和退款的 React 组件。
+- **`@tuwaio/quasar-sdk`**,当您的服务器调用 Quasar API 时:API 客户端、Webhook 验证、无界面结账存储以及 Webhook 转发 CLI。
+
+---
+
+## 🚀 快速开始
+
+```bash
+pnpm add @tuwaio/payments-sdk @tuwaio/sdk @tuwaio/quasar-sdk react
+```
+
+在服务器上使用 Quasar 应用的密钥开具发票:
+
+```ts
+'use server';
+
+import { Quasar } from '@tuwaio/quasar-sdk';
+
+const quasar = new Quasar({ secretKey: process.env.QUASAR_SECRET_KEY ?? '' });
+
+export async function issueInvoice(orderId: string, email: string) {
+  const { checkoutToken } = await quasar.payments.createInvoice(
+    {
+      currency: 'EUR',
+      lineItems: [{ name: 'Pro plan, October', quantity: '1', unitPrice: '49.00' }],
+      buyer: { email },
+      metadata: { orderId },
+    },
+    { idempotencyKey: `order_${orderId}` },
+  );
+  return checkoutToken;
+}
+```
+
+在浏览器中使用发票的令牌显示结账:
+
+```tsx
+'use client';
+
+import { PaymentCheckout } from '@tuwaio/payments-sdk';
+import { useState } from 'react';
+
+export function Checkout({ token }: { token: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Pay
+      </button>
+      <PaymentCheckout token={token} open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
+```
+
+并导入样式表:
+
+```css
+@import '@tuwaio/sdk/styles/all.css';
+@import '@tuwaio/payments-sdk/styles.css';
+```
+
+---
+
+## 📚 下一步
+
+- 在浏览器中通过钱包付款:请参阅 **[`@tuwaio/nova-payments`](?path=/docs/packages-nova-payments-overview--docs)**。
+- 验证 Webhook 并读取发票账本:请参阅 **[`@tuwaio/quasar-sdk`](?path=/docs/packages-quasar-sdk-overview--docs)**。
+- 阅读 **[Quasar 文档](https://docs.tuwa.io/quasar)**、其 **[API 参考](https://docs.tuwa.io/quasar/api)** 和 **[Webhook](https://docs.tuwa.io/quasar/webhooks)**。
+- 在 **[GitHub](https://github.com/TuwaIO/quasar-client)** 上阅读源代码。

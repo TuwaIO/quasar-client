@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/PayScreen" />
+
+# PayScreen()
+
+> **PayScreen**(): `Element` \| `null`
+
+Defined in: [nova-payments/src/components/PayScreen.tsx:142](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PayScreen.tsx#L142)
+
+The pay step: the connected wallet (with "Change"), the exact amount to send with its network and invoice value,
+the price lock with "Keep this price" in its last minute, the rate, the network fee (the merchant's or an estimate),
+the recipient, and the main action — "Sign to pay" when the merchant pays the gas, "Pay" otherwise, "Switch to …"
+on the wrong network, "Confirm this wallet to pay" before a transfer or a paymaster payment of a method the gasless
+relay could pay (the wallet signs Quasar's free confirmation of the invoice first; the relay's authorization needs
+none). Before the prompt it reads the wallet's balance (unless `config.balanceCheck` is `false`)
+and, when it is short, offers the methods the wallet can pay and the seller's top-up link. `handlers.onSubmit` wraps
+the pay button. A Solana payment off mainnet reminds the buyer to switch the wallet to its cluster (Solana wallets
+choose their network themselves), with the steps of Phantom and Solflare. The note under the buttons says that the
+payment goes straight to the merchant and, when the merchant checks paying wallets (`amlScreening` of the
+checkout), that it does.
+
+Side effects: balance, fee and wallet capability reads from the network through the chain adapter (no request to
+Quasar); wallet prompts; checkout requests to Quasar; on a Solana payment, `switchNetwork` of the Satellite store
+moves the app's Solana connection to the payment's cluster (no wallet request).
+
+## Returns
+
+`Element` \| `null`
+
+The pay step.

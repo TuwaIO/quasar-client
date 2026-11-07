@@ -1,0 +1,238 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/RefundState" />
+
+# RefundState
+
+Defined in: [checkout/refundStore.ts:29](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L29)
+
+The state and actions of [createRefundStore](?path=/docs/packages-quasar-sdk-checkout-functions-createrefundstore--docs).
+
+## Properties
+
+### error
+
+> **error**: [`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null`
+
+Defined in: [checkout/refundStore.ts:37](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L37)
+
+Why the last action failed; cleared by the next one.
+
+***
+
+### instructions
+
+> **instructions**: [`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\[`"instructions"`\] \| `null`
+
+Defined in: [checkout/refundStore.ts:35](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L35)
+
+What to send where: chain, asset, recipient (the payer) and amount in base units.
+
+***
+
+### keepFollowing
+
+> **keepFollowing**: () => `void`
+
+Defined in: [checkout/refundStore.ts:90](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L90)
+
+Reads the refund again after [RefundState.stopFollowing](#stopfollowing), while it is `confirming`.
+
+#### Returns
+
+`void`
+
+***
+
+### phase
+
+> **phase**: [`RefundPhase`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-refundphase--docs)
+
+Defined in: [checkout/refundStore.ts:31](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L31)
+
+Where the refund stands.
+
+***
+
+### preview
+
+> **preview**: (`invoiceId`, `params?`) => `Promise`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs) \| `null`\>
+
+Defined in: [checkout/refundStore.ts:50](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L50)
+
+What a refund would send, through the option `preview`: nothing is asked for.
+
+#### Parameters
+
+##### invoiceId
+
+`string`
+
+The paid or held invoice.
+
+##### params?
+
+[`RefundParams`](?path=/docs/packages-quasar-sdk-server-interfaces-refundparams--docs)
+
+Amount (everything left when omitted), mode and reason.
+
+#### Returns
+
+`Promise`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs) \| `null`\>
+
+The preview; `null` without the option, or when it failed (`error` says why).
+
+***
+
+### recheck
+
+> **recheck**: () => `Promise`\<`boolean`\>
+
+Defined in: [checkout/refundStore.ts:77](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L77)
+
+Reads the refund again before a wallet is asked to send it. A window can stay open while the refund is withdrawn or sent
+elsewhere, and a wallet asked then would pay out money nobody asks for any more. What it finds shows in `phase`.
+
+Side effects: one `get`; follows a refund it finds submitted.
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+Whether a wallet may send the refund now: `false` when Quasar does not answer (`error` says so), as it cannot be
+known then, and while `sentTransaction` holds a transaction already sent for it.
+
+***
+
+### refund
+
+> **refund**: [`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs) \| `null`
+
+Defined in: [checkout/refundStore.ts:33](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L33)
+
+The refund, once asked for.
+
+***
+
+### reset
+
+> **reset**: () => `void`
+
+Defined in: [checkout/refundStore.ts:92](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L92)
+
+Stops following and returns to `idle`.
+
+#### Returns
+
+`void`
+
+***
+
+### resume
+
+> **resume**: (`refund`, `instructions`) => `void`
+
+Defined in: [checkout/refundStore.ts:67](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L67)
+
+Continues a refund that waits for its transaction (asked for earlier, or through the API).
+
+#### Parameters
+
+##### refund
+
+[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)
+
+The refund, `requested`.
+
+##### instructions
+
+[`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\[`"instructions"`\]
+
+What to send, as `request` returned it.
+
+#### Returns
+
+`void`
+
+***
+
+### sentTransaction
+
+> **sentTransaction**: [`SentRefundTransaction`](?path=/docs/packages-quasar-sdk-checkout-interfaces-sentrefundtransaction--docs) \| `null`
+
+Defined in: [checkout/refundStore.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L42)
+
+The transaction the wallet sent for this refund that Quasar has not taken yet. While it is set, never ask a wallet
+again: hand it over with [RefundState.submit](#submit), or the buyer is refunded twice.
+
+***
+
+### start
+
+> **start**: (`invoiceId`, `params?`) => `Promise`\<`boolean`\>
+
+Defined in: [checkout/refundStore.ts:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L60)
+
+Asks for a refund of an invoice through `request`. When a transaction sent for an earlier refund of the invoice was
+not handed over, that refund comes back instead (`sentTransaction`), or is followed when Quasar took it after all, and
+nothing new is asked for while Quasar does not say what became of it.
+
+#### Parameters
+
+##### invoiceId
+
+`string`
+
+The paid or held invoice.
+
+##### params?
+
+[`RefundParams`](?path=/docs/packages-quasar-sdk-server-interfaces-refundparams--docs)
+
+Amount (everything left when omitted), mode and reason.
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+Whether it was asked for or came back; `phase` is then `awaitingTransfer` (`confirming` when taken).
+
+***
+
+### stopFollowing
+
+> **stopFollowing**: () => `void`
+
+Defined in: [checkout/refundStore.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L88)
+
+Stops reading the refund and keeps everything else, for when the window goes away.
+
+#### Returns
+
+`void`
+
+***
+
+### submit
+
+> **submit**: (`params`) => `Promise`\<`boolean`\>
+
+Defined in: [checkout/refundStore.ts:86](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L86)
+
+Hands over the refund transaction through `submit`, then follows the refund through `get` until it is final. The
+transaction stays in `sentTransaction`, and in [RefundStoreOptions.handOverStorage](?path=/docs/packages-quasar-sdk-checkout-interfaces-refundstoreoptions--docs#handoverstorage), until Quasar takes it or
+refuses it for good: a refusal of 4xx, other than one that says nothing about it (401, 403, 408, 425, 429).
+
+#### Parameters
+
+##### params
+
+[`SubmitRefundParams`](?path=/docs/packages-quasar-sdk-server-interfaces-submitrefundparams--docs)
+
+The transaction and the merchant wallet it was sent from.
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+Whether it was taken; `phase` is then `confirming`.

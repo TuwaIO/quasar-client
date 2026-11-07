@@ -1,0 +1,71 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/LocaleSwitcherProps" />
+
+# LocaleSwitcherProps
+
+Defined in: [nova-payments/src/components/LocaleSwitcher.tsx:9](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/LocaleSwitcher.tsx#L9)
+
+Props of [LocaleSwitcher](?path=/docs/packages-nova-payments-payments-functions-localeswitcher--docs).
+
+## Properties
+
+### className?
+
+> `optional` **className?**: `string`
+
+Defined in: [nova-payments/src/components/LocaleSwitcher.tsx:23](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/LocaleSwitcher.tsx#L23)
+
+Classes added to the wrapper.
+
+***
+
+### labels
+
+> **labels**: [`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+Defined in: [nova-payments/src/components/LocaleSwitcher.tsx:13](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/LocaleSwitcher.tsx#L13)
+
+The labels of that language.
+
+***
+
+### locale
+
+> **locale**: `string`
+
+Defined in: [nova-payments/src/components/LocaleSwitcher.tsx:11](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/LocaleSwitcher.tsx#L11)
+
+The language of the checkout.
+
+***
+
+### onSelect
+
+> **onSelect**: (`locale`) => `void`
+
+Defined in: [nova-payments/src/components/LocaleSwitcher.tsx:21](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/LocaleSwitcher.tsx#L21)
+
+Called with the language the buyer picks.
+
+#### Parameters
+
+##### locale
+
+[`CheckoutLocale`](?path=/docs/packages-nova-payments-i18n-type-aliases-checkoutlocale--docs)
+
+The picked language.
+
+#### Returns
+
+`void`
+
+***
+
+### receiptIssued?
+
+> `optional` **receiptIssued?**: `boolean`
+
+Defined in: [nova-payments/src/components/LocaleSwitcher.tsx:15](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/LocaleSwitcher.tsx#L15)
+
+Whether the receipt is issued: then the language changes the page only.

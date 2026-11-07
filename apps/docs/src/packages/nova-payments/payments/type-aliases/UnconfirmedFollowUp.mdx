@@ -1,0 +1,23 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Type Aliases/UnconfirmedFollowUp" />
+
+# UnconfirmedFollowUp
+
+> **UnconfirmedFollowUp** = `"nonceSpent"` \| `"unmined"` \| `"rechecked"` \| `"retrying"` \| `"notReceived"` \| `"contact"` \| `"closed"` \| `"takenElsewhere"` \| `"settlementRetrying"` \| `"settlementFailed"` \| `"invoiceFull"`
+
+Defined in: [nova-payments/src/utils/checkout.ts:607](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L607)
+
+What the checkout tells the buyer about a payment that may have left the wallet and that Quasar did not confirm:
+`rechecked` (Quasar still reads it again, for up to 24 hours after it learned of it, and records it for the seller if
+it arrives), `retrying` (the checkout store keeps handing over a transaction the wallet sent, which Quasar has not
+received yet: keep the page open), `notReceived` (the store gave up handing it over after an hour: Quasar never
+received it), `contact` (a reason Quasar never reads again: a relay operation lost, `transaction_failed`, a Quasar
+or a store that does not say), `closed` (Quasar saw no result on chain within 24 hours and closed it),
+`takenElsewhere` (the page of another invoice handed the transaction over first: Quasar credits it to the invoice
+that the wallet that sent it confirmed, and the page shows the result while it follows the payment),
+`settlementRetrying` (the network confirmed it, but Quasar has not recorded it yet and settles it again daily, for 30
+days after it learned of it: `rechecked`), `settlementFailed` (the same, without Quasar saying that it still
+tries) and `invoiceFull` (the invoice takes no more payments: Quasar keeps the hash for the seller and follows nothing). For all but `rechecked` and `retrying` the buyer contacts the seller with the transaction hash; after
+`takenElsewhere`, `settlementRetrying` and `settlementFailed` the payment left the wallet, so the checkout offers no
+payment.

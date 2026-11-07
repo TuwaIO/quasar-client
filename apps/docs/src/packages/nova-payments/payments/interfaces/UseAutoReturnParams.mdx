@@ -1,0 +1,61 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/UseAutoReturnParams" />
+
+# UseAutoReturnParams
+
+Defined in: [nova-payments/src/hooks/useOutcomeEffects.ts:33](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useOutcomeEffects.ts#L33)
+
+What [useAutoReturn](?path=/docs/packages-nova-payments-payments-functions-useautoreturn--docs) needs.
+
+## Properties
+
+### navigate?
+
+> `optional` **navigate?**: (`url`) => `void`
+
+Defined in: [nova-payments/src/hooks/useOutcomeEffects.ts:45](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useOutcomeEffects.ts#L45)
+
+Sends the buyer to the link (default: `window.location.assign`).
+
+#### Parameters
+
+##### url
+
+`string`
+
+The link.
+
+#### Returns
+
+`void`
+
+***
+
+### now
+
+> **now**: `number`
+
+Defined in: [nova-payments/src/hooks/useOutcomeEffects.ts:39](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useOutcomeEffects.ts#L39)
+
+`Date.now()` of the latest second tick of the checkout.
+
+***
+
+### seconds
+
+> **seconds**: `number`
+
+Defined in: [nova-payments/src/hooks/useOutcomeEffects.ts:37](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useOutcomeEffects.ts#L37)
+
+Seconds before the return; `0` for no automatic return.
+
+***
+
+### url
+
+> **url**: `string` \| `null`
+
+Defined in: [nova-payments/src/hooks/useOutcomeEffects.ts:35](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useOutcomeEffects.ts#L35)
+
+Where to send the buyer (the invoice's `successUrl`); `null` for no return.

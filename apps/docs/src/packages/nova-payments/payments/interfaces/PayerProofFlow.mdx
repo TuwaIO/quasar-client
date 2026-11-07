@@ -1,0 +1,85 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/PayerProofFlow" />
+
+# PayerProofFlow
+
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:27](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L27)
+
+What [usePayerProof](?path=/docs/packages-nova-payments-payments-functions-usepayerproof--docs) returns.
+
+## Properties
+
+### confirm
+
+> **confirm**: (`options?`) => `Promise`\<`boolean`\>
+
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L42)
+
+Confirms the invoice from the wallet: switches the wallet to the method's network when it is on another one, then
+has it sign Quasar's message (`confirmPayer` of the checkout store).
+
+#### Parameters
+
+##### options?
+
+`quote: true` locks the price once the wallet confirmed (the step before the price).
+
+###### quote?
+
+`boolean`
+
+Whether to lock the price after it.
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+Whether the wallet confirmed the invoice.
+
+***
+
+### dismiss
+
+> **dismiss**: () => `void`
+
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:49](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L49)
+
+Closes the wallet window. The request stays open in the wallet: a signature it gives later still confirms the
+invoice (and locks the price), a refusal is not shown. A cancel during the network switch asks for no signature.
+[PayerProofFlow.confirm](#confirm) can be called again at once: the new request replaces the open one, and signing
+twice moves no money.
+
+#### Returns
+
+`void`
+
+***
+
+### problem
+
+> **problem**: [`PayerProofProblem`](?path=/docs/packages-nova-payments-payments-type-aliases-payerproofproblem--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:31](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L31)
+
+Why the wallet did not switch or sign, until the next try; `switchDeclined`: the buyer refused the network switch.
+
+***
+
+### request
+
+> **request**: [`PayerProofMessage`](?path=/docs/packages-quasar-sdk-checkout-interfaces-payerproofmessage--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:33](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L33)
+
+The message Quasar issued for the wallet to sign (its site, network, nonce), once Quasar answered.
+
+***
+
+### step
+
+> **step**: [`PayerProofStep`](?path=/docs/packages-nova-payments-payments-type-aliases-payerproofstep--docs)
+
+Defined in: [nova-payments/src/hooks/usePayerProof.ts:29](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayerProof.ts#L29)
+
+Where the confirmation stands.

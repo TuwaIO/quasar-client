@@ -1,0 +1,34 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/qrPath" />
+
+# qrPath()
+
+> **qrPath**(`text`): `object`
+
+Defined in: [nova-payments/src/utils/qr.ts:17](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/qr.ts#L17)
+
+A QR code as an SVG path: one 1×1 square per dark module, inside a quiet zone of four modules. Error correction `M`
+(15 %) keeps payment links short enough to scan from a screen.
+
+## Parameters
+
+### text
+
+`string`
+
+What the code holds (a Solana Pay URL, a payment page).
+
+## Returns
+
+`object`
+
+The size of the square view box in modules and the path.
+
+### path
+
+> **path**: `string`
+
+### size
+
+> **size**: `number`

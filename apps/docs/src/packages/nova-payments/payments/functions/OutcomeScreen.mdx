@@ -1,0 +1,51 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/OutcomeScreen" />
+
+# OutcomeScreen()
+
+> **OutcomeScreen**(`props`): `Element` \| `null`
+
+Defined in: [nova-payments/src/components/OutcomeScreen.tsx:198](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/OutcomeScreen.tsx#L198)
+
+An outcome other than paid: a payment Quasar could not confirm (`unconfirmed`: it may still arrive, so the buyer
+checks the wallet before paying again; only while Quasar still reads it again, `error.rechecked` of the checkout
+store, the screen says that Quasar checks it for 24 hours and records it for the seller if it arrives; while the
+store hands a transaction the wallet sent over again, the buyer keeps the page open; otherwise (a reason Quasar never
+reads again, a hand-over the store gave up) the buyer contacts the seller with the transaction hash, which the screen
+shows; a transfer that moved money without paying the invoice says so, and one Quasar credited to another invoice
+says that it pays that one; a transaction the page of another invoice handed over first, which Quasar credits to the
+invoice whose quoted wallet sent it, and a payment the network confirmed that Quasar has not recorded yet are named
+with their hash for the seller, and the buyer is asked not to pay again; no payment is offered, only, on a payable
+invoice and for a payment that may not have left the wallet, "The payment did not leave my wallet", which goes back
+to it with `payAgain` of the checkout store), an
+underpaid invoice ("Pay the rest"), a payment the seller reviews (screening,
+late, overpaid, after the price lock ran out), a refunded invoice, an expired one (with what arrived before the
+deadline, which the seller can refund; never "nothing was charged" while a payment may still arrive: one this page
+handed over or saw on its way, or that the wallet sent, also after the checkout stopped following it, which Quasar
+records and shows to the seller if it arrives, one Quasar could not confirm or reports as unresolved, to check in the
+wallet, one Quasar does not read again or closed after 24 hours without a result, for the seller with its transaction
+hash, one that does not pay the invoice and may have moved money, and after a QR code showed, a payment made with it,
+as this page does not see it; while this page follows a payment on its way, until when it does, `followingUntil` of
+the checkout store), a cancelled one (the same: never "nothing was charged" while a payment may still
+arrive, also after a QR code showed, and "recorded if it arrives" only for a payment Quasar records), a corrected one
+("Open \<new invoice\>" opens it here) and a payer the wallet check refused ("Use another wallet"). Each offers to
+contact the seller.
+
+## Parameters
+
+### props
+
+The outcome.
+
+#### kind
+
+[`OutcomeKind`](?path=/docs/packages-nova-payments-payments-type-aliases-outcomekind--docs)
+
+Which outcome.
+
+## Returns
+
+`Element` \| `null`
+
+The outcome step.

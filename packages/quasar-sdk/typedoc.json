@@ -1,0 +1,5 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts", "src/pulsar/index.ts", "src/react/index.ts", "src/checkout/index.ts"],
+  "sortEntryPoints": false
+}

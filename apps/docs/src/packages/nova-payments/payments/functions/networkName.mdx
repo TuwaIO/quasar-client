@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/networkName" />
+
+# networkName()
+
+> **networkName**(`chainId`): `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:221](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L221)
+
+The name of a method's network, from the chain names of `@tuwaio/nova-core`.
+
+## Parameters
+
+### chainId
+
+`string`
+
+CAIP-2 chain of the method (`eip155:8453`, `solana:EtWT…`).
+
+## Returns
+
+`string`
+
+The name (`Base`, `Solana Devnet`), `Unknown` for a chain nova-core does not list.

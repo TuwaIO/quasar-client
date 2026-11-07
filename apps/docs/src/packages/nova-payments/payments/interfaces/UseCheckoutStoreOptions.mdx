@@ -1,0 +1,69 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/UseCheckoutStoreOptions" />
+
+# UseCheckoutStoreOptions
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L30)
+
+What [useCheckoutStore](?path=/docs/packages-nova-payments-payments-functions-usecheckoutstore--docs) takes.
+
+## Properties
+
+### api?
+
+> `optional` **api?**: [`CheckoutApi`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutapi--docs)
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:36](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L36)
+
+Calls to make instead of the HTTP ones, for tests and simulations; read when the store is created.
+
+***
+
+### baseUrl?
+
+> `optional` **baseUrl?**: `string`
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:34](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L34)
+
+The Quasar API.
+
+***
+
+### enabled?
+
+> `optional` **enabled?**: `boolean`
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L42)
+
+Whether to load and follow the invoice; `false` keeps the idle store, which makes no requests. Defaults to `true`.
+
+***
+
+### EventSource?
+
+> `optional` **EventSource?**: [`EventSourceConstructor`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-eventsourceconstructor--docs) \| `null`
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:38](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L38)
+
+The `EventSource` to follow the invoice with (`null`: read it every `pollMs`); read when the store is created.
+
+***
+
+### pollMs?
+
+> `optional` **pollMs?**: `number`
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:40](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L40)
+
+How often to read the invoice without an event stream, in milliseconds.
+
+***
+
+### token
+
+> **token**: `string`
+
+Defined in: [nova-payments/src/hooks/useCheckoutStore.ts:32](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/useCheckoutStore.ts#L32)
+
+The checkout token of the invoice.

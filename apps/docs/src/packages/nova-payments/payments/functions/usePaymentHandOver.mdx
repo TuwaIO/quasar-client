@@ -1,0 +1,30 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/usePaymentHandOver" />
+
+# usePaymentHandOver()
+
+> **usePaymentHandOver**(`params`): (`payment`) => `void`
+
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L42)
+
+Follows the payment the wallet sent until the checkout closes: while it is open the checkout tracks the payment
+itself; when it closes (or goes away) before Quasar settled the payment, the payment is handed over to the app's
+Pulsar store, where Nova Transactions shows its toast. A wallet that sends after the checkout closed hands its
+payment over at once.
+
+Side effects: on hand-over, a pending transaction in the Pulsar store and its tracker.
+
+## Parameters
+
+### params
+
+[`UsePaymentHandOverParams`](?path=/docs/packages-nova-payments-payments-interfaces-usepaymenthandoverparams--docs)
+
+See [UsePaymentHandOverParams](?path=/docs/packages-nova-payments-payments-interfaces-usepaymenthandoverparams--docs).
+
+## Returns
+
+The function to call with the payment the wallet sent.
+
+(`payment`) => `void`

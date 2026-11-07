@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/walletLabel" />
+
+# walletLabel()
+
+> **walletLabel**(`connectorType`, `ownName?`): `string`
+
+Defined in: [nova-payments/src/utils/methods.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L66)
+
+The name of a wallet: the name it gives itself, as the wallet list of Nova Connect shows it (`Switch Wallet`);
+without one, the name Nova knows for its connector type (`evm:metamask` is `MetaMask`), else the connector type
+with a capital letter. The generic injected connector is always `Browser wallet`.
+
+## Parameters
+
+### connectorType
+
+`string`
+
+Connector type of Satellite Connect, for example `evm:metamask`.
+
+### ownName?
+
+`string`
+
+The name of the wallet's connector (`name` of the wagmi connector or the Wallet Standard wallet).
+
+## Returns
+
+`string`
+
+The name, for example `MetaMask`.

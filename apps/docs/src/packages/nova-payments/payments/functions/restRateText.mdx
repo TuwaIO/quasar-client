@@ -1,0 +1,56 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/restRateText" />
+
+# restRateText()
+
+> **restRateText**(`quote`, `now`, `labels`, `merchant`, `locale`, `ended?`): `string` \| `null`
+
+Defined in: [nova-payments/src/utils/outcome.ts:299](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L299)
+
+What the buyer is told about the rate of the rest of an underpaid invoice, in an asset that moves against the invoice
+currency (`rateHeldUntil` of the quote): until when a payment settles by itself, or that the seller now decides.
+
+## Parameters
+
+### quote
+
+`Pick`\<[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs), `"rateHeldUntil"`\> \| `null`
+
+The locked quote.
+
+### now
+
+`number`
+
+The time now, in milliseconds.
+
+### labels
+
+[`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+The labels of the checkout language.
+
+### merchant
+
+`string`
+
+The seller's name.
+
+### locale
+
+`string`
+
+The language of the checkout.
+
+### ended?
+
+`string` = `labels.pay.restRateEnded`
+
+What is said past that time; the payment step's `pay.restRateEnded` speaks of the payment being made.
+
+## Returns
+
+`string` \| `null`
+
+The text, or `null` when the rate holds until the due date.

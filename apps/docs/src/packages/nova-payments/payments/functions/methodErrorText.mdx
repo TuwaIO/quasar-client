@@ -1,0 +1,37 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/methodErrorText" />
+
+# methodErrorText()
+
+> **methodErrorText**(`error`, `labels`, `merchant?`): `string`
+
+Defined in: [nova-payments/src/utils/outcome.ts:141](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L141)
+
+The text of a refusal on the method step, with what to do.
+
+## Parameters
+
+### error
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs)
+
+The store's error.
+
+### labels
+
+[`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+The labels of the checkout language.
+
+### merchant?
+
+`string` = `''`
+
+The seller's name, for a payment that left the wallet, or may have ([leftTheWalletText](?path=/docs/packages-nova-payments-payments-functions-leftthewallettext--docs)).
+
+## Returns
+
+`string`
+
+The text.

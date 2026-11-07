@@ -1,0 +1,32 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/payerFor" />
+
+# payerFor()
+
+> **payerFor**(`wallet`, `method`): `string` \| `null`
+
+Defined in: [nova-payments/src/utils/methods.ts:184](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/methods.ts#L184)
+
+The payer of a method for the connected wallet: its address on the method's chain. A wallet of the other family
+cannot pay it; a wallet on another chain of the family pays after switching (the quote names the method's chain).
+
+## Parameters
+
+### wallet
+
+[`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs) \| `null`
+
+The connected wallet.
+
+### method
+
+[`CheckoutMethod`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutmethod--docs)
+
+The method.
+
+## Returns
+
+`string` \| `null`
+
+The CAIP-10 account, or `null`.

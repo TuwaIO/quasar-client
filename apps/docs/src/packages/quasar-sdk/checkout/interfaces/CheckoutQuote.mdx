@@ -1,0 +1,217 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/CheckoutQuote" />
+
+# CheckoutQuote
+
+Defined in: [checkout/types.ts:444](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L444)
+
+A locked quote: the price for this payer, valid until `expiresAt`.
+
+## Properties
+
+### amountDue
+
+> **amountDue**: `string`
+
+Defined in: [checkout/types.ts:457](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L457)
+
+Token amount that must still arrive, in base units: [CheckoutQuote.cryptoAmountExpected](#cryptoamountexpected), or on an underpaid
+invoice what is left of it after what arrived, at the same rate.
+
+***
+
+### amountToSend
+
+> **amountToSend**: `string`
+
+Defined in: [checkout/types.ts:459](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L459)
+
+Token amount the buyer sends: [CheckoutQuote.amountDue](#amountdue) grossed up for a transfer fee, in base units.
+
+***
+
+### cryptoAmountExpected
+
+> **cryptoAmountExpected**: `string`
+
+Defined in: [checkout/types.ts:452](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L452)
+
+Token amount the whole invoice costs at the quoted rate, in base units.
+
+***
+
+### decimals
+
+> **decimals**: `number`
+
+Defined in: [checkout/types.ts:469](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L469)
+
+Decimals of the token.
+
+***
+
+### discountBps
+
+> **discountBps**: `number`
+
+Defined in: [checkout/types.ts:483](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L483)
+
+Discount of the method in basis points.
+
+***
+
+### expiresAt
+
+> **expiresAt**: `string` \| `null`
+
+Defined in: [checkout/types.ts:475](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L475)
+
+When it expires; ask for a new quote after that.
+
+***
+
+### gasless
+
+> **gasless**: [`GaslessOffer`](?path=/docs/packages-quasar-sdk-checkout-interfaces-gaslessoffer--docs) \| `null`
+
+Defined in: [checkout/types.ts:487](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L487)
+
+What the merchant sponsors, or `null`: the buyer pays the gas.
+
+***
+
+### instructions
+
+> **instructions**: [`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs)
+
+Defined in: [checkout/types.ts:485](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L485)
+
+What the wallet sends.
+
+***
+
+### lockedAt
+
+> **lockedAt**: `string` \| `null`
+
+Defined in: [checkout/types.ts:473](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L473)
+
+When it was locked.
+
+***
+
+### markupBps
+
+> **markupBps**: `number`
+
+Defined in: [checkout/types.ts:481](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L481)
+
+Markup of the method in basis points.
+
+***
+
+### methodId
+
+> **methodId**: `string`
+
+Defined in: [checkout/types.ts:448](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L448)
+
+The payment method.
+
+***
+
+### object
+
+> **object**: `"checkout_quote"`
+
+Defined in: [checkout/types.ts:446](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L446)
+
+Always `checkout_quote`.
+
+***
+
+### payer
+
+> **payer**: `string` \| `null`
+
+Defined in: [checkout/types.ts:450](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L450)
+
+CAIP-10 account the quote was locked to; `null` for a Solana Pay QR quote.
+
+***
+
+### payerProof?
+
+> `optional` **payerProof?**: `object`
+
+Defined in: [checkout/types.ts:494](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L494)
+
+Whether the quoted wallet confirmed the invoice ([CheckoutState.confirmPayer](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#confirmpayer)): `required` on an EVM method,
+`proven` once it did (`kind` says how). An EVM quote without the confirmation exists only for a method the gasless
+relay may pay: a transfer or a paymaster payment from that wallet needs the confirmation first, or Quasar credits it
+to no invoice and the merchant returns it. Quasar versions before October 29, 2026 leave it out.
+
+#### kind
+
+> **kind**: [`PayerProofKind`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payerproofkind--docs) \| `null`
+
+#### proven
+
+> **proven**: `boolean`
+
+#### required
+
+> **required**: `boolean`
+
+***
+
+### rateHeldUntil
+
+> **rateHeldUntil**: `string` \| `null`
+
+Defined in: [checkout/types.ts:465](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L465)
+
+On the quote of a rest in an asset that moves against the invoice currency: until when its rate holds. The quote may
+run longer; a payment after this time waits for the merchant to accept or refund it (`review.reason`
+`quote_expired`). `null` otherwise.
+
+***
+
+### rates
+
+> **rates**: `unknown`
+
+Defined in: [checkout/types.ts:479](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L479)
+
+Price rounds used, as evidence.
+
+***
+
+### reference
+
+> **reference**: `string` \| `null`
+
+Defined in: [checkout/types.ts:477](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L477)
+
+The Solana Pay reference key.
+
+***
+
+### symbol
+
+> **symbol**: `string`
+
+Defined in: [checkout/types.ts:471](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L471)
+
+Token symbol.
+
+***
+
+### transferFee
+
+> **transferFee**: \{ `bps`: `number`; `maxFee`: `string` \| `null`; `source`: `"contract"` \| `"method"`; \} \| `null`
+
+Defined in: [checkout/types.ts:467](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L467)
+
+The token's transfer fee, when it takes one.

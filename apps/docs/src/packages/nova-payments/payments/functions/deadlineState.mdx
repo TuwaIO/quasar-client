@@ -1,0 +1,49 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/deadlineState" />
+
+# deadlineState()
+
+> **deadlineState**(`status`, `screen`, `restPayable?`): `"confirming"` \| `"closed"` \| `"paying"` \| `null`
+
+Defined in: [nova-payments/src/utils/checkout.ts:295](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L295)
+
+Where the invoice deadline stands for the checkout: the countdown shows through every step of the payment, also while
+the wallet signs, the payment is handed to Quasar and it confirms, and on a payer the wallet check refused
+(`blocked`, where the buyer can pay with another wallet); it ends with the paid outcome and with the outcomes in which
+a deadline means nothing. A payment sent before the deadline counts: Quasar keeps an `open` or `underpaid` invoice
+while a payment it learned of before the deadline confirms (for a limited time), and holds a payment that lands after
+the invoice closed for the seller to accept or return.
+
+## Parameters
+
+### status
+
+`string`
+
+The invoice state (`checkout.invoice.status`).
+
+### screen
+
+[`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
+
+The screen shown.
+
+### restPayable?
+
+`boolean`
+
+Whether the rest of an underpaid invoice can be paid (`invoice.restPayable`).
+
+## Returns
+
+`"confirming"` \| `"closed"` \| `"paying"` \| `null`
+
+`paying` while the buyer can still pay (the countdown shows and screen readers hear the minutes left),
+`confirming` while the payment is on its way (the countdown shows; at zero the confirm step says that the payment
+sent in time is being confirmed) and while Quasar could not confirm it (`unconfirmed`: the buyer checks the wallet
+before paying again, so no minutes left to pay are announced), or `null` once the payment succeeded (`paid`,
+`autoPay`), on the outcomes in
+which a deadline means nothing (`held`, `refunded`, `expired`, `cancelled`, `replaced`) and for an invoice that can
+no longer be paid. `closed` while part of an underpaid invoice arrived and its rest cannot be paid: the countdown still
+shows, as the time after which the seller can refund, and no minutes left to pay are announced.

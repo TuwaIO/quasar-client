@@ -1,0 +1,73 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/CheckoutScreenChoices" />
+
+# CheckoutScreenChoices
+
+Defined in: [nova-payments/src/utils/checkout.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L42)
+
+Choices of the buyer that the checkout store does not hold.
+
+## Properties
+
+### autoPay?
+
+> `optional` **autoPay?**: `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:46](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L46)
+
+The buyer opened the automatic payments offer after paying the first period of a subscription.
+
+***
+
+### autoPayOff?
+
+> `optional` **autoPayOff?**: `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:48](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L48)
+
+The buyer opened the screen that turns automatic payments off, while they are on.
+
+***
+
+### confirmWallet?
+
+> `optional` **confirmWallet?**: `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:64](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L64)
+
+The buyer continued with a wallet that must confirm the invoice before the price (`payerProof` of the checkout
+store is `required`): the step that confirms it shows while the store waits for the signature and locks the price
+after it.
+
+***
+
+### handoff?
+
+> `optional` **handoff?**: `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:53](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L53)
+
+The buyer continues on a phone: with `payWith` `qr`, the QR code of the payment page shows before any price is
+locked (an EVM method, paid from the phone's wallet on that page).
+
+***
+
+### labelsReady?
+
+> `optional` **labelsReady?**: `boolean`
+
+Defined in: [nova-payments/src/utils/checkout.ts:58](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L58)
+
+The labels of the invoice's language are loaded (default `true`). Until then the checkout stays on `loading`, so
+its first screen never shows in English before the buyer's language arrives.
+
+***
+
+### payWith?
+
+> `optional` **payWith?**: `"qr"` \| `"wallet"`
+
+Defined in: [nova-payments/src/utils/checkout.ts:44](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L44)
+
+Pay from a wallet in this browser (default) or scan a QR code with a phone.

@@ -1,0 +1,61 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Classes/PaymentWalletError" />
+
+# PaymentWalletError
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L24)
+
+The error a payments adapter throws when it knows why the wallet did not pay.
+
+## Extends
+
+- `Error`
+
+## Constructors
+
+### Constructor
+
+> **new PaymentWalletError**(`kind`, `message`, `options?`): `PaymentWalletError`
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L30)
+
+#### Parameters
+
+##### kind
+
+[`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
+
+Why: see [PaymentWalletErrorKind](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs).
+
+##### message
+
+`string`
+
+What to log.
+
+##### options?
+
+The original error as `cause`.
+
+###### cause?
+
+`unknown`
+
+#### Returns
+
+`PaymentWalletError`
+
+#### Overrides
+
+`Error.constructor`
+
+## Properties
+
+### kind
+
+> `readonly` **kind**: [`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:31](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L31)
+
+Why: see [PaymentWalletErrorKind](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs).

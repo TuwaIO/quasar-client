@@ -1,0 +1,13 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Type Aliases/RefundPhase" />
+
+# RefundPhase
+
+> **RefundPhase** = `"idle"` \| `"requesting"` \| `"awaitingTransfer"` \| `"submitting"` \| `"confirming"` \| `"confirmed"` \| `"failed"`
+
+Defined in: [checkout/refundStore.ts:17](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L17)
+
+Where a refund stands: `idle`; `requesting` (Quasar prices it); `awaitingTransfer` (send `instructions` from the
+merchant's wallet, then [RefundState.submit](?path=/docs/packages-quasar-sdk-checkout-interfaces-refundstate--docs#submit)); `submitting`; `confirming` (Quasar follows the transaction);
+`confirmed` (the credit note is issued) or `failed`.

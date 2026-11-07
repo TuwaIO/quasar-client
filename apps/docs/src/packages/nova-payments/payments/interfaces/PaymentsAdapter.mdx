@@ -1,0 +1,545 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/PaymentsAdapter" />
+
+# PaymentsAdapter
+
+Defined in: [nova-payments/src/adapters/types.ts:45](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L45)
+
+What the checkout needs from a chain family to pay from the connected wallet. `@tuwaio/nova-payments/evm` and
+`@tuwaio/nova-payments/solana` make them; the checkout itself imports no chain library. Chains are CAIP-2 IDs, and
+amounts base units. A method that fails because of the wallet throws `PaymentWalletError` (or the wallet library's
+error, which the checkout reads with `walletErrorKind`).
+
+## Properties
+
+### canSponsorCalls?
+
+> `optional` **canSponsorCalls?**: (`params`) => `Promise`\<`boolean`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:69](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L69)
+
+Whether the wallet sends `wallet_sendCalls` with the `paymasterService` capability on the chain (EIP-5792,
+ERC-7677).
+
+#### Parameters
+
+##### params
+
+The chain and the account.
+
+###### account
+
+`string`
+
+###### chainId
+
+`string`
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+`true` when sponsored calls are possible.
+
+***
+
+### estimateFee?
+
+> `optional` **estimateFee?**: (`params`) => `Promise`\<[`NativeFee`](?path=/docs/packages-nova-payments-payments-interfaces-nativefee--docs) \| `null`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:61](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L61)
+
+Estimates the network fee of the transfer, paid in the native coin.
+
+#### Parameters
+
+##### params
+
+What the wallet sends and the sender.
+
+###### account
+
+`string`
+
+###### instructions
+
+[`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs)
+
+#### Returns
+
+`Promise`\<[`NativeFee`](?path=/docs/packages-nova-payments-payments-interfaces-nativefee--docs) \| `null`\>
+
+The fee, or `null` when it cannot be estimated.
+
+***
+
+### explorerAddressUrl?
+
+> `optional` **explorerAddressUrl?**: (`params`) => `string` \| `undefined`
+
+Defined in: [nova-payments/src/adapters/types.ts:131](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L131)
+
+The link of a wallet address on a block explorer of its chain.
+
+#### Parameters
+
+##### params
+
+The chain and the address.
+
+###### address
+
+`string`
+
+###### chainId
+
+`string`
+
+#### Returns
+
+`string` \| `undefined`
+
+The link, or `undefined` when the chain has no known explorer.
+
+***
+
+### explorerUrl?
+
+> `optional` **explorerUrl?**: (`params`) => `string` \| `undefined`
+
+Defined in: [nova-payments/src/adapters/types.ts:124](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L124)
+
+The link of a transaction on a block explorer of its chain.
+
+#### Parameters
+
+##### params
+
+The chain and the transaction hash or signature.
+
+###### chainId
+
+`string`
+
+###### txKey
+
+`string`
+
+#### Returns
+
+`string` \| `undefined`
+
+The link, or `undefined` when the chain has no known explorer.
+
+***
+
+### family
+
+> **family**: [`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs)
+
+Defined in: [nova-payments/src/adapters/types.ts:47](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L47)
+
+The chain family it pays on.
+
+***
+
+### followSponsoredCalls?
+
+> `optional` **followSponsoredCalls?**: (`params`) => `void`
+
+Defined in: [nova-payments/src/adapters/types.ts:184](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L184)
+
+Follows a batch the wallet took before the page was reloaded, until its transaction comes or `until` passes.
+
+#### Parameters
+
+##### params
+
+The batch, until when to follow it (a timestamp) and what to call with its transaction.
+
+###### batchId
+
+`string`
+
+###### onLate
+
+(`txKey`) => `void`
+
+###### until
+
+`number`
+
+#### Returns
+
+`void`
+
+***
+
+### getBalance
+
+> **getBalance**: (`params`) => `Promise`\<`bigint`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:54](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L54)
+
+Reads a balance from the network in the browser (no request to Quasar).
+
+#### Parameters
+
+##### params
+
+The chain, the account and the token (`native` for the coin of the chain).
+
+###### account
+
+`string`
+
+###### chainId
+
+`string`
+
+###### token
+
+`string`
+
+#### Returns
+
+`Promise`\<`bigint`\>
+
+The balance, in base units.
+
+***
+
+### pulsarTransaction?
+
+> `optional` **pulsarTransaction?**: (`params`) => `Transaction`
+
+Defined in: [nova-payments/src/adapters/types.ts:178](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L178)
+
+Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
+it (and Nova Transactions shows its toast) once the checkout closes.
+
+#### Parameters
+
+##### params
+
+[`PulsarTransactionParams`](?path=/docs/packages-nova-payments-payments-interfaces-pulsartransactionparams--docs)
+
+The payment and the texts of its transaction.
+
+#### Returns
+
+`Transaction`
+
+The pending transaction, for `injectExternalPendingTxs` of the Pulsar store.
+
+***
+
+### requestPermission?
+
+> `optional` **requestPermission?**: (`params`) => `Promise`\<`Omit`\<[`GrantPermissionParams`](?path=/docs/packages-quasar-sdk-checkout-interfaces-grantpermissionparams--docs), `"payer"`\>\>
+
+Defined in: [nova-payments/src/adapters/types.ts:154](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L154)
+
+Asks the wallet for the ERC-7715 permission of a subscription's automatic payments, with the wallet's prompt.
+
+#### Parameters
+
+##### params
+
+The request of the checkout's auto-charge offer and the granting account.
+
+###### account
+
+`string`
+
+###### request
+
+[`PermissionRequest`](?path=/docs/packages-quasar-sdk-checkout-interfaces-permissionrequest--docs)
+
+#### Returns
+
+`Promise`\<`Omit`\<[`GrantPermissionParams`](?path=/docs/packages-quasar-sdk-checkout-interfaces-grantpermissionparams--docs), `"payer"`\>\>
+
+What the wallet granted, for `grantPermission` of the checkout store (without the payer).
+
+***
+
+### revokePermission?
+
+> `optional` **revokePermission?**: (`params`) => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:165](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L165)
+
+Sends the transaction that revokes the permission of a subscription's automatic payments, with the wallet's prompt,
+and waits until the network includes it. The wallet pays its network fee.
+
+#### Parameters
+
+##### params
+
+The transaction of the checkout's auto-charge offer, its CAIP-2 chain, the account that granted the
+permission and what to call once the wallet has sent it: a failure while waiting must not send it again.
+
+###### account
+
+`string`
+
+###### chainId
+
+`string`
+
+###### onSent?
+
+() => `void`
+
+###### revocation
+
+\{ `data`: `string`; `to`: `string`; \}
+
+###### revocation.data
+
+`string`
+
+###### revocation.to
+
+`string`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### sendSponsoredCalls?
+
+> `optional` **sendSponsoredCalls?**: (`params`) => `Promise`\<`string`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:185](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L185)
+
+#### Parameters
+
+##### params
+
+###### account
+
+`string`
+
+###### calls
+
+`object`[]
+
+###### chainId
+
+`string`
+
+###### onAccepted?
+
+(`batchId`) => `void`
+
+Called with the ID of the batch as soon as the wallet took it, before it has a transaction.
+
+###### onLate?
+
+(`txKey`) => `void`
+
+Called with the transaction of a batch that landed after the adapter gave up waiting (`sentUnconfirmed`).
+
+###### onSent?
+
+() => `void`
+
+###### paymasterUrl
+
+`string`
+
+#### Returns
+
+`Promise`\<`string`\>
+
+***
+
+### sendTransfer
+
+> **sendTransfer**: (`params`) => `Promise`\<`string`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:83](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L83)
+
+Sends the transfer the quote describes, with the wallet's prompt.
+
+#### Parameters
+
+##### params
+
+The quote's instructions, the sender, and the Satellite Connect connection of the wallet (the
+  Solana adapter signs with its Wallet Standard account).
+
+###### account
+
+`string`
+
+###### connection?
+
+`unknown`
+
+###### instructions
+
+[`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs)
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The transaction hash (EVM) or signature (Solana).
+
+***
+
+### signMessage?
+
+> `optional` **signMessage?**: (`params`) => `Promise`\<`string`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:109](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L109)
+
+Signs a message with `personal_sign` (EIP-191), with the wallet's prompt: the EIP-4361 message by which the paying
+wallet confirms the invoice before an EVM payment it sends itself (`confirmPayer` of the checkout store of
+`@tuwaio/quasar-sdk/checkout`). A free signature that moves no funds; a smart wallet signs it through its own flow
+(ERC-1271, ERC-6492), often with a passkey. Without it the checkout cannot pay methods that need the confirmation
+from this wallet.
+
+#### Parameters
+
+##### params
+
+The message exactly as Quasar wrote it, the signer, and the CAIP-2 network the message names (the
+  wallet is on it already: the checkout switches it first).
+
+###### account
+
+`string`
+
+###### chainId
+
+`string`
+
+###### message
+
+`string`
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The signature, as hex.
+
+***
+
+### signTransferAuthorization?
+
+> `optional` **signTransferAuthorization?**: (`params`) => `Promise`\<`string`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:94](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L94)
+
+Signs the EIP-3009 authorization of a gasless quote (`eth_signTypedData_v4`), with the wallet's prompt.
+
+#### Parameters
+
+##### params
+
+The typed data and the signer.
+
+###### account
+
+`string`
+
+###### typedData
+
+[`TransferAuthorizationTypedData`](?path=/docs/packages-quasar-sdk-checkout-interfaces-transferauthorizationtypeddata--docs)
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The 65-byte signature.
+
+***
+
+### smartAccountStatus?
+
+> `optional` **smartAccountStatus?**: (`params`) => `Promise`\<`"smart"` \| `"upgradable"` \| `"unknown"`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:140](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L140)
+
+What the account is for automatic payments, read before asking for the permission: `smart` has code on the network,
+`upgradable` is a plain account its wallet can switch to a smart account, `unknown` says nothing either way. Quasar
+decides in the end: it refuses a wallet that could never be charged.
+
+#### Parameters
+
+##### params
+
+The network and the account.
+
+###### account
+
+`string`
+
+###### chainId
+
+`string`
+
+#### Returns
+
+`Promise`\<`"smart"` \| `"upgradable"` \| `"unknown"`\>
+
+The kind.
+
+***
+
+### switchChain?
+
+> `optional` **switchChain?**: (`chainId`) => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:75](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L75)
+
+Asks the wallet to switch to the chain of the payment.
+
+#### Parameters
+
+##### chainId
+
+`string`
+
+The chain.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### upgradeToSmartAccount?
+
+> `optional` **upgradeToSmartAccount?**: (`params`) => `Promise`\<`void`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:147](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L147)
+
+Has the wallet switch a plain account to its smart account (`upgradable` of [PaymentsAdapter.smartAccountStatus](#smartaccountstatus))
+and waits until the network includes it. The wallet asks the buyer and the buyer pays the network fee.
+
+#### Parameters
+
+##### params
+
+The network and the account.
+
+###### account
+
+`string`
+
+###### chainId
+
+`string`
+
+#### Returns
+
+`Promise`\<`void`\>
