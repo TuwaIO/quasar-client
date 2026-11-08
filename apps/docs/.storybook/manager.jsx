@@ -19,108 +19,84 @@ import {
 const STORAGE_KEY = 'tuwa-storybook-theme';
 const CHANNEL_EVENT = 'tuwa/set-theme';
 
-// ─── SVG Icons (matches @heroicons/react/24/solid) ───────────────────────────
+// ─── ThemeSwitcher (the switch of @tuwaio/docs-ui 0.10; its styles are in manager-head.html) ────────────────
 
-const SunIcon = ({ size = 18, color = 'currentColor', style }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={color} style={style}>
-    <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM6.161 5.1a.75.75 0 0 1 1.06 0l1.59 1.59a.75.75 0 1 1-1.06 1.06l-1.59-1.59a.75.75 0 0 1 0-1.06Zm10.618 0a.75.75 0 0 1 0 1.06l-1.59 1.59a.75.75 0 1 1-1.06-1.06l1.59-1.59a.75.75 0 0 1 1.06 0ZM3 12a.75.75 0 0 1 .75-.75h2.25a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm15 0a.75.75 0 0 1 .75-.75h2.25a.75.75 0 0 1 0 1.5h-2.25A.75.75 0 0 1 18 12Zm-11.839 4.84a.75.75 0 0 1 1.06 1.06l-1.59 1.59a.75.75 0 1 1-1.06-1.06l1.59-1.59Zm10.618 0 1.59 1.59a.75.75 0 1 1-1.06 1.06l-1.59-1.59a.75.75 0 0 1 1.06-1.06ZM12 18.75a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Z" />
-  </svg>
-);
+const cls = (...names) => names.filter(Boolean).join(' ');
 
-const MoonIcon = ({ size = 18, color = 'currentColor', style }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={color} style={style}>
-    <path
-      fillRule="evenodd"
-      d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
-
-// ─── ThemeSwitcher (inline-style replica of docs-ui ThemeSwitcher) ───────────
-
-const TRACK_W = 56;
-const TRACK_H = 28;
-const INDICATOR_SIZE = 24;
-const ICON_SIZE = 16;
-const BORDER_RADIUS = 6;
+// The pixels of a 7 × 7 grid: a crescent moon with two stars that twinkle, and a sun with a round disc and eight rays
+// prettier-ignore
+const MOON = [
+  [2, 0], [3, 0], [4, 0], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2], [0, 3], [1, 3], [2, 3],
+  [0, 4], [1, 4], [2, 4], [1, 5], [2, 5], [3, 5], [2, 6], [3, 6], [4, 6], [6, 0, 'twinkle'], [5, 3, 'twinkle'],
+];
+// prettier-ignore
+const SUN = [
+  [2, 2, 'tl'], [3, 2], [4, 2, 'tr'], [2, 3], [3, 3], [4, 3], [2, 4, 'bl'], [3, 4], [4, 4, 'br'],
+  [3, 0], [5, 1], [6, 3], [5, 5], [3, 6], [1, 5], [0, 3], [1, 1],
+];
+// In the order of their angle around the centre, so each pixel travels a short way to the other picture
+const byAngle = (pixels) =>
+  [...pixels].sort(([ax, ay], [bx, by]) => Math.atan2(ay - 3, ax - 3) - Math.atan2(by - 3, bx - 3));
+const MOON_PATH = byAngle(MOON);
+const SUN_PATH = byAngle(SUN);
+const PIXEL_COUNT = Math.max(MOON_PATH.length, SUN_PATH.length);
 
 const ThemeSwitcher = ({ isDark, onToggle, ariaLabel }) => {
-  const [hovered, setHovered] = React.useState(false);
-
-  const indicatorLeft = isDark ? TRACK_W - INDICATOR_SIZE - 4 : 2;
-
+  // The first render places the knob without moving it; the moves of later toggles play
+  const [moved, setMoved] = React.useState(false);
+  const pixels = isDark ? MOON_PATH : SUN_PATH;
   return (
     <button
-      onClick={onToggle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      type="button"
+      role="switch"
+      aria-checked={isDark}
       aria-label={ariaLabel}
-      style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        width: TRACK_W,
-        height: TRACK_H,
-        borderRadius: BORDER_RADIUS,
-        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
-        background: isDark
-          ? hovered
-            ? 'rgba(255,255,255,0.2)'
-            : 'rgba(255,255,255,0.1)'
-          : hovered
-            ? 'rgba(0,0,0,0.1)'
-            : 'rgba(0,0,0,0.05)',
-        cursor: 'pointer',
-        padding: '3px',
-        transition: 'background 0.3s ease, border-color 0.3s ease',
-        outline: 'none',
-        flexShrink: 0,
-        backdropFilter: 'blur(4px)',
+      onClick={() => {
+        setMoved(true);
+        onToggle();
       }}
+      className={cls(
+        'tuwa-theme-switch tuwa-switch-appear',
+        isDark ? 'tuwa-theme-switch--dark' : 'tuwa-theme-switch--light',
+      )}
     >
-      {/* Sliding indicator */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 1,
-          left: indicatorLeft,
-          width: INDICATOR_SIZE,
-          height: INDICATOR_SIZE,
-          borderRadius: BORDER_RADIUS - 1,
-          background: isDark ? '#0a0e27' : '#ffffff',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-          transition: 'left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease',
-          zIndex: 10,
-        }}
-      />
-
-      {/* Icons row */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 20,
-          display: 'flex',
-          width: '100%',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
+      <span
+        aria-hidden="true"
+        className={cls(
+          'tuwa-theme-switch__knob',
+          moved && (isDark ? 'tuwa-theme-switch__knob--to-dark' : 'tuwa-theme-switch__knob--to-light'),
+        )}
       >
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <SunIcon
-            size={ICON_SIZE}
-            color={!isDark ? '#eab308' : hovered ? '#facc15' : '#64748b'}
-            style={{ transition: 'color 0.3s ease', position: 'relative', left: -1 }}
-          />
-        </div>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <MoonIcon
-            size={ICON_SIZE}
-            color={isDark ? '#0052ff' : hovered ? '#0052ff' : '#64748b'}
-            style={{ transition: 'color 0.3s ease', position: 'relative', left: 1 }}
-          />
-        </div>
-      </div>
+        <span className="tuwa-theme-switch__glow tuwa-theme-switch__glow--top" />
+        <span className="tuwa-theme-switch__glow tuwa-theme-switch__glow--bottom" />
+        <span className="tuwa-theme-switch__pixels">
+          {Array.from({ length: PIXEL_COUNT }, (_, index) => {
+            const pixel = pixels[index];
+            const mark = pixel?.[2];
+            return (
+              <span
+                key={index}
+                className={cls(
+                  'tuwa-theme-switch__pixel',
+                  mark === 'twinkle' && 'tuwa-theme-switch__pixel--twinkle',
+                  mark && mark !== 'twinkle' && `tuwa-theme-switch__pixel--${mark}`,
+                )}
+                style={{
+                  '--x': pixel ? pixel[0] : 3,
+                  '--y': pixel ? pixel[1] : 3,
+                  '--delay': `${index * 14}ms`,
+                  '--twinkle-delay': `${(index % 4) * 600}ms`,
+                  opacity: pixel ? 1 : 0,
+                }}
+              />
+            );
+          })}
+        </span>
+        {/* A satellite around the moon, a planet around the sun, on a tilted orbit, for a moment after a change */}
+        <span className="tuwa-theme-switch__orbit">
+          <span className="tuwa-theme-switch__orbiter" />
+        </span>
+      </span>
     </button>
   );
 };
@@ -152,14 +128,19 @@ function setManagerLocale(next) {
 
 const useManagerLocale = () => React.useSyncExternalStore(subscribeLocale, getManagerLocale, getManagerLocale);
 
-// ─── LanguageSwitcher (inline-style replica of docs-ui LocaleSwitcher) ───────
+// ─── LanguageSwitcher (the switch of @tuwaio/docs-ui 0.10; its styles are in manager-head.html) ──────────────
 
-const TRIGGER_W = 72;
-const OPTION_H = 38;
-const MENU_W = 192;
+const TRIGGER_W = 76;
+const TRIGGER_H = 32;
+const RADIUS = 6;
+const OPTION_H = 40;
+const MENU_W = 200;
+
+// The glow of each language: the colour of its flag
+const GLOWS = { en: '#3b82f6', uk: '#facc15', 'zh-CN': '#ef4444' };
 
 const FlagUK = () => (
-  <svg viewBox="0 0 640 480" width={16} height={12} aria-hidden="true" style={{ display: 'block' }}>
+  <svg viewBox="0 0 640 480" width={16} height={12} aria-hidden="true" className="tuwa-locale-flag">
     <path fill="#012169" d="M0 0h640v480H0z" />
     <path fill="#FFF" d="m75 0 245 180L565 0h75v60L435 240l205 180v60h-75L320 300 75 480H0v-60l205-180L0 60V0h75z" />
     <path
@@ -172,14 +153,14 @@ const FlagUK = () => (
 );
 
 const FlagUkraine = () => (
-  <svg viewBox="0 0 640 480" width={16} height={12} aria-hidden="true" style={{ display: 'block' }}>
+  <svg viewBox="0 0 640 480" width={16} height={12} aria-hidden="true" className="tuwa-locale-flag">
     <path fill="#0057b7" d="M0 0h640v240H0z" />
     <path fill="#ffd700" d="M0 240h640v240H0z" />
   </svg>
 );
 
 const FlagChina = () => (
-  <svg viewBox="0 0 640 480" width={16} height={12} aria-hidden="true" style={{ display: 'block' }}>
+  <svg viewBox="0 0 640 480" width={16} height={12} aria-hidden="true" className="tuwa-locale-flag">
     <rect width="640" height="480" fill="#ee1c25" />
     <path fill="#ffde00" d="M120 72l14.1 43.4H180l-36.9 26.8 14.1 43.4-37.2-26.8-37.2 26.8 14.1-43.4L60 115.4h45.9z" />
     <circle cx="200" cy="40" r="12" fill="#ffde00" />
@@ -191,23 +172,9 @@ const FlagChina = () => (
 
 const FLAGS = { en: FlagUK, uk: FlagUkraine, 'zh-CN': FlagChina };
 
-const Flag = ({ code, isDark }) => {
+const Flag = ({ code }) => {
   const Icon = FLAGS[code];
-  if (!Icon) return null;
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: 'flex',
-        flexShrink: 0,
-        overflow: 'hidden',
-        borderRadius: 2,
-        border: `1px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-      }}
-    >
-      <Icon />
-    </span>
-  );
+  return Icon ? <Icon /> : null;
 };
 
 const prefersReducedMotion = () =>
@@ -275,6 +242,13 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
   const buttonRef = React.useRef(null);
   const listRef = React.useRef(null);
   const listboxId = React.useId();
+  // How many times the language changed: each change springs the knob and brings the new flag in (none at first)
+  const [shown, setShown] = React.useState(locale);
+  const [changes, setChanges] = React.useState(0);
+  if (shown !== locale) {
+    setShown(locale);
+    setChanges(changes + 1);
+  }
 
   // On touch screens an invisible native <select> over the button opens the picker of the system
   React.useEffect(() => {
@@ -409,14 +383,15 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
         onKeyDown={handleKeyDown}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        className="tuwa-locale-switch tuwa-switch-appear"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           width: TRIGGER_W,
-          height: TRACK_H,
-          padding: '0 8px',
-          borderRadius: BORDER_RADIUS,
+          height: TRIGGER_H,
+          padding: '0 8px 0 2px',
+          borderRadius: RADIUS,
           border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
           background: isDark
             ? hovered
@@ -432,7 +407,23 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
           backdropFilter: 'blur(4px)',
         }}
       >
-        <Flag code={active.code} isDark={isDark} />
+        {/* The flag on a knob as the theme switch's, with a glow in its colour; a small spring when it changes */}
+        <span
+          aria-hidden="true"
+          className={cls(
+            'tuwa-locale-switch__knob',
+            changes > 0 && (changes % 2 ? 'tuwa-locale-switch__knob--bump-a' : 'tuwa-locale-switch__knob--bump-b'),
+          )}
+          style={{ '--glow': GLOWS[active.code] ?? accent }}
+        >
+          <span className="tuwa-locale-switch__glow" />
+          <span
+            key={active.code}
+            className={cls('tuwa-locale-switch__flag', changes > 0 && 'tuwa-locale-switch__flag--in')}
+          >
+            <Flag code={active.code} />
+          </span>
+        </span>
         {/* The visible label starts the accessible name (WCAG 2.5.3) */}
         <span
           style={{
@@ -478,7 +469,7 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
               zIndex: 100000,
               width: MENU_W,
               overflow: 'hidden',
-              borderRadius: BORDER_RADIUS,
+              borderRadius: RADIUS,
               border: `1px solid ${borderColor}`,
               background: menuBg,
               boxShadow: isDark ? '0 12px 32px rgba(0,0,0,0.5)' : '0 12px 32px rgba(15,23,42,0.15)',
@@ -498,20 +489,23 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
                   aria-selected={selected}
                   onClick={() => pick(option.code)}
                   onPointerMove={() => focused || setActiveIndex(index)}
+                  // Each language in the colours of its flag, as the knob of the switch
+                  className={cls('tuwa-locale-switch__option', focused && 'tuwa-locale-switch__option--active')}
                   style={{
+                    '--glow': GLOWS[option.code] ?? accent,
                     position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 10,
                     height: OPTION_H,
-                    padding: '0 14px',
+                    padding: '0 12px',
                     fontSize: 12,
                     fontWeight: selected ? 700 : 400,
                     cursor: 'pointer',
                     color: selected || focused ? textColor : mutedColor,
                     background: selected
-                      ? `linear-gradient(90deg, color-mix(in srgb, ${accent} ${focused ? 25 : 15}%, transparent), color-mix(in srgb, ${accent} ${focused ? 10 : 5}%, transparent), transparent)`
+                      ? `linear-gradient(90deg, color-mix(in srgb, var(--glow) ${focused ? 20 : 14}%, transparent), color-mix(in srgb, var(--glow) ${focused ? 8 : 5}%, transparent), transparent)`
                       : focused
                         ? isDark
                           ? 'rgba(255,255,255,0.06)'
@@ -529,13 +523,16 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
                         top: 0,
                         bottom: 0,
                         width: 3,
-                        background: accent,
-                        boxShadow: `0 0 8px ${accent}`,
+                        background: 'var(--glow-line)',
+                        boxShadow: '0 0 8px var(--glow)',
                       }}
                     />
                   )}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Flag code={option.code} isDark={isDark} />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span aria-hidden="true" className="tuwa-locale-switch__tile">
+                      <span className="tuwa-locale-switch__glow" />
+                      <Flag code={option.code} />
+                    </span>
                     {option.label}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -546,8 +543,11 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
                         fontFamily: theme?.typography?.fonts?.mono,
                         fontSize: 10,
                         textTransform: 'uppercase',
-                        color: selected ? accent : mutedColor,
-                        background: selected ? `color-mix(in srgb, ${accent} 15%, transparent)` : 'transparent',
+                        color: selected ? textColor : mutedColor,
+                        background: selected ? 'color-mix(in srgb, var(--glow) 15%, transparent)' : 'transparent',
+                        boxShadow: selected
+                          ? 'inset 0 0 0 1px color-mix(in srgb, var(--glow-line) 40%, transparent)'
+                          : 'none',
                       }}
                     >
                       {option.short}
@@ -559,8 +559,8 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
                           width: 6,
                           height: 6,
                           borderRadius: '50%',
-                          background: accent,
-                          boxShadow: `0 0 8px ${accent}`,
+                          background: 'var(--glow-line)',
+                          boxShadow: '0 0 8px var(--glow)',
                         }}
                       />
                     )}
