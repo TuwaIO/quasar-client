@@ -1,5 +1,9 @@
 # Quasar Client
 
+<p align="center">
+  <img src="https://tuwa.io/brand/quasar_client.png" alt="Quasar Client" width="450" style="border-radius: 12px; margin: 24px auto;" />
+</p>
+
 [![License](https://img.shields.io/npm/l/@tuwaio/payments-sdk.svg)](https://github.com/TuwaIO/quasar-client/blob/main/LICENSE)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/TuwaIO/quasar-client/release.yml?branch=main)](https://github.com/TuwaIO/quasar-client/actions)
 
