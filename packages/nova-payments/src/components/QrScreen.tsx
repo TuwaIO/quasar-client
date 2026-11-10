@@ -108,14 +108,24 @@ export function QrScreen() {
                 copiedLabel={labels.pay.copied}
               />
             </div>
+            {/* Each part in one piece with its "·", wrapping only between them: the address broke over two lines with a
+                "·" at the start of the second (owner test 2026-11-09, finding 2) */}
             <div
+              data-qr-line
               className={cn(
                 mono,
-                'novapay:flex novapay:items-center novapay:gap-1 novapay:text-[var(--tuwa-text-secondary)]',
+                'novapay:flex novapay:flex-wrap novapay:items-center novapay:gap-x-1 novapay:gap-y-0.5 novapay:text-[var(--tuwa-text-secondary)]',
               )}
             >
-              {instructions.symbol} · {network} ·{' '}
-              <ChainLink hash={instructions.to} chainId={instructionsChainId(instructions)} />
+              <span data-qr-part className="novapay:whitespace-nowrap">
+                {instructions.symbol} ·
+              </span>
+              <span data-qr-part className="novapay:whitespace-nowrap">
+                {network} ·
+              </span>
+              <span data-qr-part className="novapay:whitespace-nowrap">
+                <ChainLink hash={instructions.to} chainId={instructionsChainId(instructions)} />
+              </span>
             </div>
             {!expired && (
               <>

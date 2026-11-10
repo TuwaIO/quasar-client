@@ -131,3 +131,43 @@ describe('the Solana Pay step in a narrow screen area', () => {
     expect(classes).not.toContain('novapay:overflow-hidden');
   });
 });
+
+// Owner test 2026-11-09, finding 2: "SOL · Solana Devnet · kPBj…F1DX" broke inside, the address over two lines and a
+// "·" at the start of the second line
+describe('the line under the amount of the QR code', () => {
+  it('keeps every part in one piece, each with the "·" after it, and wraps only between them', () => {
+    const quote = {
+      methodId: 'sol',
+      amountToSend: '84131395',
+      decimals: 9,
+      expiresAt: null,
+      instructions: {
+        family: 'solana',
+        chainId: 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1',
+        symbol: 'SOL',
+        to: 'kPBjHzJ7wTzQk3s1G9Uu4qBTrvjZbBY3cS4YDYq5F1DX',
+        solanaPayUrl: 'solana:kPBjHzJ7wTzQk3s1G9Uu4qBTrvjZbBY3cS4YDYq5F1DX?amount=0.084131395',
+      },
+    };
+    ctx = fixture.checkoutContextValue(
+      {},
+      { screen: 'qr', state: { ...fixture.checkoutContextValue({}).state, quote } as CheckoutContextValue['state'] },
+    );
+    const tree = fixture.elements(render(QrScreen, {}));
+    const line = tree.find((element) => element.props['data-qr-line'] !== undefined);
+    expect(line).toBeDefined();
+    expect(classesOf(line)).toEqual(expect.arrayContaining(['novapay:flex-wrap']));
+    const parts = fixture
+      .elements(line!.props.children)
+      .filter((element) => element.props['data-qr-part'] !== undefined);
+    expect(parts).toHaveLength(3);
+    for (const part of parts) expect(classesOf(part)).toContain('novapay:whitespace-nowrap');
+    const text = (part: (typeof parts)[number]) =>
+      ([] as unknown[])
+        .concat(part.props.children)
+        .filter((child) => typeof child === 'string')
+        .join('');
+    expect(text(parts[0])).toMatch(/^SOL\s·$/);
+    expect(text(parts[1])).toMatch(/·$/);
+  });
+});
