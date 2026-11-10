@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { PaymentsAdapter, PulsarTransactionParams } from '../adapters/types';
 import { defaultLabels } from '../i18n/en';
-import { handOverPayment, type SentPayment, shouldHandOver } from './handOver';
+import { handOverPayment, type SentPayment } from './handOver';
 
 const payment: SentPayment = {
   txKey: '0xhash',
@@ -74,29 +74,5 @@ describe('handOverPayment', () => {
     const bare: PaymentsAdapter = { ...adapter, pulsarTransaction: undefined };
     await expect(handOverPayment({ adapter: bare, pulsar, payment, ...context })).resolves.toBe(false);
     expect(pulsar.injectExternalPendingTxs).not.toHaveBeenCalled();
-  });
-});
-
-describe('shouldHandOver', () => {
-  it('hands over a payment Quasar has not settled yet', () => {
-    for (const phase of ['submitting', 'confirming', 'awaitingPayment', 'quoting', 'error'] as const) {
-      expect(shouldHandOver({ phase, error: null })).toBe(true);
-    }
-  });
-
-  it('keeps a settled or failed payment', () => {
-    for (const phase of ['paid', 'underpaid', 'held', 'refunded', 'expired', 'cancelled', 'blocked'] as const) {
-      expect(shouldHandOver({ phase, error: null })).toBe(false);
-    }
-    expect(
-      shouldHandOver({ phase: 'awaitingPayment', error: { code: 'payment_failed', message: 'The payment failed' } }),
-    ).toBe(false);
-  });
-
-  // F9: Quasar already has the final word on a transaction that does not pay the invoice
-  it('keeps a transaction that does not pay the invoice', () => {
-    expect(
-      shouldHandOver({ phase: 'awaitingPayment', error: { code: 'payment_mismatch', message: '' } as never }),
-    ).toBe(false);
   });
 });

@@ -270,8 +270,8 @@ Replaces the link of "Contact \<seller\>", when the app handles it.
 
 Defined in: [nova-payments/src/components/checkoutContext.ts:111](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L111)
 
-Remembers the payment the wallet sent: the checkout tracks it while open, and hands it over to the app's Pulsar
-store when it closes before Quasar settled it.
+Takes the payment the wallet sent: the checkout follows it, and hands it over to the app's Pulsar store at once,
+where Nova Transactions shows its toast.
 
 #### Parameters
 

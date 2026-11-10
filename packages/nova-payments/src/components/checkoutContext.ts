@@ -103,8 +103,8 @@ export interface CheckoutContextValue {
    */
   lockPrice: () => Promise<void>;
   /**
-   * Remembers the payment the wallet sent: the checkout tracks it while open, and hands it over to the app's Pulsar
-   * store when it closes before Quasar settled it.
+   * Takes the payment the wallet sent: the checkout follows it, and hands it over to the app's Pulsar store at once,
+   * where Nova Transactions shows its toast.
    *
    * @param payment - The transaction and what it pays.
    */

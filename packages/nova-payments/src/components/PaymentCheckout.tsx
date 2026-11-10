@@ -448,20 +448,14 @@ export function PaymentCheckout({
   usePaidCallback(state.phase, checkout?.invoice, onPaid, firstRead?.store === store && firstRead.paid);
   useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
-  const handOverOnClose = usePaymentHandOver({
-    store,
-    open: display !== 'modal' || open,
-    adapterFor,
-    pulsar: settings.pulsar,
-    labels,
-    locale,
-  });
+  // Every payment of the invoice goes to the app's Pulsar store, where Nova Transactions shows its toast
+  const handOver = usePaymentHandOver({ store, adapterFor, pulsar: settings.pulsar, labels, locale });
   const onPaymentSent = useCallback(
     (payment: SentPayment) => {
       setWalletSent({ store, txKey: payment.txKey });
-      handOverOnClose(payment);
+      handOver(payment);
     },
-    [store, handOverOnClose],
+    [store, handOver],
   );
 
   const lockForWallet = useEffectEvent(() => {

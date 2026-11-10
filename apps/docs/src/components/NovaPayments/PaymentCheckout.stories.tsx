@@ -294,8 +294,8 @@ export const NotEnough: Story = {
 };
 
 /**
- * Pay, then close the checkout while the wallet still asks: the transaction it sends later goes to the app's Pulsar
- * store (see the actions panel), where Nova Transactions shows its toast and keeps tracking it.
+ * Pay, then close the checkout while the wallet still asks: the transaction it sends goes to the app's Pulsar store
+ * (see the actions panel), where Nova Transactions shows its toast and keeps tracking it, as every payment does.
  */
 export const HandOverAfterClose: Story = {
   args: { display: 'modal', wallet: METAMASK_ON_BASE_SEPOLIA, gasless: false },
