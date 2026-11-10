@@ -2093,16 +2093,20 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           .object({
             reason: z.enum(['late', 'aml', 'quote_expired']).nullable(),
             txHash: z.string().nullable(),
+            chainId: z.string().nullable().openapi({ description: 'CAIP-2 chain of the transaction.' }),
             senders: z.array(z.string()).optional(),
             late: z.literal(true).optional(),
           })
           .optional()
-          .openapi({ description: '`invoice.held`: why (`reason`), its transaction, the senders, `late`.' }),
+          .openapi({
+            description: '`invoice.held`: why (`reason`), its transaction and network, the senders, `late`.',
+          }),
         heldTransfer: z
           .union([
             z.object({
               id: z.string().nullable(),
               txHash: z.string().nullable(),
+              chainId: z.string().nullable().openapi({ description: 'CAIP-2 chain of the transaction.' }),
               amount: z.string().nullable(),
               senders: z.array(z.string()),
               reason: z
@@ -2122,6 +2126,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
               id: z.string().nullable(),
               voided: z.literal(true),
               txHash: z.string().nullable(),
+              chainId: z.string().nullable().openapi({ description: 'CAIP-2 chain of the transaction.' }),
               paidInvoice: z.string().nullable(),
             }),
           ])

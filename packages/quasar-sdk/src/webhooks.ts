@@ -53,8 +53,8 @@ export type PaymentWebhookEventType =
 
 /**
  * What a hold is about (`data.hold` of `invoice.held`): an invoice paid in a way that waits for your decision. `reason`
- * (`late`, `aml`, `quote_expired`), its transaction (`txHash`), the wallets that sent it (`senders`) and whether it came
- * late (`late`). Release it with {@link PaymentsModule.releaseInvoice} or refund it; a refund to a wallet AML blocks now
+ * (`late`, `aml`, `quote_expired`), its transaction (`txHash`) and network (`chainId`), the wallets that sent it
+ * (`senders`) and whether it came late (`late`). Release it with {@link PaymentsModule.releaseInvoice} or refund it; a refund to a wallet AML blocks now
  * is refused (`sender_blocked`).
  */
 export interface PaymentWebhookHold {
@@ -62,6 +62,8 @@ export interface PaymentWebhookHold {
   reason: 'late' | 'aml' | 'quote_expired' | null;
   /** The transaction of the held payment. */
   txHash: string | null;
+  /** CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out. */
+  chainId?: string | null;
   /** The wallets that sent it. */
   senders?: string[];
   /** It arrived after the invoice expired or was cancelled, or was handed over after `dueAt`. */
@@ -83,6 +85,8 @@ export interface PaymentWebhookHeldTransfer {
   id: string | null;
   /** Its transaction. */
   txHash: string | null;
+  /** CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out. */
+  chainId?: string | null;
   /** What it carried, in base units of its token. */
   amount: string | null;
   /** The wallets that sent it. */
@@ -113,6 +117,8 @@ export interface PaymentWebhookHeldTransferVoided {
   voided: true;
   /** Its transaction. */
   txHash: string | null;
+  /** CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out. */
+  chainId?: string | null;
   /** The invoice the transaction paid instead. */
   paidInvoice: string | null;
 }
