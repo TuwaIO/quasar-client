@@ -32,6 +32,12 @@ const CALLS_LATE_TIMEOUT_MS = 30 * 60_000;
 /** How long to wait before reading a batch again after a read failed. */
 const CALLS_LATE_READ_MS = 15_000;
 
+/**
+ * How much gas a transfer gets above the app RPC's estimate, in percent. Gas the transaction does not use is not paid,
+ * and a recipient with an EIP-7702 delegation runs code on receipt, which a wallet's own estimate may leave out.
+ */
+const GAS_HEADROOM_PERCENT = 25n;
+
 /** A call that moves nothing, to an address nothing runs at: the batch exists only for the switch it makes the wallet offer. */
 const NO_OP_CALL = { to: '0x000000000000000000000000000000000000dEaD' as Address, value: 0n };
 /** How many times the code of a switched account is read, and how far apart: RPC nodes lag behind the receipt. */
@@ -65,6 +71,27 @@ function transferRequest(instructions: Extract<PaymentInstructions, { family: 'e
 }
 
 /**
+ * The gas limit of a transfer: the app RPC's estimate plus {@link GAS_HEADROOM_PERCENT}, rounded up; none when the
+ * estimate fails, and the wallet estimates itself.
+ */
+async function gasLimit(
+  config: Config,
+  account: Address,
+  instructions: Extract<PaymentInstructions, { family: 'eip155' }>,
+): Promise<{ gas?: bigint }> {
+  try {
+    const estimate = await estimateGas(config, {
+      account,
+      chainId: instructions.chainId,
+      ...transferRequest(instructions),
+    });
+    return { gas: (estimate * (100n + GAS_HEADROOM_PERCENT) + 99n) / 100n };
+  } catch {
+    return {};
+  }
+}
+
+/**
  * Whether the wallet behind a WalletConnect session is a Safe. Safe{Wallet} connects with the connector `walletConnect`
  * too, and then only the peer's name tells it apart. `SafePal` is another wallet that sends its own transactions, so the
  * name must be the whole word. A session that cannot be read says nothing about the wallet, which may pay.
@@ -82,12 +109,14 @@ async function isSafeThroughWalletConnect(connector: ReturnType<typeof getConnec
 /**
  * The adapter that pays EVM methods of a Nova Payments checkout from the wallet connected through wagmi (the config
  * Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
- * switch networks, sends the transfer (native coin or ERC-20 `transfer`), signs the EIP-3009 authorization of a gasless
+ * switch networks, sends the transfer (native coin or ERC-20 `transfer`) with the gas limit the app's RPC estimates plus
+ * 25% (a recipient with an EIP-7702 delegation runs code on receipt; the wallet estimates itself when that read fails),
+ * signs the EIP-3009 authorization of a gasless
  * quote with `eth_signTypedData_v4` exactly as Quasar issued it, signs Quasar's message that confirms the paying wallet
  * with `personal_sign`, and sends sponsored calls with `wallet_sendCalls` and the checkout's ERC-7677 paymaster. A Safe wallet is refused: it returns a Safe transaction hash, not the transaction
  * Quasar follows. Pass it in `adapters` of `NovaPaymentsProvider`.
  *
- * Side effects: RPC reads through the wagmi transports; wallet prompts.
+ * Side effects: RPC reads through the wagmi transports (`eth_estimateGas` before each transfer); wallet prompts.
  *
  * @param config - The wagmi config of the app.
  * @returns The EVM adapter.
@@ -177,12 +206,16 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     sendTransfer: async ({ instructions, account }) => {
       const evm = evmInstructions(instructions);
       await refuseSafe();
+      // The gas limit comes from the app's RPC, not the wallet: OneKey's own limit left a payment to a merchant with an
+      // EIP-7702 delegation out of gas (owner test 2026-11-05, finding 5). A failed estimate leaves it to the wallet
+      const gas = await gasLimit(config, account as Address, evm);
       if (evm.token === 'native') {
         return sendTransaction(config, {
           account: account as Address,
           chainId: evm.chainId,
           to: evm.to as Address,
           value: BigInt(evm.amount),
+          ...gas,
         });
       }
       return writeContract(config, {
@@ -192,6 +225,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         abi: erc20Abi,
         functionName: 'transfer',
         args: [evm.to as Address, BigInt(evm.amount)],
+        ...gas,
       });
     },
 

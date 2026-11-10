@@ -6,16 +6,18 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **paymentsEVMAdapter**(`config`): [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)
 
-Defined in: [nova-payments/src/evm/paymentsEVMAdapter.ts:107](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/evm/paymentsEVMAdapter.ts#L107)
+Defined in: [nova-payments/src/evm/paymentsEVMAdapter.ts:136](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/evm/paymentsEVMAdapter.ts#L136)
 
 The adapter that pays EVM methods of a Nova Payments checkout from the wallet connected through wagmi (the config
 Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
-switch networks, sends the transfer (native coin or ERC-20 `transfer`), signs the EIP-3009 authorization of a gasless
+switch networks, sends the transfer (native coin or ERC-20 `transfer`) with the gas limit the app's RPC estimates plus
+25% (a recipient with an EIP-7702 delegation runs code on receipt; the wallet estimates itself when that read fails),
+signs the EIP-3009 authorization of a gasless
 quote with `eth_signTypedData_v4` exactly as Quasar issued it, signs Quasar's message that confirms the paying wallet
 with `personal_sign`, and sends sponsored calls with `wallet_sendCalls` and the checkout's ERC-7677 paymaster. A Safe wallet is refused: it returns a Safe transaction hash, not the transaction
 Quasar follows. Pass it in `adapters` of `NovaPaymentsProvider`.
 
-Side effects: RPC reads through the wagmi transports; wallet prompts.
+Side effects: RPC reads through the wagmi transports (`eth_estimateGas` before each transfer); wallet prompts.
 
 ## Parameters
 
