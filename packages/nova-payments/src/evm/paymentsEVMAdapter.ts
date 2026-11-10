@@ -23,7 +23,7 @@ import {
 import { type Address, encodeFunctionData, erc20Abi, type Hex } from 'viem';
 
 import type { PaymentsAdapter } from '../adapters/types';
-import { PaymentWalletError } from '../utils/walletErrors';
+import { PaymentWalletError, walletErrorKind } from '../utils/walletErrors';
 
 /** How long a sponsored payment may take to be included, in milliseconds. */
 const CALLS_TIMEOUT_MS = 180_000;
@@ -111,12 +111,16 @@ async function isSafeThroughWalletConnect(connector: ReturnType<typeof getConnec
  * Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
  * switch networks, sends the transfer (native coin or ERC-20 `transfer`) with the gas limit the app's RPC estimates plus
  * 25% (a recipient with an EIP-7702 delegation runs code on receipt; the wallet estimates itself when that read fails),
- * signs the EIP-3009 authorization of a gasless
- * quote with `eth_signTypedData_v4` exactly as Quasar issued it, signs Quasar's message that confirms the paying wallet
- * with `personal_sign`, and sends sponsored calls with `wallet_sendCalls` and the checkout's ERC-7677 paymaster. A Safe wallet is refused: it returns a Safe transaction hash, not the transaction
- * Quasar follows. Pass it in `adapters` of `NovaPaymentsProvider`.
+ * signs the EIP-3009 authorization of a gasless quote with `eth_signTypedData_v4` exactly as Quasar issued it, signs
+ * Quasar's message that confirms the paying wallet with `personal_sign`, and sends sponsored calls with
+ * `wallet_sendCalls` and the checkout's ERC-7677 paymaster. Before each of these four requests, a wallet that reports
+ * another network than the request's is asked to switch (wagmi would refuse the request before the wallet saw it); a
+ * switch that fails is a `PaymentWalletError` of the kind `switchFailed`, a refused one stays `declined`. A Safe wallet
+ * is refused: it returns a Safe transaction hash, not the transaction Quasar follows. Pass it in `adapters` of
+ * `NovaPaymentsProvider`.
  *
- * Side effects: RPC reads through the wagmi transports (`eth_estimateGas` before each transfer); wallet prompts.
+ * Side effects: RPC reads through the wagmi transports (`eth_estimateGas` before each transfer); wallet prompts,
+ * including a network switch.
  *
  * @param config - The wagmi config of the app.
  * @returns The EVM adapter.
@@ -138,6 +142,28 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     const connector = getConnection(config).connector;
     if (connector?.id === 'safe' || connector?.type === 'safe' || (await isSafeThroughWalletConnect(connector))) {
       throw new PaymentWalletError('unsupported', 'A Safe wallet cannot pay this checkout');
+    }
+  };
+
+  // wagmi refuses a request bound to a network when the wallet is on another one (`ConnectorChainMismatchError`), before
+  // the wallet sees it, and the page may not know: MetaMask on a phone, through WalletConnect, stayed on another network
+  // and the buyer got an error with nothing in the wallet (owner test 2026-11-05, finding 6). So the wallet is asked to
+  // switch first, and only when the network it reports is another one: a switch to where it is would prompt for nothing
+  const onChain = async (chainId: number) => {
+    let current: number | undefined;
+    try {
+      current = await getConnection(config).connector?.getChainId();
+    } catch {
+      // A wallet that does not tell its network: wagmi's own check decides
+      return;
+    }
+    if (current === undefined || current === chainId) return;
+    try {
+      await switchChain(config, { chainId });
+    } catch (error) {
+      // A refusal stays a refusal, and a request already waiting stays one; anything else is a switch that did not happen
+      if (walletErrorKind(error) !== 'failed') throw error;
+      throw new PaymentWalletError('switchFailed', `The wallet did not switch to ${chainId}`, { cause: error });
     }
   };
 
@@ -206,6 +232,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     sendTransfer: async ({ instructions, account }) => {
       const evm = evmInstructions(instructions);
       await refuseSafe();
+      await onChain(evm.chainId);
       // The gas limit comes from the app's RPC, not the wallet: OneKey's own limit left a payment to a merchant with an
       // EIP-7702 delegation out of gas (owner test 2026-11-05, finding 5). A failed estimate leaves it to the wallet
       const gas = await gasLimit(config, account as Address, evm);
@@ -232,16 +259,21 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     signTransferAuthorization: async ({ typedData, account }) => {
       await refuseSafe();
       // The wallet must be on the chain of the token's domain; the typed data is signed exactly as Quasar issued it
-      const client = await getConnectorClient(config, { chainId: Number(typedData.domain.chainId) });
+      const chainId = Number(typedData.domain.chainId);
+      await onChain(chainId);
+      const client = await getConnectorClient(config, { chainId });
       return client.request({
         method: 'eth_signTypedData_v4',
         params: [account as Address, JSON.stringify(typedData)],
       });
     },
 
-    signMessage: async ({ message, account }) => {
+    signMessage: async ({ message, account, chainId }) => {
       // A Safe cannot pay this checkout, so it does not confirm the invoice either
       await refuseSafe();
+      // A smart wallet signs for the network it is on: the one the confirmation is for
+      const id = toEvmChainId(chainId);
+      if (id !== undefined) await onChain(id);
       return signMessage(config, { account: account as Address, message });
     },
 
@@ -251,6 +283,7 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
 
     sendSponsoredCalls: async ({ calls, paymasterUrl, chainId, account, onSent, onAccepted, onLate }) => {
       await refuseSafe();
+      await onChain(evmChainId(chainId));
       const { id } = await sendCalls(config, {
         account: account as Address,
         chainId: evmChainId(chainId),
