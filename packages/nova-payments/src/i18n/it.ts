@@ -172,6 +172,8 @@ export const itLabels: NovaPaymentsLabels = {
       'Questo pagamento è stato inviato o addebitato a un prezzo precedente di questa fattura, quindi non la paga. {merchant} lo restituisce al tuo wallet e puoi ancora pagare la fattura.',
     mismatchTooManyParts:
       'Questa fattura ha ricevuto tutti i pagamenti parziali che accetta, quindi questo trasferimento non la paga. {merchant} lo restituisce al tuo wallet; invia tutto il resto in una volta.',
+    mismatchNoReferenceHeld:
+      "Questo trasferimento è arrivato senza il riferimento Solana Pay di questa fattura, e il suo importo da solo non lo collega alla fattura, quindi non la paga. {merchant} lo restituisce al wallet che l'ha inviato, e puoi ancora pagare la fattura.",
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
     wrongCluster: "{wallet} è su un'altra rete, quindi non è stato pagato nulla. Passalo a {network} e paga di nuovo.",

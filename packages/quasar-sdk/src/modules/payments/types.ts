@@ -633,10 +633,11 @@ export type HeldTransferStatus = 'held' | 'refunding' | 'refunded' | 'voided';
 
 /**
  * A transfer that reached the address of one of your invoices without being tied to it by proof: from another wallet
- * than the one the quote was for (`payer_mismatch`), or from the quoted wallet that never confirmed the invoice
- * (`payer_unconfirmed`). It paid nothing and the invoice stays as it was; refund it as a whole to the wallet that sent
- * it with {@link PaymentsModule.refundHeldTransfer}. When the same transaction is proven to pay an invoice, Quasar
- * voids the record (`voided`, `voidedBy`).
+ * than the one the quote was for (`payer_mismatch`), from the quoted wallet that never confirmed the invoice
+ * (`payer_unconfirmed`), or a Solana Pay transfer without the invoice's reference whose amount alone does not tie it to
+ * the invoice (`reference_missing`). It paid nothing and the invoice stays as it was; refund it as a whole to the wallet
+ * that sent it with {@link PaymentsModule.refundHeldTransfer}. When the same transaction is proven to pay an invoice,
+ * Quasar voids the record (`voided`, `voidedBy`).
  */
 export interface HeldTransfer {
   /** Held transfer ID. */
@@ -646,7 +647,8 @@ export interface HeldTransfer {
   /** Where it is. */
   status: HeldTransferStatus;
   /** Why it is tied to no invoice. */
-  reason: 'payer_mismatch' | 'payer_unconfirmed' | 'already_paid' | 'quote_changed' | 'too_many_parts';
+  reason:
+    'payer_mismatch' | 'payer_unconfirmed' | 'reference_missing' | 'already_paid' | 'quote_changed' | 'too_many_parts';
   /** Whether it arrived after the invoice expired or was cancelled. */
   late: boolean;
   /** CAIP-2 chain. */

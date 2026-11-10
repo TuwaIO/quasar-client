@@ -196,6 +196,27 @@ describe('methodErrorText', () => {
     expect(plain).not.toMatch(/returns it/);
   });
 
+  // Owner test 2026-11-05, finding 1: Phantom dropped the Solana Pay reference. Held on this invoice, the transfer read
+  // as "tied to another invoice", which sent the buyer looking for an invoice that does not exist
+  it('says that a Solana Pay transfer held for its missing reference is returned, never tied to another invoice', () => {
+    const held = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'reference_missing', held: true } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(held).toBe(
+      'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. Cosmos returns it to the wallet that sent it, and you can still pay the invoice.',
+    );
+    expect(held).not.toMatch(/another invoice/);
+    // Without a held transfer nothing promises a refund
+    const plain = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'reference_missing' } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(plain).toBe('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
+  });
+
   // A transfer held on another invoice for a refund only pays no invoice
   it('says that a transfer held on another invoice is tied to it, never that it pays it', () => {
     const text = methodErrorText(

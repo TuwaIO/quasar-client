@@ -153,7 +153,9 @@ export interface CheckoutRejectedPayment {
    * recipient), `tx_already_used` (the transaction pays another invoice of the merchant: the one the wallet that sent
    * it confirmed, or whose mark it carries, also when this invoice's page handed it over first or claimed it; with
    * `held`, another invoice holds it for a refund only and it pays none),
-   * `reference_missing`, `too_early`, `not_found` (the network never returned the transaction), `timeout` (no receipt
+   * `reference_missing` (a Solana Pay transfer without the invoice's reference whose amount alone does not tie it to
+   * the invoice: some wallets drop the reference; with `held` this invoice holds it for a refund), `too_early`,
+   * `not_found` (the network never returned the transaction), `timeout` (no receipt
    * in time), `replaced`, `payer_mismatch` (a transfer from another wallet to an invoice paid or held already; one to a
    * payable invoice is held for a refund only: {@link CheckoutReview}), `payer_unconfirmed` (the same from a wallet that
    * never confirmed the invoice: it pays no invoice; final; a refund only when held, a transfer credited to another
@@ -201,8 +203,9 @@ export interface CheckoutRejectedPayment {
   /**
    * `true` when Quasar records the transfer as a held transfer, which the merchant returns to the wallet that sent it:
    * a `payer_mismatch` or `payer_unconfirmed` rejection (the invoice stays payable from the wallet that confirmed it),
-   * or a `tx_already_used` one whose transfer is held at another invoice of the merchant (`otherInvoice`; say that it is
-   * tied to another invoice, never that it pays one). Quasar versions before October 29, 2026 leave it out.
+   * a `reference_missing` one (held on this invoice, which stays payable), or a `tx_already_used` one whose transfer
+   * is held at another invoice of the merchant (`otherInvoice`; say that it is tied to another invoice, never that it
+   * pays one). Quasar versions before October 29, 2026 leave it out.
    */
   held?: true;
   /** The invoice of the merchant the transaction is credited to or held on, when Quasar names it. */

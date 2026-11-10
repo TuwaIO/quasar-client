@@ -122,7 +122,8 @@ export interface CheckoutError {
    *
    * `payment_mismatch` with `payer_mismatch` or `payer_unconfirmed`: the transfer came from another wallet than the
    * quoted one, or from one that never confirmed the invoice; it pays no invoice and the merchant returns it to the
-   * wallet that sent it.
+   * wallet that sent it. With `reference_missing` and `held`: a Solana Pay transfer without the invoice's reference
+   * whose amount alone does not tie it to the invoice, held on this invoice for a refund to its sender.
    */
   reason?: string;
   /**
@@ -685,6 +686,12 @@ interface KeptHandOver {
  * it was; a rejection without `held` promises no refund.
  */
 const REFUND_ONLY_REASONS: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
+/**
+ * A Solana Pay transfer without the invoice's reference whose amount does not tie it to the invoice either: some wallets
+ * drop the reference. With `held` Quasar holds it on this invoice for a refund to its sender, so the text must not send
+ * the buyer to another invoice.
+ */
+const REFERENCE_MISSING = 'reference_missing';
 /** A payment sent or charged under an earlier price of the invoice: held for a refund, the invoice still open. */
 const CHARGE_AFTER_REQUOTE = 'quote_changed';
 
@@ -919,6 +926,16 @@ function endedError(ended: Ending): CheckoutError {
         : 'This transaction came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact the merchant.',
       ...reason,
       ...(ended.held ? { held: true as const } : {}),
+    };
+  }
+  if (ended.reason === REFERENCE_MISSING && ended.held) {
+    // Held here, not on another invoice: the wallet dropped the reference and the amount is not the quote's
+    return {
+      code: 'payment_mismatch',
+      message:
+        'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. The merchant returns it to the wallet that sent it, and the invoice can still be paid.',
+      ...reason,
+      held: true,
     };
   }
   const other = ended.otherInvoice ? { otherInvoice: ended.otherInvoice } : {};

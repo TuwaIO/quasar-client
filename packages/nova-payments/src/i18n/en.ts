@@ -168,6 +168,8 @@ export const defaultLabels: NovaPaymentsLabels = {
       'This payment was sent or charged under an earlier price of this invoice, so it does not pay it. {merchant} returns it to your wallet, and you can still pay the invoice.',
     mismatchTooManyParts:
       'This invoice has taken as many parts as it can, so this transfer does not pay it. {merchant} returns it to your wallet; send the whole rest at once.',
+    mismatchNoReferenceHeld:
+      'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. {merchant} returns it to the wallet that sent it, and you can still pay the invoice.',
     payAgain: 'Pay again',
     unsupported: "{wallet} can't make this payment.",
     wrongCluster: '{wallet} is on another network, so nothing was paid. Switch it to {network} and pay again.',

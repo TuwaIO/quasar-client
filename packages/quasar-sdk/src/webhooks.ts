@@ -72,8 +72,9 @@ export interface PaymentWebhookHold {
  * A transfer that reached the invoice's address without being tied to it by proof (`data.heldTransfer` of
  * `invoice.transfer_held`): it paid nothing and the invoice stays as it was. It is a record of its own, which you
  * refund as a whole to the wallet that sent it ({@link PaymentsModule.refundHeldTransfer}): `reason` is
- * `payer_mismatch` (another wallet than the one the quote was for) or `payer_unconfirmed` (the quoted wallet never
- * confirmed the invoice).
+ * `payer_mismatch` (another wallet than the one the quote was for), `payer_unconfirmed` (the quoted wallet never
+ * confirmed the invoice), `reference_missing` (a Solana Pay transfer without the invoice's reference whose amount does
+ * not tie it to the invoice either), `already_paid`, `quote_changed` or `too_many_parts`.
  */
 export interface PaymentWebhookHeldTransfer {
   /** Not set: the transfer is held. */
@@ -87,7 +88,14 @@ export interface PaymentWebhookHeldTransfer {
   /** The wallets that sent it. */
   senders: string[];
   /** Why it is tied to no invoice. */
-  reason: 'payer_mismatch' | 'payer_unconfirmed' | 'already_paid' | 'quote_changed' | 'too_many_parts' | null;
+  reason:
+    | 'payer_mismatch'
+    | 'payer_unconfirmed'
+    | 'reference_missing'
+    | 'already_paid'
+    | 'quote_changed'
+    | 'too_many_parts'
+    | null;
   /** It arrived after the invoice expired or was cancelled. */
   late?: true;
   /** Set when AML blocked its sender: Quasar refunds it to no one. */

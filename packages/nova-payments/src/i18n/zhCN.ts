@@ -163,6 +163,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
       '此付款是按此发票先前的价格发送或扣取的，因此不计入此发票。{merchant} 会将其退回您的钱包，您仍可支付此发票。',
     mismatchTooManyParts:
       '此发票接受的部分付款已达上限，因此这笔转账不计入此发票。{merchant} 会将其退回您的钱包；请一次发送全部余额。',
+    mismatchNoReferenceHeld:
+      '此转账没有携带此发票的 Solana Pay 付款参考信息，仅凭金额也无法将其与此发票对应，因此不计入此发票。{merchant} 会将其退回到发送它的钱包，您仍可支付此发票。',
     payAgain: '再次付款',
     unsupported: '{wallet} 无法完成此笔付款。',
     wrongCluster: '{wallet} 处于其他网络，因此未完成任何付款。请将其切换到 {network} 后重新付款。',

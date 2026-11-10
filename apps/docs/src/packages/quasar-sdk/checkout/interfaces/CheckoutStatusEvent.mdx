@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # CheckoutStatusEvent
 
-Defined in: [checkout/types.ts:641](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L641)
+Defined in: [checkout/types.ts:644](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L644)
 
 One `status` event of the checkout's event stream.
 
@@ -14,7 +14,7 @@ One `status` event of the checkout's event stream.
 
 > **amountPaid**: `string` \| `null`
 
-Defined in: [checkout/types.ts:649](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L649)
+Defined in: [checkout/types.ts:652](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L652)
 
 Amount received, in base units.
 
@@ -24,7 +24,7 @@ Amount received, in base units.
 
 > **ledgerSeq**: `number`
 
-Defined in: [checkout/types.ts:645](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L645)
+Defined in: [checkout/types.ts:648](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L648)
 
 Number of ledger steps so far.
 
@@ -34,7 +34,7 @@ Number of ledger steps so far.
 
 > `optional` **onTimeTxKeys?**: `string`[]
 
-Defined in: [checkout/types.ts:666](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L666)
+Defined in: [checkout/types.ts:669](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L669)
 
 The keys of the payments that count as sent in time, as [CheckoutInvoice.onTimeTxKeys](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs#ontimetxkeys).
 
@@ -44,7 +44,7 @@ The keys of the payments that count as sent in time, as [CheckoutInvoice.onTimeT
 
 > `optional` **paymentCountsUntil?**: `string` \| `null`
 
-Defined in: [checkout/types.ts:662](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L662)
+Defined in: [checkout/types.ts:665](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L665)
 
 Until when a payment sent before the due date counts, as [CheckoutInvoice.paymentCountsUntil](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs#paymentcountsuntil).
 
@@ -54,7 +54,7 @@ Until when a payment sent before the due date counts, as [CheckoutInvoice.paymen
 
 > `optional` **pendingPayments?**: `number`
 
-Defined in: [checkout/types.ts:656](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L656)
+Defined in: [checkout/types.ts:659](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L659)
 
 Payments handed over and still on their way, as [CheckoutInvoice.pendingPayments](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs#pendingpayments). Quasar keeps the stream of an
 `expired` or `cancelled` invoice open while it is above `0`.
@@ -65,7 +65,7 @@ Payments handed over and still on their way, as [CheckoutInvoice.pendingPayments
 
 > **quoteExpiresAt**: `string` \| `null`
 
-Defined in: [checkout/types.ts:651](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L651)
+Defined in: [checkout/types.ts:654](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L654)
 
 When the locked quote expires.
 
@@ -75,7 +75,7 @@ When the locked quote expires.
 
 > `optional` **rejectedPayments?**: [`CheckoutRejectedPayment`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutrejectedpayment--docs)[]
 
-Defined in: [checkout/types.ts:660](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L660)
+Defined in: [checkout/types.ts:663](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L663)
 
 The payments that failed and why, latest first, as [CheckoutInvoice.rejectedPayments](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs#rejectedpayments).
 
@@ -85,7 +85,7 @@ The payments that failed and why, latest first, as [CheckoutInvoice.rejectedPaym
 
 > `optional` **rejectedTxKeys?**: `string`[]
 
-Defined in: [checkout/types.ts:658](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L658)
+Defined in: [checkout/types.ts:661](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L661)
 
 The keys of the payments that failed, latest first, as [CheckoutInvoice.rejectedTxKeys](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs#rejectedtxkeys).
 
@@ -95,7 +95,7 @@ The keys of the payments that failed, latest first, as [CheckoutInvoice.rejected
 
 > **status**: [`InvoiceStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-invoicestatus--docs)
 
-Defined in: [checkout/types.ts:643](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L643)
+Defined in: [checkout/types.ts:646](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L646)
 
 State of the invoice.
 
@@ -105,7 +105,7 @@ State of the invoice.
 
 > **txHash**: `string` \| `null`
 
-Defined in: [checkout/types.ts:647](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L647)
+Defined in: [checkout/types.ts:650](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L650)
 
 The payment transaction, once there is one.
 
@@ -115,6 +115,6 @@ The payment transaction, once there is one.
 
 > `optional` **unresolvedPayments?**: `number`
 
-Defined in: [checkout/types.ts:664](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L664)
+Defined in: [checkout/types.ts:667](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L667)
 
 Payments that may still arrive, with no time limit, as [CheckoutInvoice.unresolvedPayments](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs#unresolvedpayments).

@@ -170,6 +170,8 @@ export const esLabels: NovaPaymentsLabels = {
       'Este pago se envió o se cargó con un precio anterior de esta factura, así que no la paga. {merchant} lo devuelve a tu billetera y aún puedes pagar la factura.',
     mismatchTooManyParts:
       'Esta factura ya recibió todos los pagos parciales que admite, así que esta transferencia no la paga. {merchant} la devuelve a tu billetera; envía todo el resto de una vez.',
+    mismatchNoReferenceHeld:
+      'Esta transferencia llegó sin la referencia de Solana Pay de esta factura, y su importe por sí solo no la vincula a la factura, así que no la paga. {merchant} la devuelve a la billetera que la envió, y aún puedes pagar la factura.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',

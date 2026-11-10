@@ -327,6 +327,14 @@ export type NovaPaymentsLabels = {
     mismatchChargeHeld: string;
     /** A part past what the invoice takes: `{merchant}`. */
     mismatchTooManyParts: string;
+    /**
+     * Instead of `mismatch` for a Solana Pay transfer without the invoice's reference whose amount alone does not tie it
+     * to the invoice, which Quasar holds on this invoice for a refund (`reference_missing` with `held`): never say that
+     * another invoice holds it: `{merchant}` (default: `This transfer arrived without the Solana Pay reference of this
+     * invoice, and its amount alone does not tie it to the invoice, so it does not pay it. {merchant} returns it to the
+     * wallet that sent it, and you can still pay the invoice.`)
+     */
+    mismatchNoReferenceHeld: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */

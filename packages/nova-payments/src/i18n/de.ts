@@ -176,6 +176,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Diese Zahlung wurde zu einem früheren Preis dieser Rechnung gesendet oder abgebucht und bezahlt sie daher nicht. {merchant} erstattet sie an Ihr Wallet, und Sie können die Rechnung weiterhin bezahlen.',
     mismatchTooManyParts:
       'Diese Rechnung hat so viele Teilzahlungen erhalten, wie sie annimmt, daher bezahlt diese Überweisung sie nicht. {merchant} erstattet sie an Ihr Wallet; senden Sie den gesamten Rest auf einmal.',
+    mismatchNoReferenceHeld:
+      'Diese Überweisung kam ohne die Solana-Pay-Referenz dieser Rechnung an, und ihr Betrag allein ordnet sie der Rechnung nicht zu, daher bezahlt sie die Rechnung nicht. {merchant} erstattet sie an das sendende Wallet, und Sie können die Rechnung weiterhin bezahlen.',
     payAgain: 'Erneut zahlen',
     unsupported: '{wallet} kann diese Zahlung nicht ausführen.',
     wrongCluster:

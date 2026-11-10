@@ -69,8 +69,9 @@ const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'pay
  * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
  * `pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
  * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, `pay.mismatchOtherWalletHeld`
- * when Quasar recorded it as a held transfer the seller returns, `held`; `pay.mismatchChargeHeld` for an automatic charge
- * that landed after the buyer chose another way to pay), a payment Quasar closed after 24 hours without a result on chain
+ * when Quasar recorded it as a held transfer the seller returns, `held`; `pay.mismatchNoReferenceHeld` for a Solana Pay
+ * transfer without the invoice's reference held on this invoice, `held`; `pay.mismatchChargeHeld` for an automatic
+ * charge that landed after the buyer chose another way to pay), a payment Quasar closed after 24 hours without a result on chain
  * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
  * and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
  * Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the
@@ -92,6 +93,8 @@ export function leftTheWalletText(
     const held = (error as { held?: boolean }).held === true;
     if (reason === 'quote_changed') return formatLabel(labels.pay.mismatchChargeHeld, { merchant });
     if (reason === 'too_many_parts') return formatLabel(labels.pay.mismatchTooManyParts, { merchant });
+    // Held on this invoice, not another one: the wallet dropped the Solana Pay reference (owner test 11-05, finding 1)
+    if (reason === 'reference_missing' && held) return formatLabel(labels.pay.mismatchNoReferenceHeld, { merchant });
     const text = FROM_ANOTHER_WALLET.has(reason)
       ? held
         ? labels.pay.mismatchOtherWalletHeld

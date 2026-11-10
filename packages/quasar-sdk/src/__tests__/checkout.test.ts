@@ -3043,6 +3043,26 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
     reopened.getState().destroy();
   });
 
+  // Owner test 2026-11-05, finding 1: Phantom dropped the Solana Pay reference. A transfer held for it on this invoice
+  // read "tied to another invoice", which sent the buyer looking for an invoice that does not exist
+  it('says a Solana Pay transfer held for its missing reference is returned, and never ties it to another invoice', async () => {
+    const held = rejection('5sig', 'reference_missing', true, { movedMoney: true, held: true });
+    answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [held] } });
+    const reopened = store({ EventSource: null });
+    await reopened.getState().load();
+    expect(reopened.getState()).toMatchObject({
+      phase: 'selectMethod',
+      error: { code: 'payment_mismatch', reason: 'reference_missing', held: true },
+    });
+    const message = reopened.getState().error?.message ?? '';
+    expect(message).toMatch(/Solana Pay reference/);
+    expect(message).toMatch(/returns it to the wallet that sent it/);
+    expect(message).toMatch(/can still be paid/);
+    expect(message).not.toMatch(/another invoice/);
+    expect(reopened.getState().error).not.toHaveProperty('otherInvoice');
+    reopened.getState().destroy();
+  });
+
   // A rejection without a held transfer promises no refund
   it('names a transfer from a wallet that never confirmed the invoice without promising a refund it was not held for', async () => {
     const unconfirmed = rejection('0xfeed', 'payer_unconfirmed', true);
