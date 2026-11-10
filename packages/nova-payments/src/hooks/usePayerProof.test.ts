@@ -103,6 +103,16 @@ describe('usePayerProof', () => {
     expect(renderHook()).toMatchObject({ step: 'idle', problem: 'switchDeclined' });
   });
 
+  // Review 11-10: the page knew the right network, the wallet was on another; the adapter asked for the switch inside
+  // the signature, and a refusal of it read "You declined the signature"
+  it('says that the buyer refused the switch the adapter asked for before the signature', async () => {
+    const { signature, renderHook } = setup();
+    const confirming = renderHook().confirm();
+    signature.reject(new PaymentWalletError('declined', 'The wallet declined the switch', { step: 'switch' }));
+    await expect(confirming).resolves.toBe(false);
+    expect(renderHook()).toMatchObject({ step: 'idle', problem: 'switchDeclined' });
+  });
+
   it('says that the wallet did not switch, however it failed', async () => {
     const { adapter, renderHook } = setup({ walletChainId: 'eip155:1' });
     vi.mocked(adapter.switchChain!).mockRejectedValueOnce(new Error('boom'));

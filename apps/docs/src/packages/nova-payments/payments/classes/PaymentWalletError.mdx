@@ -18,7 +18,7 @@ The error a payments adapter throws when it knows why the wallet did not pay.
 
 > **new PaymentWalletError**(`kind`, `message`, `options?`): `PaymentWalletError`
 
-Defined in: [nova-payments/src/utils/walletErrors.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L30)
+Defined in: [nova-payments/src/utils/walletErrors.ts:36](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L36)
 
 #### Parameters
 
@@ -36,11 +36,15 @@ What to log.
 
 ##### options?
 
-The original error as `cause`.
+The original error as `cause`, and `step: 'switch'` for a network switch the adapter asked for.
 
 ###### cause?
 
 `unknown`
+
+###### step?
+
+`"switch"`
 
 #### Returns
 
@@ -56,6 +60,17 @@ The original error as `cause`.
 
 > `readonly` **kind**: [`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs)
 
-Defined in: [nova-payments/src/utils/walletErrors.ts:31](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L31)
+Defined in: [nova-payments/src/utils/walletErrors.ts:37](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L37)
 
 Why: see [PaymentWalletErrorKind](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs).
+
+***
+
+### step?
+
+> `readonly` `optional` **step?**: `"switch"`
+
+Defined in: [nova-payments/src/utils/walletErrors.ts:29](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/walletErrors.ts#L29)
+
+`switch` when the refusal or failure is of the network switch the adapter asked for before the request: the
+request itself was never shown (a `declined` one is not a refused signature).

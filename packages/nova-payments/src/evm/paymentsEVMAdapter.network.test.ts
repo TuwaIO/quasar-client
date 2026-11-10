@@ -133,6 +133,18 @@ describe('paymentsEVMAdapter: the wallet on another network than the request', (
     expect(requests).toEqual([]);
   });
 
+  it('names a switch the buyer declined before the confirmation, which was never asked for', async () => {
+    const config = await walletOnSepolia({ switchChainError: true });
+    const error = await paymentsEVMAdapter(config).signMessage!({
+      message: 'confirm',
+      account: ACCOUNT,
+      chainId: 'eip155:84532',
+    }).catch((caught: unknown) => caught);
+    expect(walletErrorKind(error)).toBe('declined');
+    expect(error).toMatchObject({ step: 'switch' });
+    expect(requests).toEqual([]);
+  });
+
   it('leaves a switch the buyer declined as declined', async () => {
     const config = await walletOnSepolia({ switchChainError: true });
     const error = await paymentsEVMAdapter(config).signTransferAuthorization!({ typedData, account: ACCOUNT }).catch(

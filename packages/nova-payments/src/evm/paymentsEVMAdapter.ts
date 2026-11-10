@@ -109,13 +109,15 @@ async function isSafeThroughWalletConnect(connector: ReturnType<typeof getConnec
 /**
  * The adapter that pays EVM methods of a Nova Payments checkout from the wallet connected through wagmi (the config
  * Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
- * switch networks, sends the transfer (native coin or ERC-20 `transfer`) with the gas limit the app's RPC estimates plus
- * 25% (a recipient with an EIP-7702 delegation runs code on receipt; the wallet estimates itself when that read fails),
+ * switch networks, sends the transfer (native coin or ERC-20 `transfer`; the native coin with the gas limit the app's
+ * RPC estimates plus 25%, as a recipient with an EIP-7702 delegation runs code on receipt; the wallet estimates the
+ * gas of a token transfer, and of any transfer when that read fails),
  * signs the EIP-3009 authorization of a gasless quote with `eth_signTypedData_v4` exactly as Quasar issued it, signs
  * Quasar's message that confirms the paying wallet with `personal_sign`, and sends sponsored calls with
  * `wallet_sendCalls` and the checkout's ERC-7677 paymaster. Before each of these four requests, a wallet that reports
  * another network than the request's is asked to switch (wagmi would refuse the request before the wallet saw it); a
- * switch that fails is a `PaymentWalletError` of the kind `switchFailed`, a refused one stays `declined`. A Safe wallet
+ * switch that fails is a `PaymentWalletError` of the kind `switchFailed`, a refused one stays `declined`, both with
+ * `step: 'switch'`. A Safe wallet
  * is refused: it returns a Safe transaction hash, not the transaction Quasar follows. Pass it in `adapters` of
  * `NovaPaymentsProvider`.
  *
@@ -161,9 +163,20 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
     try {
       await switchChain(config, { chainId });
     } catch (error) {
-      // A refusal stays a refusal, and a request already waiting stays one; anything else is a switch that did not happen
-      if (walletErrorKind(error) !== 'failed') throw error;
-      throw new PaymentWalletError('switchFailed', `The wallet did not switch to ${chainId}`, { cause: error });
+      // A refusal stays a refusal, of the switch and not of the request that never showed; a request already waiting
+      // stays one; anything else is a switch that did not happen
+      const kind = walletErrorKind(error);
+      if (kind === 'declined') {
+        throw new PaymentWalletError('declined', `The wallet declined the switch to ${chainId}`, {
+          cause: error,
+          step: 'switch',
+        });
+      }
+      if (kind !== 'failed') throw error;
+      throw new PaymentWalletError('switchFailed', `The wallet did not switch to ${chainId}`, {
+        cause: error,
+        step: 'switch',
+      });
     }
   };
 
@@ -233,10 +246,12 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       const evm = evmInstructions(instructions);
       await refuseSafe();
       await onChain(evm.chainId);
-      // The gas limit comes from the app's RPC, not the wallet: OneKey's own limit left a payment to a merchant with an
-      // EIP-7702 delegation out of gas (owner test 2026-11-05, finding 5). A failed estimate leaves it to the wallet
-      const gas = await gasLimit(config, account as Address, evm);
       if (evm.token === 'native') {
+        // The gas limit comes from the app's RPC, not the wallet: OneKey's own limit left a payment to a merchant with an
+        // EIP-7702 delegation out of gas (owner test 2026-11-05, finding 5). A failed estimate leaves it to the wallet.
+        // A token transfer runs no code of the recipient, and its gas stays the wallet's (review 11-10: MetaMask's own
+        // margin covers a balance slot written from zero, which 25% over an earlier estimate may not)
+        const gas = await gasLimit(config, account as Address, evm);
         return sendTransaction(config, {
           account: account as Address,
           chainId: evm.chainId,
@@ -252,7 +267,6 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
         abi: erc20Abi,
         functionName: 'transfer',
         args: [evm.to as Address, BigInt(evm.amount)],
-        ...gas,
       });
     },
 

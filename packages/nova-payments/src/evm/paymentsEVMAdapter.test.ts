@@ -102,7 +102,7 @@ describe('paymentsEVMAdapter', () => {
 
   it('sends a token transfer or the native coin from the account, on the chain of the quote', async () => {
     const adapter = paymentsEVMAdapter(config);
-    wagmi.estimateGas.mockResolvedValueOnce(40_000n).mockResolvedValueOnce(21_000n);
+    wagmi.estimateGas.mockResolvedValue(21_000n);
     wagmi.writeContract.mockResolvedValue('0xtoken');
     wagmi.sendTransaction.mockResolvedValue('0xnative');
     await expect(adapter.sendTransfer({ instructions: usdc, account: ACCOUNT })).resolves.toBe('0xtoken');
@@ -113,7 +113,6 @@ describe('paymentsEVMAdapter', () => {
       abi: erc20Abi,
       functionName: 'transfer',
       args: [MERCHANT, 89_540_000n],
-      gas: 50_000n,
     });
     await expect(adapter.sendTransfer({ instructions: eth, account: ACCOUNT })).resolves.toBe('0xnative');
     expect(wagmi.sendTransaction).toHaveBeenCalledWith(config, {
@@ -145,16 +144,23 @@ describe('paymentsEVMAdapter', () => {
     expect(gas).toBeGreaterThan(24_393n);
   });
 
+  // Review 11-10: a token transfer runs no code of the recipient, and the wallet's own margin (MetaMask's 1.5) covers a
+  // balance slot written from zero, which a 25% margin on an estimate made while it held tokens does not
+  it("leaves the gas of a token transfer to the wallet's own estimate", async () => {
+    const adapter = paymentsEVMAdapter(config);
+    wagmi.writeContract.mockResolvedValue('0xtoken');
+    await adapter.sendTransfer({ instructions: usdc, account: ACCOUNT });
+    expect(wagmi.estimateGas).not.toHaveBeenCalled();
+    expect(wagmi.writeContract.mock.calls[0][1]).not.toHaveProperty('gas');
+  });
+
   // An estimate that fails decides nothing: the wallet estimates itself, as before, and shows its own error if any
   it('leaves the gas to the wallet when the estimate fails', async () => {
     const adapter = paymentsEVMAdapter(config);
     wagmi.estimateGas.mockRejectedValue(new Error('rpc down'));
     wagmi.sendTransaction.mockResolvedValue('0xnative');
-    wagmi.writeContract.mockResolvedValue('0xtoken');
     await expect(adapter.sendTransfer({ instructions: eth, account: ACCOUNT })).resolves.toBe('0xnative');
     expect(wagmi.sendTransaction.mock.calls[0][1]).not.toHaveProperty('gas');
-    await expect(adapter.sendTransfer({ instructions: usdc, account: ACCOUNT })).resolves.toBe('0xtoken');
-    expect(wagmi.writeContract.mock.calls[0][1]).not.toHaveProperty('gas');
   });
 
   it('refuses to pay from a Safe, whose key is not the transaction Quasar follows', async () => {
