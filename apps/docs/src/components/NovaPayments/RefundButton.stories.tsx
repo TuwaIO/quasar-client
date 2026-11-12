@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { primaryButtonClasses } from '@tuwaio/nova-core/utils';
 import { NovaPaymentsProvider, RefundButton, RefundDialog, type RefundRequest } from '@tuwaio/nova-payments';
 import { createRefundStore, type RefundState } from '@tuwaio/quasar-sdk/checkout';
 import { useMemo, useState } from 'react';
@@ -181,11 +182,7 @@ function SimulatedRefund({
       ) : (
         <>
           {/* The opener stays in the page: the dialog gives the focus back to it when it closes */}
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="rounded bg-[var(--tuwa-button-primary-bg)] px-4 py-2 text-white"
-          >
+          <button type="button" onClick={() => setOpen(true)} className={primaryButtonClasses}>
             Open the refund
           </button>
           <RefundDialog {...props} open={open} onOpenChange={setOpen} />

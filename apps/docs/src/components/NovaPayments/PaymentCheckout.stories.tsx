@@ -1,5 +1,6 @@
-import { CheckCircleIcon, FaceFrownIcon } from '@heroicons/react/24/outline';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { primaryButtonClasses } from '@tuwaio/nova-core/utils';
+import { CheckCircleIcon, FaceFrownIcon } from '@tuwaio/nova-icons/24/outline';
 import {
   type CheckoutPrimaryButtonProps,
   type CheckoutScreenProps,
@@ -83,11 +84,7 @@ function SimulatedCheckout({
     <StoryConnection connection={connection} wallet={wallet} walletOptions={walletOptions}>
       {/* The opener stays in the page: the dialog gives the focus back to it when it closes */}
       {display === 'modal' && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="rounded bg-[var(--tuwa-button-primary-bg)] px-4 py-2 text-white"
-        >
+        <button type="button" onClick={() => setOpen(true)} className={primaryButtonClasses}>
           Open the checkout
         </button>
       )}
@@ -919,17 +916,21 @@ export const PayRest: Story = {
  * change colors the parts already set with the `--tuwa-*` variables, or replace the part.
  */
 const brandClassNames: PaymentCheckoutCustomization['classNames'] = {
+  // In the paper and ink of the checkout: lines and the colors of the theme, no shadow
   container: ({ screen }) =>
-    screen === 'paid' ? 'ring-2 ring-emerald-500/50 shadow-xl' : 'ring-2 ring-blue-600/40 shadow-xl',
-  step: ({ step }) => (step.state === 'current' ? 'rounded bg-blue-600/10 pr-1.5' : undefined),
-  tokenOption: ({ selected }) => (selected ? 'shadow-md' : undefined),
-  networkOption: ({ method }) => (method.featured ? 'ring-1 ring-sky-500/60' : undefined),
-  primaryButton: () => 'uppercase tracking-widest',
-  total: () => 'rounded border border-dashed border-sky-500/60 px-2 py-1',
-  statusIcon: () => 'drop-shadow',
+    screen === 'paid' ? 'ring-2 ring-[var(--tuwa-success-icon)]' : 'ring-2 ring-[var(--tuwa-text-primary)]',
+  step: ({ step }) => (step.state === 'current' ? 'bg-[var(--tuwa-bg-muted)] pr-1.5' : undefined),
+  tokenOption: ({ selected }) => (selected ? 'border-dashed' : undefined),
+  networkOption: ({ method }) => (method.featured ? 'border-dashed' : undefined),
+  primaryButton: () => 'tracking-[0.3em]',
+  total: () => 'border border-dashed border-[var(--tuwa-border-strong)] px-2 py-1',
+  statusIcon: () => 'opacity-70',
 };
 
-/** Classes from the state of the checkout: a ring on the block, the current step marked, the chosen token raised. */
+/**
+ * Classes from the state of the checkout: a frame round the block (green once paid), the current step marked, the chosen
+ * token and the popular network in a dashed frame, the total in a frame of its own.
+ */
 export const CustomClassNames: Story = { args: { customization: { classNames: brandClassNames } } };
 
 /** The main button of the app: same props as the default one (`busy`, `disabled`, `onClick`, `type`…). */
@@ -940,7 +941,7 @@ function BrandButton({ busy, children, className, ...props }: CheckoutPrimaryBut
       {...props}
       disabled={props.disabled || busy}
       aria-busy={busy || undefined}
-      className={`inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-[var(--tuwa-rounded-corners)] border-0 bg-emerald-700 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-70 ${className ?? ''}`}
+      className={`inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-[var(--tuwa-rounded-corners)] border border-[var(--tuwa-text-primary)] bg-[var(--tuwa-text-primary)] px-3 py-2 font-mono text-xs font-bold tracking-[0.12em] text-[var(--tuwa-bg-primary)] uppercase hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 ${className ?? ''}`}
     >
       {children}
     </button>
@@ -962,7 +963,7 @@ function BrandTokenOption({ group, selected }: CheckoutTokenOptionProps) {
 
 /** One icon for every outcome other than paid. */
 function BrandStatusIcon({ className }: CheckoutStatusIconProps) {
-  return <FaceFrownIcon aria-hidden className={`h-12 w-12 text-blue-600 ${className ?? ''}`} />;
+  return <FaceFrownIcon aria-hidden className={`h-12 w-12 text-[var(--tuwa-text-secondary)] ${className ?? ''}`} />;
 }
 
 /** The app's own paid screen, reading the checkout with `useCheckoutContext`. */
@@ -973,8 +974,8 @@ function BrandPaidScreen({ screen }: CheckoutScreenProps) {
       data-screen={screen}
       className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center text-[var(--tuwa-text-primary)]"
     >
-      <CheckCircleIcon aria-hidden className="h-12 w-12 text-emerald-600" />
-      <h2 className="m-0 text-lg font-semibold">Thank you for your order</h2>
+      <CheckCircleIcon aria-hidden className="h-12 w-12 text-[var(--tuwa-success-icon)]" />
+      <h2 className="m-0 font-mono text-lg font-bold">Thank you for your order</h2>
       <p className="m-0 text-sm text-[var(--tuwa-text-secondary)]">
         {checkout?.merchant.name} received the payment of invoice {checkout?.invoice.number}.
       </p>
@@ -1053,7 +1054,7 @@ export const WithChildCustomizations: Story = {
     view: settled({ status: 'paid', amountPaid: '89540000' }),
     customization: {
       childCustomizations: {
-        statusVisual: { iconClassNames: { icon: 'text-blue-600' } },
+        statusVisual: { iconClassNames: { icon: 'text-[var(--tuwa-text-primary)]' } },
         progressIndicator: { stepClassNames: { label: 'uppercase tracking-wider' } },
         hashLink: { classNames: { hash: 'font-semibold' } },
       },

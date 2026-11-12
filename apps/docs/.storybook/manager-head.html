@@ -67,21 +67,22 @@
    * their desktop size: the manager loads no docs-ui stylesheet, and its theme is html[data-tuwa-theme], not .dark
    */
   html[data-tuwa-theme='light'] {
-    --tuwa-border-primary: #e5e7eb;
-    --tuwa-bg-primary: #ffffff;
-    --tuwa-text-accent: #0052ff;
-    --tuwa-rounded-corners: 6px;
+    --tuwa-border-primary: #d6d5d1;
+    --tuwa-bg-primary: #faf9f7;
+    --tuwa-text-accent: #b93b0a;
+    --tuwa-rounded-corners: 0px;
   }
   html[data-tuwa-theme='dark'] {
-    --tuwa-border-primary: #1e293b;
-    --tuwa-bg-primary: #0a0e27;
-    --tuwa-text-accent: #38bdf8;
-    --tuwa-rounded-corners: 6px;
+    --tuwa-border-primary: #2b2c30;
+    --tuwa-bg-primary: #121316;
+    --tuwa-text-accent: #3ed2ec;
+    --tuwa-rounded-corners: 0px;
   }
 
-  /* The light/dark switch (ThemeSwitcher), in the cosmic manner of TUWA and flat: the sizes of the switch before it (80 ×
+  /* The paper-and-ink look of Nova: square, drawn with lines of 1 px, no shadows or halos around the knobs.
+     The light/dark switch (ThemeSwitcher), in the cosmic manner of TUWA and flat: the sizes of the switch before it (80 ×
      40 on a phone, 64 × 32 from md), a knob that slides with a spring and stretches on its way (the sun on the left, the
-     moon on the right), pixel art that rebuilds itself, a twinkle, an orbit and a glow along an edge of the knob */
+     moon on the right), pixel art that rebuilds itself, a twinkle, an orbit and a line in colour along an edge of the knob */
   .tuwa-theme-switch {
     --knob: 26px;
     --pixel-step: 2.5px;
@@ -93,17 +94,15 @@
     width: 64px;
     height: 32px;
     padding: 0;
-    border: 1px solid rgb(0 0 0 / 0.06);
+    border: 1px solid var(--tuwa-border-primary);
     border-radius: var(--tuwa-rounded-corners);
-    background: rgb(0 0 0 / 0.05);
+    background: transparent;
     cursor: pointer;
     transition: border-color 200ms ease;
     /* The tilted orbit of the satellite or the planet, in the knob (its box inside the border) */
     --orbit-path: path('M 1.95 16.47 A 11 4 -24 1 0 22.05 7.53 A 11 4 -24 1 0 1.95 16.47');
   }
   .tuwa-theme-switch--dark {
-    border-color: rgb(255 255 255 / 0.1);
-    background: rgb(255 255 255 / 0.08);
     --glow: var(--tuwa-text-accent);
     --pixel: color-mix(in srgb, var(--tuwa-text-accent) 55%, #ffffff);
   }
@@ -131,18 +130,9 @@
     border: 1px solid var(--tuwa-border-primary);
     border-radius: var(--tuwa-rounded-corners);
     background: var(--tuwa-bg-primary);
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.08),
-      0 0 10px -4px var(--glow);
-    transition: box-shadow 300ms ease;
   }
   .tuwa-theme-switch--dark .tuwa-theme-switch__knob {
     left: calc(100% - var(--knob) - 3px);
-  }
-  .tuwa-theme-switch:hover .tuwa-theme-switch__knob {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.08),
-      0 0 14px -3px var(--glow);
   }
   .tuwa-theme-switch__knob--to-dark {
     animation: tuwa-knob-to-dark 480ms cubic-bezier(0.34, 1.3, 0.64, 1) both;
@@ -177,15 +167,13 @@
     }
   }
 
-  /* The glow along an edge, wrapping a little onto the sides: warm amber over the sun, the accent under the moon. The
-     border of the knob, masked to its edge; the halo follows what shows of it. Quiet: it sits in a header */
+  /* A line in colour along an edge, wrapping a little onto the sides: warm amber over the sun, the accent under the moon.
+     The border of the knob, masked to its edge; a line, no halo */
   .tuwa-theme-switch__glow {
     position: absolute;
     inset: -1px;
     border-radius: inherit;
     pointer-events: none;
-    filter: drop-shadow(0 0 1.5px color-mix(in srgb, var(--glow) 60%, transparent))
-      drop-shadow(0 0 4px color-mix(in srgb, var(--glow) 28%, transparent));
     opacity: 0;
     transition: opacity 300ms ease 160ms;
   }
@@ -293,7 +281,6 @@
     width: calc(var(--pixel-step) * 0.8);
     height: calc(var(--pixel-step) * 0.8);
     background: var(--pixel);
-    box-shadow: 0 0 4px var(--glow);
     offset-path: var(--orbit-path);
     offset-rotate: 0deg;
     opacity: 0;
@@ -334,8 +321,8 @@
     }
   }
 
-  /* The language switch, a pair with the theme switch: the flag of the language on the same knob, a soft glow in the
-     colour of the flag along its lower edge, a small spring and a new flag coming in when the language changes */
+  /* The language switch, a pair with the theme switch: the flag of the language on the same knob, a line in the colour
+     of the flag along its lower edge, a small spring and a new flag coming in when the language changes */
   .tuwa-locale-switch__knob,
   .tuwa-locale-switch__tile,
   .tuwa-locale-switch__option {
@@ -357,42 +344,15 @@
     border: 1px solid var(--tuwa-border-primary);
     border-radius: var(--tuwa-rounded-corners);
     background: var(--tuwa-bg-primary);
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.08),
-      0 0 10px -4px var(--glow);
-    transition: box-shadow 300ms ease;
   }
-  html[data-tuwa-theme='light'] .tuwa-locale-switch__knob {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.08),
-      0 0 8px -4px var(--glow-line);
-  }
-  .tuwa-locale-switch:hover .tuwa-locale-switch__knob {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.08),
-      0 0 14px -3px var(--glow);
-  }
-  html[data-tuwa-theme='light'] .tuwa-locale-switch:hover .tuwa-locale-switch__knob {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.08),
-      0 0 10px -3px var(--glow-line);
-  }
-  /* The glow line: quiet, it sits in a header */
+  /* The line in colour: quiet, it sits in a header */
   .tuwa-locale-switch__glow {
     position: absolute;
     inset: -1px;
     border-radius: inherit;
     pointer-events: none;
     opacity: 0.85;
-    filter: drop-shadow(0 0 1.5px color-mix(in srgb, var(--glow) 60%, transparent))
-      drop-shadow(0 0 4px color-mix(in srgb, var(--glow) 28%, transparent));
-    transition:
-      filter 300ms ease,
-      opacity 300ms ease;
-  }
-  /* On a light page the halo stays close to the line, so the flag is not washed out */
-  html[data-tuwa-theme='light'] .tuwa-locale-switch__glow {
-    filter: drop-shadow(0 0 1px color-mix(in srgb, var(--glow) 50%, transparent));
+    transition: opacity 300ms ease;
   }
   .tuwa-locale-switch__glow::before {
     content: '';
@@ -404,7 +364,7 @@
     transition: border-color 300ms ease;
   }
 
-  /* The flag of each language in the menu sits on a small knob of its own, with the glow of its colour: faint on the
+  /* The flag of each language in the menu sits on a small knob of its own, with the line of its colour: faint on the
      others, full on the chosen and the highlighted one */
   .tuwa-locale-switch__tile {
     position: relative;
@@ -416,17 +376,9 @@
     border: 1px solid var(--tuwa-border-primary);
     border-radius: var(--tuwa-rounded-corners);
     background: var(--tuwa-bg-primary);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
-    transition: box-shadow 300ms ease;
   }
   .tuwa-locale-switch__tile .tuwa-locale-switch__glow {
     opacity: 0.25;
-  }
-  .tuwa-locale-switch__option[aria-selected='true'] .tuwa-locale-switch__tile,
-  .tuwa-locale-switch__option--active .tuwa-locale-switch__tile {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.08),
-      0 0 10px -4px var(--glow-line);
   }
   .tuwa-locale-switch__option[aria-selected='true'] .tuwa-locale-switch__tile .tuwa-locale-switch__glow,
   .tuwa-locale-switch__option--active .tuwa-locale-switch__tile .tuwa-locale-switch__glow {
@@ -461,7 +413,7 @@
     width: 16px;
     height: 12px;
     flex-shrink: 0;
-    border-radius: 2px;
+    border-radius: 0;
     box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.22);
   }
   html[data-tuwa-theme='dark'] .tuwa-locale-flag {
@@ -489,7 +441,6 @@
       opacity: 0;
     }
   }
-
 
   @media (prefers-reduced-motion: reduce) {
     .tuwa-theme-switch__knob--to-dark,
