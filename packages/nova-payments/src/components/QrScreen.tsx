@@ -1,4 +1,3 @@
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn, QuasarLoader } from '@tuwaio/nova-core';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
@@ -7,8 +6,9 @@ import { baseUnitsToDecimal, formatCountdown, formatTokenAmount, shortAddress } 
 import { networkName } from '../utils/methods';
 import { addressOfWallet, restRateText } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
-import { mono, primaryAction } from './classes';
+import { mono, pendingNote, primaryAction } from './classes';
 import { checkoutClassName } from './customization';
+import { ExclamationTriangleIcon } from './icons';
 import { QrCode } from './QrCode';
 import {
   ChainLink,
@@ -146,7 +146,12 @@ export function QrScreen() {
         {restRate && (
           <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{restRate}</p>
         )}
-        <p className="novapay:m-0 novapay:flex novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-pending-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-pending-text)]">
+        <p
+          className={cn(
+            pendingNote,
+            'novapay:m-0 novapay:flex novapay:gap-2 novapay:px-3 novapay:py-2 novapay:text-xs',
+          )}
+        >
           <ExclamationTriangleIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:shrink-0" />
           {labels.qr.exchangeWarning}
         </p>

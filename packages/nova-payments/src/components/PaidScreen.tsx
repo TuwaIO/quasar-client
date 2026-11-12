@@ -1,4 +1,3 @@
-import { ArrowDownTrayIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { cn, DrawnCheck } from '@tuwaio/nova-core';
 import { HashLink, TxProgressIndicator, TxStatusVisual } from '@tuwaio/nova-transactions';
 import { useState } from 'react';
@@ -9,8 +8,10 @@ import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal } from '../utils/format';
 import { methodFamily } from '../utils/methods';
-import { focusRing, mono, primaryAction, secondaryAction, textButton } from './classes';
+import { capsLabel } from './capsLabel';
+import { mono, primaryAction, secondaryAction, smallAction, textButton } from './classes';
 import { checkoutClassName } from './customization';
+import { ArrowDownTrayIcon, DocumentTextIcon } from './icons';
 import {
   DetailRow,
   DetailsCard,
@@ -155,12 +156,9 @@ export function PaidScreen() {
               href={state.receiptUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={cn(
-                'novapay:inline-flex novapay:min-h-6 novapay:items-center novapay:gap-1 novapay:text-xs novapay:font-semibold novapay:text-[var(--tuwa-text-accent)]',
-                focusRing,
-              )}
+              className={cn(smallAction, 'novapay:gap-1.5 novapay:no-underline')}
             >
-              <ArrowDownTrayIcon aria-hidden className="novapay:h-4 novapay:w-4" />
+              <ArrowDownTrayIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
               {labels.paid.download}
             </a>
           </div>
@@ -194,7 +192,7 @@ export function PaidScreen() {
                   : cn(primaryAction, checkoutClassName(context, 'primaryButton'))
               }
             >
-              {formatLabel(labels.paid.back, { merchant })}
+              {capsLabel(labels.paid.back, { merchant })}
             </a>
             {countdown.left !== null && (
               <FooterNote>

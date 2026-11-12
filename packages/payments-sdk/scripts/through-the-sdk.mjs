@@ -13,6 +13,7 @@ export const ENTRIES = {
   '@tuwaio/nova-connect': '@tuwaio/sdk/nova-connect',
   '@tuwaio/nova-core/utils': '@tuwaio/sdk/nova-core/utils',
   '@tuwaio/nova-core': '@tuwaio/sdk/nova-core',
+  '@tuwaio/nova-icons/24/outline': '@tuwaio/sdk/nova-icons/24/outline',
   '@tuwaio/nova-transactions/providers': '@tuwaio/sdk/nova-transactions/providers',
   '@tuwaio/nova-transactions': '@tuwaio/sdk/nova-transactions',
   '@tuwaio/orbit-core': '@tuwaio/sdk/orbit',

@@ -1,7 +1,6 @@
-import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
 import type { CheckoutError, CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { useAsyncValue, useRereadValue } from '../hooks/useAsyncValue';
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
@@ -33,7 +32,9 @@ import {
 import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { AutoPayNote } from './AutoPayNote';
-import { focusRing, mono, screenHeading } from './classes';
+import { capsLabel } from './capsLabel';
+import { focusRing, label, mono, pendingNote, screenHeading, smallAction, smallPrimaryAction } from './classes';
+import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from './icons';
 import {
   ChainLink,
   CheckoutWalletIcon,
@@ -279,15 +280,15 @@ export function PayScreen() {
   const connect = () => {
     if (!connectWallet(method)) setCannotConnect(true);
   };
-  let action: { label: string; run: () => void; disabled?: boolean };
+  let action: { label: ReactNode; run: () => void; disabled?: boolean };
   if (expired) action = { label: rest ? labels.outcome.payRest : labels.pay.newPrice, run: renew };
   else if (!walletMatches) action = { label: labels.pay.connect, run: connect };
   else if (wrongNetwork)
-    action = { label: formatLabel(labels.pay.switchTo, { network }), run: () => void payment.switchNetwork() };
+    action = { label: capsLabel(labels.pay.switchTo, { network }), run: () => void payment.switchNetwork() };
   else if (confirmFirst) action = { label: labels.payerProof.confirmToPay, run: () => void proof.confirm() };
   else {
     action = {
-      label: formatLabel(path === 'transfer' ? labels.pay.payAmount : labels.pay.signToPay, {
+      label: capsLabel(path === 'transfer' ? labels.pay.payAmount : labels.pay.signToPay, {
         amount: token(amounts.send),
       }),
       // `onSubmit` of the app wraps the wallet prompt
@@ -352,15 +353,7 @@ export function PayScreen() {
                   })}
                 </span>
               </span>
-              <button
-                type="button"
-                aria-label={labels.pay.changeWallet}
-                onClick={connect}
-                className={cn(
-                  'novapay:min-h-6 novapay:cursor-pointer novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-transparent novapay:px-2.5 novapay:py-1 novapay:text-xs novapay:font-semibold novapay:text-[var(--tuwa-text-primary)] novapay:hover:bg-[var(--tuwa-bg-muted)]',
-                  focusRing,
-                )}
-              >
+              <button type="button" aria-label={labels.pay.changeWallet} onClick={connect} className={smallAction}>
                 {labels.pay.change}
               </button>
             </div>
@@ -369,7 +362,7 @@ export function PayScreen() {
           {wrongNetwork && walletMatches && !expired && (
             <div
               role="status"
-              className="novapay:flex novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-pending-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-pending-text)]"
+              className={cn(pendingNote, 'novapay:flex novapay:gap-2 novapay:px-3 novapay:py-2 novapay:text-xs')}
             >
               <ExclamationTriangleIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:shrink-0" />
               <span>
@@ -397,9 +390,7 @@ export function PayScreen() {
           )}
 
           <div>
-            <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
-              {rest ? labels.pay.youSendRest : labels.pay.youSend}
-            </span>
+            <span className={cn(label, 'novapay:block')}>{rest ? labels.pay.youSendRest : labels.pay.youSend}</span>
             <div className={cn('novapay:flex novapay:items-baseline novapay:gap-2', page && 'novapay-page-amount-row')}>
               <span
                 className={cn(
@@ -469,17 +460,8 @@ export function PayScreen() {
               <span role="status" className="novapay:sr-only">
                 {formatLabel(labels.pay.priceEnding, { time: formatCountdown(QUOTE_WARNING_MS) })}
               </span>
-              <button
-                type="button"
-                onClick={renew}
-                disabled={quoting}
-                className={cn(
-                  mono,
-                  'novapay:min-h-8 novapay:cursor-pointer novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border-0 novapay:bg-[var(--tuwa-button-primary-bg)] novapay:px-3 novapay:text-xs novapay:font-bold novapay:text-[var(--tuwa-text-on-accent)] novapay:disabled:opacity-70',
-                  focusRing,
-                )}
-              >
-                {formatLabel(labels.pay.keepPrice, { minutes: Math.round(checkout.quoteTtlSeconds / 60) })}
+              <button type="button" onClick={renew} disabled={quoting} className={smallPrimaryAction}>
+                {capsLabel(labels.pay.keepPrice, { minutes: Math.round(checkout.quoteTtlSeconds / 60) })}
               </button>
             </div>
           )}

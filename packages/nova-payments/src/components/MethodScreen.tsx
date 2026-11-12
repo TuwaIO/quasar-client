@@ -1,4 +1,3 @@
-import { DevicePhoneMobileIcon, QrCodeIcon, WalletIcon as WalletOutlineIcon } from '@heroicons/react/24/outline';
 import { cn, NetworkIcon, TokenIcon } from '@tuwaio/nova-core';
 import { toEvmChainId } from '@tuwaio/orbit-core';
 import type { CheckoutMethod } from '@tuwaio/quasar-sdk/checkout';
@@ -11,27 +10,23 @@ import { shortAddress } from '../utils/format';
 import { canPayWithQr, methodFamily, networkName, payerFor, priceAdjustment } from '../utils/methods';
 import { methodErrorText } from '../utils/outcome';
 import { AutoPayNote } from './AutoPayNote';
-import { focusRing, mono } from './classes';
+import { chip, chipTone, focusRing, mono } from './classes';
 import { checkoutClassName } from './customization';
+import { DevicePhoneMobileIcon, QrCodeIcon, WalletOutlineIcon } from './icons';
 import { RadioCards } from './RadioCards';
-import { CheckoutWalletIcon, GroupLabel, PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
+import {
+  CheckBox,
+  CheckoutWalletIcon,
+  GroupLabel,
+  PrimaryButton,
+  ScreenContent,
+  ScreenError,
+  ScreenFooter,
+} from './ScreenParts';
 
-/** A small badge of a network option. */
+/** A small badge of a network option: a chip of the checkout in one of its tones. */
 function Badge({ tone, children }: { tone: 'neutral' | 'accent' | 'success'; children: ReactNode }) {
-  return (
-    <span
-      className={cn(
-        'novapay:shrink-0 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:px-1.5 novapay:py-0.5 novapay:text-[11px]',
-        tone === 'neutral' && 'novapay:bg-[var(--tuwa-bg-muted)] novapay:text-[var(--tuwa-text-primary)]',
-        // An outline: the accent text reads on the page background in both themes, not on a tinted one
-        tone === 'accent' &&
-          'novapay:border novapay:border-[var(--tuwa-text-accent)] novapay:text-[var(--tuwa-text-accent)]',
-        tone === 'success' && 'novapay:bg-[var(--tuwa-success-bg)] novapay:text-[var(--tuwa-success-text)]',
-      )}
-    >
-      {children}
-    </span>
-  );
+  return <span className={cn(chip, chipTone[tone])}>{children}</span>;
 }
 
 /** The discount or markup of a method, if any. */
@@ -45,13 +40,13 @@ function Adjustment({ method, labels }: { method: CheckoutMethod; labels: NovaPa
   );
 }
 
-/** The radio dot of a list option. */
+/** The radio mark of a list option: square, as the marks of Nova that were circles (`--tuwa-rounded-full`). */
 function RadioDot({ selected }: { selected: boolean }) {
   return (
     <span
       aria-hidden
       className={cn(
-        'novapay:h-3.5 novapay:w-3.5 novapay:shrink-0 novapay:rounded-full novapay:box-border',
+        'novapay:h-3.5 novapay:w-3.5 novapay:shrink-0 novapay:rounded-[var(--tuwa-rounded-full)] novapay:box-border',
         selected
           ? 'novapay:border-4 novapay:border-[var(--tuwa-text-accent)]'
           : 'novapay:border novapay:border-[var(--tuwa-text-secondary)]',
@@ -390,22 +385,18 @@ export function MethodScreen() {
               // As the option cards: one border width, the tick adds a ring, nothing moves
               consentGiven
                 ? 'novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)] novapay:ring-1 novapay:ring-[var(--tuwa-text-accent)]'
-                : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
+                : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-border-strong)]',
               checkoutClassName(context, 'consentOption', { checked: consentGiven, required: consent.required }),
             )}
           >
-            <input
-              type="checkbox"
+            <CheckBox
               checked={consentGiven}
               required={consent.required}
               // Named by the seller's words alone: the hint is its description, not part of its name
               aria-labelledby={consentTextId}
               aria-describedby={consent.required ? consentHintId : undefined}
               onChange={(event) => store.getState().setConsentGiven(event.target.checked)}
-              className={cn(
-                'novapay:mt-0.5 novapay:h-4 novapay:w-4 novapay:shrink-0 novapay:accent-[var(--tuwa-text-accent)]',
-                focusRing,
-              )}
+              className="novapay:mt-0.5"
             />
             <span className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-1">
               <span

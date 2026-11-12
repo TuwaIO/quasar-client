@@ -1,9 +1,9 @@
-import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { cn, DrawnCheck } from '@tuwaio/nova-core';
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 
 import { CHECKOUT_LOCALES, type CheckoutLocale, formatLabel, type NovaPaymentsLabels } from '../i18n';
-import { focusRing, iconButton, mono } from './classes';
+import { caps, focusRing, iconButton, label, mono } from './classes';
+import { ChevronDownIcon, GlobeAltIcon } from './icons';
 
 /** Props of {@link LocaleSwitcher}. */
 export interface LocaleSwitcherProps {
@@ -94,7 +94,7 @@ export function LocaleSwitcher({ locale, labels, receiptIssued, onSelect, classN
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? `${id}-list` : undefined}
-        className={cn(iconButton, mono, 'novapay:text-[11px] novapay:font-semibold')}
+        className={cn(iconButton, caps, 'novapay:text-[11px]')}
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={(event) => {
           if (event.key === 'ArrowDown' && !open) {
@@ -107,17 +107,12 @@ export function LocaleSwitcher({ locale, labels, receiptIssued, onSelect, classN
         {/* The visible code starts the accessible name, the language follows for screen readers (WCAG 2.5.3) */}
         <span>{current.short}</span>
         <span className="novapay:sr-only">, {formatLabel(labels.language.button, { language: current.name })}</span>
-        <ChevronDownIcon aria-hidden className="novapay:h-3 novapay:w-3" />
+        <ChevronDownIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
       </button>
+      {/* Paper and ink: a frame of the strong line and the faint lines of a Nova surface, no shadow */}
       {open && (
-        <div className="novapay:absolute novapay:right-0 novapay:top-full novapay:z-20 novapay:mt-1.5 novapay:w-60 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:p-1.5 novapay:shadow-xl">
-          <span
-            id={`${id}-title`}
-            className={cn(
-              mono,
-              'novapay:block novapay:px-2.5 novapay:py-1 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
-            )}
-          >
+        <div className="tuwa-scanlines novapay:absolute novapay:right-0 novapay:top-full novapay:z-20 novapay:mt-1.5 novapay:w-60 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-strong)] novapay:bg-[var(--tuwa-bg-primary)] novapay:p-1.5">
+          <span id={`${id}-title`} className={cn(label, 'novapay:block novapay:px-2.5 novapay:py-1')}>
             {labels.language.title}
           </span>
           <ul

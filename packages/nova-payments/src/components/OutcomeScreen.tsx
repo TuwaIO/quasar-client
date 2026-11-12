@@ -1,11 +1,3 @@
-import {
-  ArrowPathRoundedSquareIcon,
-  ArrowUturnLeftIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
-  NoSymbolIcon,
-} from '@heroicons/react/24/outline';
 import { cn, DrawnCross } from '@tuwaio/nova-core';
 import { HashLink } from '@tuwaio/nova-transactions';
 import { parseCaip10AccountId } from '@tuwaio/orbit-core';
@@ -37,8 +29,17 @@ import {
 } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { AutoPayNote } from './AutoPayNote';
+import { capsLabel } from './capsLabel';
 import { secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
+import {
+  ArrowPathRoundedSquareIcon,
+  ArrowUturnLeftIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  NoSymbolIcon,
+} from './icons';
 import { NameTransaction } from './NameTransaction';
 import {
   ChainLink,
@@ -139,7 +140,7 @@ function ContactLink() {
   const context = useCheckoutContext();
   const { checkout, labels, onContact } = context;
   if (!checkout) return null;
-  const text = formatLabel(labels.outcome.contact, { merchant: checkout.merchant.name });
+  const text = capsLabel(labels.outcome.contact, { merchant: checkout.merchant.name });
   // The second action of the footer, the same as "Close" or "Back" on the other screens
   const className = cn(secondaryAction, checkoutClassName(context, 'secondaryButton'));
   if (onContact) {
@@ -593,7 +594,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         const next = replacement.checkoutToken;
         action = (
           <PrimaryButton onClick={() => openInvoice(next)}>
-            {formatLabel(labels.outcome.openReplacement, { number })}
+            {capsLabel(labels.outcome.openReplacement, { number })}
           </PrimaryButton>
         );
       }

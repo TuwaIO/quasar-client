@@ -39,7 +39,7 @@ exports[`the classes of the inline checkout > buyer 1`] = `
 
 exports[`the classes of the inline checkout > compact summary 1`] = `
 [
-  "novapay:mx-4 novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-3",
+  "tuwa-scanlines novapay:mx-4 novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-3",
   "novapay:flex novapay:items-baseline novapay:justify-between",
   "novapay:font-mono novapay:tabular-nums novapay:text-[22px] novapay:font-bold",
   "novapay:text-xs novapay:font-normal novapay:text-[var(--tuwa-text-secondary)]",
@@ -58,14 +58,14 @@ exports[`the classes of the inline checkout > confirm 1`] = `
 
 exports[`the classes of the inline checkout > footer 1`] = `
 [
-  "novapay:empty:hidden novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center",
+  "tuwa-scanlines novapay:empty:hidden novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center",
 ]
 `;
 
 exports[`the classes of the inline checkout > frame 1`] = `
 [
-  "novapay:relative novapay:box-border novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:flex-row",
-  "novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block",
+  "tuwa-scanlines novapay:relative novapay:box-border novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:flex-row",
+  "tuwa-scanlines novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block",
   "novapay:relative novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col",
   "novapay:sm:hidden",
   "novapay:@container novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto",
@@ -75,7 +75,7 @@ exports[`the classes of the inline checkout > frame 1`] = `
 
 exports[`the classes of the inline checkout > group 1`] = `
 [
-  "novapay:font-mono novapay:tabular-nums novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]",
+  "novapay:font-mono novapay:font-bold novapay:uppercase novapay:tracking-[0.12em] novapay:text-[11px] novapay:leading-4 novapay:text-[var(--tuwa-text-secondary)]",
 ]
 `;
 
@@ -107,7 +107,9 @@ exports[`the classes of the inline checkout > order lines 1`] = `
 [
   "novapay:flex novapay:flex-col novapay:gap-3.5",
   "novapay:flex novapay:flex-col novapay:gap-2.5",
-  "novapay:font-mono novapay:tabular-nums novapay:flex novapay:justify-between novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]",
+  "novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3",
+  "novapay:font-mono novapay:font-bold novapay:uppercase novapay:tracking-[0.12em] novapay:text-[11px] novapay:leading-4 novapay:text-[var(--tuwa-text-secondary)]",
+  "novapay:font-mono novapay:tabular-nums novapay:min-w-0 novapay:break-all novapay:text-right novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]",
   "novapay:m-0 novapay:flex novapay:list-none novapay:flex-col novapay:gap-2.5 novapay:p-0",
   "novapay:m-0 novapay:flex novapay:flex-col novapay:gap-1.5 novapay:border-t novapay:border-dashed novapay:border-[var(--tuwa-border-primary)] novapay:pt-2.5 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
   "novapay:flex novapay:justify-between",
@@ -120,7 +122,7 @@ exports[`the classes of the inline checkout > order lines 1`] = `
 exports[`the classes of the inline checkout > order total 1`] = `
 [
   "novapay:flex novapay:items-baseline novapay:justify-between",
-  "novapay:font-mono novapay:tabular-nums novapay:text-xs novapay:font-bold",
+  "novapay:font-mono novapay:font-bold novapay:uppercase novapay:tracking-[0.12em] novapay:text-[11px] novapay:leading-4 novapay:text-[var(--tuwa-text-primary)]",
   "novapay:font-mono novapay:tabular-nums novapay:text-[22px] novapay:font-bold",
   "novapay:text-[13px] novapay:font-normal novapay:text-[var(--tuwa-text-secondary)]",
 ]
@@ -145,7 +147,7 @@ exports[`the classes of the inline checkout > paid 1`] = `
 
 exports[`the classes of the inline checkout > prompt 1`] = `
 [
-  "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center novapay:max-sm:min-h-[var(--novapay-step-height)]",
+  "tuwa-scanlines novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center novapay:max-sm:min-h-[var(--novapay-step-height)]",
   "novapay-title novapay:font-mono novapay:tabular-nums novapay:m-0 novapay:text-base novapay:font-bold novapay:text-balance novapay:outline-none",
   "novapay:max-w-xs",
 ]
@@ -216,7 +218,7 @@ exports[`the classes of the modal checkout > buyer 1`] = `
 
 exports[`the classes of the modal checkout > compact summary 1`] = `
 [
-  "novapay:mx-4 novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-3",
+  "tuwa-scanlines novapay:mx-4 novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-3",
   "novapay:flex novapay:items-baseline novapay:justify-between",
   "novapay:font-mono novapay:tabular-nums novapay:text-[22px] novapay:font-bold",
   "novapay:text-xs novapay:font-normal novapay:text-[var(--tuwa-text-secondary)]",
@@ -235,14 +237,14 @@ exports[`the classes of the modal checkout > confirm 1`] = `
 
 exports[`the classes of the modal checkout > footer 1`] = `
 [
-  "novapay:empty:hidden novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center",
+  "tuwa-scanlines novapay:empty:hidden novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center",
 ]
 `;
 
 exports[`the classes of the modal checkout > frame 1`] = `
 [
-  "novapay:relative novapay:box-border novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:flex-row novapay:sm:w-[min(760px,calc(100vw_-_2rem_-_2px))]",
-  "novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block",
+  "tuwa-scanlines novapay:relative novapay:box-border novapay:flex novapay:w-full novapay:flex-col novapay:overflow-hidden novapay:bg-[var(--tuwa-bg-primary)] novapay:text-[var(--tuwa-text-primary)] novapay:sm:h-[680px] novapay:sm:flex-row novapay:sm:w-[min(760px,calc(100vw_-_2rem_-_2px))]",
+  "tuwa-scanlines novapay:hidden novapay:w-[286px] novapay:shrink-0 novapay:border-r novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-5 novapay:sm:block",
   "novapay:relative novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col",
   "novapay:sm:hidden",
   "novapay:@container novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto",
@@ -252,7 +254,7 @@ exports[`the classes of the modal checkout > frame 1`] = `
 
 exports[`the classes of the modal checkout > group 1`] = `
 [
-  "novapay:font-mono novapay:tabular-nums novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]",
+  "novapay:font-mono novapay:font-bold novapay:uppercase novapay:tracking-[0.12em] novapay:text-[11px] novapay:leading-4 novapay:text-[var(--tuwa-text-secondary)]",
 ]
 `;
 
@@ -284,7 +286,9 @@ exports[`the classes of the modal checkout > order lines 1`] = `
 [
   "novapay:flex novapay:flex-col novapay:gap-3.5",
   "novapay:flex novapay:flex-col novapay:gap-2.5",
-  "novapay:font-mono novapay:tabular-nums novapay:flex novapay:justify-between novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]",
+  "novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3",
+  "novapay:font-mono novapay:font-bold novapay:uppercase novapay:tracking-[0.12em] novapay:text-[11px] novapay:leading-4 novapay:text-[var(--tuwa-text-secondary)]",
+  "novapay:font-mono novapay:tabular-nums novapay:min-w-0 novapay:break-all novapay:text-right novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]",
   "novapay:m-0 novapay:flex novapay:list-none novapay:flex-col novapay:gap-2.5 novapay:p-0",
   "novapay:m-0 novapay:flex novapay:flex-col novapay:gap-1.5 novapay:border-t novapay:border-dashed novapay:border-[var(--tuwa-border-primary)] novapay:pt-2.5 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
   "novapay:flex novapay:justify-between",
@@ -297,7 +301,7 @@ exports[`the classes of the modal checkout > order lines 1`] = `
 exports[`the classes of the modal checkout > order total 1`] = `
 [
   "novapay:flex novapay:items-baseline novapay:justify-between",
-  "novapay:font-mono novapay:tabular-nums novapay:text-xs novapay:font-bold",
+  "novapay:font-mono novapay:font-bold novapay:uppercase novapay:tracking-[0.12em] novapay:text-[11px] novapay:leading-4 novapay:text-[var(--tuwa-text-primary)]",
   "novapay:font-mono novapay:tabular-nums novapay:text-[22px] novapay:font-bold",
   "novapay:text-[13px] novapay:font-normal novapay:text-[var(--tuwa-text-secondary)]",
 ]
@@ -322,7 +326,7 @@ exports[`the classes of the modal checkout > paid 1`] = `
 
 exports[`the classes of the modal checkout > prompt 1`] = `
 [
-  "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center novapay:max-sm:min-h-[var(--novapay-step-height)]",
+  "tuwa-scanlines novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center novapay:max-sm:min-h-[var(--novapay-step-height)]",
   "novapay-title novapay:font-mono novapay:tabular-nums novapay:m-0 novapay:text-base novapay:font-bold novapay:text-balance novapay:outline-none",
   "novapay:max-w-xs",
 ]

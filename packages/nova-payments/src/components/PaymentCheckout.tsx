@@ -1,4 +1,3 @@
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn, Dialog, DialogContent, DialogTitle, QuasarLoader, StatusEdge } from '@tuwaio/nova-core';
 import type { CheckoutApi, CheckoutStore, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
@@ -40,6 +39,7 @@ import { checkoutLayout, checkoutWidthClasses, screenHeading, screenTitle } from
 import { ConfirmScreen } from './ConfirmScreen';
 import { ConfirmWalletScreen } from './ConfirmWalletScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
+import { ExclamationTriangleIcon } from './icons';
 import { LeaveDialog } from './LeaveDialog';
 import { MethodScreen } from './MethodScreen';
 import { OutcomeScreen } from './OutcomeScreen';

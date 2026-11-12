@@ -1,5 +1,4 @@
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
+import { CloseIcon, cn, Dialog, DialogContent, DialogTitle } from '@tuwaio/nova-core';
 import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type { RefundState, RefundStore } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useEffect, useEffectEvent, useId, useRef, useState } from 'react';
@@ -10,6 +9,7 @@ import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { formatFeeAmount, formatTokenAmount, shortAddress } from '../utils/format';
 import type { PaymentFamily } from '../utils/methods';
 import { refundRateMoved } from '../utils/outcome';
+import { capsLabel } from './capsLabel';
 import { iconButton, mono, primaryAction } from './classes';
 import { RadioCards } from './RadioCards';
 import {
@@ -168,7 +168,7 @@ export function RefundDialog({ open, onOpenChange, locale = 'en', onRefunded, ..
             onClick={() => onOpenChange(false)}
             className={iconButton}
           >
-            <XMarkIcon aria-hidden className="novapay:h-4 novapay:w-4" />
+            <CloseIcon aria-hidden className="novapay:h-4 novapay:w-4" />
           </button>
         </div>
         <RefundSteps flow={flow} labels={labels} locale={locale} close={() => onOpenChange(false)} {...props} />
@@ -755,9 +755,7 @@ export function ConfirmStep({
       <ScreenFooter>
         {flow.problem !== 'noRecipient' &&
           (flow.wrongNetwork && !handOver ? (
-            <PrimaryButton onClick={() => void flow.switchNetwork()}>
-              {formatLabel(text.switchTo, values)}
-            </PrimaryButton>
+            <PrimaryButton onClick={() => void flow.switchNetwork()}>{capsLabel(text.switchTo, values)}</PrimaryButton>
           ) : (
             <PrimaryButton busy={flow.sending} onClick={() => void flow.send()}>
               {handOver ? text.handOver : text.sendRefund}

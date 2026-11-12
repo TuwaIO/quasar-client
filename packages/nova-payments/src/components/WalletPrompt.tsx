@@ -3,7 +3,8 @@ import { type CSSProperties, useEffect, useId, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
-import { screenTitle } from './classes';
+import { capsLabel } from './capsLabel';
+import { label, screenTitle } from './classes';
 import { DetailRow, DetailsCard, FooterAction, SecondaryButton, WalletWait } from './ScreenParts';
 
 /**
@@ -121,7 +122,7 @@ export function WalletPrompt({
       // height of the step
       style={stepHeight ? ({ '--novapay-step-height': `${stepHeight}px` } as CSSProperties) : undefined}
       className={cn(
-        'novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center',
+        'tuwa-scanlines novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center-safe novapay:gap-3 novapay:bg-[var(--tuwa-bg-primary)] novapay:px-6 novapay:py-5 novapay:text-center',
         stepHeight &&
           (display === 'page'
             ? 'novapay:min-h-[var(--novapay-step-height)]'
@@ -144,9 +145,7 @@ export function WalletPrompt({
             </p>
           )}
           <div className="novapay:flex novapay:w-full novapay:max-w-xs novapay:flex-col novapay:gap-1.5 novapay:text-left">
-            <span className="novapay:text-[11px] novapay:font-semibold">
-              {formatLabel(labels.walletPrompt.check, values)}
-            </span>
+            <span className={label}>{capsLabel(labels.walletPrompt.check, values)}</span>
             <DetailsCard>
               {details ? (
                 details.map((row) => (

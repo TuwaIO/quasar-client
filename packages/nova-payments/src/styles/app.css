@@ -16,6 +16,47 @@
   }
 }
 
+/* Paper and ink, the wait for a wallet: a segment of the pending color runs round the square frame of its icon, on the
+   border itself, as on the connecting screen of Nova Connect (a square frame cannot be a spinning ring). The checkout
+   draws it itself, so it needs no stylesheet of Nova Connect. `--novapay-chase-border` is the width of the frame */
+@property --novapay-chase-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes novapay-chase {
+  to {
+    --novapay-chase-angle: 360deg;
+  }
+}
+
+@layer components {
+  .novapay-chase::after {
+    content: '';
+    position: absolute;
+    inset: calc(-1 * var(--novapay-chase-border, 2px));
+    padding: var(--novapay-chase-border, 2px);
+    border-radius: inherit;
+    pointer-events: none;
+    /* Hard stops: one solid segment, no fading ends */
+    background: conic-gradient(from var(--novapay-chase-angle), var(--tuwa-pending-icon) 0 14%, transparent 14% 100%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    animation: novapay-chase 2.4s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .novapay-chase::after {
+      animation: none;
+    }
+  }
+}
+
 /* display="page" only: no part of a modal or an inline checkout carries these classes. After the utilities of this
    package in the same layer, so a rule here wins over a utility of the part. */
 @layer utilities {
@@ -68,19 +109,11 @@
     .novapay-page-block {
       display: block;
       flex: none;
-      /* Keeps the rounded corners, and is no scroll container: the sticky footer sticks to the window */
+      /* Keeps the corners, and is no scroll container: the sticky footer sticks to the window. Paper and ink: a frame of
+         1 px and no shadow under it */
       overflow: clip;
       border: 1px solid var(--tuwa-border-primary);
       border-radius: var(--tuwa-rounded-corners);
-      box-shadow:
-        0 1px 2px rgb(0 0 0 / 0.04),
-        0 16px 40px -12px rgb(0 0 0 / 0.08),
-        0 40px 80px -32px rgb(0 0 0 / 0.1);
-    }
-    .dark .novapay-page-block {
-      box-shadow:
-        0 1px 2px rgb(0 0 0 / 0.3),
-        0 24px 64px -16px rgb(0 0 0 / 0.55);
     }
     .novapay-page-aside {
       padding-block: 10px 14px;
@@ -143,7 +176,7 @@
       padding-block: 16px 20px;
     }
     .novapay-page-footer > :is(button, a) {
-      height: 48px;
+      min-height: 48px;
     }
     .novapay-page-footer p {
       font-size: 12px;

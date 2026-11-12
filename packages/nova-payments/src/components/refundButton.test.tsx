@@ -350,7 +350,7 @@ describe('RefundButton', () => {
   it('asks a wallet on another network to switch first, as the checkout does', () => {
     const flow = flowOf({ wrongNetwork: true });
     const tree = confirm(flow);
-    expect(button(tree, PrimaryButton).props.children).toBe('Switch to Base');
+    expect(fixture.text(button(tree, PrimaryButton).props.children)).toBe('Switch to Base');
     (button(tree, PrimaryButton).props.onClick as () => void)();
     expect(flow.switchNetwork).toHaveBeenCalled();
     expect(flow.send).not.toHaveBeenCalled();

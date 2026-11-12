@@ -1,5 +1,4 @@
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { cn } from '@tuwaio/nova-core';
+import { CloseIcon, cn } from '@tuwaio/nova-core';
 import type { ReactNode } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
@@ -68,7 +67,7 @@ export function CheckoutHeader({ title, withDetails }: CheckoutHeaderProps) {
       />
       {close && (
         <button type="button" aria-label={labels.common.close} onClick={close} className={iconButton}>
-          <XMarkIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
+          <CloseIcon aria-hidden className="novapay:h-4 novapay:w-4" />
         </button>
       )}
     </div>

@@ -142,7 +142,7 @@ describe('the pay step of a method the gasless relay may pay', () => {
       payerProof: 'unless_relayed',
     });
     const button = fixture.ofType(render(PayScreen, {}), PrimaryButton)[0] as ReactElement<Props>;
-    expect(button.props.children).toBe('Sign to pay 89.54 USDC');
+    expect(fixture.text(button.props.children)).toBe('Sign to pay 89.54 USDC');
   });
 
   it('asks for the free confirmation before the buyer pays the gas instead', () => {
@@ -259,7 +259,7 @@ describe('the pay step of a method the gasless relay may pay', () => {
   it('pays once the wallet confirmed the invoice', () => {
     show('pay', { quote: quoteOf(null), payerProof: 'confirmed' });
     const button = fixture.ofType(render(PayScreen, {}), PrimaryButton)[0] as ReactElement<Props>;
-    expect(button.props.children).toBe('Pay 89.54 USDC');
+    expect(fixture.text(button.props.children)).toBe('Pay 89.54 USDC');
   });
 });
 

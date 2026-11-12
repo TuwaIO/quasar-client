@@ -17,7 +17,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 ## 💾 Installation
 
 ```bash
-pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/nova-connect @tuwaio/nova-transactions @tuwaio/satellite-react @tuwaio/satellite-core @tuwaio/pulsar-core @tuwaio/orbit-core zustand react framer-motion @heroicons/react @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
+pnpm add @tuwaio/nova-payments @tuwaio/quasar-sdk @tuwaio/nova-core @tuwaio/nova-connect @tuwaio/nova-transactions @tuwaio/satellite-react @tuwaio/satellite-core @tuwaio/pulsar-core @tuwaio/orbit-core zustand react framer-motion @radix-ui/react-dialog @web3icons/react @web3icons/common clsx tailwind-merge
 ```
 
 The checkout connects wallets through Nova Connect (`NovaConnectProvider` of `@tuwaio/nova-connect`, with its own peers): the app's, or Nova's own when the app has no wallet connection (see "Wallet connection" below). Apps that connect wallets differently pass `onConnectWallet`, and without either the buyer pays with a QR code.
@@ -31,6 +31,8 @@ Import the stylesheets of `@tuwaio/nova-core` (theme variables), of `@tuwaio/nov
 ```
 
 With Nova's own connection, also import `@tuwaio/nova-connect/dist/index.css` for its connect modal.
+
+The checkout is drawn in the look of Nova UI Kit 0.15: paper and ink, square, with the pixel icons of `@tuwaio/nova-icons` (installed with this package). The icons it shares with the Nova components come from the icon set of `NovaIconsProvider` of `@tuwaio/nova-core`, so an app that gave Nova another set (`heroicons` of `@tuwaio/nova-core/heroicons`) gets it in the checkout too; the icons only the checkout draws stay the pixel ones. The names of a seller, a wallet and a network keep their own letters inside the buttons, whose words are in capitals.
 
 ---
 

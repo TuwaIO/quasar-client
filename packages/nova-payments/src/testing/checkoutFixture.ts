@@ -146,3 +146,13 @@ export const hasClass = (node: unknown, name: string) =>
       .split(' ')
       .includes(name),
   );
+
+/**
+ * The text a node shows: its strings and numbers and those of the elements in it, in order, as a reader sees a label
+ * whose parts are in elements of their own (a name inside a label in capitals).
+ */
+export function text(node: unknown): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(text).join('');
+  return isValidElement(node) ? text((node.props as { children?: unknown }).children) : '';
+}

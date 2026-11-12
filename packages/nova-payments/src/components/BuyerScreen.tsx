@@ -1,4 +1,3 @@
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
 import type { Buyer } from '@tuwaio/quasar-sdk';
 import { type FormEvent, Fragment, useId, useMemo, useState } from 'react';
@@ -14,7 +13,8 @@ import {
   countryOptions,
 } from '../utils/buyer';
 import { focusRing } from './classes';
-import { PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
+import { ChevronDownIcon } from './icons';
+import { CheckBox, PrimaryButton, ScreenContent, ScreenError, ScreenFooter } from './ScreenParts';
 
 type Values = Partial<Record<keyof Buyer, string>>;
 
@@ -180,18 +180,10 @@ export function BuyerScreen() {
                       // As the option cards: one border width, the choice adds a ring, nothing moves
                       company
                         ? 'novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)] novapay:ring-1 novapay:ring-[var(--tuwa-text-accent)]'
-                        : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
+                        : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-border-strong)]',
                     )}
                   >
-                    <input
-                      type="checkbox"
-                      checked={company}
-                      onChange={(event) => setCompany(event.target.checked)}
-                      className={cn(
-                        'novapay:h-4 novapay:w-4 novapay:shrink-0 novapay:accent-[var(--tuwa-text-accent)]',
-                        focusRing,
-                      )}
-                    />
+                    <CheckBox checked={company} onChange={(event) => setCompany(event.target.checked)} />
                     <span className="novapay:font-semibold">{labels.buyer.companyInvoice}</span>
                   </label>
                 )}

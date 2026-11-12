@@ -10,8 +10,8 @@
 
 - **Core:** TypeScript 6.0.3 (pinned exactly), Node.js 20+, pnpm 12 (workspace), `tsup` (ESM, CJS, types), `vitest` 5.
 - **`quasar-sdk`:** `ofetch`; optional peers `@tuwaio/pulsar-core` (`/pulsar`, and the types of the root entry), `@tuwaio/siwx-react` and `zustand`.
-- **`nova-payments`:** React 19.2+, Nova UI Kit, Satellite Connect, Pulsar, Orbit, `framer-motion`, optional wagmi + viem and `@solana/kit`.
-- **`payments-sdk`:** bundles the two above; peers `@tuwaio/sdk`, `react`, optional `@tuwaio/solana-sdk`, wagmi, viem, `@solana/kit`, `@solana-program/*`.
+- **`nova-payments`:** React 19.2+, Nova UI Kit 0.15+ (its paper and ink look and the pixel icons of `@tuwaio/nova-icons`, a dependency), Satellite Connect, Pulsar, Orbit, `framer-motion`, optional wagmi + viem and `@solana/kit`.
+- **`payments-sdk`:** bundles the two above; peers `@tuwaio/sdk` (0.9+, the first with Nova 0.15), `react`, optional `@tuwaio/solana-sdk`, wagmi, viem, `@solana/kit`, `@solana-program/*`.
 - **Docs:** `apps/docs`, Storybook 10 on the model of the Nova UI Kit Storybook, TypeDoc 0.28 + `typedoc-plugin-markdown` 4, `payments.docs.tuwa.io`.
 - **Release:** `release-please` (stable, from `main`) and `semantic-release` (`alpha.release.config.js`, prereleases from `feat/**`, `fix/**`, `dev/**`).
 
@@ -64,6 +64,7 @@ Stories run in Chromium with axe only in the `Tests` workflow (`pnpm --filter @t
 - Never install new packages without explicit permission.
 - Never push to `main`: it goes through the owner, by a pull request he merges.
 - Do **NOT** import `@tuwaio/sdk` in `quasar-sdk` or `nova-payments`: only `payments-sdk` knows it.
+- The checkout is drawn in the paper and ink of Nova 0.15 (`paperAndInk.test.tsx` guards it). Do **NOT** import `@heroicons/react` in `nova-payments`: its icons are in `src/components/icons.tsx` (the names of the Nova icon set through `NovaSetIcon` of `@tuwaio/nova-core`, the others from `@tuwaio/nova-icons`). Do **NOT** write `rounded-full`, a shadow, a gradient or `animate-spin`: a mark that was a circle is `rounded-[var(--tuwa-rounded-full)]`, a surface has a line of 1 px, the wait for a wallet is `novapay-chase`. Buttons, labels and chips take their letters from `caps`, `label`, `chip`, `primaryAction`, `secondaryAction` and `smallAction` of `src/components/classes.ts`; a button label with a name in it (a seller, a wallet, a network) is filled with `capsLabel`, so the name keeps its own letters. A block that fills itself with the color of its surface carries `tuwa-scanlines`.
 - Do **NOT** add a Quasar Cloud or TUWA secret to anything that runs in the browser.
 - Do **NOT** import React, SIWX, `zustand` or a value of `@tuwaio/pulsar-core` in the root entry point of `@tuwaio/quasar-sdk`: a webhook handler loads it on every cold start. Browser code goes to `/react`, `/checkout` and `/pulsar`. Do **NOT** use the secret-key client (`QuasarClient`) in `/checkout`: the checkout opens one invoice with its token, and the refund store calls functions the app runs on its server.
 - Do **NOT** put secrets in URLs (the CLI sends the signing secret in the `x-webhook-secret` header), and do **NOT** document creating `Quasar` in the browser.

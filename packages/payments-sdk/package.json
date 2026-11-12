@@ -4,7 +4,7 @@
   "private": false,
   "author": "Oleksandr Tkach",
   "license": "Apache-2.0",
-  "description": "The Payments module of the TUWA SDK: the Nova Payments checkout and the Quasar checkout client, on top of @tuwaio/sdk.",
+  "description": "L10 Payments module of the TUWA SDK: the Nova Payments checkout and the Quasar checkout client, on top of @tuwaio/sdk.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -79,7 +79,7 @@
     "@solana-program/system": ">=0.15",
     "@solana-program/token": ">=0.17",
     "@solana/kit": ">=8.2",
-    "@tuwaio/sdk": ">=0.7",
+    "@tuwaio/sdk": ">=0.9",
     "@tuwaio/solana-sdk": ">=0.7",
     "@wagmi/core": "3.x.x",
     "react": ">=19.2.3",
@@ -106,7 +106,6 @@
     }
   },
   "dependencies": {
-    "@heroicons/react": "^2.2.0",
     "framer-motion": "14.9.1",
     "ofetch": "^1.5.1",
     "uqr": "^0.1.3",

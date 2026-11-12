@@ -1,4 +1,3 @@
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('react', async () => ({
@@ -9,6 +8,7 @@ vi.mock('react', async () => ({
 const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { Disclosure } = await import('./CheckoutSummary');
+const { ChevronDownIcon } = await import('./icons');
 
 type ButtonProps = { onClick: () => void };
 const chevronOf = (tree: unknown) => fixture.ofType(tree, ChevronDownIcon)[0].props as { className: string };
