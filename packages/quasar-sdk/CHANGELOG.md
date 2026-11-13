@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.8.0...quasar-sdk-v0.9.0) (2026-11-13)
+
+
+### Features
+
+* **nova-payments:** the checkout in paper and ink, with a status that changes in place ([#12](https://github.com/TuwaIO/quasar-client/issues/12)) ([b9cda06](https://github.com/TuwaIO/quasar-client/commit/b9cda060ec2abbd2995b4f32fa51a0735b07ee5b))
+
 ## [0.8.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.7.3...quasar-sdk-v0.8.0) (2026-11-07)
 
 
