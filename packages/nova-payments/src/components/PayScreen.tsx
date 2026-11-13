@@ -32,7 +32,7 @@ import {
 import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { AutoPayNote } from './AutoPayNote';
-import { capsLabel } from './capsLabel';
+import { CapsLabel } from './CapsLabel';
 import { focusRing, label, mono, pendingNote, screenHeading, smallAction, smallPrimaryAction } from './classes';
 import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from './icons';
 import {
@@ -284,13 +284,21 @@ export function PayScreen() {
   if (expired) action = { label: rest ? labels.outcome.payRest : labels.pay.newPrice, run: renew };
   else if (!walletMatches) action = { label: labels.pay.connect, run: connect };
   else if (wrongNetwork)
-    action = { label: capsLabel(labels.pay.switchTo, { network }), run: () => void payment.switchNetwork() };
+    action = {
+      label: <CapsLabel label={labels.pay.switchTo} values={{ network }} />,
+      run: () => void payment.switchNetwork(),
+    };
   else if (confirmFirst) action = { label: labels.payerProof.confirmToPay, run: () => void proof.confirm() };
   else {
     action = {
-      label: capsLabel(path === 'transfer' ? labels.pay.payAmount : labels.pay.signToPay, {
-        amount: token(amounts.send),
-      }),
+      label: (
+        <CapsLabel
+          label={path === 'transfer' ? labels.pay.payAmount : labels.pay.signToPay}
+          values={{
+            amount: token(amounts.send),
+          }}
+        />
+      ),
       // `onSubmit` of the app wraps the wallet prompt
       run: () =>
         void (customization.handlers?.onSubmit
@@ -461,7 +469,10 @@ export function PayScreen() {
                 {formatLabel(labels.pay.priceEnding, { time: formatCountdown(QUOTE_WARNING_MS) })}
               </span>
               <button type="button" onClick={renew} disabled={quoting} className={smallPrimaryAction}>
-                {capsLabel(labels.pay.keepPrice, { minutes: Math.round(checkout.quoteTtlSeconds / 60) })}
+                <CapsLabel
+                  label={labels.pay.keepPrice}
+                  values={{ minutes: Math.round(checkout.quoteTtlSeconds / 60) }}
+                />
               </button>
             </div>
           )}

@@ -29,7 +29,7 @@ import {
 } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { AutoPayNote } from './AutoPayNote';
-import { capsLabel } from './capsLabel';
+import { CapsLabel } from './CapsLabel';
 import { secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
 import {
@@ -140,7 +140,7 @@ function ContactLink() {
   const context = useCheckoutContext();
   const { checkout, labels, onContact } = context;
   if (!checkout) return null;
-  const text = capsLabel(labels.outcome.contact, { merchant: checkout.merchant.name });
+  const text = <CapsLabel label={labels.outcome.contact} values={{ merchant: checkout.merchant.name }} />;
   // The second action of the footer, the same as "Close" or "Back" on the other screens
   const className = cn(secondaryAction, checkoutClassName(context, 'secondaryButton'));
   if (onContact) {
@@ -594,7 +594,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
         const next = replacement.checkoutToken;
         action = (
           <PrimaryButton onClick={() => openInvoice(next)}>
-            {capsLabel(labels.outcome.openReplacement, { number })}
+            <CapsLabel label={labels.outcome.openReplacement} values={{ number }} />
           </PrimaryButton>
         );
       }

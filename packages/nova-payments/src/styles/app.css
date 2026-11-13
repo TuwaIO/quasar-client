@@ -87,8 +87,13 @@
   .novapay-page-fade {
     animation: novapay-page-fade 120ms ease-out;
   }
+  /* Every display: a label of two lines changes at once, and the new text comes in with the same short fade (`CapsLabel`) */
+  .novapay-label-fade {
+    animation: novapay-page-fade 120ms ease-out;
+  }
   @media (prefers-reduced-motion: reduce) {
-    .novapay-page-fade {
+    .novapay-page-fade,
+    .novapay-label-fade {
       animation: none;
     }
   }

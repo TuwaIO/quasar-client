@@ -8,7 +8,7 @@ import { isValidElement, type ReactElement } from 'react';
 import { vi } from 'vitest';
 
 import type { CheckoutContextValue } from '../components/checkoutContext';
-import { defaultLabels } from '../i18n';
+import { defaultLabels, formatLabel } from '../i18n';
 
 /** A method of the test checkout. */
 export const method = (id: string, symbol: string, chainId: string, featured = false): CheckoutMethod =>
@@ -149,10 +149,16 @@ export const hasClass = (node: unknown, name: string) =>
 
 /**
  * The text a node shows: its strings and numbers and those of the elements in it, in order, as a reader sees a label
- * whose parts are in elements of their own (a name inside a label in capitals).
+ * whose parts are in elements of their own. A filled-in label (`CapsLabel`, an element with a `label` and its `values`)
+ * reads as the label with its values in place.
  */
 export function text(node: unknown): string {
   if (typeof node === 'string' || typeof node === 'number') return String(node);
   if (Array.isArray(node)) return node.map(text).join('');
-  return isValidElement(node) ? text((node.props as { children?: unknown }).children) : '';
+  if (!isValidElement(node)) return '';
+  const props = node.props as { children?: unknown; label?: unknown; values?: unknown };
+  if (typeof props.label === 'string' && (props.values === undefined || typeof props.values === 'object')) {
+    return formatLabel(props.label, (props.values ?? {}) as Record<string, string | number>);
+  }
+  return text(props.children);
 }

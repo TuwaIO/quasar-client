@@ -9,7 +9,7 @@ import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { formatFeeAmount, formatTokenAmount, shortAddress } from '../utils/format';
 import type { PaymentFamily } from '../utils/methods';
 import { refundRateMoved } from '../utils/outcome';
-import { capsLabel } from './capsLabel';
+import { CapsLabel } from './CapsLabel';
 import { iconButton, mono, primaryAction } from './classes';
 import { RadioCards } from './RadioCards';
 import {
@@ -755,7 +755,9 @@ export function ConfirmStep({
       <ScreenFooter>
         {flow.problem !== 'noRecipient' &&
           (flow.wrongNetwork && !handOver ? (
-            <PrimaryButton onClick={() => void flow.switchNetwork()}>{capsLabel(text.switchTo, values)}</PrimaryButton>
+            <PrimaryButton onClick={() => void flow.switchNetwork()}>
+              <CapsLabel label={text.switchTo} values={values} />
+            </PrimaryButton>
           ) : (
             <PrimaryButton busy={flow.sending} onClick={() => void flow.send()}>
               {handOver ? text.handOver : text.sendRefund}

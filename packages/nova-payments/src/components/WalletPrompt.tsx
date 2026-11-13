@@ -3,7 +3,7 @@ import { type CSSProperties, useEffect, useId, useRef, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
-import { capsLabel } from './capsLabel';
+import { CapsLabel } from './CapsLabel';
 import { label, screenTitle } from './classes';
 import { DetailRow, DetailsCard, FooterAction, SecondaryButton, WalletWait } from './ScreenParts';
 
@@ -145,7 +145,9 @@ export function WalletPrompt({
             </p>
           )}
           <div className="novapay:flex novapay:w-full novapay:max-w-xs novapay:flex-col novapay:gap-1.5 novapay:text-left">
-            <span className={label}>{capsLabel(labels.walletPrompt.check, values)}</span>
+            <span className={label}>
+              <CapsLabel label={labels.walletPrompt.check} values={values} />
+            </span>
             <DetailsCard>
               {details ? (
                 details.map((row) => (

@@ -57,6 +57,10 @@ export const hooks = {
       });
     }
   },
+  // Runs with the other effects after the render: the harness has no paint to come before
+  useLayoutEffect(effect: () => unknown, deps?: readonly unknown[]) {
+    hooks.useEffect(effect, deps);
+  },
   useEffectEvent(callback: (...args: unknown[]) => unknown) {
     const slot = nextSlot();
     slot.latest = callback;

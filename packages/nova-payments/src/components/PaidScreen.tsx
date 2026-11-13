@@ -8,7 +8,7 @@ import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal } from '../utils/format';
 import { methodFamily } from '../utils/methods';
-import { capsLabel } from './capsLabel';
+import { CapsLabel } from './CapsLabel';
 import { mono, primaryAction, secondaryAction, smallAction, textButton } from './classes';
 import { checkoutClassName } from './customization';
 import { ArrowDownTrayIcon, DocumentTextIcon } from './icons';
@@ -192,7 +192,7 @@ export function PaidScreen() {
                   : cn(primaryAction, checkoutClassName(context, 'primaryButton'))
               }
             >
-              {capsLabel(labels.paid.back, { merchant })}
+              <CapsLabel label={labels.paid.back} values={{ merchant }} />
             </a>
             {countdown.left !== null && (
               <FooterNote>

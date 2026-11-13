@@ -9,7 +9,7 @@ import { formatFiat, minorToDecimal, shortAddress } from '../utils/format';
 import { methodFamily, networkName, payerFor } from '../utils/methods';
 import { addressOfWallet, isSameWallet } from '../utils/outcome';
 import { isConfirmationError, isSmartWallet, payerProofErrorText } from '../utils/payerProof';
-import { capsLabel } from './capsLabel';
+import { CapsLabel } from './CapsLabel';
 import { mono, smallAction } from './classes';
 import { FingerPrintIcon } from './icons';
 import {
@@ -183,11 +183,13 @@ export function ConfirmWalletScreen() {
 
         <ScreenFooter>
           <PrimaryButton busy={waiting || quoting} onClick={retry}>
-            {quoting
-              ? labels.method.quoting
-              : waiting
-                ? capsLabel(labels.payerProof.waiting, values)
-                : capsLabel(labels.payerProof.confirm, values)}
+            {quoting ? (
+              labels.method.quoting
+            ) : waiting ? (
+              <CapsLabel label={labels.payerProof.waiting} values={values} />
+            ) : (
+              <CapsLabel label={labels.payerProof.confirm} values={values} />
+            )}
           </PrimaryButton>
           {/* The price is on its way and would open the pay step a moment later */}
           <SecondaryButton disabled={quoting} onClick={back}>

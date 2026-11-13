@@ -12,6 +12,7 @@ import {
 import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
 import type { NovaPaymentsLabels } from '../i18n';
 import { isWalletIconUrl } from '../utils/methods';
+import { CapsLabel } from './CapsLabel';
 import type { CheckoutContextValue } from './checkoutContext';
 import {
   focusRing,
@@ -231,7 +232,8 @@ export function PrimaryButton({ busy, children, className, ...props }: CheckoutP
       className={cn(primaryAction, className, extra)}
     >
       {busy && <QuasarLoader size={16} accent="currentColor" />}
-      {typeof children === 'string' ? <MorphText wrap>{children}</MorphText> : children}
+      {/* A plain label and a filled-in one (`CapsLabel`) are the same element: one morphs into the other */}
+      {typeof children === 'string' ? <CapsLabel label={children} /> : children}
     </button>
   );
 }

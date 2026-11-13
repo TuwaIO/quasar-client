@@ -10,6 +10,7 @@ import { shortAddress } from '../utils/format';
 import { canPayWithQr, methodFamily, networkName, payerFor, priceAdjustment } from '../utils/methods';
 import { methodErrorText } from '../utils/outcome';
 import { AutoPayNote } from './AutoPayNote';
+import { CapsLabel } from './CapsLabel';
 import { chip, chipTone, focusRing, mono } from './classes';
 import { checkoutClassName } from './customization';
 import { DevicePhoneMobileIcon, QrCodeIcon, WalletOutlineIcon } from './icons';
@@ -193,7 +194,10 @@ export function MethodScreen() {
 
   const networksOf = (item: CheckoutTokenGroup) => (
     <>
-      <GroupLabel>{formatLabel(labels.method.network, { symbol: item.symbol })}</GroupLabel>
+      {/* A token keeps the letters of its symbol (`wstETH`) in the label in capitals */}
+      <GroupLabel>
+        <CapsLabel label={labels.method.network} values={{ symbol: item.symbol }} />
+      </GroupLabel>
       <RadioCards
         label={formatLabel(labels.method.network, { symbol: item.symbol })}
         items={item.methods}

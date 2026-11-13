@@ -20,14 +20,14 @@ vi.mock('@tuwaio/nova-core', async (importOriginal) => {
   return { ...novaCore, useNovaIcons: () => iconSet.value ?? novaCore.pixelIcons };
 });
 
-const { NovaSetIcon, pixelIcons } = await import('@tuwaio/nova-core');
+const { MorphText, NovaSetIcon, pixelIcons } = await import('@tuwaio/nova-core');
 const pixelOutline = await import('@tuwaio/nova-icons/24/outline');
 const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
-const { capsLabel } = await import('./capsLabel');
+const { CapsLabel } = await import('./CapsLabel');
 const classes = await import('./classes');
 const icons = await import('./icons');
-const { CheckBox } = await import('./ScreenParts');
+const { CheckBox, PrimaryButton } = await import('./ScreenParts');
 
 type Props = Record<string, unknown>;
 
@@ -148,22 +148,94 @@ describe('the checkout in paper and ink', () => {
     for (const tone of Object.values(classes.chipTone)) expect(tone).toMatch(/novapay:border-\[/);
   });
 
-  it('keeps what a label in capitals is filled with in its own letters: a name is never changed', () => {
-    const parts = capsLabel('Back to {merchant}', { merchant: 'eBay' }) as unknown[];
-    expect(fixture.text(parts)).toBe('Back to eBay');
-    const [words, name] = parts as [string, ReactElement<Props>];
-    expect(words).toBe('Back to ');
-    expect(name.props).toEqual({ className: 'novapay:normal-case', children: 'eBay' });
-  });
+  describe('a label in capitals', () => {
+    type Place = ReactElement<{ children: [string, ReactElement<Props>, string] }>;
+    /** The label as drawn: its element, and inside it the element of each place (between the spaces around it). */
+    const draw = (label: string, values?: Record<string, string | number>) => {
+      const element = render(CapsLabel, { label, values }) as ReactElement<{ className: string; children: Place[] }>;
+      const slots = element.props.children;
+      return { element, slots, places: slots.map((slot) => ({ ...slot.props.children[1], key: slot.key })) };
+    };
+    const texts = (places: { props: Props }[]) => places.map((place) => place.props.children);
 
-  it('fills a label that names the same thing twice, each time in an element of its own', () => {
-    const parts = capsLabel('{wallet} asks: open {wallet}, {count} left', {
-      wallet: 'MetaMask',
-      count: 2,
-    }) as unknown[];
-    expect(fixture.text(parts)).toBe('MetaMask asks: open MetaMask, 2 left');
-    const keys = parts.filter((part) => typeof part !== 'string').map((part) => (part as ReactElement).key);
-    expect(new Set(keys).size).toBe(3);
+    it('keeps what it is filled with in its own letters: a name is never changed', () => {
+      const { places } = draw('Back to {merchant}', { merchant: 'eBay' });
+      unmount();
+      expect(texts(places)).toEqual(['Back to', 'eBay', '']);
+      // The words take the capitals of the button around them; the name does not
+      expect(places[0].props.className).toBeUndefined();
+      expect(places[1].props.className).toBe('novapay:normal-case');
+    });
+
+    // Filled in as loose parts, a label lost the morph of a text that changes ("Confirm in …" to "Waiting for …"): only a
+    // plain text morphed, and a label with a name in it was replaced at once
+    it('morphs place by place when it changes: the words into the new words, a name that stays keeps still', () => {
+      const before = draw('Confirm in {wallet}', { wallet: 'MetaMask' }).places;
+      const after = draw('Waiting for {wallet}…', { wallet: 'MetaMask' }).places;
+      unmount();
+      for (const place of [...before, ...after]) expect(place.type).toBe(MorphText);
+      // The same place in both labels is the same element for React, so its text morphs instead of being replaced
+      expect(before.map((place) => place.key)).toEqual(['0', '1', '2']);
+      expect(after.map((place) => place.key)).toEqual(['0', '1', '2']);
+      expect(texts(before)).toEqual(['Confirm in', 'MetaMask', '']);
+      expect(texts(after)).toEqual(['Waiting for', 'MetaMask', '…']);
+      expect(after[1].props).toEqual(before[1].props);
+    });
+
+    // A name that left with its label vanished at once and the words jumped sideways to the middle: its place stays,
+    // empty, so the name morphs out and the next one morphs in
+    it('keeps the place of a name when a plain label follows, and a plain label is the same element', () => {
+      const filled = draw('Turn off in {wallet}', { wallet: 'MetaMask' }).places;
+      const plain = draw('Waiting for the network…').places;
+      unmount();
+      expect(texts(filled)).toEqual(['Turn off in', 'MetaMask', '']);
+      expect(texts(plain)).toEqual(['Waiting for the network…', '', '']);
+      expect(plain.map((place) => place.key)).toEqual(filled.map((place) => place.key));
+      expect(plain[1].props.className).toBeUndefined();
+      // The main button draws its plain labels with the same element, so a plain label morphs into a filled-in one
+      const button = render(PrimaryButton, { children: 'Check again' }) as ReactElement<{ children: unknown[] }>;
+      unmount();
+      const label = fixture.ofType(button, CapsLabel)[0];
+      expect(label.props).toEqual({ label: 'Check again' });
+    });
+
+    // The name of a button is put together from the texts of its elements, and a tool that computes it dropped the space
+    // at the end of an element: "Confirm inMetaMask". The spaces between two places are text between their elements
+    it('keeps the spaces between its places as plain text, outside the elements of the places', () => {
+      const { slots } = draw('Let {merchant} pay the gas', { merchant: 'Acme Labs' });
+      unmount();
+      const drawn = slots.map((slot) => slot.props.children.map((part) => (typeof part === 'string' ? part : '·')));
+      expect(drawn).toEqual([
+        ['', '·', ' '],
+        ['', '·', ''],
+        [' ', '·', ''],
+      ]);
+      for (const slot of slots) expect(String(slot.props.children[1].props.children)).not.toMatch(/^\s|\s$/);
+    });
+
+    // As loose parts in a button that lays its content out in a row, each part was an item of the row: the gap of the
+    // row stood for the space between the words and the name
+    it('is one element, so a button has one item for it', () => {
+      const { element } = draw('Let {merchant} pay the gas', { merchant: 'Acme Labs' });
+      unmount();
+      expect(element.type).toBe('span');
+      expect(words(element.props.className)).toContain('novapay:min-w-0');
+      expect(fixture.text(element)).toBe('Let Acme Labs pay the gas');
+    });
+
+    it('reads as the label with its values in place, also where a name comes twice', () => {
+      const { element, places } = draw('{wallet} asks: open {wallet}, {count} left', { wallet: 'MetaMask', count: 2 });
+      unmount();
+      expect(fixture.text(element)).toBe('MetaMask asks: open MetaMask, 2 left');
+      // More places than the three that are always there: every part has one
+      expect(texts(places)).toEqual(['MetaMask', 'asks: open', 'MetaMask', ',', '2', 'left']);
+      expect(new Set(places.map((place) => place.key)).size).toBe(places.length);
+      // A test reads the label of a button the same way, from the element a screen passes as its label
+      expect(fixture.text(<CapsLabel label="Back to {merchant}" values={{ merchant: 'Acme Labs' }} />)).toBe(
+        'Back to Acme Labs',
+      );
+      expect(fixture.text(<CapsLabel label="Check again" />)).toBe('Check again');
+    });
   });
 
   it('draws a checkbox as a square over a real one, which keeps its label, its form and the keyboard', () => {

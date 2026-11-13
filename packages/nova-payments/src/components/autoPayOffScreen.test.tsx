@@ -111,7 +111,11 @@ describe('turning off automatic payments', () => {
     const { primary } = screen(PAYER, { revokePermission });
     (primary.props.onClick as () => void)();
     await vi.waitFor(() => expect(revokePermission).toHaveBeenCalled());
-    const label = () => textOf(fixture.elements(render(AutoPayOffScreen, {})).find((e) => e.type === PrimaryButton));
+    // The label of the button as a reader sees it, whether a plain text or a filled-in label
+    const label = () =>
+      fixture.text(
+        fixture.elements(render(AutoPayOffScreen, {})).find((e) => e.type === PrimaryButton)?.props.children,
+      );
     expect(label()).toContain('MetaMask');
 
     sent();
