@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/failedPaymentTx" />
+
+# failedPaymentTx()
+
+> **failedPaymentTx**(`error`): `string` \| `null`
+
+Defined in: [nova-payments/src/utils/outcome.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L88)
+
+The transaction of a payment that ended without paying the invoice, when the store's error names one: a transaction
+the network has (it reverted, or it succeeded and sent something else), which the page shows with a link to the
+explorer next to what it says.
+
+## Parameters
+
+### error
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs) \| `null` \| `undefined`
+
+The store's error, if any.
+
+## Returns
+
+`string` \| `null`
+
+The transaction's key, or `null` for any other error, or one that names no transaction.

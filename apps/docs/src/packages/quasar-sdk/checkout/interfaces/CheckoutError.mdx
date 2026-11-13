@@ -150,7 +150,7 @@ HTTP status, when the API answered.
 
 > `optional` **stillRead?**: `true`
 
-Defined in: [checkout/store.ts:161](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L161)
+Defined in: [checkout/store.ts:167](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L167)
 
 Set on `payment_unconfirmed` for a payment past the first day Quasar still reads, as a node still shows it or nothing could
 read it: neither the promise of `rechecked` nor that Quasar stopped reading it holds.
@@ -171,6 +171,10 @@ What to show in the reader's language, when the app said it: a window prefers it
 
 > `optional` **txKey?**: `string`
 
-Defined in: [checkout/store.ts:156](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L156)
+Defined in: [checkout/store.ts:162](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L162)
 
-The transaction whose nonce nothing explains, on `nonce_spent_unexplained`: not always the one the page handed over last.
+The transaction the error is about, when the network has it to look at: one that reverted (`payment_failed` with
+the reason `reverted`), one that succeeded without paying the invoice (`payment_mismatch`), and the transaction
+whose nonce nothing explains, on `nonce_spent_unexplained` (not always the one the page handed over last). A page
+links to it in the explorer next to what it says. Absent for a payment that never reached the network (a relay
+operation lost, a transaction that expired or was replaced).

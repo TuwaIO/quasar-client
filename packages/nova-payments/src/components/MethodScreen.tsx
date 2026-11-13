@@ -18,6 +18,7 @@ import { RadioCards } from './RadioCards';
 import {
   CheckBox,
   CheckoutWalletIcon,
+  FailedTransaction,
   GroupLabel,
   PrimaryButton,
   ScreenContent,
@@ -422,7 +423,10 @@ export function MethodScreen() {
           <ScreenError>{qrAvailable ? labels.pay.connectUnavailable : labels.method.methodUnavailable}</ScreenError>
         )}
         {state.error && state.phase === 'selectMethod' && (
-          <ScreenError>{methodErrorText(state.error, labels, checkout.merchant.name)}</ScreenError>
+          <>
+            <ScreenError>{methodErrorText(state.error, labels, checkout.merchant.name)}</ScreenError>
+            <FailedTransaction error={state.error} />
+          </>
         )}
       </ScreenContent>
       <ScreenFooter>

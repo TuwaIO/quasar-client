@@ -282,8 +282,20 @@ export type NovaPaymentsLabels = {
     declined: string;
     /** Button after a declined request (default: `Try again`) */
     tryAgain: string;
-    /** The transaction failed: `{network}` */
+    /** The transaction reverted on the network, so its fee was spent: `{network}` */
     failed: string;
+    /**
+     * The transaction never landed and its time ran out (a Solana blockhash expired), so nothing was sent and no fee was
+     * spent (default: `The transaction was not confirmed in time and expired, so nothing was sent. The invoice is still open.`)
+     */
+    failedExpired: string;
+    /** The buyer cancelled the transaction in the wallet (default: `The transaction was cancelled in the wallet. The invoice is still open.`) */
+    failedCancelled: string;
+    /**
+     * The payment failed and Quasar names no cause the page can word, or none at all: no word about a fee, which a payment
+     * that never reached the network did not spend (default: `The payment did not go through. The invoice is still open.`)
+     */
+    didNotGoThrough: string;
     /**
      * The transaction succeeded on chain but does not pay the invoice (a wrong amount, asset or recipient, no Solana Pay
      * reference, sent before the price was locked…): it may have moved money, so never say that it failed or that

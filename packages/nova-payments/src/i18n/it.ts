@@ -159,6 +159,10 @@ export const itLabels: NovaPaymentsLabels = {
     tryAgain: 'Riprova',
     failed:
       'Il pagamento non è riuscito su {network}. È stata spesa solo la commissione di rete; la fattura è ancora aperta.',
+    failedExpired:
+      'La transazione non è stata confermata in tempo ed è scaduta, quindi non è stato inviato nulla. La fattura è ancora aperta.',
+    failedCancelled: 'La transazione è stata annullata nel wallet. La fattura è ancora aperta.',
+    didNotGoThrough: 'Il pagamento non è andato a buon fine. La fattura è ancora aperta.',
     mismatch: 'Questa transazione non paga la fattura. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     mismatchTakenElsewhere:
       "Questa transazione paga un'altra fattura. Se era il tuo pagamento per questa, contatta {merchant} indicando l'hash della transazione.",

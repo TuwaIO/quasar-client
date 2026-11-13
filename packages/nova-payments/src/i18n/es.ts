@@ -157,6 +157,10 @@ export const esLabels: NovaPaymentsLabels = {
     declined: 'Rechazaste la solicitud en {wallet}.',
     tryAgain: 'Reintentar',
     failed: 'El pago falló en {network}. Solo se gastó la comisión de red; la factura sigue abierta.',
+    failedExpired:
+      'La transacción no se confirmó a tiempo y caducó, así que no se envió nada. La factura sigue abierta.',
+    failedCancelled: 'La transacción se canceló en la billetera. La factura sigue abierta.',
+    didNotGoThrough: 'El pago no se completó. La factura sigue abierta.',
     mismatch: 'Esta transacción no paga la factura. Si salió dinero de tu billetera, contacta con {merchant}.',
     mismatchTakenElsewhere:
       'Esta transacción paga otra factura. Si era tu pago de esta, contacta con {merchant} e indica el hash de la transacción.',

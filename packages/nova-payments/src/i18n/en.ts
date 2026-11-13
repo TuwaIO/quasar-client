@@ -155,6 +155,10 @@ export const defaultLabels: NovaPaymentsLabels = {
     declined: 'You declined the request in {wallet}.',
     tryAgain: 'Try again',
     failed: 'The payment failed on {network}. Only the network fee was spent; the invoice is still open.',
+    failedExpired:
+      'The transaction was not confirmed in time and expired, so nothing was sent. The invoice is still open.',
+    failedCancelled: 'The transaction was cancelled in the wallet. The invoice is still open.',
+    didNotGoThrough: 'The payment did not go through. The invoice is still open.',
     mismatch: 'This transaction does not pay the invoice. If money left your wallet, contact {merchant}.',
     mismatchTakenElsewhere:
       'This transaction pays another invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',

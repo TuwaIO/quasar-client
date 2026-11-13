@@ -1,5 +1,6 @@
 import { cn, CopyIcon, DrawnCheck, MorphText, QuasarLoader, WalletIcon } from '@tuwaio/nova-core';
 import { HashLink } from '@tuwaio/nova-transactions';
+import type { CheckoutError } from '@tuwaio/quasar-sdk/checkout';
 import {
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
@@ -12,6 +13,8 @@ import {
 import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
 import type { NovaPaymentsLabels } from '../i18n';
 import { isWalletIconUrl } from '../utils/methods';
+import { failedPaymentTx } from '../utils/outcome';
+import { instructionsChainId } from '../utils/pay';
 import { CapsLabel } from './CapsLabel';
 import type { CheckoutContextValue } from './checkoutContext';
 import {
@@ -315,6 +318,39 @@ export function ScreenError({ children }: { children: ReactNode }) {
     >
       {children}
     </p>
+  );
+}
+
+/**
+ * The transaction a failed payment is about, under what the screen says of it: its short hash with a copy button,
+ * linked to the explorer of the network of the locked price when there is one. For a transaction the network has (it
+ * reverted, or it succeeded and did not pay the invoice), so the buyer looks at what the wallet sent instead of taking
+ * the page's word. Nothing for an error that names no transaction.
+ *
+ * @internal
+ */
+export function FailedTransaction({ error }: { error: CheckoutError | null | undefined }) {
+  const context = useOptionalCheckoutContext();
+  const txKey = failedPaymentTx(error);
+  if (!context || !txKey) return null;
+  // The price the payment was sent under names its network; without one the hash still shows, to copy
+  const locked = context.state.quote ?? context.checkout?.quote;
+  const chainId = locked ? instructionsChainId(locked.instructions) : null;
+  const explorerUrl =
+    locked && chainId ? context.adapterFor(locked.instructions.family)?.explorerUrl?.({ chainId, txKey }) : undefined;
+  return (
+    <TxLabels>
+      <DetailsCard>
+        <DetailRow name={context.labels.confirm.transaction}>
+          <HashLink
+            hash={txKey}
+            explorerUrl={explorerUrl}
+            variant="compact"
+            {...context.customization.childCustomizations?.hashLink}
+          />
+        </DetailRow>
+      </DetailsCard>
+    </TxLabels>
   );
 }
 

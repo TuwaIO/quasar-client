@@ -152,7 +152,13 @@ export interface CheckoutError {
    * prices the rest of an underpaid invoice only for that wallet, so the buyer pays the rest from it.
    */
   originWallet?: string;
-  /** The transaction whose nonce nothing explains, on `nonce_spent_unexplained`: not always the one the page handed over last. */
+  /**
+   * The transaction the error is about, when the network has it to look at: one that reverted (`payment_failed` with
+   * the reason `reverted`), one that succeeded without paying the invoice (`payment_mismatch`), and the transaction
+   * whose nonce nothing explains, on `nonce_spent_unexplained` (not always the one the page handed over last). A page
+   * links to it in the explorer next to what it says. Absent for a payment that never reached the network (a relay
+   * operation lost, a transaction that expired or was replaced).
+   */
   txKey?: string;
   /**
    * Set on `payment_unconfirmed` for a payment past the first day Quasar still reads, as a node still shows it or nothing could
@@ -891,8 +897,27 @@ type Ending = {
 /**
  * The error of a payment that ended without paying the invoice, by how it ended: a transfer that may have moved money
  * is `payment_mismatch` whether Quasar calls it final or not (never "did not go through", never the re-check promise).
+ * It names the transaction (`txKey`) when the network has it ({@link transactionOf}).
  */
 function endedError(ended: Ending): CheckoutError {
+  return { ...endedErrorOf(ended), ...transactionOf(ended) };
+}
+
+/** Reasons of a failed payment whose transaction is on the network to look at, besides those that may have moved money. */
+const ON_CHAIN_REASONS: ReadonlySet<string> = new Set(['reverted']);
+
+/**
+ * The transaction of a payment that ended, for the error about it: only one the network has, so that a page can link
+ * to it (a transaction that succeeded without paying the invoice, or one that reverted). A relay operation that never
+ * became a transaction, a transaction that expired or was replaced are not there to look at.
+ */
+function transactionOf(ended: Ending): { txKey?: string } {
+  const txKey = ended.keys?.[0];
+  if (!txKey) return {};
+  return ended.movedMoney || (ended.reason !== undefined && ON_CHAIN_REASONS.has(ended.reason)) ? { txKey } : {};
+}
+
+function endedErrorOf(ended: Ending): CheckoutError {
   const reason = ended.reason ? { reason: ended.reason } : {};
   // Confirmed on chain, not recorded yet: the merchant has the money, Quasar may still retry it
   if (ended.reason === SETTLEMENT_FAILED) return settlementFailedError(ended.rechecked);

@@ -1171,6 +1171,43 @@ describe('createCheckoutStore: payments on their way and why they failed', () =>
     spedUp.getState().destroy();
   });
 
+  // The page said that a transaction did not pay the invoice without a way to look at it: the error named no transaction
+  it('names the transaction of a failed payment when the network has it, for a link to the explorer', async () => {
+    answer({ rejectedTxKeys: [], rejectedPayments: [] });
+    const ended = async (index: number, payment: ReturnType<typeof rejection>) => {
+      const checkout = store();
+      await checkout.getState().load();
+      await checkout.getState().submit({ txKey: '0xFEED' });
+      FakeEventSource.instances[index].emit(
+        'status',
+        signal('open', 5, { pendingPayments: 0, rejectedPayments: [payment] }),
+      );
+      const { error } = checkout.getState();
+      checkout.getState().destroy();
+      return error;
+    };
+
+    // Reverted: the transaction is on the network, as Quasar lists it (an EVM hash in lower case)
+    expect(await ended(0, rejection('0xfeed', 'reverted', true))).toMatchObject({
+      code: 'payment_failed',
+      txKey: '0xfeed',
+    });
+    // Sped up in the wallet with a wrong amount: the transaction that landed, not the one this page handed over
+    expect(await ended(1, rejection('0xfaster', 'no_matching_transfer', true, { original: '0xfeed' }))).toMatchObject({
+      code: 'payment_mismatch',
+      txKey: '0xfaster',
+    });
+    // Never on the network: a Solana transaction whose blockhash expired, a relay operation that was lost
+    for (const [index, reason] of [
+      [2, 'expired'],
+      [3, 'user_operation_lost'],
+    ] as const) {
+      const error = await ended(index, rejection('0xfeed', reason, true));
+      expect(error).toMatchObject({ code: 'payment_failed', reason });
+      expect(error).not.toHaveProperty('txKey');
+    }
+  });
+
   it('asks to check the wallet when the invoice goes back to open without a final rejection', async () => {
     answer({ rejectedTxKeys: [], rejectedPayments: [] });
     const checkout = store();

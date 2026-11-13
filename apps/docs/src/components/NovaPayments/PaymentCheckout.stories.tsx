@@ -891,6 +891,44 @@ export const HeldTransfer: Story = {
 };
 
 /**
+ * A transaction that landed and did not pay the invoice (a wrong amount, token or recipient): the page says so instead
+ * of waiting, shows the transaction with its link to the explorer, and the button pays again.
+ */
+export const WrongTransfer: Story = {
+  args: {
+    wallet: METAMASK_ON_BASE_SEPOLIA,
+    view: sampleCheckout(
+      { quote: LOCKED },
+      {
+        pendingPayments: 0,
+        rejectedPayments: [
+          {
+            txKey: '0x9a3f000000000000000000000000000000000000000000000000000000004be2',
+            reason: 'no_matching_transfer',
+            final: true,
+            movedMoney: true,
+            at: Date.parse('2026-11-03T14:02:00.000Z'),
+          },
+        ],
+      },
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText(
+        'This transaction does not pay the invoice. If money left your wallet, contact Acme Labs.',
+      ),
+    ).toBeVisible();
+    await expect(canvas.getByRole('link', { name: /explorer/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('0x9a3f000000000000000000000000000000000000000000000000000000004be2'),
+    );
+    await expect(canvas.getByRole('button', { name: 'Pay again' })).toBeEnabled();
+  },
+};
+
+/**
  * Part of the invoice was paid from one wallet and another one is connected now: only the wallet that paid first pays
  * the rest, and "Pay the rest" asks for it.
  */

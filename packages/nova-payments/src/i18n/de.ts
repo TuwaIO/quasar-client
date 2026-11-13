@@ -162,6 +162,10 @@ export const deLabels: NovaPaymentsLabels = {
     tryAgain: 'Erneut versuchen',
     failed:
       'Die Zahlung ist im Netzwerk {network} fehlgeschlagen. Es wurde nur die Netzwerkgebühr verbraucht; die Rechnung bleibt offen.',
+    failedExpired:
+      'Die Transaktion wurde nicht rechtzeitig bestätigt und ist abgelaufen; es wurde nichts gesendet. Die Rechnung bleibt offen.',
+    failedCancelled: 'Die Transaktion wurde im Wallet abgebrochen. Die Rechnung bleibt offen.',
+    didNotGoThrough: 'Die Zahlung ist nicht durchgegangen. Die Rechnung bleibt offen.',
     mismatch:
       'Diese Transaktion bezahlt die Rechnung nicht. Wenn Geld Ihr Wallet verlassen hat, wenden Sie sich an {merchant}.',
     mismatchTakenElsewhere:

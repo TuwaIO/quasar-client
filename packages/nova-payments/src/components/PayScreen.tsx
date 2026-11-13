@@ -20,7 +20,7 @@ import {
   shortAddress,
 } from '../utils/format';
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
-import { leftTheWalletText, restRateText } from '../utils/outcome';
+import { leftTheWalletText, paymentFailedText, restRateText } from '../utils/outcome';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
 import {
   isConfirmationError,
@@ -41,6 +41,7 @@ import {
   CopyButton,
   DetailRow,
   DetailsCard,
+  FailedTransaction,
   FooterAction,
   FooterNote,
   PrimaryButton,
@@ -77,9 +78,10 @@ function problemText(
   // "only the fee"
   const leftTheWallet = problem ? null : leftTheWalletText(error, labels, values.merchant);
   if (leftTheWallet !== null) return leftTheWallet;
-  // Only a transaction that reverted on the network spent a fee. A wallet that did not do what it was asked sent nothing
+  // Only a transaction that reverted on the network spent a fee (`paymentFailedText`). A wallet that did not do what it
+  // was asked sent nothing
   if (problem === 'failed') return formatLabel(labels.pay.walletFailed, values);
-  if (errorCode === 'payment_failed') return formatLabel(labels.pay.failed, values);
+  if (error && errorCode === 'payment_failed') return paymentFailedText(error, labels, values.network);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;
   // A new price was refused: the feed or the network of the method cannot be read now, or the seller set up no RPC
@@ -268,13 +270,13 @@ export function PayScreen() {
         merchant,
       })
     : null;
-  const problem = problemText(
-    labels,
-    { wallet: wallet?.name ?? '', network, merchant },
-    payment.problem,
-    // The confirmation's own failures show once, under it
-    state.phase === 'awaitingPayment' && !(confirmFirst && isConfirmationError(state.error)) ? state.error : undefined,
-  );
+  // The confirmation's own failures show once, under it
+  const shownError =
+    state.phase === 'awaitingPayment' && !(confirmFirst && isConfirmationError(state.error)) ? state.error : undefined;
+  const problem = problemText(labels, { wallet: wallet?.name ?? '', network, merchant }, payment.problem, shownError);
+  // The last payment of this page ended without paying the invoice, and the screen says so: the button pays again
+  const paysAgain =
+    !payment.problem && (shownError?.code === 'payment_failed' || shownError?.code === 'payment_mismatch');
 
   // An app with neither Nova Connect nor a handler of its own: the control would do nothing, with no word why
   const connect = () => {
@@ -291,7 +293,10 @@ export function PayScreen() {
   else if (confirmFirst) action = { label: labels.payerProof.confirmToPay, run: () => void proof.confirm() };
   else {
     action = {
-      label: (
+      // After a payment that ended without paying the invoice the button says what it does now; the amount is above it
+      label: paysAgain ? (
+        labels.pay.payAgain
+      ) : (
         <CapsLabel
           label={path === 'transfer' ? labels.pay.payAmount : labels.pay.signToPay}
           values={{
@@ -578,6 +583,8 @@ export function PayScreen() {
           )}
           {proofError && <ScreenError>{proofError}</ScreenError>}
           {problem && <ScreenError>{problem}</ScreenError>}
+          {/* What the wallet sent, to look at: the refusal of a payment names its transaction when the network has it */}
+          {!payment.problem && <FailedTransaction error={shownError} />}
           {cannotConnect && <ScreenError>{labels.pay.connectUnavailable}</ScreenError>}
         </section>
 

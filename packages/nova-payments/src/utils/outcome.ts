@@ -58,6 +58,40 @@ const LEFT_THE_WALLET: Partial<
 };
 
 /**
+ * What the checkout says about a payment Quasar ended as failed for good (`payment_failed`), by the reason Quasar gives.
+ * Only a transaction that reverted on the network spent a fee, and only that one is said to have: a transaction whose
+ * time ran out before it landed (`expired`, a Solana blockhash) sent nothing, one the buyer cancelled in the wallet
+ * (`cancelled`) was their own doing, and for anything else (a relay operation that was lost, a cause Quasar does not
+ * name, an older Quasar that gives no reason) the page knows only that the invoice is not paid.
+ *
+ * @param error - The store's `payment_failed` error.
+ * @param labels - The labels of the checkout language.
+ * @param network - The name of the network of the payment, on the pay step; the method step does not know it.
+ * @returns The text.
+ */
+export function paymentFailedText(error: CheckoutError, labels: NovaPaymentsLabels, network?: string): string {
+  const reason = (error as { reason?: string }).reason;
+  if (reason === 'expired') return labels.pay.failedExpired;
+  if (reason === 'cancelled') return labels.pay.failedCancelled;
+  if (reason === 'reverted') return network ? formatLabel(labels.pay.failed, { network }) : labels.method.paymentFailed;
+  return labels.pay.didNotGoThrough;
+}
+
+/**
+ * The transaction of a payment that ended without paying the invoice, when the store's error names one: a transaction
+ * the network has (it reverted, or it succeeded and sent something else), which the page shows with a link to the
+ * explorer next to what it says.
+ *
+ * @param error - The store's error, if any.
+ * @returns The transaction's key, or `null` for any other error, or one that names no transaction.
+ */
+export function failedPaymentTx(error: CheckoutError | null | undefined): string | null {
+  if (error?.code !== 'payment_failed' && error?.code !== 'payment_mismatch') return null;
+  const { txKey } = error as { txKey?: unknown };
+  return typeof txKey === 'string' && txKey ? txKey : null;
+}
+
+/**
  * Rejection reasons of a transfer Quasar ties to no invoice: it came from a wallet that did not confirm the invoice.
  * With `held` Quasar recorded it as a held transfer, which the seller returns, and the invoice stays payable; without
  * it the text promises no refund.
@@ -181,9 +215,9 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.payerProof.invalid;
     case 'payer_proof_unavailable':
       return labels.payerProof.unavailable;
-    // A transaction that reverted, seen after the price lock ended or on a rest: the pay step has the same sentence
+    // A payment that failed for good, seen after the price lock ended or on a rest: the pay step has the same sentence
     case 'payment_failed':
-      return labels.method.paymentFailed;
+      return paymentFailedText(error, labels);
     // Quasar takes the rest only in the method that paid first
     case 'rest_method_mismatch':
       return labels.method.restSameMethod;
