@@ -13,7 +13,15 @@ vi.mock('../hooks/useCheckoutContext', () => ({
   useOptionalCheckoutContext: () => null,
 }));
 
-const { NovaSetIcon } = await import('@tuwaio/nova-core');
+// The icon set of the closest `NovaIconsProvider`: what a test puts in `iconSet`, else the default pixel set of Nova
+const { iconSet } = vi.hoisted(() => ({ iconSet: { value: null as unknown } }));
+vi.mock('@tuwaio/nova-core', async (importOriginal) => {
+  const novaCore = await importOriginal<typeof import('@tuwaio/nova-core')>();
+  return { ...novaCore, useNovaIcons: () => iconSet.value ?? novaCore.pixelIcons };
+});
+
+const { NovaSetIcon, pixelIcons } = await import('@tuwaio/nova-core');
+const pixelOutline = await import('@tuwaio/nova-icons/24/outline');
 const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { capsLabel } = await import('./capsLabel');
@@ -53,6 +61,41 @@ describe('the checkout in paper and ink', () => {
     const wallet = icons.WalletOutlineIcon({}) as ReactElement<Props>;
     expect(wallet.type).toBe(NovaSetIcon);
     expect(wallet.props).toEqual({ outline: 'WalletIcon' });
+  });
+
+  // With the Heroicons set of Nova the checkout kept a pixel lock, QR code and download beside the thin icons of the
+  // rest: the icons only the checkout draws did not look into the set
+  describe('the icons only the checkout draws', () => {
+    const OWN = [
+      'ArrowDownTrayIcon',
+      'ArrowPathRoundedSquareIcon',
+      'ArrowUturnLeftIcon',
+      'DevicePhoneMobileIcon',
+      'FingerPrintIcon',
+      'LockClosedIcon',
+      'MagnifyingGlassIcon',
+      'NoSymbolIcon',
+      'QrCodeIcon',
+    ] as const;
+    const draw = (name: (typeof OWN)[number]) => icons[name]({ className: 'size' }) as ReactElement<Props>;
+
+    it.each(OWN)('%s comes from the icon set of the app when the set has it', (name) => {
+      const FromSet = () => null;
+      iconSet.value = { ...pixelIcons, outline: { ...pixelIcons.outline, [name]: FromSet } };
+      const icon = draw(name);
+      iconSet.value = null;
+      expect(icon.type).toBe(FromSet);
+      expect(icon.props).toEqual({ className: 'size' });
+    });
+
+    // A set an app made before these names, the default set, and the sets of `@tuwaio/nova-core` 0.15.0 have none
+    it.each(OWN)('%s is the pixel icon when the set has none', (name) => {
+      iconSet.value = null;
+      expect((pixelIcons.outline as Record<string, unknown>)[name]).toBeUndefined();
+      const icon = draw(name);
+      expect(icon.type).toBe(pixelOutline[name]);
+      expect(icon.props).toEqual({ className: 'size' });
+    });
   });
 
   it('has no round mark, no shadow, no gradient and no spinning ring in a class', () => {

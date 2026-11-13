@@ -31,7 +31,7 @@ Import the stylesheets of `@tuwaio/nova-core` (theme variables), of `@tuwaio/nov
 
 With Nova's own connection, also import `@tuwaio/nova-connect/dist/index.css` for its connect modal.
 
-The checkout is drawn in the look of Nova UI Kit 0.15: paper and ink, square, with the pixel icons of `@tuwaio/nova-icons` (installed with this package). The icons it shares with the Nova components come from the icon set of `NovaIconsProvider` of `@tuwaio/nova-core`, so an app that gave Nova another set (`heroicons` of `@tuwaio/nova-core/heroicons`) gets it in the checkout too; the icons only the checkout draws stay the pixel ones. The names of a seller, a wallet and a network keep their own letters inside the buttons, whose words are in capitals.
+The checkout is drawn in the look of Nova UI Kit 0.15: paper and ink, square, with the pixel icons of `@tuwaio/nova-icons` (installed with this package). Its icons come from the icon set of `NovaIconsProvider` of `@tuwaio/nova-core`, so an app that gave Nova another set (`heroicons` of `@tuwaio/nova-core/heroicons`) gets it in the checkout too. The icons only the checkout draws (a lock, a QR code, a download and others) are optional in a set: the Heroicons set has them from `@tuwaio/nova-core` 0.15.1, and with a set that has none, or an older `@tuwaio/nova-core`, they stay the pixel ones. The names of a seller, a wallet and a network keep their own letters inside the buttons, whose words are in capitals.
 
 ---
 
