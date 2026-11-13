@@ -16,6 +16,7 @@ import {
   lockedPriceOnWallet,
   screensPayingWallets,
   sentBeforeDeadline,
+  shownLocale,
   takeOverOpens,
   unconfirmedFollowUp,
   unconfirmedTxKey,
@@ -714,5 +715,31 @@ describe('lockedPriceOnWallet', () => {
     for (const phase of ['idle', 'quoting', 'sending', 'confirming', 'done']) {
       expect(lockedPriceOnWallet({ ...locked, phase, payer: '0xb' })).toBe('keep');
     }
+  });
+});
+
+// The checkout opened in the language of its invoice whatever the page around it spoke: a Ukrainian shop got an English
+// checkout for an invoice its server had issued without a language
+describe('the language a checkout shows', () => {
+  it('is the language of the invoice when the page around it says none, and English before the invoice is read', () => {
+    expect(shownLocale({ picked: null, page: null, invoice: 'de' })).toBe('de');
+    expect(shownLocale({ picked: null, page: null, invoice: null })).toBe('en');
+    expect(shownLocale({ picked: null, page: null, invoice: undefined })).toBe('en');
+  });
+
+  it('is the language of the page around it, also before the invoice is read', () => {
+    expect(shownLocale({ picked: null, page: 'uk', invoice: 'en' })).toBe('uk');
+    expect(shownLocale({ picked: null, page: 'uk', invoice: null })).toBe('uk');
+  });
+
+  it('is the language the buyer picked in the menu, over the page and the invoice', () => {
+    expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: 'uk', invoice: 'en' })).toBe('de');
+    expect(shownLocale({ picked: { locale: 'de', page: null }, page: null, invoice: 'en' })).toBe('de');
+  });
+
+  it('follows the page again once the page changes its language after a pick', () => {
+    expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: 'zh-CN', invoice: 'de' })).toBe('zh-CN');
+    // A page that stops saying its language leaves the invoice, which holds the pick
+    expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: null, invoice: 'de' })).toBe('de');
   });
 });

@@ -18,6 +18,7 @@ import { useMemo, useState } from 'react';
 import { action } from 'storybook/actions';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { useStorybookLocale } from '../../../i18n/useStorybookLocale';
 import { STORY_OWN_CONNECTION } from '../../utils/payments/ownConnection';
 import { PaymentsConnectionCaption } from '../../utils/payments/PaymentsConnectionCaption';
 import { sampleCheckout, simulatedCheckoutApi, type SimulationOptions } from '../../utils/payments/simulatedCheckout';
@@ -36,6 +37,11 @@ type StoryProps = SimulationOptions & {
   /** How often the checkout reads the invoice; the stories read it once a minute unless they follow a payment. */
   pollMs?: number;
   customization?: PaymentCheckoutCustomization;
+  /**
+   * The language of the page around the checkout (`locale` of `PaymentCheckout`). The stories give the language of the
+   * toolbar, as a page of an app gives its own; `null` gives none, and the checkout follows the language of its invoice.
+   */
+  locale?: string | null;
   /**
    * Whose wallet connection the checkout uses, shown above it: the app's (the simulated wallet with its Nova Connect),
    * the app's store with the app's own connect button, or Nova's own (a real Nova Connect modal).
@@ -76,10 +82,14 @@ function SimulatedCheckout({
   pollMs = 60_000,
   customization,
   connection,
+  locale,
   ...simulation
 }: StoryProps) {
   const api = useMemo(() => simulatedCheckoutApi(simulation), [simulation]);
   const [open, setOpen] = useState(true);
+  // The page around the checkout is this Storybook, in the language of its toolbar
+  const toolbarLocale = useStorybookLocale();
+  const pageLocale = locale === undefined ? toolbarLocale : (locale ?? undefined);
   return (
     <StoryConnection connection={connection} wallet={wallet} walletOptions={walletOptions}>
       {/* The opener stays in the page: the dialog gives the focus back to it when it closes */}
@@ -105,6 +115,7 @@ function SimulatedCheckout({
         payUrl={payUrl}
         autoReturnSeconds={autoReturnSeconds}
         onPaid={action('onPaid')}
+        locale={pageLocale}
         customization={customization}
       />
     </StoryConnection>
@@ -136,9 +147,13 @@ export const Modal: Story = { args: { display: 'modal' } };
 /** The merchant's logo instead of its first letter. */
 export const WithLogo: Story = { args: { logo: true } };
 
-/** A live invoice (no test badge) in Ukrainian, with one VAT-free line. */
+/**
+ * A live invoice (no test badge) in Ukrainian, with one VAT-free line. The page around it says no language (`locale` is
+ * not given), so the checkout opens in the language of the invoice.
+ */
 export const LiveInvoice: Story = {
   args: {
+    locale: null,
     view: sampleCheckout(
       {},
       {
@@ -1028,6 +1043,7 @@ const loggingHandlers: PaymentCheckoutCustomization['handlers'] = {
     action('onLocaleChange')(locale);
     await proceed();
   },
+  onLocaleShown: ({ locale }) => action('onLocaleShown')(locale),
   onStatusChange: action('onStatusChange'),
   onError: action('onError'),
   onExpire: action('onExpire'),
@@ -1110,6 +1126,25 @@ export const KeyboardPayToConfirm: Story = {
     await userEvent.keyboard('{Enter}');
     const heading = await canvas.findByRole('heading', { name: 'Confirming your payment' }, { timeout: 5000 });
     await waitFor(() => expect(heading).toHaveFocus());
+  },
+};
+
+/**
+ * The language of the page around the checkout (`locale`): a Ukrainian page opens an English invoice in Ukrainian. The
+ * language the buyer picks in the menu wins from then on, and is saved on the invoice for its documents.
+ */
+export const PageLanguage: Story = {
+  args: { locale: 'uk' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Ukrainian, though the invoice of the story is in English
+    const heading = await canvas.findByRole('heading', { name: 'Оберіть спосіб оплати' });
+    await expect(heading.closest('[lang]')).toHaveAttribute('lang', 'uk');
+
+    await userEvent.click(canvas.getByRole('button', { name: /^UK/ }));
+    await userEvent.click(await canvas.findByRole('option', { name: /Deutsch/ }));
+    await expect(await canvas.findByRole('heading', { name: 'Zahlungsart wählen' })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: /^DE/ }).closest('[lang]')).toHaveAttribute('lang', 'de');
   },
 };
 

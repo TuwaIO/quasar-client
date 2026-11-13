@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/i18n/Functions/checkoutLocaleOf" />
+
+# checkoutLocaleOf()
+
+> **checkoutLocaleOf**(`tag`): `"en"` \| `"uk"` \| `"zh-CN"` \| `"es"` \| `"it"` \| `"de"` \| `null`
+
+Defined in: [nova-payments/src/i18n/locales.ts:28](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/locales.ts#L28)
+
+The language of the checkout that a language tag names: the tag itself when it is one of [CHECKOUT\_LOCALES](?path=/docs/packages-nova-payments-i18n-variables-checkout-locales--docs),
+else the language of the same family (`uk-UA` is `uk`, `de-AT` is `de`; any Chinese is `zh-CN`, the only Chinese the
+checkout has). Letter case does not matter.
+
+## Parameters
+
+### tag
+
+`string` \| `null` \| `undefined`
+
+A BCP 47 language tag, as `<html lang>` or `navigator.language` hold it.
+
+## Returns
+
+`"en"` \| `"uk"` \| `"zh-CN"` \| `"es"` \| `"it"` \| `"de"` \| `null`
+
+The language of the checkout, or `null` when the checkout does not have the language or there is no tag.

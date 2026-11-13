@@ -675,3 +675,29 @@ export function unconfirmedTxKey(
   const rejected = (checkout?.invoice as { rejectedPayments?: { txKey: string }[] } | undefined)?.rejectedPayments;
   return state.txHash ?? state.txKey ?? rejected?.[0]?.txKey ?? null;
 }
+
+/**
+ * The language a checkout shows. The buyer's pick in the language menu comes first, as long as the page around the
+ * checkout still has the language it had then: a page that changes its language is followed again. Then the language of
+ * that page (`locale` of `PaymentCheckout`), then the language of the invoice, then English.
+ *
+ * @param params - What is known.
+ * @param params.picked - The language the buyer picked in the menu during this visit, with the language the page had
+ * then; `null` before a pick.
+ * @param params.page - The language of the page around the checkout, as a language of the checkout; `null` when the
+ * app gave none or the checkout does not have it.
+ * @param params.invoice - The language of the invoice; `null` before the invoice is read.
+ * @returns The language, a BCP 47 tag.
+ */
+export function shownLocale({
+  picked,
+  page,
+  invoice,
+}: {
+  picked: { locale: string; page: string | null } | null;
+  page: string | null;
+  invoice: string | null | undefined;
+}): string {
+  if (picked && picked.page === page) return picked.locale;
+  return page ?? invoice ?? 'en';
+}

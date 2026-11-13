@@ -333,6 +333,17 @@ export interface PaymentCheckoutHandlers {
    */
   onLocaleChange?: (params: { locale: CheckoutLocale; proceed: () => Promise<void> }) => void | Promise<void>;
   /**
+   * The language the checkout is shown in: called once it is known (the invoice is read, or the app gave the language of
+   * its page with `locale`) and on every change, whoever made it: the buyer in the menu, the page with a new `locale`,
+   * or the invoice. For a page that keeps `<html lang>`, the labels of Nova or its own texts on the language of the
+   * checkout.
+   *
+   * @param params - The language.
+   * @param params.locale - The language shown, a BCP 47 tag: one of the checkout's, or the language of an invoice the
+   * checkout has no labels for (it shows English then).
+   */
+  onLocaleShown?: (params: { locale: string }) => void;
+  /**
    * The phase of the checkout or the status of the invoice changed; also called once with the first ones.
    *
    * @param params - The state.

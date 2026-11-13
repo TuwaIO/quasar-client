@@ -17,20 +17,23 @@ export interface UseCheckoutEventsParams {
   screen: CheckoutScreen;
   /** `Date.now()` of the latest second tick of the checkout. */
   now: number;
+  /** The language the checkout shows; `null` while it is not known yet (the invoice is not read, the app gave none). */
+  locale?: string | null;
   /** The handlers of `customization.handlers` of `PaymentCheckout`. */
   handlers?: PaymentCheckoutHandlers;
 }
 
 /**
  * Tells the app what happened in a checkout through its handlers: `onStatusChange` with the first phase and invoice
- * status and on every change, `onError` once per new error, and `onExpire` when the locked price runs out (at the
+ * status and on every change, `onLocaleShown` with the language shown once it is known and on every change, `onError`
+ * once per new error, and `onExpire` when the locked price runs out (at the
  * tick that crosses its end) and when the invoice expires, with whether a payment is on its way (one this page handed
  * over, one of the invoice Quasar reports, as on a reopened page, or one Quasar could not confirm yet and reads again).
  * Handlers that change between renders are called in their latest version.
  *
  * @param params - See {@link UseCheckoutEventsParams}.
  */
-export function useCheckoutEvents({ state, screen, now, handlers }: UseCheckoutEventsParams): void {
+export function useCheckoutEvents({ state, screen, now, locale = null, handlers }: UseCheckoutEventsParams): void {
   const status = state.checkout?.invoice.status ?? null;
   const { phase, error } = state;
   const expiresAt = state.quote?.expiresAt ? Date.parse(state.quote.expiresAt) : null;
@@ -38,6 +41,11 @@ export function useCheckoutEvents({ state, screen, now, handlers }: UseCheckoutE
 
   const statusChanged = useEffectEvent(() => handlers?.onStatusChange?.({ phase, status, screen }));
   useEffect(() => statusChanged(), [phase, status]);
+
+  const localeShown = useEffectEvent(() => {
+    if (locale) handlers?.onLocaleShown?.({ locale });
+  });
+  useEffect(() => localeShown(), [locale]);
 
   const errorRaised = useEffectEvent(() => {
     if (error) handlers?.onError?.({ error, screen });

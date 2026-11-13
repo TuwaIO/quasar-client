@@ -17,12 +17,13 @@ import { usePaymentSent } from '../hooks/usePaymentSent';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useQrShown } from '../hooks/useQrShown';
 import { useWalletConnection } from '../hooks/useWalletConnection';
-import { formatLabel, hasLabels } from '../i18n';
+import { type CheckoutLocale, checkoutLocaleOf, formatLabel, hasLabels } from '../i18n';
 import {
   checkoutScreen,
   deadlineAnnouncement,
   deadlineState,
   lockedPriceOnWallet,
+  shownLocale,
   walletOnConfirmStep,
 } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
@@ -111,6 +112,13 @@ export interface PaymentCheckoutProps {
   autoReturnSeconds?: number;
   /** Replaces the link of "Contact <seller>" (the seller's support email, else site) with the app's own handler. */
   onContact?: () => void;
+  /**
+   * The language of the page around the checkout, a BCP 47 tag (for example the `lang` of `<html>`). The checkout opens
+   * in it instead of the language of the invoice; a language the checkout does not have is left to the invoice. The
+   * language the buyer picks in the menu wins until this value changes. It changes what the buyer reads, not the
+   * invoice: the documents keep the language of the invoice unless the buyer picks one in the menu.
+   */
+  locale?: string;
   /** Classes added to the checkout block. */
   className?: string;
   /**
@@ -340,6 +348,7 @@ export function PaymentCheckout({
   onPaid,
   autoReturnSeconds,
   onContact,
+  locale: pageLanguage,
   className,
   customization,
 }: PaymentCheckoutProps) {
@@ -361,7 +370,16 @@ export function PaymentCheckout({
   });
   const state = useCheckoutState(store, (value) => value);
   const checkout = state.checkout;
-  const locale = state.locale ?? checkout?.invoice.locale ?? 'en';
+  const pageLocale = checkoutLocaleOf(pageLanguage);
+  // The buyer's pick in the language menu, with the language the page had then
+  const [pickedLocale, setPickedLocale] = useState<{ locale: CheckoutLocale; page: CheckoutLocale | null } | null>(
+    null,
+  );
+  const locale = shownLocale({
+    picked: pickedLocale,
+    page: pageLocale,
+    invoice: state.locale ?? checkout?.invoice.locale,
+  });
   const labels = usePaymentsLabels(locale);
   // Ticks while the checkout shows: the deadline, the price lock and the return countdown count down
   const ticking = Boolean(checkout) && everOpened && needsTheClock(state.phase, autoReturnSeconds, hasLabels(locale));
@@ -446,7 +464,14 @@ export function PaymentCheckout({
     walletTxKey: walletSent?.store === store ? walletSent.txKey : null,
   });
   usePaidCallback(state.phase, checkout?.invoice, onPaid, firstRead?.store === store && firstRead.paid);
-  useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
+  useCheckoutEvents({
+    state,
+    screen,
+    now,
+    // Known once the invoice is read or the page said its own: not the English the checkout starts in before that
+    locale: checkout || pageLocale ? locale : null,
+    handlers: customization?.handlers,
+  });
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
   // Every payment of the invoice goes to the app's Pulsar store, where Nova Transactions shows its toast
   const handOver = usePaymentHandOver({ store, adapterFor, pulsar: settings.pulsar, labels, locale });
@@ -547,6 +572,12 @@ export function PaymentCheckout({
     screen,
     locale,
     labels,
+    setLocale: async (picked) => {
+      const before = pickedLocale;
+      setPickedLocale({ locale: picked, page: pageLocale });
+      // Not saved (Quasar did not answer): the store is back on the language before, and so is the page
+      if (!(await store.getState().setLocale(picked))) setPickedLocale(before);
+    },
     now,
     handedOverAt,
     qrShown,

@@ -17,6 +17,24 @@ export const CHECKOUT_LOCALES = [
 /** A language of the checkout: a BCP 47 tag of {@link CHECKOUT_LOCALES}. */
 export type CheckoutLocale = (typeof CHECKOUT_LOCALES)[number]['code'];
 
+/**
+ * The language of the checkout that a language tag names: the tag itself when it is one of {@link CHECKOUT_LOCALES},
+ * else the language of the same family (`uk-UA` is `uk`, `de-AT` is `de`; any Chinese is `zh-CN`, the only Chinese the
+ * checkout has). Letter case does not matter.
+ *
+ * @param tag - A BCP 47 language tag, as `<html lang>` or `navigator.language` hold it.
+ * @returns The language of the checkout, or `null` when the checkout does not have the language or there is no tag.
+ */
+export function checkoutLocaleOf(tag: string | null | undefined): CheckoutLocale | null {
+  const wanted = tag?.trim().toLowerCase();
+  if (!wanted) return null;
+  const family = wanted.split(/[-_]/)[0];
+  const match =
+    CHECKOUT_LOCALES.find((item) => item.code.toLowerCase() === wanted) ??
+    CHECKOUT_LOCALES.find((item) => item.code.toLowerCase().split('-')[0] === family);
+  return match?.code ?? null;
+}
+
 // Every language but English is a file of its own: a page downloads only the languages it shows
 const LOADERS: Record<Exclude<CheckoutLocale, 'en'>, () => Promise<NovaPaymentsLabels>> = {
   'zh-CN': () => import('./zhCN').then((module) => module.zhCNLabels),

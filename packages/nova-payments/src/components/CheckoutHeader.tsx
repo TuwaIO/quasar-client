@@ -47,14 +47,11 @@ function stepsOf(context: CheckoutContextValue, steps: CheckoutStep[], className
  */
 export function CheckoutHeader({ title, withDetails }: CheckoutHeaderProps) {
   const context = useCheckoutContext();
-  const { labels, locale, store, close, state } = context;
+  const { labels, locale, setLocale, close, state } = context;
   const page = context.display === 'page';
   const steps = context.customization.config?.showSteps === false ? null : stepsOfScreen(context, withDetails);
   const extra = checkoutClassName(context, 'header');
   const onLocaleChange = context.customization.handlers?.onLocaleChange;
-  const setLocale = async (code: CheckoutLocale) => {
-    await store.getState().setLocale(code);
-  };
   const tools = (
     <div className="novapay:ml-auto novapay:flex novapay:shrink-0 novapay:items-center novapay:gap-2">
       <LocaleSwitcher

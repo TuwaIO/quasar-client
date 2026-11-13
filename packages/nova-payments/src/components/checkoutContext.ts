@@ -2,7 +2,7 @@ import type { CheckoutMethod, CheckoutState, CheckoutStore, CheckoutView } from 
 import { createContext } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
-import type { NovaPaymentsLabels } from '../i18n';
+import type { CheckoutLocale, NovaPaymentsLabels } from '../i18n';
 import type { CheckoutScreen } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
 import type { CheckoutWallet, PaymentFamily } from '../utils/methods';
@@ -23,6 +23,14 @@ export interface CheckoutContextValue {
   locale: string;
   /** The labels of that language. */
   labels: NovaPaymentsLabels;
+  /**
+   * Switches the checkout to the language the buyer picked in the menu and saves it on the invoice, for the documents
+   * still to be issued (`setLocale` of the checkout store). The pick stays the language shown, also over the language of
+   * the page (`locale` of `PaymentCheckout`), until that page changes its language; a pick Quasar did not save is undone.
+   *
+   * @param locale - The language picked.
+   */
+  setLocale: (locale: CheckoutLocale) => Promise<void>;
   /** `Date.now()` of the latest second tick. */
   now: number;
   /**

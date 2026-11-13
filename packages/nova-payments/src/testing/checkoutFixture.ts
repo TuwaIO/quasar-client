@@ -84,7 +84,7 @@ export function checkoutContextValue(
   customization: CheckoutContextValue['customization'],
   extra: Partial<CheckoutContextValue> = {},
 ): CheckoutContextValue {
-  return {
+  const value = {
     store: fakeStore().store,
     state: {
       phase: 'selectMethod',
@@ -126,6 +126,11 @@ export function checkoutContextValue(
     customization,
     ...extra,
   } as CheckoutContextValue;
+  // The pick of a language goes to the store of the context, as in the checkout
+  value.setLocale ??= async (locale) => {
+    await value.store.getState().setLocale(locale);
+  };
+  return value;
 }
 
 /** Every element of the tree (children and element props), depth first. */

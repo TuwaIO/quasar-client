@@ -1,0 +1,45 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/shownLocale" />
+
+# shownLocale()
+
+> **shownLocale**(`params`): `string`
+
+Defined in: [nova-payments/src/utils/checkout.ts:692](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L692)
+
+The language a checkout shows. The buyer's pick in the language menu comes first, as long as the page around the
+checkout still has the language it had then: a page that changes its language is followed again. Then the language of
+that page (`locale` of `PaymentCheckout`), then the language of the invoice, then English.
+
+## Parameters
+
+### params
+
+What is known.
+
+#### invoice
+
+`string` \| `null` \| `undefined`
+
+The language of the invoice; `null` before the invoice is read.
+
+#### page
+
+`string` \| `null`
+
+The language of the page around the checkout, as a language of the checkout; `null` when the
+app gave none or the checkout does not have it.
+
+#### picked
+
+\{ `locale`: `string`; `page`: `string` \| `null`; \} \| `null`
+
+The language the buyer picked in the menu during this visit, with the language the page had
+then; `null` before a pick.
+
+## Returns
+
+`string`
+
+The language, a BCP 47 tag.
