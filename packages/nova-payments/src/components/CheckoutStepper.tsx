@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import type { CheckoutStep } from '../utils/checkout';
-import { mono } from './classes';
+import { caps, mono } from './classes';
 
 /** Props of {@link CheckoutStepper}. */
 export interface CheckoutStepperProps {
@@ -37,7 +37,7 @@ export function CheckoutStepper({ steps, labels, className, stepClassName }: Che
   const nav = useRef<HTMLElement>(null);
   const measure = useRef<HTMLSpanElement>(null);
   const [compact, setCompact] = useState(false);
-  // Every name in one line, plus a circle, two gaps and the shortest line that still reads as one per step
+  // Every name in one line, plus a mark, two gaps and the shortest line that still reads as one per step
   useEffect(() => {
     const box = nav.current;
     const text = measure.current;
@@ -55,7 +55,7 @@ export function CheckoutStepper({ steps, labels, className, stepClassName }: Che
       className={cn('novapay:relative novapay:min-w-0 novapay:flex-1', className)}
     >
       <span aria-hidden className="novapay:invisible novapay:absolute novapay:h-0 novapay:w-0 novapay:overflow-hidden">
-        <span ref={measure} className={cn(mono, 'novapay:whitespace-nowrap novapay:text-[11px] novapay:font-bold')}>
+        <span ref={measure} className={cn(caps, 'novapay:whitespace-nowrap novapay:text-[11px]')}>
           {names}
         </span>
       </span>
@@ -76,7 +76,7 @@ export function CheckoutStepper({ steps, labels, className, stepClassName }: Che
                 <span
                   aria-hidden
                   className={cn(
-                    'novapay:h-0.5 novapay:min-w-2 novapay:flex-1 novapay:rounded-full novapay:transition-colors novapay:duration-300 novapay:motion-reduce:transition-none',
+                    'novapay:h-px novapay:min-w-2 novapay:flex-1 novapay:transition-colors novapay:duration-300 novapay:motion-reduce:transition-none',
                     step.state === 'upcoming'
                       ? 'novapay:bg-[var(--tuwa-border-primary)]'
                       : 'novapay:bg-[var(--tuwa-success-icon)]',
@@ -87,22 +87,24 @@ export function CheckoutStepper({ steps, labels, className, stepClassName }: Che
                 aria-hidden
                 className={cn(
                   mono,
-                  'novapay:flex novapay:h-5 novapay:w-5 novapay:shrink-0 novapay:items-center novapay:justify-center novapay:rounded-full novapay:text-[10px] novapay:font-bold',
-                  step.state === 'done' && 'novapay:bg-[var(--tuwa-success-icon)] novapay:text-white',
+                  // Square, as the marks of Nova that were circles (`--tuwa-rounded-full`); one frame of 1 px in every state
+                  'novapay:box-border novapay:flex novapay:h-5 novapay:w-5 novapay:shrink-0 novapay:items-center novapay:justify-center novapay:rounded-[var(--tuwa-rounded-full)] novapay:border novapay:text-[10px] novapay:font-bold',
+                  step.state === 'done' &&
+                    'novapay:border-[var(--tuwa-success-icon)] novapay:bg-[var(--tuwa-success-icon)] novapay:text-white',
                   step.state === 'current' &&
-                    'novapay:border-2 novapay:border-[var(--tuwa-text-accent)] novapay:text-[var(--tuwa-text-accent)]',
+                    'novapay:border-[var(--tuwa-text-accent)] novapay:text-[var(--tuwa-text-accent)]',
                   step.state === 'upcoming' &&
-                    'novapay:border-2 novapay:border-[var(--tuwa-border-primary)] novapay:text-[var(--tuwa-text-secondary)]',
+                    'novapay:border-[var(--tuwa-border-strong)] novapay:text-[var(--tuwa-text-secondary)]',
                 )}
               >
                 {step.state === 'done' ? <DrawnCheck className="novapay:h-3 novapay:w-3" /> : i + 1}
               </span>
               <span
                 className={cn(
-                  mono,
-                  'novapay:truncate novapay:text-[11px]',
+                  caps,
+                  'novapay:truncate novapay:text-[11px] novapay:leading-4',
                   step.state === 'current'
-                    ? 'novapay:font-bold novapay:text-[var(--tuwa-text-primary)]'
+                    ? 'novapay:text-[var(--tuwa-text-primary)]'
                     : 'novapay:text-[var(--tuwa-text-secondary)]',
                   compact && step.state !== 'current' && 'novapay:sr-only',
                 )}

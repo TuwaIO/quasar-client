@@ -195,6 +195,16 @@ export interface PaymentCheckoutClassNames {
    */
   statusIcon?: (params: CheckoutPartState & { kind: OutcomeKind }) => string | undefined;
   /**
+   * The chip over the heading of a status screen (Pending, Paid, Failed and the other outcomes).
+   *
+   * @param params - The state of the checkout, and `tone`, the state the chip shows.
+   * @param params.tone - `pending`, `success`, `error` or `neutral`.
+   * @returns Classes to add.
+   */
+  statusChip?: (
+    params: CheckoutPartState & { tone: 'pending' | 'success' | 'error' | 'neutral' },
+  ) => string | undefined;
+  /**
    * The strip and the wash of the status color along the top of the checkout, on a payment on its way and its outcome.
    *
    * @param params - The state of the checkout, and `tone`, the state the strip shows.
@@ -332,6 +342,17 @@ export interface PaymentCheckoutHandlers {
    * @param params.proceed - Switches and saves it.
    */
   onLocaleChange?: (params: { locale: CheckoutLocale; proceed: () => Promise<void> }) => void | Promise<void>;
+  /**
+   * The language the checkout is shown in: called once it is known (the invoice is read, or the app gave the language of
+   * its page with `locale`) and on every change, whoever made it: the buyer in the menu, the page with a new `locale`,
+   * or the invoice. For a page that keeps `<html lang>`, the labels of Nova or its own texts on the language of the
+   * checkout.
+   *
+   * @param params - The language.
+   * @param params.locale - The language shown, a BCP 47 tag: one of the checkout's, or the language of an invoice the
+   * checkout has no labels for (it shows English then).
+   */
+  onLocaleShown?: (params: { locale: string }) => void;
   /**
    * The phase of the checkout or the status of the invoice changed; also called once with the first ones.
    *

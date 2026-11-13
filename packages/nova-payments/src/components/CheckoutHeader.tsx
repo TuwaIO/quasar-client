@@ -1,5 +1,4 @@
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { cn } from '@tuwaio/nova-core';
+import { CloseIcon, cn } from '@tuwaio/nova-core';
 import type { ReactNode } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
@@ -20,10 +19,12 @@ export interface CheckoutHeaderProps {
   withDetails?: boolean;
 }
 
-/** The steps of a screen; on its own page the paid screen keeps them, all done, so the row does not change at the end. */
+/**
+ * The steps of a screen. The paid screen keeps them, all done, so the row does not change at the end: on a phone it
+ * stands over the status, and a row that went away moved the heading the buyer was reading.
+ */
 const stepsOfScreen = (context: CheckoutContextValue, withDetails?: boolean) =>
-  checkoutSteps(context.screen, { withDetails }) ??
-  (context.display === 'page' && context.screen === 'paid' ? paidSteps({ withDetails }) : null);
+  checkoutSteps(context.screen, { withDetails }) ?? (context.screen === 'paid' ? paidSteps({ withDetails }) : null);
 
 /** The steps of the checkout, or their replacement (`customization.components.Stepper`), with their classes. */
 function stepsOf(context: CheckoutContextValue, steps: CheckoutStep[], className?: string) {
@@ -48,14 +49,11 @@ function stepsOf(context: CheckoutContextValue, steps: CheckoutStep[], className
  */
 export function CheckoutHeader({ title, withDetails }: CheckoutHeaderProps) {
   const context = useCheckoutContext();
-  const { labels, locale, store, close, state } = context;
+  const { labels, locale, setLocale, close, state } = context;
   const page = context.display === 'page';
   const steps = context.customization.config?.showSteps === false ? null : stepsOfScreen(context, withDetails);
   const extra = checkoutClassName(context, 'header');
   const onLocaleChange = context.customization.handlers?.onLocaleChange;
-  const setLocale = async (code: CheckoutLocale) => {
-    await store.getState().setLocale(code);
-  };
   const tools = (
     <div className="novapay:ml-auto novapay:flex novapay:shrink-0 novapay:items-center novapay:gap-2">
       <LocaleSwitcher
@@ -68,7 +66,7 @@ export function CheckoutHeader({ title, withDetails }: CheckoutHeaderProps) {
       />
       {close && (
         <button type="button" aria-label={labels.common.close} onClick={close} className={iconButton}>
-          <XMarkIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
+          <CloseIcon aria-hidden className="novapay:h-4 novapay:w-4" />
         </button>
       )}
     </div>

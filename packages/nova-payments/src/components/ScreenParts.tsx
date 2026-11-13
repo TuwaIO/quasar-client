@@ -1,12 +1,32 @@
-import { cn, CopyIcon, MorphText, QuasarLoader, WalletIcon } from '@tuwaio/nova-core';
+import { cn, CopyIcon, DrawnCheck, MorphText, QuasarLoader, WalletIcon } from '@tuwaio/nova-core';
 import { HashLink } from '@tuwaio/nova-transactions';
-import { type ButtonHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react';
+import type { CheckoutError } from '@tuwaio/quasar-sdk/checkout';
+import {
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { useOptionalCheckoutContext } from '../hooks/useCheckoutContext';
 import type { NovaPaymentsLabels } from '../i18n';
 import { isWalletIconUrl } from '../utils/methods';
+import { failedPaymentTx } from '../utils/outcome';
+import { instructionsChainId } from '../utils/pay';
+import { CapsLabel } from './CapsLabel';
 import type { CheckoutContextValue } from './checkoutContext';
-import { focusRing, iconButton, mono, primaryAction, screenHeading, screenTitle, secondaryAction } from './classes';
+import {
+  focusRing,
+  iconButton,
+  label,
+  mono,
+  primaryAction,
+  screenHeading,
+  screenTitle,
+  secondaryAction,
+} from './classes';
 import { checkoutClassName, type CheckoutPrimaryButtonProps } from './customization';
 import { TxLabels } from './TxLabels';
 
@@ -78,23 +98,19 @@ export function ChainLink({
 }
 
 /**
- * The wait for a wallet: a ring runs around its icon, as on the connecting screen of Nova Connect. Without a wallet to show,
- * the Quasar loader. Both in the pending color: this is a wait for a person, not for the page.
+ * The wait for a wallet: a segment of the pending color runs round the square frame of its icon (`novapay-chase` of
+ * `styles/app.css`), as on the connecting screen of Nova Connect. Without a wallet to show, the Quasar loader. Both in the
+ * pending color: this is a wait for a person, not for the page.
  *
  * @internal
  */
 export function WalletWait({ walletId, walletIcon }: { walletId?: string; walletIcon?: string }) {
   if (!walletId && !walletIcon) return <QuasarLoader size={48} accent="var(--tuwa-pending-icon)" />;
   return (
-    <span className="novapay:relative novapay:flex novapay:h-20 novapay:w-20 novapay:items-center novapay:justify-center novapay:rounded-full novapay:border-2 novapay:border-[var(--tuwa-border-primary)]">
-      {/* Inside the circle: an arc across the corners of the icon read as something wrong with it */}
+    <span className="novapay-chase novapay:relative novapay:flex novapay:h-20 novapay:w-20 novapay:items-center novapay:justify-center novapay:rounded-[var(--tuwa-rounded-full)] novapay:border-2 novapay:border-[color-mix(in_srgb,var(--tuwa-pending-text)_25%,transparent)]">
       <span className="novapay:block novapay:h-11 novapay:w-11">
         <CheckoutWalletIcon walletId={walletId ?? ''} icon={walletIcon} />
       </span>
-      <span
-        aria-hidden
-        className="novapay:absolute novapay:-inset-0.5 novapay:animate-spin novapay:rounded-full novapay:border-2 novapay:border-transparent novapay:border-t-[var(--tuwa-pending-text)] novapay:motion-reduce:animate-none"
-      />
     </span>
   );
 }
@@ -172,7 +188,7 @@ export function ScreenFooter({ children }: { children: ReactNode }) {
     <footer
       ref={ref}
       className={cn(
-        'novapay:empty:hidden novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center',
+        'tuwa-scanlines novapay:empty:hidden novapay:sticky novapay:bottom-0 novapay:z-10 novapay:flex novapay:flex-col novapay:gap-2 novapay:border-t novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-5 novapay:pb-3.5 novapay:pt-3 novapay:text-center',
         page && 'novapay-page-footer',
         partClass(context, 'footer'),
       )}
@@ -186,14 +202,7 @@ export function ScreenFooter({ children }: { children: ReactNode }) {
 export function GroupLabel({ children, id }: { children: ReactNode; id?: string }) {
   const page = useOptionalCheckoutContext()?.display === 'page';
   return (
-    <span
-      id={id}
-      className={cn(
-        mono,
-        'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
-        page && 'novapay-page-group',
-      )}
-    >
+    <span id={id} className={cn(label, page && 'novapay-page-group')}>
       {children}
     </span>
   );
@@ -226,7 +235,8 @@ export function PrimaryButton({ busy, children, className, ...props }: CheckoutP
       className={cn(primaryAction, className, extra)}
     >
       {busy && <QuasarLoader size={16} accent="currentColor" />}
-      {typeof children === 'string' ? <MorphText>{children}</MorphText> : children}
+      {/* A plain label and a filled-in one (`CapsLabel`) are the same element: one morphs into the other */}
+      {typeof children === 'string' ? <CapsLabel label={children} /> : children}
     </button>
   );
 }
@@ -238,6 +248,30 @@ export function SecondaryButton({ children, className, ...props }: ButtonHTMLAtt
     <button type="button" {...props} className={cn(secondaryAction, className, partClass(context, 'secondaryButton'))}>
       {children}
     </button>
+  );
+}
+
+/**
+ * A checkbox of the checkout: square, as the marks of Nova that were circles (`--tuwa-rounded-full`), with a frame that
+ * stands 3:1 apart from the surface (WCAG 1.4.11); ticked, it fills with the accent and shows the drawn check of Nova. It
+ * is a real `<input type="checkbox">`, so its label, a form and the keyboard work as with any other; the check lies over
+ * it and takes no pointer.
+ *
+ * @internal
+ */
+export function CheckBox({ className, ...props }: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+  return (
+    <span className={cn('novapay:relative novapay:inline-flex novapay:h-4 novapay:w-4 novapay:shrink-0', className)}>
+      <input
+        type="checkbox"
+        {...props}
+        className={cn(
+          'novapay:peer novapay:m-0 novapay:box-border novapay:h-4 novapay:w-4 novapay:cursor-pointer novapay:appearance-none novapay:rounded-[var(--tuwa-rounded-full)] novapay:border novapay:border-[var(--tuwa-text-secondary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:transition-colors novapay:checked:border-[var(--tuwa-text-accent)] novapay:checked:bg-[var(--tuwa-text-accent)]',
+          focusRing,
+        )}
+      />
+      <DrawnCheck className="novapay:pointer-events-none novapay:absolute novapay:inset-0 novapay:m-auto novapay:h-3 novapay:w-3 novapay:text-[var(--tuwa-bg-primary)] novapay:opacity-0 novapay:peer-checked:opacity-100" />
+    </span>
   );
 }
 
@@ -261,7 +295,7 @@ export function DetailsCard({ children, className }: { children: ReactNode; clas
   return (
     <dl
       className={cn(
-        'novapay:m-0 novapay:flex novapay:w-full novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:text-left',
+        'tuwa-scanlines novapay:m-0 novapay:flex novapay:w-full novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:text-left',
         className,
         partClass(context, 'detailsCard'),
       )}
@@ -278,12 +312,45 @@ export function ScreenError({ children }: { children: ReactNode }) {
     <p
       role="alert"
       className={cn(
-        'novapay:m-0 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-error-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-error-text)]',
+        'novapay:m-0 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[color-mix(in_srgb,var(--tuwa-error-icon)_35%,transparent)] novapay:bg-[var(--tuwa-error-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-error-text)]',
         partClass(context, 'error'),
       )}
     >
       {children}
     </p>
+  );
+}
+
+/**
+ * The transaction a failed payment is about, under what the screen says of it: its short hash with a copy button,
+ * linked to the explorer of the network of the locked price when there is one. For a transaction the network has (it
+ * reverted, or it succeeded and did not pay the invoice), so the buyer looks at what the wallet sent instead of taking
+ * the page's word. Nothing for an error that names no transaction.
+ *
+ * @internal
+ */
+export function FailedTransaction({ error }: { error: CheckoutError | null | undefined }) {
+  const context = useOptionalCheckoutContext();
+  const txKey = failedPaymentTx(error);
+  if (!context || !txKey) return null;
+  // The price the payment was sent under names its network; without one the hash still shows, to copy
+  const locked = context.state.quote ?? context.checkout?.quote;
+  const chainId = locked ? instructionsChainId(locked.instructions) : null;
+  const explorerUrl =
+    locked && chainId ? context.adapterFor(locked.instructions.family)?.explorerUrl?.({ chainId, txKey }) : undefined;
+  return (
+    <TxLabels>
+      <DetailsCard>
+        <DetailRow name={context.labels.confirm.transaction}>
+          <HashLink
+            hash={txKey}
+            explorerUrl={explorerUrl}
+            variant="compact"
+            {...context.customization.childCustomizations?.hashLink}
+          />
+        </DetailRow>
+      </DetailsCard>
+    </TxLabels>
   );
 }
 

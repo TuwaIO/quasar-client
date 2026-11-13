@@ -155,6 +155,10 @@ export const defaultLabels: NovaPaymentsLabels = {
     declined: 'You declined the request in {wallet}.',
     tryAgain: 'Try again',
     failed: 'The payment failed on {network}. Only the network fee was spent; the invoice is still open.',
+    failedExpired:
+      'The transaction was not confirmed in time and expired, so nothing was sent. The invoice is still open.',
+    failedCancelled: 'The transaction was cancelled in the wallet. The invoice is still open.',
+    didNotGoThrough: 'The payment did not go through. The invoice is still open.',
     mismatch: 'This transaction does not pay the invoice. If money left your wallet, contact {merchant}.',
     mismatchTakenElsewhere:
       'This transaction pays another invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
@@ -168,6 +172,8 @@ export const defaultLabels: NovaPaymentsLabels = {
       'This payment was sent or charged under an earlier price of this invoice, so it does not pay it. {merchant} returns it to your wallet, and you can still pay the invoice.',
     mismatchTooManyParts:
       'This invoice has taken as many parts as it can, so this transfer does not pay it. {merchant} returns it to your wallet; send the whole rest at once.',
+    mismatchNoReferenceHeld:
+      'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. {merchant} returns it to the wallet that sent it, and you can still pay the invoice.',
     payAgain: 'Pay again',
     unsupported: "{wallet} can't make this payment.",
     wrongCluster: '{wallet} is on another network, so nothing was paid. Switch it to {network} and pay again.',
@@ -260,9 +266,9 @@ export const defaultLabels: NovaPaymentsLabels = {
     paid: 'Paid',
     failed: 'Failed',
     network: 'Network',
-    amount: 'Amount',
     transaction: 'Transaction',
     lastTransfer: 'Last transfer',
+    transferOf: 'Transfer {index} of {count}',
     from: 'From',
     canClose: 'You can close this window: the payment keeps going, and the seller sends the receipt.',
     afterDeadline: 'Your payment was sent before the deadline and is being confirmed.',
@@ -271,6 +277,23 @@ export const defaultLabels: NovaPaymentsLabels = {
     invoicePayment: 'A payment for this invoice is on its way. Wait until it is confirmed before paying again.',
     viewOnExplorer: 'View on the explorer',
     copyHash: 'Copy the transaction',
+  },
+  status: {
+    pending: 'Pending',
+    paid: 'Paid',
+    failed: 'Failed',
+    review: 'On review',
+    underpaid: 'Part paid',
+    expired: 'Expired',
+    cancelled: 'Cancelled',
+    refunded: 'Refunded',
+    replaced: 'Corrected',
+    blocked: 'Blocked',
+    unconfirmed: 'Unconfirmed',
+  },
+  failed: {
+    title: 'Payment failed',
+    summary: 'on {network} · the invoice is still open',
   },
   paid: {
     title: 'Payment received',

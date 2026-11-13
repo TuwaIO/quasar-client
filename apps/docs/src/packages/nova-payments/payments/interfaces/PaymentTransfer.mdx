@@ -1,0 +1,49 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/PaymentTransfer" />
+
+# PaymentTransfer
+
+Defined in: [nova-payments/src/hooks/usePaymentFacts.ts:11](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentFacts.ts#L11)
+
+A transfer credited to the invoice, as the paid step lists it.
+
+## Properties
+
+### amount
+
+> **amount**: `string` \| `null`
+
+Defined in: [nova-payments/src/hooks/usePaymentFacts.ts:15](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentFacts.ts#L15)
+
+What it credited with its token (`40.00 USDC`); `null` when Quasar names no token for it.
+
+***
+
+### at
+
+> **at**: `number`
+
+Defined in: [nova-payments/src/hooks/usePaymentFacts.ts:17](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentFacts.ts#L17)
+
+When the network included it, in milliseconds.
+
+***
+
+### explorerUrl
+
+> **explorerUrl**: `string` \| `undefined`
+
+Defined in: [nova-payments/src/hooks/usePaymentFacts.ts:19](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentFacts.ts#L19)
+
+Its page in the explorer of its network, from the chain adapter; `undefined` without one.
+
+***
+
+### txKey
+
+> **txKey**: `string`
+
+Defined in: [nova-payments/src/hooks/usePaymentFacts.ts:13](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentFacts.ts#L13)
+
+The transaction: its hash, or its Solana signature.

@@ -1171,6 +1171,43 @@ describe('createCheckoutStore: payments on their way and why they failed', () =>
     spedUp.getState().destroy();
   });
 
+  // The page said that a transaction did not pay the invoice without a way to look at it: the error named no transaction
+  it('names the transaction of a failed payment when the network has it, for a link to the explorer', async () => {
+    answer({ rejectedTxKeys: [], rejectedPayments: [] });
+    const ended = async (index: number, payment: ReturnType<typeof rejection>) => {
+      const checkout = store();
+      await checkout.getState().load();
+      await checkout.getState().submit({ txKey: '0xFEED' });
+      FakeEventSource.instances[index].emit(
+        'status',
+        signal('open', 5, { pendingPayments: 0, rejectedPayments: [payment] }),
+      );
+      const { error } = checkout.getState();
+      checkout.getState().destroy();
+      return error;
+    };
+
+    // Reverted: the transaction is on the network, as Quasar lists it (an EVM hash in lower case)
+    expect(await ended(0, rejection('0xfeed', 'reverted', true))).toMatchObject({
+      code: 'payment_failed',
+      txKey: '0xfeed',
+    });
+    // Sped up in the wallet with a wrong amount: the transaction that landed, not the one this page handed over
+    expect(await ended(1, rejection('0xfaster', 'no_matching_transfer', true, { original: '0xfeed' }))).toMatchObject({
+      code: 'payment_mismatch',
+      txKey: '0xfaster',
+    });
+    // Never on the network: a Solana transaction whose blockhash expired, a relay operation that was lost
+    for (const [index, reason] of [
+      [2, 'expired'],
+      [3, 'user_operation_lost'],
+    ] as const) {
+      const error = await ended(index, rejection('0xfeed', reason, true));
+      expect(error).toMatchObject({ code: 'payment_failed', reason });
+      expect(error).not.toHaveProperty('txKey');
+    }
+  });
+
   it('asks to check the wallet when the invoice goes back to open without a final rejection', async () => {
     answer({ rejectedTxKeys: [], rejectedPayments: [] });
     const checkout = store();
@@ -3040,6 +3077,26 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
     expectTypeOf<NonNullable<CheckoutInvoice['review']>['reason']>().toEqualTypeOf<
       'screening' | 'late' | 'overpaid' | 'quote_expired'
     >();
+    reopened.getState().destroy();
+  });
+
+  // Owner test 2026-11-05, finding 1: Phantom dropped the Solana Pay reference. A transfer held for it on this invoice
+  // read "tied to another invoice", which sent the buyer looking for an invoice that does not exist
+  it('says a Solana Pay transfer held for its missing reference is returned, and never ties it to another invoice', async () => {
+    const held = rejection('5sig', 'reference_missing', true, { movedMoney: true, held: true });
+    answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [held] } });
+    const reopened = store({ EventSource: null });
+    await reopened.getState().load();
+    expect(reopened.getState()).toMatchObject({
+      phase: 'selectMethod',
+      error: { code: 'payment_mismatch', reason: 'reference_missing', held: true },
+    });
+    const message = reopened.getState().error?.message ?? '';
+    expect(message).toMatch(/Solana Pay reference/);
+    expect(message).toMatch(/returns it to the wallet that sent it/);
+    expect(message).toMatch(/can still be paid/);
+    expect(message).not.toMatch(/another invoice/);
+    expect(reopened.getState().error).not.toHaveProperty('otherInvoice');
     reopened.getState().destroy();
   });
 

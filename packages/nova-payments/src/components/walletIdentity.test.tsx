@@ -158,16 +158,21 @@ describe('the checkout names and shows the wallet as it calls itself', () => {
     expect(fixture.ofType(window, WalletWait)[0].props).toEqual({ walletId: 'switchwallet', walletIcon: ICON });
   });
 
-  // An arc drawn over the icon, across its corners, read as something wrong with the wallet (the owner, live)
-  it('stands inside the ring of its wait, as on the connecting screen of Nova Connect', () => {
+  // A mark drawn over the icon, across its corners, read as something wrong with the wallet: the wait runs round the
+  // frame, on its border, and the icon stands inside it with room to spare
+  it('stands inside the square frame of its wait, as on the connecting screen of Nova Connect', () => {
     const parts = fixture.elements(render(WalletWait, { walletId: 'switchwallet', walletIcon: ICON }));
     const classes = parts.map((part) => String(part.props.className ?? ''));
     const box = (size: string) => classes.findIndex((name) => name.includes(`novapay:h-${size} `));
     const icon = parts.findIndex((part) => part.type === CheckoutWalletIcon);
 
-    expect(box('20')).toBeGreaterThanOrEqual(0);
+    expect(box('20')).toBe(0);
     expect(box('11')).toBe(icon - 1);
-    expect(classes.find((name) => name.includes('novapay:animate-spin'))).toContain('novapay:border-transparent');
+    // The frame is square with the marks of Nova, and the segment of the wait is its own border: nothing spins over the icon
+    expect(classes[0].split(' ')).toEqual(
+      expect.arrayContaining(['novapay-chase', 'novapay:relative', 'novapay:rounded-[var(--tuwa-rounded-full)]']),
+    );
+    expect(classes.join(' ')).not.toMatch(/animate-spin|rounded-full(?!\))/);
   });
 
   it('under "Wallet" of the method step', () => {

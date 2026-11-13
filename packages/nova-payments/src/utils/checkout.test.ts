@@ -16,6 +16,7 @@ import {
   lockedPriceOnWallet,
   screensPayingWallets,
   sentBeforeDeadline,
+  shownLocale,
   takeOverOpens,
   unconfirmedFollowUp,
   unconfirmedTxKey,
@@ -164,6 +165,47 @@ describe('checkoutScreen of a payment that may still arrive', () => {
   it('shows the unconfirmed screen, not the payment', () => {
     expect(checkoutScreen({ phase: 'unconfirmed' as never, checkout: view(), quote: QUOTE })).toBe('unconfirmed');
     expect(checkoutScreen({ phase: 'unconfirmed' as never, checkout: view() }, { payWith: 'qr' })).toBe('unconfirmed');
+  });
+});
+
+// A payment on its way that failed for good sent the page straight back to the pay step: the status the buyer was
+// watching was gone, with a line of red text where it had been
+describe('checkoutScreen after a payment the page followed failed', () => {
+  const failed = { code: 'payment_failed', reason: 'reverted', message: 'failed' } as never;
+  const after = { afterFailure: true };
+
+  it('shows the failed step while the invoice still takes a payment, whatever step comes next', () => {
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE, error: failed }, after)).toBe(
+      'failed',
+    );
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view(), error: failed }, after)).toBe('failed');
+    expect(checkoutScreen({ phase: 'underpaid', checkout: view(), error: failed }, after)).toBe('failed');
+  });
+
+  it('gives way to the step the store is at once the buyer goes on to pay again', () => {
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE, error: failed })).toBe('pay');
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view(), error: failed })).toBe('method');
+  });
+
+  it('is only for a payment that failed: one that may have moved money keeps its own words', () => {
+    const mismatch = { code: 'payment_mismatch', message: 'moved' } as never;
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE, error: mismatch }, after)).toBe(
+      'pay',
+    );
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE }, after)).toBe('pay');
+    expect(checkoutScreen({ phase: 'unconfirmed' as never, checkout: view(), error: failed }, after)).toBe(
+      'unconfirmed',
+    );
+  });
+
+  it('never covers the outcome of an invoice that takes no payment any more', () => {
+    expect(checkoutScreen({ phase: 'expired', checkout: view(), error: failed }, after)).toBe('expired');
+    expect(checkoutScreen({ phase: 'paid', checkout: view(), error: failed }, after)).toBe('paid');
+  });
+
+  it('keeps the steps of the header and the countdown: the buyer can still pay', () => {
+    expect(checkoutSteps('failed')?.at(-1)).toEqual({ key: 'confirm', state: 'current' });
+    expect(deadlineState('open', 'failed')).toBe('paying');
   });
 });
 
@@ -714,5 +756,31 @@ describe('lockedPriceOnWallet', () => {
     for (const phase of ['idle', 'quoting', 'sending', 'confirming', 'done']) {
       expect(lockedPriceOnWallet({ ...locked, phase, payer: '0xb' })).toBe('keep');
     }
+  });
+});
+
+// The checkout opened in the language of its invoice whatever the page around it spoke: a Ukrainian shop got an English
+// checkout for an invoice its server had issued without a language
+describe('the language a checkout shows', () => {
+  it('is the language of the invoice when the page around it says none, and English before the invoice is read', () => {
+    expect(shownLocale({ picked: null, page: null, invoice: 'de' })).toBe('de');
+    expect(shownLocale({ picked: null, page: null, invoice: null })).toBe('en');
+    expect(shownLocale({ picked: null, page: null, invoice: undefined })).toBe('en');
+  });
+
+  it('is the language of the page around it, also before the invoice is read', () => {
+    expect(shownLocale({ picked: null, page: 'uk', invoice: 'en' })).toBe('uk');
+    expect(shownLocale({ picked: null, page: 'uk', invoice: null })).toBe('uk');
+  });
+
+  it('is the language the buyer picked in the menu, over the page and the invoice', () => {
+    expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: 'uk', invoice: 'en' })).toBe('de');
+    expect(shownLocale({ picked: { locale: 'de', page: null }, page: null, invoice: 'en' })).toBe('de');
+  });
+
+  it('follows the page again once the page changes its language after a pick', () => {
+    expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: 'zh-CN', invoice: 'de' })).toBe('zh-CN');
+    // A page that stops saying its language leaves the invoice, which holds the pick
+    expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: null, invoice: 'de' })).toBe('de');
   });
 });

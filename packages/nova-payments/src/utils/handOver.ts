@@ -1,15 +1,15 @@
 /**
- * @file Handing a payment the wallet sent over to the app's Pulsar store when the checkout closes before Quasar
- * settled it: Pulsar keeps tracking it, and Nova Transactions shows its toast.
+ * @file Handing a payment of a checkout over to the app's Pulsar store: Pulsar tracks it and keeps it in the history,
+ * and Nova Transactions shows its toast.
  */
 
 import type { Transaction } from '@tuwaio/pulsar-core';
-import type { CheckoutError, CheckoutPhase, PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
+import type { PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 
-/** A payment the wallet sent, as the checkout remembers it until Quasar settles it. */
+/** A payment of the checkout: one the wallet sent, or one Quasar found and recorded. */
 export interface SentPayment {
   /** The transaction hash (EVM) or signature (Solana). */
   txKey: string;
@@ -40,25 +40,6 @@ const TITLE_MAX = 100;
 const DESCRIPTION_MAX = 300;
 
 const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
-
-/** Phases in which Quasar settled the payment, or the invoice no longer takes one. */
-const SETTLED: CheckoutPhase[] = ['paid', 'underpaid', 'held', 'refunded', 'expired', 'cancelled', 'blocked'];
-
-/**
- * Whether a sent payment still needs tracking when the checkout closes: Quasar has not settled it, and it did not
- * fail on-chain or turn out not to pay the invoice.
- *
- * @param state - The `phase` and `error` of the checkout store.
- * @param state.phase - Where the payment stands.
- * @param state.error - The last failure; `payment_failed` means the transaction failed on-chain, `payment_mismatch`
- * that it succeeded without paying the invoice: Quasar already has the final word on both.
- * @returns `true` to hand it over.
- */
-export function shouldHandOver(state: { phase: CheckoutPhase; error: CheckoutError | null }): boolean {
-  // `payment_mismatch` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
-  const code: string | undefined = state.error?.code;
-  return !SETTLED.includes(state.phase) && code !== 'payment_failed' && code !== 'payment_mismatch';
-}
 
 /** What {@link handOverPayment} needs. */
 export interface HandOverParams {

@@ -7,23 +7,55 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   STORYBOOK DOCS PALETTE — Sapphire / Cobalt / Oceanic Azure (Light)
-                            & Sapphire / Glacial Sky (Dark)
-   Matches @tuwaio/docs-ui v0.5.5 while keeping Nova's --tuwa-button-gradient-*
-   variables untouched for the ConnectButton.
+   STORYBOOK DOCS PALETTE — paper and ink, the look of Nova
+   Warm paper, ink text, lines of 1 px, the accent of TUWA for links: the deep
+   shade of the TUWA orange in the light theme, the cyan of the logo in the dark.
    ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --tuwa-docs-primary: #0052ff;
-  --tuwa-docs-via: #1d4ed8;
-  --tuwa-docs-secondary: #0284c7;
-  --tuwa-docs-gradient: linear-gradient(135deg, #0052ff 0%, #1d4ed8 50%, #0284c7 100%);
+  --tuwa-docs-primary: #b93b0a;
+  /* Links on hover */
+  --tuwa-docs-secondary: #8f2d06;
+  /* The page furniture has tokens of its own: the theme of a customized story sets --tuwa-* for the whole document */
+  --tuwa-docs-text: #101014;
+  --tuwa-docs-text-secondary: #636366;
+  --tuwa-docs-text-tertiary: #8e8e90;
+  --tuwa-docs-border: #d6d5d1;
+  --tuwa-docs-surface: #f2f1ee;
 }
 
 .dark {
-  --tuwa-docs-primary: #38bdf8;
-  --tuwa-docs-via: #3b82f6;
-  --tuwa-docs-secondary: #7dd3fc;
-  --tuwa-docs-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #7dd3fc 100%);
+  --tuwa-docs-primary: #3ed2ec;
+  --tuwa-docs-secondary: #8ef5ff;
+  --tuwa-docs-text: #f2f1ee;
+  --tuwa-docs-text-secondary: #9d9c9a;
+  --tuwa-docs-text-tertiary: #77767a;
+  --tuwa-docs-border: #2b2c30;
+  --tuwa-docs-surface: #17181b;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STORYBOOK DOCS BLOCKS — lines, not shadows; square corners
+   The code blocks, the frames of the stories and the tables of the docs pages
+   are drawn with a line of 1 px. Storybook's own
+   blocks only: nothing inside a story is touched.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sbdocs .docblock-source,
+.sbdocs .sbdocs-preview,
+.sbdocs .docblock-argstable,
+.sbdocs .docblock-argstable-body,
+.sbdocs .docblock-code-toggle,
+.sbdocs pre:not(.sbdocs-preview pre):not(.docs-story pre) {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.sbdocs .docblock-source,
+.sbdocs .sbdocs-preview {
+  border: 1px solid var(--tuwa-docs-border) !important;
+}
+
+.sbdocs code:not(.sbdocs-preview code):not(.docs-story code) {
+  border-radius: 0 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -58,7 +90,7 @@
 
 .dark .sbdocs-content a:not(.sbdocs-preview a):not(.docs-story a):not(.tuwa-docs-footer a) {
   color: var(--tuwa-docs-primary);
-  text-decoration-color: rgba(56, 189, 248, 0.4);
+  text-decoration-color: rgba(96, 165, 250, 0.4);
 }
 
 .dark .sbdocs-content a:not(.sbdocs-preview a):not(.docs-story a):not(.tuwa-docs-footer a):hover {
@@ -75,10 +107,10 @@
 .tuwa-docs-footer {
   margin-top: 64px;
   padding-top: 24px;
-  border-top: 1px solid var(--tuwa-border-primary);
+  border-top: 1px solid var(--tuwa-docs-border);
   font-size: 12px;
   line-height: 1.5;
-  color: var(--tuwa-text-secondary);
+  color: var(--tuwa-docs-text-secondary);
 }
 
 .tuwa-docs-footer__row {
@@ -92,7 +124,7 @@
 .tuwa-docs-footer__divided {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid var(--tuwa-border-primary);
+  border-top: 1px solid var(--tuwa-docs-border);
 }
 
 .tuwa-docs-footer__row.tuwa-docs-footer__divided {
@@ -104,8 +136,9 @@
   align-items: center;
 }
 
+/* The logo of tuwa.io at its size there: 126 px wide */
 .tuwa-docs-footer__logo img {
-  height: 24px;
+  height: 40px;
   width: auto;
 }
 
@@ -139,7 +172,7 @@
 }
 
 .tuwa-docs-footer__link {
-  color: var(--tuwa-text-secondary);
+  color: var(--tuwa-docs-text-secondary);
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -181,7 +214,7 @@
 
 .tuwa-docs-footer__description {
   font-size: 13px;
-  color: var(--tuwa-text-primary);
+  color: var(--tuwa-docs-text);
 }
 
 .tuwa-docs-footer .tuwa-docs-footer__license {
@@ -190,7 +223,7 @@
 
 .tuwa-docs-footer__copyright {
   text-align: center;
-  color: var(--tuwa-text-tertiary);
+  color: var(--tuwa-docs-text-tertiary);
 }
 
 @media (max-width: 640px) {
@@ -221,11 +254,11 @@
 .tuwa-docs-note {
   margin: 0 0 24px;
   padding: 10px 14px;
-  border: 1px solid var(--tuwa-border-primary);
+  border: 1px solid var(--tuwa-docs-border);
   border-left: 3px solid var(--tuwa-docs-primary);
   border-radius: var(--tuwa-rounded-corners);
-  background: var(--tuwa-bg-secondary);
-  color: var(--tuwa-text-secondary);
+  background: var(--tuwa-docs-surface);
+  color: var(--tuwa-docs-text-secondary);
   font-size: 13px;
   line-height: 1.5;
 }

@@ -23,6 +23,7 @@ const { CheckoutHeader, MobileSteps } = await import('./CheckoutHeader');
 const { CheckoutStepper } = await import('./CheckoutStepper');
 const { MethodScreen } = await import('./MethodScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
+const { StatusHead } = await import('./StatusHead');
 const { QrCode } = await import('./QrCode');
 const { OrderTotal } = await import('./CheckoutSummary');
 const { RadioCards } = await import('./RadioCards');
@@ -173,10 +174,9 @@ describe('customization of the checkout parts', () => {
       { screen: 'expired' },
     );
 
-    expect(ofType(OutcomeScreen({ kind: 'expired' }), StatusIcon)[0].props).toMatchObject({
-      kind: 'expired',
-      className: 'icon-expired',
-    });
+    // The mark of the status head draws the icon of an outcome, or its replacement (`statusMark.test.tsx`)
+    expect(ofType(render(OutcomeScreen, { kind: 'expired' }), StatusHead)[0].props).toMatchObject({ mark: 'expired' });
+    unmount();
     expect(render(QrCode, { value: 'solana:pay', label: 'Pay', className: 'novapay:h-44' })).toMatchObject({
       type: Qr,
       props: { value: 'solana:pay', label: 'Pay', className: expect.stringContaining('brand-qr') },

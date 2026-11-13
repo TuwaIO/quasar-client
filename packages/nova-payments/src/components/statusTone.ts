@@ -20,6 +20,7 @@ export function statusToneOf(screen: CheckoutScreen): StatusTone | null {
       return 'warning';
     case 'paid':
       return 'success';
+    case 'failed':
     case 'blocked':
     case 'error':
       return 'error';

@@ -7,17 +7,27 @@ import { Meta } from '@storybook/addon-docs/blocks';
 Defined in: [webhooks.ts:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L60)
 
 What a hold is about (`data.hold` of `invoice.held`): an invoice paid in a way that waits for your decision. `reason`
-(`late`, `aml`, `quote_expired`), its transaction (`txHash`), the wallets that sent it (`senders`) and whether it came
-late (`late`). Release it with [PaymentsModule.releaseInvoice](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#releaseinvoice) or refund it; a refund to a wallet AML blocks now
+(`late`, `aml`, `quote_expired`), its transaction (`txHash`) and network (`chainId`), the wallets that sent it
+(`senders`) and whether it came late (`late`). Release it with [PaymentsModule.releaseInvoice](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#releaseinvoice) or refund it; a refund to a wallet AML blocks now
 is refused (`sender_blocked`).
 
 ## Properties
+
+### chainId?
+
+> `optional` **chainId?**: `string` \| `null`
+
+Defined in: [webhooks.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L66)
+
+CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out.
+
+***
 
 ### late?
 
 > `optional` **late?**: `true`
 
-Defined in: [webhooks.ts:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L68)
+Defined in: [webhooks.ts:70](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L70)
 
 It arrived after the invoice expired or was cancelled, or was handed over after `dueAt`.
 
@@ -37,7 +47,7 @@ Why the payment is held; `null` when Quasar did not record why.
 
 > `optional` **senders?**: `string`[]
 
-Defined in: [webhooks.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L66)
+Defined in: [webhooks.ts:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L68)
 
 The wallets that sent it.
 

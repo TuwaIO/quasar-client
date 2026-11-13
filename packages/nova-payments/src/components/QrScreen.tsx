@@ -1,4 +1,3 @@
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn, QuasarLoader } from '@tuwaio/nova-core';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
@@ -7,8 +6,9 @@ import { baseUnitsToDecimal, formatCountdown, formatTokenAmount, shortAddress } 
 import { networkName } from '../utils/methods';
 import { addressOfWallet, restRateText } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
-import { mono, primaryAction } from './classes';
+import { mono, pendingNote, primaryAction } from './classes';
 import { checkoutClassName } from './customization';
+import { ExclamationTriangleIcon } from './icons';
 import { QrCode } from './QrCode';
 import {
   ChainLink,
@@ -108,14 +108,24 @@ export function QrScreen() {
                 copiedLabel={labels.pay.copied}
               />
             </div>
+            {/* Each part in one piece with its "·", wrapping only between them: the address broke over two lines with a
+                "·" at the start of the second (owner test 2026-11-09, finding 2) */}
             <div
+              data-qr-line
               className={cn(
                 mono,
-                'novapay:flex novapay:items-center novapay:gap-1 novapay:text-[var(--tuwa-text-secondary)]',
+                'novapay:flex novapay:flex-wrap novapay:items-center novapay:gap-x-1 novapay:gap-y-0.5 novapay:text-[var(--tuwa-text-secondary)]',
               )}
             >
-              {instructions.symbol} · {network} ·{' '}
-              <ChainLink hash={instructions.to} chainId={instructionsChainId(instructions)} />
+              <span data-qr-part className="novapay:whitespace-nowrap">
+                {instructions.symbol} ·
+              </span>
+              <span data-qr-part className="novapay:whitespace-nowrap">
+                {network} ·
+              </span>
+              <span data-qr-part className="novapay:whitespace-nowrap">
+                <ChainLink hash={instructions.to} chainId={instructionsChainId(instructions)} />
+              </span>
             </div>
             {!expired && (
               <>
@@ -136,7 +146,12 @@ export function QrScreen() {
         {restRate && (
           <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{restRate}</p>
         )}
-        <p className="novapay:m-0 novapay:flex novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-pending-bg)] novapay:px-3 novapay:py-2 novapay:text-xs novapay:text-[var(--tuwa-pending-text)]">
+        <p
+          className={cn(
+            pendingNote,
+            'novapay:m-0 novapay:flex novapay:gap-2 novapay:px-3 novapay:py-2 novapay:text-xs',
+          )}
+        >
           <ExclamationTriangleIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:shrink-0" />
           {labels.qr.exchangeWarning}
         </p>

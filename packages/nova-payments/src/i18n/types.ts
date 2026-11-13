@@ -282,8 +282,20 @@ export type NovaPaymentsLabels = {
     declined: string;
     /** Button after a declined request (default: `Try again`) */
     tryAgain: string;
-    /** The transaction failed: `{network}` */
+    /** The transaction reverted on the network, so its fee was spent: `{network}` */
     failed: string;
+    /**
+     * The transaction never landed and its time ran out (a Solana blockhash expired), so nothing was sent and no fee was
+     * spent (default: `The transaction was not confirmed in time and expired, so nothing was sent. The invoice is still open.`)
+     */
+    failedExpired: string;
+    /** The buyer cancelled the transaction in the wallet (default: `The transaction was cancelled in the wallet. The invoice is still open.`) */
+    failedCancelled: string;
+    /**
+     * The payment failed and Quasar names no cause the page can word, or none at all: no word about a fee, which a payment
+     * that never reached the network did not spend (default: `The payment did not go through. The invoice is still open.`)
+     */
+    didNotGoThrough: string;
     /**
      * The transaction succeeded on chain but does not pay the invoice (a wrong amount, asset or recipient, no Solana Pay
      * reference, sent before the price was locked…): it may have moved money, so never say that it failed or that
@@ -327,6 +339,14 @@ export type NovaPaymentsLabels = {
     mismatchChargeHeld: string;
     /** A part past what the invoice takes: `{merchant}`. */
     mismatchTooManyParts: string;
+    /**
+     * Instead of `mismatch` for a Solana Pay transfer without the invoice's reference whose amount alone does not tie it
+     * to the invoice, which Quasar holds on this invoice for a refund (`reference_missing` with `held`): never say that
+     * another invoice holds it: `{merchant}` (default: `This transfer arrived without the Solana Pay reference of this
+     * invoice, and its amount alone does not tie it to the invoice, so it does not pay it. {merchant} returns it to the
+     * wallet that sent it, and you can still pay the invoice.`)
+     */
+    mismatchNoReferenceHeld: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
@@ -516,12 +536,12 @@ export type NovaPaymentsLabels = {
     failed: string;
     /** Row of the network (default: `Network`) */
     network: string;
-    /** Row of the amount (default: `Amount`) */
-    amount: string;
     /** Row of the transaction (default: `Transaction`) */
     transaction: string;
-    /** The same row on an invoice paid in parts, where it names the last one; the receipt names them all (default: `Last transfer`) */
+    /** The same row on an invoice paid in parts, where it names the last one, with a Quasar that does not list the transfers (default: `Last transfer`) */
     lastTransfer: string;
+    /** Row of one transfer of an invoice paid in parts, on the paid step; `{index}` from 1, `{count}` of them (default: `Transfer {index} of {count}`) */
+    transferOf: string;
     /** Row of the sender (default: `From`) */
     from: string;
     /** That the window may close */
@@ -549,6 +569,38 @@ export type NovaPaymentsLabels = {
     viewOnExplorer: string;
     /** Accessible name of the copy button of the transaction (default: `Copy the transaction`) */
     copyHash: string;
+  };
+  /** The chip over the heading of a status screen: one or two words that name the state of the payment. */
+  status: {
+    /** A payment on its way (default: `Pending`) */
+    pending: string;
+    /** The invoice is paid (default: `Paid`) */
+    paid: string;
+    /** The payment failed (default: `Failed`) */
+    failed: string;
+    /** A payment the seller looks at (default: `On review`) */
+    review: string;
+    /** A part of the invoice arrived (default: `Part paid`) */
+    underpaid: string;
+    /** The invoice expired (default: `Expired`) */
+    expired: string;
+    /** The invoice was cancelled (default: `Cancelled`) */
+    cancelled: string;
+    /** The payment was refunded (default: `Refunded`) */
+    refunded: string;
+    /** The seller corrected the invoice (default: `Corrected`) */
+    replaced: string;
+    /** The wallet may not pay the invoice (default: `Blocked`) */
+    blocked: string;
+    /** Quasar could not confirm the payment (default: `Unconfirmed`) */
+    unconfirmed: string;
+  };
+  /** The step after a payment on its way failed for good: the buyer may pay again. */
+  failed: {
+    /** Heading (default: `Payment failed`) */
+    title: string;
+    /** Under the amount: `{network}` (default: `on {network} · the invoice is still open`) */
+    summary: string;
   };
   /** The paid outcome. */
   paid: {

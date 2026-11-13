@@ -157,6 +157,10 @@ export const esLabels: NovaPaymentsLabels = {
     declined: 'Rechazaste la solicitud en {wallet}.',
     tryAgain: 'Reintentar',
     failed: 'El pago falló en {network}. Solo se gastó la comisión de red; la factura sigue abierta.',
+    failedExpired:
+      'La transacción no se confirmó a tiempo y caducó, así que no se envió nada. La factura sigue abierta.',
+    failedCancelled: 'La transacción se canceló en la billetera. La factura sigue abierta.',
+    didNotGoThrough: 'El pago no se completó. La factura sigue abierta.',
     mismatch: 'Esta transacción no paga la factura. Si salió dinero de tu billetera, contacta con {merchant}.',
     mismatchTakenElsewhere:
       'Esta transacción paga otra factura. Si era tu pago de esta, contacta con {merchant} e indica el hash de la transacción.',
@@ -170,6 +174,8 @@ export const esLabels: NovaPaymentsLabels = {
       'Este pago se envió o se cargó con un precio anterior de esta factura, así que no la paga. {merchant} lo devuelve a tu billetera y aún puedes pagar la factura.',
     mismatchTooManyParts:
       'Esta factura ya recibió todos los pagos parciales que admite, así que esta transferencia no la paga. {merchant} la devuelve a tu billetera; envía todo el resto de una vez.',
+    mismatchNoReferenceHeld:
+      'Esta transferencia llegó sin la referencia de Solana Pay de esta factura, y su importe por sí solo no la vincula a la factura, así que no la paga. {merchant} la devuelve a la billetera que la envió, y aún puedes pagar la factura.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
     wrongCluster: '{wallet} está en otra red, así que no se pagó nada. Cámbiala a {network} y vuelve a pagar.',
@@ -263,9 +269,9 @@ export const esLabels: NovaPaymentsLabels = {
     paid: 'Pagado',
     failed: 'Fallido',
     network: 'Red',
-    amount: 'Importe',
     transaction: 'Transacción',
     lastTransfer: 'Última transferencia',
+    transferOf: 'Transferencia {index} de {count}',
     from: 'Desde',
     canClose: 'Puedes cerrar esta ventana: el pago sigue su curso y el vendedor envía el recibo.',
     afterDeadline: 'Tu pago se envió antes de que venciera el plazo y se está confirmando.',
@@ -274,6 +280,23 @@ export const esLabels: NovaPaymentsLabels = {
     invoicePayment: 'Ya hay un pago de esta factura en camino. Espera a que se confirme antes de volver a pagar.',
     viewOnExplorer: 'Ver en el explorador',
     copyHash: 'Copiar la transacción',
+  },
+  status: {
+    pending: 'Pendiente',
+    paid: 'Pagado',
+    failed: 'Fallido',
+    review: 'En revisión',
+    underpaid: 'Pago parcial',
+    expired: 'Vencida',
+    cancelled: 'Cancelada',
+    refunded: 'Reembolsado',
+    replaced: 'Corregida',
+    blocked: 'Bloqueado',
+    unconfirmed: 'Sin confirmar',
+  },
+  failed: {
+    title: 'El pago falló',
+    summary: 'en {network} · la factura sigue abierta',
   },
   paid: {
     title: 'Pago recibido',

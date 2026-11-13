@@ -49,7 +49,7 @@ const { PayScreen } = await import('./PayScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
 const { MethodScreen } = await import('./MethodScreen');
 const { QrScreen } = await import('./QrScreen');
-const { PrimaryButton, ScreenError, SecondaryButton } = await import('./ScreenParts');
+const { FailedTransaction, PrimaryButton, ScreenError, SecondaryButton } = await import('./ScreenParts');
 const { WalletPrompt } = await import('./WalletPrompt');
 
 type Props = Record<string, unknown>;
@@ -135,6 +135,40 @@ afterEach(() => {
   flow.request = null;
 });
 
+// The page said that a payment failed and left the same "Pay 89.54 USDC": nothing to look at, and no word that the next
+// press pays again
+describe('the pay step after a payment that ended without paying the invoice', () => {
+  const ended = (error: Record<string, unknown>) => {
+    show('pay', { quote: quoteOf(null), error });
+    const tree = render(PayScreen, {});
+    return {
+      button: fixture.ofType(tree, PrimaryButton)[0] as ReactElement<Props>,
+      transaction: fixture.ofType(tree, FailedTransaction)[0] as ReactElement<Props> | undefined,
+      errors: fixture.ofType(tree, ScreenError).map((element) => (element as ReactElement<Props>).props.children),
+    };
+  };
+
+  it('offers to pay again and hands the error to the row with its transaction', () => {
+    const error = { code: 'payment_failed', message: 'raw', reason: 'reverted', txKey: '0xfeed' };
+    const { button, transaction, errors } = ended(error);
+    expect(fixture.text(button.props.children)).toBe(defaultLabels.pay.payAgain);
+    expect(transaction?.props.error).toEqual(error);
+    expect(errors).toEqual(['The payment failed on Base. Only the network fee was spent; the invoice is still open.']);
+  });
+
+  it('says of a transaction that expired that nothing was sent, with no word about a fee', () => {
+    const { button, errors } = ended({ code: 'payment_failed', message: 'raw', reason: 'expired' });
+    expect(errors).toEqual([defaultLabels.pay.failedExpired]);
+    expect(fixture.text(button.props.children)).toBe(defaultLabels.pay.payAgain);
+  });
+
+  it('keeps the usual button while nothing has ended', () => {
+    show('pay', { quote: quoteOf(null) });
+    const button = fixture.ofType(render(PayScreen, {}), PrimaryButton)[0] as ReactElement<Props>;
+    expect(fixture.text(button.props.children)).toBe('Pay 89.54 USDC');
+  });
+});
+
 describe('the pay step of a method the gasless relay may pay', () => {
   it('pays by the relay at once: its signed authorization confirms the wallet', () => {
     show('pay', {
@@ -142,7 +176,7 @@ describe('the pay step of a method the gasless relay may pay', () => {
       payerProof: 'unless_relayed',
     });
     const button = fixture.ofType(render(PayScreen, {}), PrimaryButton)[0] as ReactElement<Props>;
-    expect(button.props.children).toBe('Sign to pay 89.54 USDC');
+    expect(fixture.text(button.props.children)).toBe('Sign to pay 89.54 USDC');
   });
 
   it('asks for the free confirmation before the buyer pays the gas instead', () => {
@@ -259,7 +293,7 @@ describe('the pay step of a method the gasless relay may pay', () => {
   it('pays once the wallet confirmed the invoice', () => {
     show('pay', { quote: quoteOf(null), payerProof: 'confirmed' });
     const button = fixture.ofType(render(PayScreen, {}), PrimaryButton)[0] as ReactElement<Props>;
-    expect(button.props.children).toBe('Pay 89.54 USDC');
+    expect(fixture.text(button.props.children)).toBe('Pay 89.54 USDC');
   });
 });
 

@@ -6,6 +6,7 @@ import {
   isPaymentWebhookEvent,
   type PaymentWebhookEvent,
   type PaymentWebhookEventType,
+  type PaymentWebhookHeldTransfer,
   QuasarWebhookError,
   verifyWebhook,
   WEBHOOK_SIGNATURE_HEADER,
@@ -274,8 +275,11 @@ describe('verifyWebhook', () => {
     expectTypeOf<NonNullable<PaymentWebhookEvent['data']['hold']>>().toEqualTypeOf<{
       reason: 'late' | 'aml' | 'quote_expired' | null;
       txHash: string | null;
+      chainId?: string | null;
       senders?: string[];
       late?: true;
     }>();
+    // Owner 11-10: the network of the transaction, so that a held transfer opens in the explorer
+    expectTypeOf<PaymentWebhookHeldTransfer['chainId']>().toEqualTypeOf<string | null | undefined>();
   });
 });

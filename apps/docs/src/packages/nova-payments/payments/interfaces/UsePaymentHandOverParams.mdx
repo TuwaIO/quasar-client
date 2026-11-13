@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # UsePaymentHandOverParams
 
-Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:11](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L11)
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:17](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L17)
 
 What [usePaymentHandOver](?path=/docs/packages-nova-payments-payments-functions-usepaymenthandover--docs) needs.
 
@@ -14,7 +14,7 @@ What [usePaymentHandOver](?path=/docs/packages-nova-payments-payments-functions-
 
 > **adapterFor**: (`family`) => [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs) \| `undefined`
 
-Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L22)
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:29](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L29)
 
 The adapter of a chain family.
 
@@ -38,7 +38,7 @@ The adapter, if any.
 
 > **labels**: [`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
 
-Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:26](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L26)
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:33](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L33)
 
 The labels of the checkout language.
 
@@ -48,19 +48,9 @@ The labels of the checkout language.
 
 > **locale**: `string`
 
-Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:28](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L28)
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:35](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L35)
 
 The checkout language (a BCP 47 tag).
-
-***
-
-### open
-
-> **open**: `boolean`
-
-Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:15](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L15)
-
-Whether the checkout is open (a modal); an inline checkout stays open while it is shown.
 
 ***
 
@@ -68,7 +58,7 @@ Whether the checkout is open (a modal); an inline checkout stays open while it i
 
 > **pulsar**: [`PaymentsPulsar`](?path=/docs/packages-nova-payments-payments-interfaces-paymentspulsar--docs) \| `undefined`
 
-Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L24)
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:31](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L31)
 
 The app's Pulsar store, if any.
 
@@ -78,14 +68,28 @@ The app's Pulsar store, if any.
 
 > **store**: `object`
 
-Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:13](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L13)
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:19](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L19)
 
-The checkout store (its state is read when the payment is handed over).
+The checkout store: read when a payment is handed over, and followed for the payments Quasar finds.
 
 #### getState
 
-> **getState**: () => `Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"phase"` \| `"error"` \| `"checkout"`\>
+> **getState**: () => [`PaymentHandOverState`](?path=/docs/packages-nova-payments-payments-type-aliases-paymenthandoverstate--docs)
 
 ##### Returns
 
-`Pick`\<[`CheckoutState`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs), `"phase"` \| `"error"` \| `"checkout"`\>
+[`PaymentHandOverState`](?path=/docs/packages-nova-payments-payments-type-aliases-paymenthandoverstate--docs)
+
+#### subscribe
+
+> **subscribe**: (`listener`) => () => `void`
+
+##### Parameters
+
+###### listener
+
+(`state`, `previous`) => `void`
+
+##### Returns
+
+() => `void`

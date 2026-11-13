@@ -159,6 +159,10 @@ export const itLabels: NovaPaymentsLabels = {
     tryAgain: 'Riprova',
     failed:
       'Il pagamento non è riuscito su {network}. È stata spesa solo la commissione di rete; la fattura è ancora aperta.',
+    failedExpired:
+      'La transazione non è stata confermata in tempo ed è scaduta, quindi non è stato inviato nulla. La fattura è ancora aperta.',
+    failedCancelled: 'La transazione è stata annullata nel wallet. La fattura è ancora aperta.',
+    didNotGoThrough: 'Il pagamento non è andato a buon fine. La fattura è ancora aperta.',
     mismatch: 'Questa transazione non paga la fattura. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     mismatchTakenElsewhere:
       "Questa transazione paga un'altra fattura. Se era il tuo pagamento per questa, contatta {merchant} indicando l'hash della transazione.",
@@ -172,6 +176,8 @@ export const itLabels: NovaPaymentsLabels = {
       'Questo pagamento è stato inviato o addebitato a un prezzo precedente di questa fattura, quindi non la paga. {merchant} lo restituisce al tuo wallet e puoi ancora pagare la fattura.',
     mismatchTooManyParts:
       'Questa fattura ha ricevuto tutti i pagamenti parziali che accetta, quindi questo trasferimento non la paga. {merchant} lo restituisce al tuo wallet; invia tutto il resto in una volta.',
+    mismatchNoReferenceHeld:
+      "Questo trasferimento è arrivato senza il riferimento Solana Pay di questa fattura, e il suo importo da solo non lo collega alla fattura, quindi non la paga. {merchant} lo restituisce al wallet che l'ha inviato, e puoi ancora pagare la fattura.",
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
     wrongCluster: "{wallet} è su un'altra rete, quindi non è stato pagato nulla. Passalo a {network} e paga di nuovo.",
@@ -266,9 +272,9 @@ export const itLabels: NovaPaymentsLabels = {
     paid: 'Pagato',
     failed: 'Non riuscito',
     network: 'Rete',
-    amount: 'Importo',
     transaction: 'Transazione',
     lastTransfer: 'Ultimo trasferimento',
+    transferOf: 'Trasferimento {index} di {count}',
     from: 'Da',
     canClose: 'Puoi chiudere questa finestra: il pagamento prosegue e il venditore invia la ricevuta.',
     afterDeadline: 'Il pagamento è stato inviato prima del termine ed è in fase di conferma.',
@@ -278,6 +284,23 @@ export const itLabels: NovaPaymentsLabels = {
       'Un pagamento di questa fattura è già in arrivo. Attendi che venga confermato prima di pagare di nuovo.',
     viewOnExplorer: "Vedi nell'explorer",
     copyHash: 'Copia la transazione',
+  },
+  status: {
+    pending: 'In attesa',
+    paid: 'Pagato',
+    failed: 'Non riuscito',
+    review: 'In verifica',
+    underpaid: 'Pagato in parte',
+    expired: 'Scaduta',
+    cancelled: 'Annullata',
+    refunded: 'Rimborsato',
+    replaced: 'Corretta',
+    blocked: 'Bloccato',
+    unconfirmed: 'Non confermato',
+  },
+  failed: {
+    title: 'Pagamento non riuscito',
+    summary: 'su {network} · la fattura è ancora aperta',
   },
   paid: {
     title: 'Pagamento ricevuto',

@@ -2,7 +2,7 @@ import type { CheckoutMethod, CheckoutState, CheckoutStore, CheckoutView } from 
 import { createContext } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
-import type { NovaPaymentsLabels } from '../i18n';
+import type { CheckoutLocale, NovaPaymentsLabels } from '../i18n';
 import type { CheckoutScreen } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
 import type { CheckoutWallet, PaymentFamily } from '../utils/methods';
@@ -23,6 +23,14 @@ export interface CheckoutContextValue {
   locale: string;
   /** The labels of that language. */
   labels: NovaPaymentsLabels;
+  /**
+   * Switches the checkout to the language the buyer picked in the menu and saves it on the invoice, for the documents
+   * still to be issued (`setLocale` of the checkout store). The pick stays the language shown, also over the language of
+   * the page (`locale` of `PaymentCheckout`), until that page changes its language; a pick Quasar did not save is undone.
+   *
+   * @param locale - The language picked.
+   */
+  setLocale: (locale: CheckoutLocale) => Promise<void>;
   /** `Date.now()` of the latest second tick. */
   now: number;
   /**
@@ -85,6 +93,11 @@ export interface CheckoutContextValue {
   /** Goes back to the method step: forgets the locked price and the phone hand-off. */
   backToMethods: () => void;
   /**
+   * Leaves the failed step for the step that pays again (the locked price while it holds, else the methods), and drops
+   * the failure it showed: the buyer has read it.
+   */
+  payAfterFailure: () => void;
+  /**
    * Whether the buyer continued with a wallet that must confirm the invoice before the price: the step that confirms
    * it shows while the checkout store waits for the signature (`ConfirmWalletScreen`).
    */
@@ -103,8 +116,8 @@ export interface CheckoutContextValue {
    */
   lockPrice: () => Promise<void>;
   /**
-   * Remembers the payment the wallet sent: the checkout tracks it while open, and hands it over to the app's Pulsar
-   * store when it closes before Quasar settled it.
+   * Takes the payment the wallet sent: the checkout follows it, and hands it over to the app's Pulsar store at once,
+   * where Nova Transactions shows its toast.
    *
    * @param payment - The transaction and what it pays.
    */

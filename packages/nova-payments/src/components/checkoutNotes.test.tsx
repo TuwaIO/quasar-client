@@ -23,6 +23,7 @@ const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { PayScreen } = await import('./PayScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
+const { StatusHead } = await import('./StatusHead');
 const { NameTransaction } = await import('./NameTransaction');
 const { PrimaryButton, SecondaryButton } = await import('./ScreenParts');
 const { AutoPayScreen } = await import('./AutoPayScreen');
@@ -727,8 +728,13 @@ describe('a payment Quasar could not confirm', () => {
   });
 
   it('asks the buyer to check the wallet before paying again', () => {
-    const text = textOf(unconfirmedScreen());
-    expect(text).toContain('We could not confirm your payment');
+    const tree = unconfirmedScreen();
+    const text = textOf(tree);
+    expect(fixture.ofType(tree, StatusHead)[0].props).toMatchObject({
+      title: 'We could not confirm your payment',
+      chip: 'Unconfirmed',
+      tone: 'pending',
+    });
     expect(text).toContain('Check your wallet before paying again: your payment may still be on its way.');
     expect(text).not.toContain('nothing was charged');
   });

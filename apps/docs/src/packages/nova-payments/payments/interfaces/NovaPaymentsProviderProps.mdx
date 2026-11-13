@@ -39,7 +39,7 @@ The Quasar API (Quasar Cloud by default, the address of your node for the Commun
 
 > **children**: `ReactNode`
 
-Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:123](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L123)
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:124](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L124)
 
 The app.
 
@@ -69,7 +69,7 @@ Texts to replace in every language.
 
 > `optional` **onConnectWallet?**: (`family`) => `void`
 
-Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:121](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L121)
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:122](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L122)
 
 Connects a wallet of a chain family when there is no Nova Connect to open (an app that connects wallets its own
 way): the default of every `PaymentCheckout`, `RefundButton` and `RefundDialog` below, which their own
@@ -93,7 +93,7 @@ The chain family of the payment.
 
 > `optional` **ownConnection?**: [`NovaPaymentsOwnConnection`](?path=/docs/packages-nova-payments-payments-interfaces-novapaymentsownconnection--docs)
 
-Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:113](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L113)
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:114](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L114)
 
 The wallet connection Nova brings when the app has none: used only when no `SatelliteConnectProvider` is above
 (see [NovaPaymentsOwnConnection](?path=/docs/packages-nova-payments-payments-interfaces-novapaymentsownconnection--docs)). Inside the app's Satellite store, Nova uses the app's connection and never
@@ -105,8 +105,9 @@ adds a second one.
 
 > `optional` **pulsar?**: [`PaymentsPulsar`](?path=/docs/packages-nova-payments-payments-interfaces-paymentspulsar--docs)
 
-Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:107](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L107)
+Defined in: [nova-payments/src/providers/NovaPaymentsProvider.tsx:108](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/NovaPaymentsProvider.tsx#L108)
 
-The app's Pulsar store (`injectExternalPendingTxs` of `createPulsarStore` from `@tuwaio/pulsar-core`). While a
-checkout is open it tracks the payment itself; when it closes before Quasar settled a payment the wallet sent, the
-payment goes to this store, which tracks it and keeps it in the history, and Nova Transactions shows its toast.
+The app's Pulsar store (`injectExternalPendingTxs` of `createPulsarStore` from `@tuwaio/pulsar-core`). Every payment
+of a checkout goes to it, which tracks it and keeps it in the history, and Nova Transactions shows its toast: one the
+wallet sends at once, one the page did not send (a QR code, a relayed signature) once Quasar records it, with its
+hash.

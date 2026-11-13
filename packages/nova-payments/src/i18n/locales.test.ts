@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { defaultLabels } from './en';
-import { CHECKOUT_LOCALES, hasLabels, labelsForLocale, loadLabels, mergeLabels } from './locales';
+import { CHECKOUT_LOCALES, checkoutLocaleOf, hasLabels, labelsForLocale, loadLabels, mergeLabels } from './locales';
 import type { NovaPaymentsLabels } from './types';
 
 const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
@@ -65,5 +65,20 @@ describe('checkout languages', () => {
     expect(merged.steps.pay).toBe('Payment');
     expect(merged.summary).toBe(defaultLabels.summary);
     expect(mergeLabels(defaultLabels, undefined)).toBe(defaultLabels);
+  });
+
+  // The page around the checkout says its language as it has it: `uk-UA` of a browser, `zh-Hans` of a site
+  it('finds the language of the checkout that a language tag names', () => {
+    for (const { code } of CHECKOUT_LOCALES) expect(checkoutLocaleOf(code)).toBe(code);
+    expect(checkoutLocaleOf('uk-UA')).toBe('uk');
+    expect(checkoutLocaleOf('de-AT')).toBe('de');
+    expect(checkoutLocaleOf('es_MX')).toBe('es');
+    expect(checkoutLocaleOf('EN-gb')).toBe('en');
+    // The checkout has one Chinese
+    for (const tag of ['zh', 'zh-cn', 'zh-Hans', 'zh-Hans-CN', 'zh-TW']) expect(checkoutLocaleOf(tag)).toBe('zh-CN');
+  });
+
+  it('has no language for a tag it does not know, so the language of the invoice stays', () => {
+    for (const tag of ['fr', 'pl-PL', 'ukr', '', '  ', null, undefined]) expect(checkoutLocaleOf(tag)).toBeNull();
   });
 });

@@ -9,6 +9,7 @@ import { networkName } from '../utils/methods';
 import { addressOfWallet, formatPeriod, isSameWallet } from '../utils/outcome';
 import { OPEN_REQUEST_MS, settlesWithin } from '../utils/settlesWithin';
 import { PaymentWalletError, type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
+import { CapsLabel } from './CapsLabel';
 import {
   ChainLink,
   DetailRow,
@@ -181,13 +182,15 @@ export function AutoPayOffScreen() {
       <ScreenFooter>
         {payerConnected ? (
           <PrimaryButton busy={step !== 'idle'} onClick={() => void turnOff()}>
-            {step === 'wallet'
-              ? formatLabel(labels.autoPayOff.inWallet, values)
-              : step === 'network'
-                ? labels.autoPayOff.waiting
-                : sent
-                  ? labels.autoPayOff.checkAgain
-                  : formatLabel(labels.autoPayOff.confirm, values)}
+            {step === 'wallet' ? (
+              <CapsLabel label={labels.autoPayOff.inWallet} values={values} />
+            ) : step === 'network' ? (
+              labels.autoPayOff.waiting
+            ) : sent ? (
+              labels.autoPayOff.checkAgain
+            ) : (
+              <CapsLabel label={labels.autoPayOff.confirm} values={values} />
+            )}
           </PrimaryButton>
         ) : (
           <PrimaryButton onClick={() => void connectFamily('eip155')}>{labels.autoPayOff.connect}</PrimaryButton>

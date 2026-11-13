@@ -1,4 +1,3 @@
-import { ChevronDownIcon, ClockIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { cn } from '@tuwaio/nova-core';
 import type { CheckoutView } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useId, useState } from 'react';
@@ -8,8 +7,9 @@ import { formatCountLabel, formatLabel, type NovaPaymentsLabels } from '../i18n'
 import { deadlineState } from '../utils/checkout';
 import { formatCountdown, formatFiat, minorToDecimal } from '../utils/format';
 import { invoiceTotals } from '../utils/totals';
-import { focusRing, heroAmountClass, mono } from './classes';
+import { chip, chipTone, focusRing, heroAmountClass, label, mono } from './classes';
 import { checkoutClassName } from './customization';
+import { ChevronDownIcon, ClockIcon, LockClosedIcon } from './icons';
 
 /** The host name of a website link, for display. */
 const hostOf = (url: string) => {
@@ -80,13 +80,7 @@ export function MerchantBadge({ compact = false }: { compact?: boolean }) {
             )}
       </div>
       {invoice.environment === 'test' && (
-        <span
-          title={labels.summary.testHint}
-          className={cn(
-            mono,
-            'novapay:ml-auto novapay:shrink-0 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:bg-[var(--tuwa-pending-bg)] novapay:px-1.5 novapay:py-0.5 novapay:text-[10px] novapay:font-bold novapay:uppercase novapay:tracking-wider novapay:text-[var(--tuwa-pending-text)]',
-          )}
-        >
+        <span title={labels.summary.testHint} className={cn(chip, chipTone.pending, 'novapay:ml-auto')}>
           {labels.summary.test}
           <span className="novapay:sr-only">: {labels.summary.testHint}</span>
         </span>
@@ -105,7 +99,7 @@ export function SellerDetailsContent({ checkout, labels }: { checkout: CheckoutV
     [labels.summary.privacy, merchant.links.privacy],
   ].filter((link): link is [string, string] => Boolean(link[1]));
   return (
-    <div className="novapay:flex novapay:flex-col novapay:gap-1 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:py-2.5 novapay:text-[11px] novapay:leading-snug novapay:text-[var(--tuwa-text-secondary)]">
+    <div className="tuwa-scanlines novapay:flex novapay:flex-col novapay:gap-1 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:py-2.5 novapay:text-[11px] novapay:leading-snug novapay:text-[var(--tuwa-text-secondary)]">
       {seller?.legalName && (
         <span className="novapay:text-xs novapay:font-semibold novapay:text-[var(--tuwa-text-primary)]">
           {seller.legalName}
@@ -170,14 +164,12 @@ export function DeadlineTimer() {
   return (
     <div
       className={cn(
-        'novapay:flex novapay:items-center novapay:justify-between novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:py-2.5',
+        'tuwa-scanlines novapay:flex novapay:items-center novapay:justify-between novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)] novapay:px-3 novapay:py-2.5',
         display === 'page' && 'novapay-page-deadline',
       )}
     >
       <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-0.5">
-        <span className={cn(mono, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
-          {state === 'closed' ? labels.summary.refundAfter : labels.summary.payWithin}
-        </span>
+        <span className={label}>{state === 'closed' ? labels.summary.refundAfter : labels.summary.payWithin}</span>
         <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
           {state === 'closed' ? date : formatLabel(labels.summary.until, { date })}
         </span>
@@ -203,14 +195,16 @@ export function OrderLines() {
     <div className="novapay:flex novapay:flex-col novapay:gap-3.5">
       <div className="novapay:flex novapay:flex-col novapay:gap-2.5">
         {invoice.number && (
-          <div
-            className={cn(
-              mono,
-              'novapay:flex novapay:justify-between novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
-            )}
-          >
-            <span>{labels.summary.invoice}</span>
-            <span>{invoice.number}</span>
+          <div className="novapay:flex novapay:items-baseline novapay:justify-between novapay:gap-3">
+            <span className={label}>{labels.summary.invoice}</span>
+            <span
+              className={cn(
+                mono,
+                'novapay:min-w-0 novapay:break-all novapay:text-right novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
+              )}
+            >
+              {invoice.number}
+            </span>
           </div>
         )}
         <ul className="novapay:m-0 novapay:flex novapay:list-none novapay:flex-col novapay:gap-2.5 novapay:p-0">
@@ -260,7 +254,7 @@ export function OrderTotal() {
     <div
       className={cn('novapay:flex novapay:items-baseline novapay:justify-between', checkoutClassName(context, 'total'))}
     >
-      <span className={cn(mono, 'novapay:text-xs novapay:font-bold')}>{labels.summary.total}</span>
+      <span className={cn(label, 'novapay:text-[var(--tuwa-text-primary)]')}>{labels.summary.total}</span>
       <span className={cn(mono, 'novapay:text-[22px] novapay:font-bold')}>
         {formatFiat(invoiceTotals(checkout.invoice).total, locale)}{' '}
         <span className="novapay:text-[13px] novapay:font-normal novapay:text-[var(--tuwa-text-secondary)]">
@@ -277,7 +271,7 @@ export function SummaryFooter() {
   return (
     <div className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
       <span className="novapay:flex novapay:items-center novapay:gap-1.5">
-        <LockClosedIcon aria-hidden className="novapay:h-3 novapay:w-3" />
+        <LockClosedIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5 novapay:shrink-0" />
         {labels.summary.secured}
       </span>
       {checkout?.merchant.supportEmail && (
@@ -329,7 +323,7 @@ export function Disclosure({
         <ChevronDownIcon
           aria-hidden
           className={cn(
-            'novapay:h-3 novapay:w-3 novapay:transition-transform novapay:motion-reduce:transition-none',
+            'novapay:h-3.5 novapay:w-3.5 novapay:transition-transform novapay:motion-reduce:transition-none',
             open !== growsUp && 'novapay:rotate-180',
           )}
         />
@@ -352,9 +346,7 @@ function HeroTotal() {
   const amount = formatFiat(invoiceTotals(checkout.invoice).total, locale);
   return (
     <div className={cn('novapay:flex novapay:flex-col novapay:gap-1.5', checkoutClassName(context, 'total'))}>
-      <span className={cn(mono, 'novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]')}>
-        {labels.summary.total}
-      </span>
+      <span className={label}>{labels.summary.total}</span>
       <span
         className={cn(
           mono,
@@ -411,11 +403,18 @@ function PageOrderCard() {
   const rest = lines.slice(shown.length);
   if (!invoice.number && lines.length === 0) return null;
   return (
-    <div className="novapay:flex novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)]">
+    <div className="tuwa-scanlines novapay:flex novapay:flex-col novapay:divide-y novapay:divide-[var(--tuwa-border-primary)] novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-primary)]">
       {invoice.number && (
-        <div className={cn(mono, pageRow, 'novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}>
-          <span>{labels.summary.invoice}</span>
-          <span className="novapay:min-w-0 novapay:break-all novapay:text-right">{invoice.number}</span>
+        <div className={cn(pageRow, 'novapay:items-baseline')}>
+          <span className={label}>{labels.summary.invoice}</span>
+          <span
+            className={cn(
+              mono,
+              'novapay:min-w-0 novapay:break-all novapay:text-right novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
+            )}
+          >
+            {invoice.number}
+          </span>
         </div>
       )}
       {shown.length > 0 && (
@@ -527,7 +526,7 @@ export function CompactSummary({ className }: { className?: string } = {}) {
   return (
     <div
       className={cn(
-        'novapay:mx-4 novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-3',
+        'tuwa-scanlines novapay:mx-4 novapay:flex novapay:flex-col novapay:gap-2 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:p-3',
         className,
       )}
     >

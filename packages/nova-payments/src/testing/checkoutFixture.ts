@@ -8,7 +8,7 @@ import { isValidElement, type ReactElement } from 'react';
 import { vi } from 'vitest';
 
 import type { CheckoutContextValue } from '../components/checkoutContext';
-import { defaultLabels } from '../i18n';
+import { defaultLabels, formatLabel } from '../i18n';
 
 /** A method of the test checkout. */
 export const method = (id: string, symbol: string, chainId: string, featured = false): CheckoutMethod =>
@@ -84,7 +84,7 @@ export function checkoutContextValue(
   customization: CheckoutContextValue['customization'],
   extra: Partial<CheckoutContextValue> = {},
 ): CheckoutContextValue {
-  return {
+  const value = {
     store: fakeStore().store,
     state: {
       phase: 'selectMethod',
@@ -114,6 +114,7 @@ export function checkoutContextValue(
     handoff: false,
     setHandoff: vi.fn(),
     backToMethods: vi.fn(),
+    payAfterFailure: vi.fn(),
     confirmWallet: false,
     setConfirmWallet: vi.fn(),
     lockPrice: vi.fn(async () => undefined),
@@ -126,6 +127,11 @@ export function checkoutContextValue(
     customization,
     ...extra,
   } as CheckoutContextValue;
+  // The pick of a language goes to the store of the context, as in the checkout
+  value.setLocale ??= async (locale) => {
+    await value.store.getState().setLocale(locale);
+  };
+  return value;
 }
 
 /** Every element of the tree (children and element props), depth first. */
@@ -146,3 +152,19 @@ export const hasClass = (node: unknown, name: string) =>
       .split(' ')
       .includes(name),
   );
+
+/**
+ * The text a node shows: its strings and numbers and those of the elements in it, in order, as a reader sees a label
+ * whose parts are in elements of their own. A filled-in label (`CapsLabel`, an element with a `label` and its `values`)
+ * reads as the label with its values in place.
+ */
+export function text(node: unknown): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(text).join('');
+  if (!isValidElement(node)) return '';
+  const props = node.props as { children?: unknown; label?: unknown; values?: unknown };
+  if (typeof props.label === 'string' && (props.values === undefined || typeof props.values === 'object')) {
+    return formatLabel(props.label, (props.values ?? {}) as Record<string, string | number>);
+  }
+  return text(props.children);
+}

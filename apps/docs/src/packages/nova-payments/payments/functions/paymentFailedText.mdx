@@ -1,0 +1,41 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/paymentFailedText" />
+
+# paymentFailedText()
+
+> **paymentFailedText**(`error`, `labels`, `network?`): `string`
+
+Defined in: [nova-payments/src/utils/outcome.ts:72](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L72)
+
+What the checkout says about a payment Quasar ended as failed for good (`payment_failed`), by the reason Quasar gives.
+Only a transaction that reverted on the network spent a fee, and only that one is said to have: a transaction whose
+time ran out before it landed (`expired`, a Solana blockhash) sent nothing, one the buyer cancelled in the wallet
+(`cancelled`) was their own doing, and for anything else (a relay operation that was lost, a cause Quasar does not
+name, an older Quasar that gives no reason) the page knows only that the invoice is not paid.
+
+## Parameters
+
+### error
+
+[`CheckoutError`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouterror--docs)
+
+The store's `payment_failed` error.
+
+### labels
+
+[`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+The labels of the checkout language.
+
+### network?
+
+`string`
+
+The name of the network of the payment, on the pay step; the method step does not know it.
+
+## Returns
+
+`string`
+
+The text.

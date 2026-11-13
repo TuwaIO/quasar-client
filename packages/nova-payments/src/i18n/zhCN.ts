@@ -151,6 +151,9 @@ export const zhCNLabels: NovaPaymentsLabels = {
     declined: '您在 {wallet} 中拒绝了请求。',
     tryAgain: '重试',
     failed: '付款在 {network} 上失败。只消耗了网络费，发票仍可支付。',
+    failedExpired: '交易未能及时确认并已过期，因此没有发送任何款项。发票仍可支付。',
+    failedCancelled: '交易已在钱包中取消。发票仍可支付。',
+    didNotGoThrough: '付款未成功。发票仍可支付。',
     mismatch: '此交易未支付该发票。如果有款项从您的钱包转出，请联系 {merchant}。',
     mismatchTakenElsewhere: '此交易支付的是另一张发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
     mismatchHeldElsewhere:
@@ -163,6 +166,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
       '此付款是按此发票先前的价格发送或扣取的，因此不计入此发票。{merchant} 会将其退回您的钱包，您仍可支付此发票。',
     mismatchTooManyParts:
       '此发票接受的部分付款已达上限，因此这笔转账不计入此发票。{merchant} 会将其退回您的钱包；请一次发送全部余额。',
+    mismatchNoReferenceHeld:
+      '此转账没有携带此发票的 Solana Pay 付款参考信息，仅凭金额也无法将其与此发票对应，因此不计入此发票。{merchant} 会将其退回到发送它的钱包，您仍可支付此发票。',
     payAgain: '再次付款',
     unsupported: '{wallet} 无法完成此笔付款。',
     wrongCluster: '{wallet} 处于其他网络，因此未完成任何付款。请将其切换到 {network} 后重新付款。',
@@ -247,9 +252,9 @@ export const zhCNLabels: NovaPaymentsLabels = {
     paid: '已付款',
     failed: '失败',
     network: '网络',
-    amount: '金额',
     transaction: '交易',
     lastTransfer: '最后一笔转账',
+    transferOf: '第 {index} 笔转账，共 {count} 笔',
     from: '发送方',
     canClose: '您可以关闭此窗口：付款会继续进行，卖方会发送收据。',
     afterDeadline: '您的付款已在截止时间前发送，正在确认中。',
@@ -257,6 +262,23 @@ export const zhCNLabels: NovaPaymentsLabels = {
     invoicePayment: '此发票已有一笔付款正在处理中。请等待其确认后再重新付款。',
     viewOnExplorer: '在区块浏览器中查看',
     copyHash: '复制交易',
+  },
+  status: {
+    pending: '处理中',
+    paid: '已支付',
+    failed: '失败',
+    review: '审核中',
+    underpaid: '部分支付',
+    expired: '已过期',
+    cancelled: '已取消',
+    refunded: '已退款',
+    replaced: '已更正',
+    blocked: '已拦截',
+    unconfirmed: '未确认',
+  },
+  failed: {
+    title: '支付失败',
+    summary: '{network} · 发票仍可支付',
   },
   paid: {
     title: '已收到付款',

@@ -1,0 +1,79 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/CheckoutPayment" />
+
+# CheckoutPayment
+
+Defined in: [checkout/types.ts:155](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L155)
+
+A transfer credited to the invoice, as the checkout lists it ([CheckoutInvoice.payments](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs#payments)).
+
+## Properties
+
+### amount
+
+> **amount**: `string`
+
+Defined in: [checkout/types.ts:161](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L161)
+
+What it credited to the invoice, in base units of the token.
+
+***
+
+### at
+
+> **at**: `string`
+
+Defined in: [checkout/types.ts:169](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L169)
+
+When the network included it (ISO), or when Quasar verified it if the network named no time.
+
+***
+
+### chainId
+
+> **chainId**: `string` \| `null`
+
+Defined in: [checkout/types.ts:159](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L159)
+
+CAIP-2 chain of the transfer; `null` when the record of the payment names none.
+
+***
+
+### decimals
+
+> **decimals**: `number` \| `null`
+
+Defined in: [checkout/types.ts:165](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L165)
+
+The decimals of that token; `null` like `symbol`.
+
+***
+
+### from
+
+> **from**: `string` \| `null`
+
+Defined in: [checkout/types.ts:167](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L167)
+
+The address that sent it (the first one, when a Solana transfer names several); `null` when none is on record.
+
+***
+
+### symbol
+
+> **symbol**: `string` \| `null`
+
+Defined in: [checkout/types.ts:163](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L163)
+
+The token it was paid in; `null` when the merchant no longer has that payment method.
+
+***
+
+### txKey
+
+> **txKey**: `string`
+
+Defined in: [checkout/types.ts:157](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L157)
+
+The transaction: its hash, or its Solana signature.

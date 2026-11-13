@@ -1,0 +1,22 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/FailedScreen" />
+
+# FailedScreen()
+
+> **FailedScreen**(): `Element` \| `null`
+
+Defined in: [nova-payments/src/components/FailedScreen.tsx:27](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/FailedScreen.tsx#L27)
+
+The failed step: a payment this page showed on its way failed for good (the network reverted it, the wallet
+cancelled it, a Solana transaction expired), and the invoice still takes a payment. It stays where the confirm step
+was, with the same head, so the buyer sees what became of the payment they were watching: the mark and the chip turn
+to a failure, the last step says "Failed", and under the network, the transaction with its explorer link and the
+sender stands why, in the words of the reason. "Pay again" goes on to the step the checkout store went back to (the
+locked price while it holds, else the methods); "Contact" reaches the seller.
+
+## Returns
+
+`Element` \| `null`
+
+The failed step, or nothing without the failure of a payment.

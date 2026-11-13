@@ -1,14 +1,7 @@
 import { cn, MorphText } from '@tuwaio/nova-core';
-import { useEffect, useState } from 'react';
 
-import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { screenHeading, screenTitle } from './classes';
-
-/** The title a status screen of each store showed last, and when it left. */
-const lastTitles = new WeakMap<object, { title: string; leftAt: number }>();
-
-/** A status screen that follows another within this time continues its title. */
-const CONTINUES_MS = 500;
+import { useContinued } from './statusMemory';
 
 /**
  * The heading of a status screen. Each screen of the checkout is a component of its own, so a title would start over with
@@ -22,18 +15,7 @@ const CONTINUES_MS = 500;
  * @internal
  */
 export function StatusTitle({ children: title, className }: { children: string; className?: string }) {
-  const { store } = useCheckoutContext();
-  const [shown, setShown] = useState(() => {
-    const last = lastTitles.get(store);
-    return last && Date.now() - last.leftAt < CONTINUES_MS ? last.title : title;
-  });
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- The change of the text is what morphs it
-    setShown(title);
-    return () => {
-      lastTitles.set(store, { title, leftAt: Date.now() });
-    };
-  }, [store, title]);
+  const shown = useContinued('title', title);
   return (
     <h2 {...screenHeading} aria-label={title} className={cn(screenTitle, className)}>
       <MorphText wrap>{shown}</MorphText>

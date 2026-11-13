@@ -1,5 +1,6 @@
-import { CheckCircleIcon, FaceFrownIcon } from '@heroicons/react/24/outline';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { primaryButtonClasses } from '@tuwaio/nova-core/utils';
+import { CheckCircleIcon, FaceFrownIcon } from '@tuwaio/nova-icons/24/outline';
 import {
   type CheckoutPrimaryButtonProps,
   type CheckoutScreenProps,
@@ -17,6 +18,7 @@ import { useMemo, useState } from 'react';
 import { action } from 'storybook/actions';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { useStorybookLocale } from '../../../i18n/useStorybookLocale';
 import { STORY_OWN_CONNECTION } from '../../utils/payments/ownConnection';
 import { PaymentsConnectionCaption } from '../../utils/payments/PaymentsConnectionCaption';
 import { sampleCheckout, simulatedCheckoutApi, type SimulationOptions } from '../../utils/payments/simulatedCheckout';
@@ -35,6 +37,11 @@ type StoryProps = SimulationOptions & {
   /** How often the checkout reads the invoice; the stories read it once a minute unless they follow a payment. */
   pollMs?: number;
   customization?: PaymentCheckoutCustomization;
+  /**
+   * The language of the page around the checkout (`locale` of `PaymentCheckout`). The stories give the language of the
+   * toolbar, as a page of an app gives its own; `null` gives none, and the checkout follows the language of its invoice.
+   */
+  locale?: string | null;
   /**
    * Whose wallet connection the checkout uses, shown above it: the app's (the simulated wallet with its Nova Connect),
    * the app's store with the app's own connect button, or Nova's own (a real Nova Connect modal).
@@ -75,19 +82,19 @@ function SimulatedCheckout({
   pollMs = 60_000,
   customization,
   connection,
+  locale,
   ...simulation
 }: StoryProps) {
   const api = useMemo(() => simulatedCheckoutApi(simulation), [simulation]);
   const [open, setOpen] = useState(true);
+  // The page around the checkout is this Storybook, in the language of its toolbar
+  const toolbarLocale = useStorybookLocale();
+  const pageLocale = locale === undefined ? toolbarLocale : (locale ?? undefined);
   return (
     <StoryConnection connection={connection} wallet={wallet} walletOptions={walletOptions}>
       {/* The opener stays in the page: the dialog gives the focus back to it when it closes */}
       {display === 'modal' && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="rounded bg-[var(--tuwa-button-primary-bg)] px-4 py-2 text-white"
-        >
+        <button type="button" onClick={() => setOpen(true)} className={primaryButtonClasses}>
           Open the checkout
         </button>
       )}
@@ -108,6 +115,7 @@ function SimulatedCheckout({
         payUrl={payUrl}
         autoReturnSeconds={autoReturnSeconds}
         onPaid={action('onPaid')}
+        locale={pageLocale}
         customization={customization}
       />
     </StoryConnection>
@@ -139,9 +147,13 @@ export const Modal: Story = { args: { display: 'modal' } };
 /** The merchant's logo instead of its first letter. */
 export const WithLogo: Story = { args: { logo: true } };
 
-/** A live invoice (no test badge) in Ukrainian, with one VAT-free line. */
+/**
+ * A live invoice (no test badge) in Ukrainian, with one VAT-free line. The page around it says no language (`locale` is
+ * not given), so the checkout opens in the language of the invoice.
+ */
 export const LiveInvoice: Story = {
   args: {
+    locale: null,
     view: sampleCheckout(
       {},
       {
@@ -294,8 +306,8 @@ export const NotEnough: Story = {
 };
 
 /**
- * Pay, then close the checkout while the wallet still asks: the transaction it sends later goes to the app's Pulsar
- * store (see the actions panel), where Nova Transactions shows its toast and keeps tracking it.
+ * Pay, then close the checkout while the wallet still asks: the transaction it sends goes to the app's Pulsar store
+ * (see the actions panel), where Nova Transactions shows its toast and keeps tracking it, as every payment does.
  */
 export const HandOverAfterClose: Story = {
   args: { display: 'modal', wallet: METAMASK_ON_BASE_SEPOLIA, gasless: false },
@@ -483,6 +495,109 @@ export const Confirming: Story = {
 /** Paid: the amount, network and steps, the receipt to download, and the way back to the seller. */
 export const Paid: Story = {
   args: { view: settled({ status: 'paid', amountPaid: '89540000', successUrl: 'https://acme.example/thanks' }) },
+};
+
+/** The transaction of the payment the status stories follow. */
+const FOLLOWED_TX = `0x${'7e'.repeat(32)}`;
+
+/**
+ * The payment confirms while the buyer watches, about three seconds in: the same head goes on from "Pending" into
+ * "Paid". The pixels of the Quasar loader fly into the check mark, the chip changes its color and word, the heading
+ * and the line under the amount morph, the amount stays where it was, the line of the steps runs on to "Paid" and the
+ * receipt comes in under the details. "Remount" in the toolbar plays it again.
+ */
+export const PendingToPaid: Story = {
+  args: {
+    pollMs: 500,
+    replaceAfterReads: 6,
+    view: settled({ status: 'processing', pendingPayments: 1 }),
+    afterReplace: settled({ status: 'paid', amountPaid: '89540000', pendingPayments: 0 }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('Pending')).toBeVisible();
+    await expect(await canvas.findByRole('heading', { name: 'Payment received' }, { timeout: 10_000 })).toBeVisible();
+    // The chip over the heading and the last step both say it
+    await waitFor(() => expect(canvas.getAllByText('Paid').length).toBeGreaterThanOrEqual(2));
+    await expect(canvas.queryByText('Pending')).toBeNull();
+  },
+};
+
+/**
+ * The network reverts the payment while the buyer watches: the head turns to a failure where it stood (the cross, the
+ * chip "Failed", the last step), with the transaction and the reason under it, and offers to pay again. Before, the
+ * page jumped to the pay step with a line of red text.
+ */
+export const PendingToFailed: Story = {
+  args: {
+    wallet: METAMASK_ON_BASE_SEPOLIA,
+    pollMs: 500,
+    replaceAfterReads: 6,
+    view: settled({ status: 'processing', pendingPayments: 1 }),
+    afterReplace: settled({
+      status: 'open',
+      pendingPayments: 0,
+      unresolvedPayments: 0,
+      rejectedTxKeys: [FOLLOWED_TX],
+      rejectedPayments: [{ txKey: FOLLOWED_TX, reason: 'reverted', final: true }],
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Payment failed' }, { timeout: 10_000 })).toBeVisible();
+    // The reason comes in a moment after the head has turned
+    await waitFor(() => expect(canvas.getByText(/^The payment failed on Base Sepolia/)).toBeVisible());
+    await waitFor(() => expect(canvas.getAllByText('Failed').length).toBeGreaterThanOrEqual(2));
+    await expect(canvas.getByRole('button', { name: 'Pay again' })).toBeVisible();
+  },
+};
+
+/** "Pay again" on the failed step leads back to the pay step, with nothing left of the failure. */
+export const PayAgainAfterFailure: Story = {
+  args: PendingToFailed.args,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: 'Pay again' }, { timeout: 10_000 }));
+    // Back at the pay step, with nothing left of the failure
+    await expect(await canvas.findByRole('button', { name: /^(Sign to pay|Pay) / })).toBeVisible();
+    await expect(canvas.queryByText(/^The payment failed/)).toBeNull();
+  },
+};
+
+/** A transfer of the sample invoice, as the checkout lists the ones Quasar credited (`invoice.payments`). */
+const creditedTransfer = (fill: string, amount: string, at: string) => ({
+  txKey: `0x${fill.repeat(32)}`,
+  chainId: 'eip155:84532',
+  amount,
+  symbol: 'USDC',
+  decimals: 6,
+  from: '0x1111111111111111111111111111111111111111',
+  at,
+});
+
+/**
+ * Paid in two transfers, a first part and its rest: the paid step lists each with its time, its amount and its
+ * transaction, not only the last one.
+ */
+export const PaidInParts: Story = {
+  args: {
+    view: settled({
+      status: 'paid',
+      amountPaid: '89540000',
+      paidAt: '2026-10-08T12:05:00.000Z',
+      payments: [
+        creditedTransfer('4f', '80000000', '2026-10-08T12:01:00.000Z'),
+        creditedTransfer('9c', '9540000', '2026-10-08T12:05:00.000Z'),
+      ],
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('Transfer 1 of 2')).toBeVisible();
+    await expect(canvas.getByText('Transfer 2 of 2')).toBeVisible();
+    await expect(canvas.getByText(/^80\.00 USDC$/)).toBeVisible();
+    await expect(canvas.getByText(/^9\.54 USDC$/)).toBeVisible();
+  },
 };
 
 /**
@@ -879,6 +994,44 @@ export const HeldTransfer: Story = {
 };
 
 /**
+ * A transaction that landed and did not pay the invoice (a wrong amount, token or recipient): the page says so instead
+ * of waiting, shows the transaction with its link to the explorer, and the button pays again.
+ */
+export const WrongTransfer: Story = {
+  args: {
+    wallet: METAMASK_ON_BASE_SEPOLIA,
+    view: sampleCheckout(
+      { quote: LOCKED },
+      {
+        pendingPayments: 0,
+        rejectedPayments: [
+          {
+            txKey: '0x9a3f000000000000000000000000000000000000000000000000000000004be2',
+            reason: 'no_matching_transfer',
+            final: true,
+            movedMoney: true,
+            at: Date.parse('2026-11-03T14:02:00.000Z'),
+          },
+        ],
+      },
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText(
+        'This transaction does not pay the invoice. If money left your wallet, contact Acme Labs.',
+      ),
+    ).toBeVisible();
+    await expect(canvas.getByRole('link', { name: /explorer/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('0x9a3f000000000000000000000000000000000000000000000000000000004be2'),
+    );
+    await expect(canvas.getByRole('button', { name: 'Pay again' })).toBeEnabled();
+  },
+};
+
+/**
  * Part of the invoice was paid from one wallet and another one is connected now: only the wallet that paid first pays
  * the rest, and "Pay the rest" asks for it.
  */
@@ -919,17 +1072,21 @@ export const PayRest: Story = {
  * change colors the parts already set with the `--tuwa-*` variables, or replace the part.
  */
 const brandClassNames: PaymentCheckoutCustomization['classNames'] = {
+  // In the paper and ink of the checkout: lines and the colors of the theme, no shadow
   container: ({ screen }) =>
-    screen === 'paid' ? 'ring-2 ring-emerald-500/50 shadow-xl' : 'ring-2 ring-blue-600/40 shadow-xl',
-  step: ({ step }) => (step.state === 'current' ? 'rounded bg-blue-600/10 pr-1.5' : undefined),
-  tokenOption: ({ selected }) => (selected ? 'shadow-md' : undefined),
-  networkOption: ({ method }) => (method.featured ? 'ring-1 ring-sky-500/60' : undefined),
-  primaryButton: () => 'uppercase tracking-widest',
-  total: () => 'rounded border border-dashed border-sky-500/60 px-2 py-1',
-  statusIcon: () => 'drop-shadow',
+    screen === 'paid' ? 'ring-2 ring-[var(--tuwa-success-icon)]' : 'ring-2 ring-[var(--tuwa-text-primary)]',
+  step: ({ step }) => (step.state === 'current' ? 'bg-[var(--tuwa-bg-muted)] pr-1.5' : undefined),
+  tokenOption: ({ selected }) => (selected ? 'border-dashed' : undefined),
+  networkOption: ({ method }) => (method.featured ? 'border-dashed' : undefined),
+  primaryButton: () => 'tracking-[0.3em]',
+  total: () => 'border border-dashed border-[var(--tuwa-border-strong)] px-2 py-1',
+  statusIcon: () => 'opacity-70',
 };
 
-/** Classes from the state of the checkout: a ring on the block, the current step marked, the chosen token raised. */
+/**
+ * Classes from the state of the checkout: a frame round the block (green once paid), the current step marked, the chosen
+ * token and the popular network in a dashed frame, the total in a frame of its own.
+ */
 export const CustomClassNames: Story = { args: { customization: { classNames: brandClassNames } } };
 
 /** The main button of the app: same props as the default one (`busy`, `disabled`, `onClick`, `type`…). */
@@ -940,7 +1097,7 @@ function BrandButton({ busy, children, className, ...props }: CheckoutPrimaryBut
       {...props}
       disabled={props.disabled || busy}
       aria-busy={busy || undefined}
-      className={`inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-[var(--tuwa-rounded-corners)] border-0 bg-emerald-700 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-70 ${className ?? ''}`}
+      className={`inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-[var(--tuwa-rounded-corners)] border border-[var(--tuwa-text-primary)] bg-[var(--tuwa-text-primary)] px-3 py-2 font-mono text-xs font-bold tracking-[0.12em] text-[var(--tuwa-bg-primary)] uppercase hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 ${className ?? ''}`}
     >
       {children}
     </button>
@@ -962,7 +1119,7 @@ function BrandTokenOption({ group, selected }: CheckoutTokenOptionProps) {
 
 /** One icon for every outcome other than paid. */
 function BrandStatusIcon({ className }: CheckoutStatusIconProps) {
-  return <FaceFrownIcon aria-hidden className={`h-12 w-12 text-blue-600 ${className ?? ''}`} />;
+  return <FaceFrownIcon aria-hidden className={`h-12 w-12 text-[var(--tuwa-text-secondary)] ${className ?? ''}`} />;
 }
 
 /** The app's own paid screen, reading the checkout with `useCheckoutContext`. */
@@ -973,8 +1130,8 @@ function BrandPaidScreen({ screen }: CheckoutScreenProps) {
       data-screen={screen}
       className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center text-[var(--tuwa-text-primary)]"
     >
-      <CheckCircleIcon aria-hidden className="h-12 w-12 text-emerald-600" />
-      <h2 className="m-0 text-lg font-semibold">Thank you for your order</h2>
+      <CheckCircleIcon aria-hidden className="h-12 w-12 text-[var(--tuwa-success-icon)]" />
+      <h2 className="m-0 font-mono text-lg font-bold">Thank you for your order</h2>
       <p className="m-0 text-sm text-[var(--tuwa-text-secondary)]">
         {checkout?.merchant.name} received the payment of invoice {checkout?.invoice.number}.
       </p>
@@ -1027,6 +1184,7 @@ const loggingHandlers: PaymentCheckoutCustomization['handlers'] = {
     action('onLocaleChange')(locale);
     await proceed();
   },
+  onLocaleShown: ({ locale }) => action('onLocaleShown')(locale),
   onStatusChange: action('onStatusChange'),
   onError: action('onError'),
   onExpire: action('onExpire'),
@@ -1053,7 +1211,7 @@ export const WithChildCustomizations: Story = {
     view: settled({ status: 'paid', amountPaid: '89540000' }),
     customization: {
       childCustomizations: {
-        statusVisual: { iconClassNames: { icon: 'text-blue-600' } },
+        statusVisual: { iconClassNames: { icon: 'text-[var(--tuwa-text-primary)]' } },
         progressIndicator: { stepClassNames: { label: 'uppercase tracking-wider' } },
         hashLink: { classNames: { hash: 'font-semibold' } },
       },
@@ -1109,6 +1267,25 @@ export const KeyboardPayToConfirm: Story = {
     await userEvent.keyboard('{Enter}');
     const heading = await canvas.findByRole('heading', { name: 'Confirming your payment' }, { timeout: 5000 });
     await waitFor(() => expect(heading).toHaveFocus());
+  },
+};
+
+/**
+ * The language of the page around the checkout (`locale`): a Ukrainian page opens an English invoice in Ukrainian. The
+ * language the buyer picks in the menu wins from then on, and is saved on the invoice for its documents.
+ */
+export const PageLanguage: Story = {
+  args: { locale: 'uk' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Ukrainian, though the invoice of the story is in English
+    const heading = await canvas.findByRole('heading', { name: 'Оберіть спосіб оплати' });
+    await expect(heading.closest('[lang]')).toHaveAttribute('lang', 'uk');
+
+    await userEvent.click(canvas.getByRole('button', { name: /^UK/ }));
+    await userEvent.click(await canvas.findByRole('option', { name: /Deutsch/ }));
+    await expect(await canvas.findByRole('heading', { name: 'Zahlungsart wählen' })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: /^DE/ }).closest('[lang]')).toHaveAttribute('lang', 'de');
   },
 };
 

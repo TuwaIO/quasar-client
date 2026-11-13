@@ -132,7 +132,7 @@ const useManagerLocale = () => React.useSyncExternalStore(subscribeLocale, getMa
 
 const TRIGGER_W = 76;
 const TRIGGER_H = 32;
-const RADIUS = 6;
+const RADIUS = 0;
 const OPTION_H = 40;
 const MENU_W = 200;
 
@@ -228,11 +228,11 @@ function matchesKey(option, char) {
 const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
   const theme = useTheme();
   const isDark = theme?.base === 'dark';
-  const accent = theme?.barSelectedColor ?? (isDark ? '#38bdf8' : '#0052ff');
-  const textColor = theme?.color?.defaultText ?? (isDark ? '#f1f5f9' : '#1f2937');
-  const mutedColor = theme?.barTextColor ?? (isDark ? '#94a3b8' : '#6b7280');
-  const menuBg = theme?.background?.content ?? (isDark ? '#0d1230' : '#ffffff');
-  const borderColor = theme?.appBorderColor ?? (isDark ? '#1e293b' : '#e5e7eb');
+  const accent = theme?.barSelectedColor ?? (isDark ? '#3ed2ec' : '#b93b0a');
+  const textColor = theme?.color?.defaultText ?? (isDark ? '#f2f1ee' : '#101014');
+  const mutedColor = theme?.barTextColor ?? (isDark ? '#9d9c9a' : '#636366');
+  const menuBg = theme?.background?.content ?? (isDark ? '#121316' : '#faf9f7');
+  const borderColor = theme?.appBorderColor ?? (isDark ? '#2b2c30' : '#d6d5d1');
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(0);
@@ -392,22 +392,16 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
           height: TRIGGER_H,
           padding: '0 8px 0 2px',
           borderRadius: RADIUS,
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
-          background: isDark
-            ? hovered
-              ? 'rgba(255,255,255,0.2)'
-              : 'rgba(255,255,255,0.1)'
-            : hovered
-              ? 'rgba(0,0,0,0.1)'
-              : 'rgba(0,0,0,0.05)',
+          // Paper and ink: a frame of 1 px, no fill until the pointer is over it
+          border: `1px solid ${borderColor}`,
+          background: hovered ? (isDark ? 'rgba(242,241,238,0.06)' : 'rgba(16,16,20,0.04)') : 'transparent',
           color: textColor,
           cursor: 'pointer',
           transition: 'background 0.3s ease, border-color 0.3s ease',
           flexShrink: 0,
-          backdropFilter: 'blur(4px)',
         }}
       >
-        {/* The flag on a knob as the theme switch's, with a glow in its colour; a small spring when it changes */}
+        {/* The flag on a knob as the theme switch's, with a line in its colour; a small spring when it changes */}
         <span
           aria-hidden="true"
           className={cls(
@@ -427,12 +421,13 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
         {/* The visible label starts the accessible name (WCAG 2.5.3) */}
         <span
           style={{
-            width: 20,
+            width: 22,
             textAlign: 'center',
             fontFamily: theme?.typography?.fonts?.mono,
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: 700,
-            letterSpacing: '-0.02em',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
           }}
         >
           {active.short}
@@ -472,7 +467,6 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
               borderRadius: RADIUS,
               border: `1px solid ${borderColor}`,
               background: menuBg,
-              boxShadow: isDark ? '0 12px 32px rgba(0,0,0,0.5)' : '0 12px 32px rgba(15,23,42,0.15)',
               outline: 'none',
               fontFamily: theme?.typography?.fonts?.base,
             }}
@@ -505,7 +499,7 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
                     cursor: 'pointer',
                     color: selected || focused ? textColor : mutedColor,
                     background: selected
-                      ? `linear-gradient(90deg, color-mix(in srgb, var(--glow) ${focused ? 20 : 14}%, transparent), color-mix(in srgb, var(--glow) ${focused ? 8 : 5}%, transparent), transparent)`
+                      ? `color-mix(in srgb, var(--glow) ${focused ? 14 : 10}%, transparent)`
                       : focused
                         ? isDark
                           ? 'rgba(255,255,255,0.06)'
@@ -524,7 +518,6 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
                         bottom: 0,
                         width: 3,
                         background: 'var(--glow-line)',
-                        boxShadow: '0 0 8px var(--glow)',
                       }}
                     />
                   )}
@@ -539,9 +532,10 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
                     <span
                       style={{
                         padding: '2px 6px',
-                        borderRadius: 4,
+                        borderRadius: 0,
                         fontFamily: theme?.typography?.fonts?.mono,
                         fontSize: 10,
+                        letterSpacing: '0.12em',
                         textTransform: 'uppercase',
                         color: selected ? textColor : mutedColor,
                         background: selected ? 'color-mix(in srgb, var(--glow) 15%, transparent)' : 'transparent',
@@ -558,9 +552,7 @@ const LanguageSwitcher = ({ locale, onSelect, ariaLabel }) => {
                         style={{
                           width: 6,
                           height: 6,
-                          borderRadius: '50%',
                           background: 'var(--glow-line)',
-                          boxShadow: '0 0 8px var(--glow)',
                         }}
                       />
                     )}
@@ -599,24 +591,27 @@ export const tuwaTheme = create({
   brandUrl: 'https://www.tuwa.io/',
   brandImage: LOGO_LIGHT,
   brandTarget: '_self',
-  colorPrimary: '#0052ff',
-  colorSecondary: '#0284c7',
-  appBg: '#ffffff',
-  appContentBg: '#ffffff',
-  appBorderColor: '#e5e7eb',
-  appBorderRadius: 8,
+  // The deep shade of the TUWA orange: white text on the chosen item is 5.7:1
+  colorPrimary: '#b93b0a',
+  colorSecondary: '#b93b0a',
+  appBg: '#f2f1ee',
+  appContentBg: '#faf9f7',
+  appPreviewBg: '#faf9f7',
+  appBorderColor: '#d6d5d1',
+  appBorderRadius: 0,
   fontBase: '"Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   fontCode: '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-  textColor: '#1f2937',
-  textInverseColor: '#ffffff',
-  barTextColor: '#6b7280',
-  barSelectedColor: '#0052ff',
-  barHoverColor: '#0284c7',
-  barBg: '#f9fafb',
-  inputBg: '#ffffff',
-  inputBorder: '#d1d5db',
-  inputTextColor: '#1f2937',
-  inputBorderRadius: 6,
+  textColor: '#101014',
+  textInverseColor: '#faf9f7',
+  textMutedColor: '#636366',
+  barTextColor: '#636366',
+  barSelectedColor: '#b93b0a',
+  barHoverColor: '#f05a14',
+  barBg: '#f2f1ee',
+  inputBg: '#faf9f7',
+  inputBorder: '#bdbcb9',
+  inputTextColor: '#101014',
+  inputBorderRadius: 0,
 });
 
 export const tuwaDarkTheme = create({
@@ -625,24 +620,27 @@ export const tuwaDarkTheme = create({
   brandUrl: 'https://www.tuwa.io/',
   brandImage: LOGO_DARK,
   brandTarget: '_self',
-  colorPrimary: '#2563eb',
-  colorSecondary: '#38bdf8',
-  appBg: '#0a0e27',
-  appContentBg: '#0d1230',
-  appBorderColor: '#1e293b',
-  appBorderRadius: 8,
+  // The cyan of the dark logo; the chosen item takes a deep cyan under white text, 5.4:1 (Storybook darkens it 18% more)
+  colorPrimary: '#3ed2ec',
+  colorSecondary: '#0e7490',
+  appBg: '#101014',
+  appContentBg: '#121316',
+  appPreviewBg: '#121316',
+  appBorderColor: '#2b2c30',
+  appBorderRadius: 0,
   fontBase: '"Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   fontCode: '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-  textColor: '#f1f5f9',
-  textInverseColor: '#0a0e27',
-  barTextColor: '#94a3b8',
-  barSelectedColor: '#38bdf8',
-  barHoverColor: '#7dd3fc',
-  barBg: '#0a0e27',
-  inputBg: '#11183c',
-  inputBorder: '#334155',
-  inputTextColor: '#f1f5f9',
-  inputBorderRadius: 6,
+  textColor: '#f2f1ee',
+  textInverseColor: '#101014',
+  textMutedColor: '#9d9c9a',
+  barTextColor: '#9d9c9a',
+  barSelectedColor: '#3ed2ec',
+  barHoverColor: '#8ef5ff',
+  barBg: '#101014',
+  inputBg: '#17181b',
+  inputBorder: '#3a3b3f',
+  inputTextColor: '#f2f1ee',
+  inputBorderRadius: 0,
 });
 
 let currentLogoIsDark = false;

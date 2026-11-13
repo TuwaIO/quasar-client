@@ -112,7 +112,7 @@ describe('the step that confirms the paying wallet', () => {
 
   it("opens the wallet's signature request from its main button, and goes back to the methods", () => {
     const { tree, button } = step();
-    expect(button.props.children).toBe('Confirm in MetaMask');
+    expect(fixture.text(button.props.children)).toBe('Confirm in MetaMask');
     (button.props.onClick as () => void)();
     expect(flow.confirm).toHaveBeenCalledWith({ quote: true });
     const back = fixture.ofType(tree, SecondaryButton)[0] as ReactElement<Props>;
@@ -217,7 +217,7 @@ describe('the step that confirms the paying wallet', () => {
     expect(errors.map((error) => error.props.children)).toEqual([
       'You declined the signature in MetaMask. It is free and moves no money: sign it to pay from this wallet, or choose another wallet or method.',
     ]);
-    expect(button.props.children).toBe('Confirm in MetaMask');
+    expect(fixture.text(button.props.children)).toBe('Confirm in MetaMask');
     expect(button.props.busy).toBe(false);
   });
 
@@ -239,7 +239,7 @@ describe('the step that confirms the paying wallet', () => {
     // The wallet never answered the first request; the store still waits for it
     const { button } = step({ payerProof: 'confirming' });
     expect(button.props.busy).toBe(false);
-    expect(button.props.children).toBe('Confirm in MetaMask');
+    expect(fixture.text(button.props.children)).toBe('Confirm in MetaMask');
     (button.props.onClick as () => void)();
     expect(flow.confirm).toHaveBeenCalledWith({ quote: true });
   });

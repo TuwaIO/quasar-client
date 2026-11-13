@@ -25,6 +25,7 @@ const { MethodScreen } = await import('./MethodScreen');
 const { RadioCards } = await import('./RadioCards');
 const { CheckoutStepper } = await import('./CheckoutStepper');
 const { DetailRow } = await import('./ScreenParts');
+const { StatusHead } = await import('./StatusHead');
 const { WalletPrompt } = await import('./WalletPrompt');
 
 afterEach(() => unmount());
@@ -169,44 +170,53 @@ describe('the confirm step on its own page', () => {
   };
   const rows = (tree: unknown) => fixture.ofType(tree, DetailRow).map((row) => row.props.name);
 
-  it('shows the amount where the paid screen does, and no row of it', () => {
+  const headOf = (tree: unknown) => fixture.ofType(tree, StatusHead)[0].props as { amount?: string | null };
+
+  it('shows the amount in the head, where the paid screen does, and no row of it', () => {
     onPage();
     ctx = { ...ctx, state: { ...ctx.state, quote, txKey: '0xabc' } } as unknown as CheckoutContextValue;
     const tree = render(ConfirmScreen, {});
-    expect(rows(tree)).not.toContain(ctx.labels.confirm.amount);
-    expect(allClasses(tree)).toContain('novapay-page-amount');
+    expect(headOf(tree).amount).toBe('1.00 USDC');
+    expect(rows(tree)).toEqual([ctx.labels.confirm.network, ctx.labels.confirm.transaction]);
   });
 
   it('invents no amount for a payment it only found', () => {
     onPage();
     ctx = { ...ctx, state: { ...ctx.state, quote: null, txKey: '0xabc' } } as unknown as CheckoutContextValue;
-    expect(allClasses(render(ConfirmScreen, {}))).not.toContain('novapay-page-amount');
+    expect(headOf(render(ConfirmScreen, {})).amount).toBeNull();
   });
 
-  it('keeps the row in the other displays', () => {
-    onPage();
-    ctx = {
-      ...ctx,
-      display: 'inline',
-      state: { ...ctx.state, quote, txKey: '0xabc' },
-    } as unknown as CheckoutContextValue;
-    expect(rows(render(ConfirmScreen, {}))).toContain(ctx.labels.confirm.amount);
+  // In a modal and inline the amount was a row of the details and jumped up to the head when the payment confirmed
+  it('shows it in the same place in the other displays', () => {
+    for (const display of ['inline', 'modal'] as const) {
+      onPage();
+      ctx = { ...ctx, display, state: { ...ctx.state, quote, txKey: '0xabc' } } as unknown as CheckoutContextValue;
+      const tree = render(ConfirmScreen, {});
+      expect(headOf(tree).amount, display).toBe('1.00 USDC');
+      expect(rows(tree), display).toEqual([ctx.labels.confirm.network, ctx.labels.confirm.transaction]);
+      unmount();
+    }
   });
 });
 
 describe('the steps of a page', () => {
-  it('stay on the paid screen, all done, only there', () => {
+  it('stay on the paid screen, all done', () => {
     expect(checkoutSteps('paid')).toBeNull();
     expect(paidSteps().map((step) => step.state)).toEqual(['done', 'done', 'done']);
     expect(paidSteps({ withDetails: true }).map((step) => step.key)).toEqual(['details', 'method', 'pay', 'confirm']);
   });
 
-  it('show in the header of a paid page, not of an inline checkout', () => {
-    onPage({}, {}, { screen: 'paid' });
+  // In a modal and inline the row went away as the payment confirmed: on a phone it stands over the status, whose
+  // heading jumped up by its height
+  it('show in the header of a paid checkout on every display, and of no other outcome', () => {
     const stepper = (tree: unknown) => fixture.elements(tree).some((element) => element.type === CheckoutStepper);
-    expect(stepper(render(CheckoutHeader, {}))).toBe(true);
-    unmount();
-    ctx = { ...ctx, display: 'inline' } as CheckoutContextValue;
+    for (const display of ['page', 'inline', 'modal'] as const) {
+      onPage({}, {}, { screen: 'paid' });
+      ctx = { ...ctx, display } as CheckoutContextValue;
+      expect(stepper(render(CheckoutHeader, {})), display).toBe(true);
+      unmount();
+    }
+    onPage({}, {}, { screen: 'expired' });
     expect(stepper(render(CheckoutHeader, {}))).toBe(false);
   });
 });

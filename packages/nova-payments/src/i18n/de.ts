@@ -162,6 +162,10 @@ export const deLabels: NovaPaymentsLabels = {
     tryAgain: 'Erneut versuchen',
     failed:
       'Die Zahlung ist im Netzwerk {network} fehlgeschlagen. Es wurde nur die Netzwerkgebühr verbraucht; die Rechnung bleibt offen.',
+    failedExpired:
+      'Die Transaktion wurde nicht rechtzeitig bestätigt und ist abgelaufen; es wurde nichts gesendet. Die Rechnung bleibt offen.',
+    failedCancelled: 'Die Transaktion wurde im Wallet abgebrochen. Die Rechnung bleibt offen.',
+    didNotGoThrough: 'Die Zahlung ist nicht durchgegangen. Die Rechnung bleibt offen.',
     mismatch:
       'Diese Transaktion bezahlt die Rechnung nicht. Wenn Geld Ihr Wallet verlassen hat, wenden Sie sich an {merchant}.',
     mismatchTakenElsewhere:
@@ -176,6 +180,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Diese Zahlung wurde zu einem früheren Preis dieser Rechnung gesendet oder abgebucht und bezahlt sie daher nicht. {merchant} erstattet sie an Ihr Wallet, und Sie können die Rechnung weiterhin bezahlen.',
     mismatchTooManyParts:
       'Diese Rechnung hat so viele Teilzahlungen erhalten, wie sie annimmt, daher bezahlt diese Überweisung sie nicht. {merchant} erstattet sie an Ihr Wallet; senden Sie den gesamten Rest auf einmal.',
+    mismatchNoReferenceHeld:
+      'Diese Überweisung kam ohne die Solana-Pay-Referenz dieser Rechnung an, und ihr Betrag allein ordnet sie der Rechnung nicht zu, daher bezahlt sie die Rechnung nicht. {merchant} erstattet sie an das sendende Wallet, und Sie können die Rechnung weiterhin bezahlen.',
     payAgain: 'Erneut zahlen',
     unsupported: '{wallet} kann diese Zahlung nicht ausführen.',
     wrongCluster:
@@ -274,9 +280,9 @@ export const deLabels: NovaPaymentsLabels = {
     paid: 'Bezahlt',
     failed: 'Fehlgeschlagen',
     network: 'Netzwerk',
-    amount: 'Betrag',
     transaction: 'Transaktion',
     lastTransfer: 'Letzte Überweisung',
+    transferOf: 'Überweisung {index} von {count}',
     from: 'Von',
     canClose: 'Sie können dieses Fenster schließen: Die Zahlung läuft weiter, und der Verkäufer sendet die Quittung.',
     afterDeadline: 'Ihre Zahlung wurde vor Fristende gesendet und wird bestätigt.',
@@ -286,6 +292,23 @@ export const deLabels: NovaPaymentsLabels = {
       'Eine Zahlung für diese Rechnung ist unterwegs. Warten Sie die Bestätigung ab, bevor Sie erneut zahlen.',
     viewOnExplorer: 'Im Explorer ansehen',
     copyHash: 'Transaktion kopieren',
+  },
+  status: {
+    pending: 'Ausstehend',
+    paid: 'Bezahlt',
+    failed: 'Fehlgeschlagen',
+    review: 'In Prüfung',
+    underpaid: 'Teilweise bezahlt',
+    expired: 'Abgelaufen',
+    cancelled: 'Storniert',
+    refunded: 'Erstattet',
+    replaced: 'Korrigiert',
+    blocked: 'Blockiert',
+    unconfirmed: 'Unbestätigt',
+  },
+  failed: {
+    title: 'Zahlung fehlgeschlagen',
+    summary: 'im Netzwerk {network} · die Rechnung ist weiterhin offen',
   },
   paid: {
     title: 'Zahlung eingegangen',

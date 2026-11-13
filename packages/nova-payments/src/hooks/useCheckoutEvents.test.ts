@@ -120,4 +120,18 @@ describe('useCheckoutEvents', () => {
 
     expect(onExpire).toHaveBeenCalledExactlyOnceWith({ kind: 'invoice', paymentOnTheWay: true });
   });
+
+  // A page had to watch the `lang` of the checkout frame to learn its language: for `<html lang>`, for the labels of
+  // Nova around the checkout
+  it('tells the language shown once it is known, and on every change', () => {
+    const onLocaleShown = vi.fn();
+    const handlers = { onLocaleShown };
+    // Not known yet: the invoice is not read and the page gave no language
+    renderEvents({ state: state('loading', { checkout: null }), screen: 'loading', now: 0, locale: null, handlers });
+    renderEvents({ state: state('selectMethod'), screen: 'method', now: 0, locale: 'uk', handlers });
+    renderEvents({ state: state('selectMethod'), screen: 'method', now: 1000, locale: 'uk', handlers });
+    renderEvents({ state: state('selectMethod'), screen: 'method', now: 2000, locale: 'de', handlers });
+
+    expect(onLocaleShown.mock.calls.map(([params]) => params)).toEqual([{ locale: 'uk' }, { locale: 'de' }]);
+  });
 });

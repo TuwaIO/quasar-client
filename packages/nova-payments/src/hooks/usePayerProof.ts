@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import type { CheckoutWallet } from '../utils/methods';
-import { type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
+import { PaymentWalletError, type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
 
 /** Where the confirmation of the paying wallet stands: the wallet switches its network, then signs. */
 export type PayerProofStep = 'idle' | 'switching' | 'signing';
@@ -114,13 +114,18 @@ export function usePayerProof({ adapter, store, wallet, chainId }: UsePayerProof
     if (isCurrent()) setStep('signing');
     const askedFor = store.getState().payer;
     // Why the wallet did not sign: the store reports it as `payer_proof_declined` only
-    let refusal: PaymentWalletErrorKind | null = null;
+    let refusal: PayerProofProblem | null = null;
     const confirmed = await store.getState().confirmPayer(async (message, issued) => {
       if (isCurrent()) setRequest(issued);
       try {
         return await signMessage({ message, account: wallet.address, chainId: issued.chainId });
       } catch (error) {
-        refusal = walletErrorKind(error);
+        // A switch the adapter asked for before the signature: the buyer refused the switch, not the signature
+        const kind = walletErrorKind(error);
+        refusal =
+          kind === 'declined' && error instanceof PaymentWalletError && error.step === 'switch'
+            ? 'switchDeclined'
+            : kind;
         throw error;
       }
     });

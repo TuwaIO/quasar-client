@@ -122,7 +122,8 @@ export interface CheckoutError {
    *
    * `payment_mismatch` with `payer_mismatch` or `payer_unconfirmed`: the transfer came from another wallet than the
    * quoted one, or from one that never confirmed the invoice; it pays no invoice and the merchant returns it to the
-   * wallet that sent it.
+   * wallet that sent it. With `reference_missing` and `held`: a Solana Pay transfer without the invoice's reference
+   * whose amount alone does not tie it to the invoice, held on this invoice for a refund to its sender.
    */
   reason?: string;
   /**
@@ -151,7 +152,13 @@ export interface CheckoutError {
    * prices the rest of an underpaid invoice only for that wallet, so the buyer pays the rest from it.
    */
   originWallet?: string;
-  /** The transaction whose nonce nothing explains, on `nonce_spent_unexplained`: not always the one the page handed over last. */
+  /**
+   * The transaction the error is about, when the network has it to look at: one that reverted (`payment_failed` with
+   * the reason `reverted`), one that succeeded without paying the invoice (`payment_mismatch`), and the transaction
+   * whose nonce nothing explains, on `nonce_spent_unexplained` (not always the one the page handed over last). A page
+   * links to it in the explorer next to what it says. Absent for a payment that never reached the network (a relay
+   * operation lost, a transaction that expired or was replaced).
+   */
   txKey?: string;
   /**
    * Set on `payment_unconfirmed` for a payment past the first day Quasar still reads, as a node still shows it or nothing could
@@ -685,6 +692,12 @@ interface KeptHandOver {
  * it was; a rejection without `held` promises no refund.
  */
 const REFUND_ONLY_REASONS: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
+/**
+ * A Solana Pay transfer without the invoice's reference whose amount does not tie it to the invoice either: some wallets
+ * drop the reference. With `held` Quasar holds it on this invoice for a refund to its sender, so the text must not send
+ * the buyer to another invoice.
+ */
+const REFERENCE_MISSING = 'reference_missing';
 /** A payment sent or charged under an earlier price of the invoice: held for a refund, the invoice still open. */
 const CHARGE_AFTER_REQUOTE = 'quote_changed';
 
@@ -884,8 +897,27 @@ type Ending = {
 /**
  * The error of a payment that ended without paying the invoice, by how it ended: a transfer that may have moved money
  * is `payment_mismatch` whether Quasar calls it final or not (never "did not go through", never the re-check promise).
+ * It names the transaction (`txKey`) when the network has it ({@link transactionOf}).
  */
 function endedError(ended: Ending): CheckoutError {
+  return { ...endedErrorOf(ended), ...transactionOf(ended) };
+}
+
+/** Reasons of a failed payment whose transaction is on the network to look at, besides those that may have moved money. */
+const ON_CHAIN_REASONS: ReadonlySet<string> = new Set(['reverted']);
+
+/**
+ * The transaction of a payment that ended, for the error about it: only one the network has, so that a page can link
+ * to it (a transaction that succeeded without paying the invoice, or one that reverted). A relay operation that never
+ * became a transaction, a transaction that expired or was replaced are not there to look at.
+ */
+function transactionOf(ended: Ending): { txKey?: string } {
+  const txKey = ended.keys?.[0];
+  if (!txKey) return {};
+  return ended.movedMoney || (ended.reason !== undefined && ON_CHAIN_REASONS.has(ended.reason)) ? { txKey } : {};
+}
+
+function endedErrorOf(ended: Ending): CheckoutError {
   const reason = ended.reason ? { reason: ended.reason } : {};
   // Confirmed on chain, not recorded yet: the merchant has the money, Quasar may still retry it
   if (ended.reason === SETTLEMENT_FAILED) return settlementFailedError(ended.rechecked);
@@ -919,6 +951,16 @@ function endedError(ended: Ending): CheckoutError {
         : 'This transaction came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact the merchant.',
       ...reason,
       ...(ended.held ? { held: true as const } : {}),
+    };
+  }
+  if (ended.reason === REFERENCE_MISSING && ended.held) {
+    // Held here, not on another invoice: the wallet dropped the reference and the amount is not the quote's
+    return {
+      code: 'payment_mismatch',
+      message:
+        'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. The merchant returns it to the wallet that sent it, and the invoice can still be paid.',
+      ...reason,
+      held: true,
     };
   }
   const other = ended.otherInvoice ? { otherInvoice: ended.otherInvoice } : {};

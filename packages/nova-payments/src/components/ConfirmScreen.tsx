@@ -1,5 +1,5 @@
 import { cn, MorphText } from '@tuwaio/nova-core';
-import { HashLink, TxProgressIndicator, TxStatusVisual } from '@tuwaio/nova-transactions';
+import { HashLink } from '@tuwaio/nova-transactions';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { usePaymentFacts } from '../hooks/usePaymentFacts';
@@ -10,18 +10,20 @@ import {
   sentBeforeDeadline,
   unconfirmedFollowUp,
 } from '../utils/checkout';
-import { mono } from './classes';
 import { DetailRow, DetailsCard, ScreenFooter, SecondaryButton } from './ScreenParts';
-import { StatusTitle } from './StatusTitle';
+import { useStatusAction } from './statusAction';
+import { StatusHead } from './StatusHead';
+import { StatusSteps } from './StatusSteps';
 import { TxLabels } from './TxLabels';
 
 /** Invoice states in which Quasar waits for a payment sent before the deadline (not `processing`: it has arrived). */
 const WAITING_STATUSES: ReadonlySet<string> = new Set(['open', 'underpaid']);
 
 /**
- * The confirm step: the transaction is on its way and Quasar follows it until it is final. It reuses the status and
- * progress of Nova Transactions (Sent → Confirming → Paid, in the language of the checkout) and shows the network, the
- * amount, the transaction with its explorer link and the sender. The buyer may close the window: the payment keeps
+ * The confirm step: the transaction is on its way and Quasar follows it until it is final. Its head is the one of every
+ * status screen (the Quasar loader, the chip "Pending", the heading and the amount, which the paid and the failed step
+ * go on from), with the progress of Nova Transactions (Sent → Confirming → Paid, in the language of the checkout), the
+ * network, the transaction with its explorer link and the sender. The buyer may close the window: the payment keeps
  * going. It also shows a payment of the invoice that this page did not hand over while Quasar reports it on its way
  * (the page was reopened or reloaded, another tab paid, Quasar found a Solana Pay transfer), instead of offering to pay
  * again: its note asks the buyer to wait for it. When the invoice deadline passes while a payment is on its way (the
@@ -52,6 +54,8 @@ export function ConfirmScreen() {
     checkout !== null && (own || found) && WAITING_STATUSES.has(status ?? '') && dueAt !== null && now >= dueAt;
   const sentInTime = pastDeadline && sentBeforeDeadline({ state, checkout, handedOverAt, dueAt });
   const handingOver = unconfirmedFollowUp(state.error) === 'retrying';
+  // The action of the result goes on from this one
+  const action = useStatusAction(close ? 'secondary' : null, labels.common.close);
   return (
     <TxLabels>
       <section
@@ -60,33 +64,18 @@ export function ConfirmScreen() {
           page && 'novapay-page-status',
         )}
       >
-        <TxStatusVisual
-          isProcessing
-          {...child?.statusVisual}
-          className={page ? cn('novapay-page-visual', child?.statusVisual?.className) : child?.statusVisual?.className}
+        <StatusHead
+          mark="waiting"
+          tone="pending"
+          chip={labels.status.pending}
+          title={labels.confirm.title}
+          // In one place on every display, where the paid step shows it: nothing moves when the payment confirms
+          amount={facts.amount}
+          note={facts.network ? formatLabel(labels.confirm.hint, { network: facts.network }) : null}
         />
-        <div>
-          <StatusTitle>{labels.confirm.title}</StatusTitle>
-          {/* On a page the amount stands where the paid screen shows it, so nothing moves when the payment confirms */}
-          {page && facts.amount && (
-            <p className={cn(mono, 'novapay-page-amount novapay:m-0 novapay:mt-2 novapay:text-2xl novapay:font-bold')}>
-              {facts.amount}
-            </p>
-          )}
-          {facts.network && (
-            <p className="novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
-              {formatLabel(labels.confirm.hint, { network: facts.network })}
-            </p>
-          )}
-        </div>
-        <TxProgressIndicator
-          isProcessing
-          {...child?.progressIndicator}
-          className={cn('novapay:max-w-sm', child?.progressIndicator?.className)}
-        />
+        <StatusSteps state="processing" />
         <DetailsCard className="novapay:max-w-sm">
           {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
-          {!page && facts.amount && <DetailRow name={labels.confirm.amount}>{facts.amount}</DetailRow>}
           {facts.txKey && (
             <DetailRow name={labels.confirm.transaction}>
               <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" {...child?.hashLink} />
@@ -120,7 +109,7 @@ export function ConfirmScreen() {
       </section>
       {close && (
         <ScreenFooter>
-          <SecondaryButton onClick={close}>{labels.common.close}</SecondaryButton>
+          <SecondaryButton onClick={close}>{action.label}</SecondaryButton>
         </ScreenFooter>
       )}
     </TxLabels>

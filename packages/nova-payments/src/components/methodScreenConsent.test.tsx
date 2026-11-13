@@ -18,7 +18,7 @@ const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { defaultLabels } = await import('../i18n');
 const { methodErrorText } = await import('../utils/outcome');
-const { PrimaryButton } = await import('./ScreenParts');
+const { CheckBox, PrimaryButton } = await import('./ScreenParts');
 const { MethodScreen } = await import('./MethodScreen');
 
 type Props = Record<string, unknown>;
@@ -37,10 +37,8 @@ function methodStep(
     { checkout, store, state: { ...fixture.checkoutContextValue({}).state, checkout, consentGiven } },
   );
   const tree = render(MethodScreen, {});
-  const box = fixture
-    .elements(tree)
-    .find((element) => element.type === 'input' && element.props.type === 'checkbox') as
-    ReactElement<Props> | undefined;
+  // The checkbox of the checkout, which hands its props to the `<input type="checkbox">` it draws
+  const box = fixture.ofType(tree, CheckBox)[0] as ReactElement<Props> | undefined;
   const button = fixture.ofType(tree, PrimaryButton)[0] as ReactElement<Props>;
   return { tree, box, button, actions };
 }

@@ -1,6 +1,11 @@
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn, Dialog, DialogContent, DialogTitle, QuasarLoader, StatusEdge } from '@tuwaio/nova-core';
-import type { CheckoutApi, CheckoutStore, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
+import type {
+  CheckoutApi,
+  CheckoutError,
+  CheckoutStore,
+  CheckoutView,
+  EventSourceConstructor,
+} from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
 import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
@@ -18,12 +23,13 @@ import { usePaymentSent } from '../hooks/usePaymentSent';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { useQrShown } from '../hooks/useQrShown';
 import { useWalletConnection } from '../hooks/useWalletConnection';
-import { formatLabel, hasLabels } from '../i18n';
+import { type CheckoutLocale, checkoutLocaleOf, formatLabel, hasLabels } from '../i18n';
 import {
   checkoutScreen,
   deadlineAnnouncement,
   deadlineState,
   lockedPriceOnWallet,
+  shownLocale,
   walletOnConfirmStep,
 } from '../utils/checkout';
 import type { SentPayment } from '../utils/handOver';
@@ -40,6 +46,9 @@ import { checkoutLayout, checkoutWidthClasses, screenHeading, screenTitle } from
 import { ConfirmScreen } from './ConfirmScreen';
 import { ConfirmWalletScreen } from './ConfirmWalletScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
+import { FailedScreen } from './FailedScreen';
+import { GlideHeight } from './GlideHeight';
+import { ExclamationTriangleIcon } from './icons';
 import { LeaveDialog } from './LeaveDialog';
 import { MethodScreen } from './MethodScreen';
 import { OutcomeScreen } from './OutcomeScreen';
@@ -111,6 +120,13 @@ export interface PaymentCheckoutProps {
   autoReturnSeconds?: number;
   /** Replaces the link of "Contact <seller>" (the seller's support email, else site) with the app's own handler. */
   onContact?: () => void;
+  /**
+   * The language of the page around the checkout, a BCP 47 tag (for example the `lang` of `<html>`). The checkout opens
+   * in it instead of the language of the invoice; a language the checkout does not have is left to the invoice. The
+   * language the buyer picks in the menu wins until this value changes. It changes what the buyer reads, not the
+   * invoice: the documents keep the language of the invoice unless the buyer picks one in the menu.
+   */
+  locale?: string;
   /** Classes added to the checkout block. */
   className?: string;
   /**
@@ -176,6 +192,7 @@ export function ScreenBody() {
   if (screen === 'pay') return <PayScreen />;
   if (screen === 'qr') return <QrScreen />;
   if (screen === 'confirm') return <ConfirmScreen />;
+  if (screen === 'failed') return <FailedScreen />;
   if (screen === 'paid') return <PaidScreen />;
   if (screen === 'autoPay') return <AutoPayScreen />;
   if (screen === 'autoPayOff') return <AutoPayOffScreen />;
@@ -267,28 +284,32 @@ export function CheckoutFrame({
             className={cn('novapay:z-20', checkoutClassName(context, 'statusEdge', { tone: statusTone }))}
           />
         )}
-        <Header withDetails={withDetails} />
-        <div className="novapay:sm:hidden">
-          {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
-          <MobileSteps withDetails={withDetails} />
-        </div>
-        {/* A container: a screen lays itself out by the width of this area, 320 px in two panes on a 640 px window */}
-        <div data-novapay-scroll="" className={cn(layout.area, checkoutClassName(context, 'body'))}>
-          {page ? (
-            <div
-              // Not between status screens: "Confirming" goes on into "Paid", and a fade would take that away
-              key={statusTone ? 'status' : screen}
-              className={cn(
-                'novapay:flex novapay:flex-1 novapay:flex-col',
-                !customization.config?.animation?.disabled && 'novapay-page-fade',
-              )}
-            >
+        {/* On a phone the checkout is as tall as its step: between status screens that height glides. Not on its own
+            page, which grows downward from a top that stays */}
+        <GlideHeight active={Boolean(statusTone) && !page && !customization.config?.animation?.disabled}>
+          <Header withDetails={withDetails} />
+          <div className="novapay:sm:hidden">
+            {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
+            <MobileSteps withDetails={withDetails} />
+          </div>
+          {/* A container: a screen lays itself out by the width of this area, 320 px in two panes on a 640 px window */}
+          <div data-novapay-scroll="" className={cn(layout.area, checkoutClassName(context, 'body'))}>
+            {page ? (
+              <div
+                // Not between status screens: "Confirming" goes on into "Paid", and a fade would take that away
+                key={statusTone ? 'status' : screen}
+                className={cn(
+                  'novapay:flex novapay:flex-1 novapay:flex-col',
+                  !customization.config?.animation?.disabled && 'novapay-page-fade',
+                )}
+              >
+                <ScreenBody />
+              </div>
+            ) : (
               <ScreenBody />
-            </div>
-          ) : (
-            <ScreenBody />
-          )}
-        </div>
+            )}
+          </div>
+        </GlideHeight>
       </div>
       <div role="status" aria-live="polite" className="novapay:sr-only">
         {announcement}
@@ -340,6 +361,7 @@ export function PaymentCheckout({
   onPaid,
   autoReturnSeconds,
   onContact,
+  locale: pageLanguage,
   className,
   customization,
 }: PaymentCheckoutProps) {
@@ -361,7 +383,16 @@ export function PaymentCheckout({
   });
   const state = useCheckoutState(store, (value) => value);
   const checkout = state.checkout;
-  const locale = state.locale ?? checkout?.invoice.locale ?? 'en';
+  const pageLocale = checkoutLocaleOf(pageLanguage);
+  // The buyer's pick in the language menu, with the language the page had then
+  const [pickedLocale, setPickedLocale] = useState<{ locale: CheckoutLocale; page: CheckoutLocale | null } | null>(
+    null,
+  );
+  const locale = shownLocale({
+    picked: pickedLocale,
+    page: pageLocale,
+    invoice: state.locale ?? checkout?.invoice.locale,
+  });
   const labels = usePaymentsLabels(locale);
   // Ticks while the checkout shows: the deadline, the price lock and the return countdown count down
   const ticking = Boolean(checkout) && everOpened && needsTheClock(state.phase, autoReturnSeconds, hasLabels(locale));
@@ -423,14 +454,28 @@ export function PaymentCheckout({
   // English; a language switched to later shows once its labels arrive, without leaving the screen
   const [labelsShown, setLabelsShown] = useState(false);
   if (!labelsShown && checkout && hasLabels(locale)) setLabelsShown(true);
-  const screen = checkoutScreen(state, {
+  const choices = {
     payWith,
     handoff,
     autoPay,
     autoPayOff: autoPayOff === 'open',
     confirmWallet,
     labelsReady: labelsShown || !checkout,
-  });
+  };
+  const step = checkoutScreen(state, choices);
+  // A payment the page showed on its way that failed for good: the failed step says what became of it, where the buyer
+  // was watching, until they go on to pay again. The store itself is back at the step that pays by then
+  const [watched, setWatched] = useState<CheckoutStore | null>(null);
+  const [failure, setFailure] = useState<CheckoutError | null>(null);
+  if (step === 'confirm') {
+    if (watched !== store) setWatched(store);
+  } else if (watched === store) {
+    setWatched(null);
+    if (state.error?.code === 'payment_failed') setFailure(state.error);
+  }
+  // Only while that failure stands: another error, or none, is the store's next word
+  const screen =
+    failure !== null && state.error === failure ? checkoutScreen(state, { ...choices, afterFailure: true }) : step;
   // The price for the wallet set on the store, or the step that confirms the wallet first
   const lockStorePrice = async () => {
     await lockPrice(store, setConfirmWallet);
@@ -446,22 +491,23 @@ export function PaymentCheckout({
     walletTxKey: walletSent?.store === store ? walletSent.txKey : null,
   });
   usePaidCallback(state.phase, checkout?.invoice, onPaid, firstRead?.store === store && firstRead.paid);
-  useCheckoutEvents({ state, screen, now, handlers: customization?.handlers });
-  const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
-  const handOverOnClose = usePaymentHandOver({
-    store,
-    open: display !== 'modal' || open,
-    adapterFor,
-    pulsar: settings.pulsar,
-    labels,
-    locale,
+  useCheckoutEvents({
+    state,
+    screen,
+    now,
+    // Known once the invoice is read or the page said its own: not the English the checkout starts in before that
+    locale: checkout || pageLocale ? locale : null,
+    handlers: customization?.handlers,
   });
+  const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
+  // Every payment of the invoice goes to the app's Pulsar store, where Nova Transactions shows its toast
+  const handOver = usePaymentHandOver({ store, adapterFor, pulsar: settings.pulsar, labels, locale });
   const onPaymentSent = useCallback(
     (payment: SentPayment) => {
       setWalletSent({ store, txKey: payment.txKey });
-      handOverOnClose(payment);
+      handOver(payment);
     },
-    [store, handOverOnClose],
+    [store, handOver],
   );
 
   const lockForWallet = useEffectEvent(() => {
@@ -553,6 +599,12 @@ export function PaymentCheckout({
     screen,
     locale,
     labels,
+    setLocale: async (picked) => {
+      const before = pickedLocale;
+      setPickedLocale({ locale: picked, page: pageLocale });
+      // Not saved (Quasar did not answer): the store is back on the language before, and so is the page
+      if (!(await store.getState().setLocale(picked))) setPickedLocale(before);
+    },
     now,
     handedOverAt,
     qrShown,
@@ -581,6 +633,10 @@ export function PaymentCheckout({
       setHandoff(false);
       setConfirmWallet(false);
       store.getState().releaseQuote();
+    },
+    payAfterFailure: () => {
+      setFailure(null);
+      store.getState().clearError();
     },
     confirmWallet,
     setConfirmWallet,
@@ -632,7 +688,12 @@ export function PaymentCheckout({
           if (!next) onClose?.();
         }}
       >
-        <DialogContent className="novapay:w-full novapay:sm:w-auto">
+        <DialogContent
+          className="novapay:w-full novapay:sm:w-auto"
+          // On the status screens the checkout glides its own height (`GlideHeight`); two animations of one height
+          // would chase each other
+          animateHeight={statusToneOf(screen) === null}
+        >
           <DialogTitle className="novapay:sr-only">
             {formatLabel(labels.common.dialogTitle, { merchant: checkout?.merchant.name ?? '' })}
           </DialogTitle>

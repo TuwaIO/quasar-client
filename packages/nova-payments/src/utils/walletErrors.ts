@@ -23,17 +23,24 @@ export type PaymentWalletErrorKind =
 /** The error a payments adapter throws when it knows why the wallet did not pay. */
 export class PaymentWalletError extends Error {
   /**
+   * `switch` when the refusal or failure is of the network switch the adapter asked for before the request: the
+   * request itself was never shown (a `declined` one is not a refused signature).
+   */
+  readonly step?: 'switch';
+
+  /**
    * @param kind - Why: see {@link PaymentWalletErrorKind}.
    * @param message - What to log.
-   * @param options - The original error as `cause`.
+   * @param options - The original error as `cause`, and `step: 'switch'` for a network switch the adapter asked for.
    */
   constructor(
     readonly kind: PaymentWalletErrorKind,
     message: string,
-    options?: { cause?: unknown },
+    options?: { cause?: unknown; step?: 'switch' },
   ) {
     super(message, options);
     this.name = 'PaymentWalletError';
+    if (options?.step) this.step = options.step;
   }
 }
 

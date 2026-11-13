@@ -81,6 +81,13 @@ export interface CheckoutInvoice {
   /** When the invoice was paid; `null` until then, and absent from an engine that does not send it yet. */
   paidAt?: string | null;
   /**
+   * Every transfer credited to the invoice, oldest first ({@link CheckoutPayment}): an invoice paid in parts has
+   * several, and the replacement of a corrected paid invoice lists the transfers of the invoice it replaced. Empty until
+   * something is credited. Quasar versions before November 13, 2026 leave it out: such a page names only the
+   * transaction it handed over itself.
+   */
+  payments?: CheckoutPayment[];
+  /**
    * Payments of the invoice handed over and still on their way, whoever handed them over: tracked transactions
    * settlement has not verified or rejected yet (recorded within the last 25 minutes: Quasar stops counting a stuck
    * one), gasless relays still sending (within 35 minutes), and claims of this invoice on a transaction another invoice
@@ -144,6 +151,24 @@ export interface CheckoutInvoice {
  */
 export type CheckoutReview = { reason: 'screening' | 'late' | 'overpaid' | 'quote_expired' };
 
+/** A transfer credited to the invoice, as the checkout lists it ({@link CheckoutInvoice.payments}). */
+export interface CheckoutPayment {
+  /** The transaction: its hash, or its Solana signature. */
+  txKey: string;
+  /** CAIP-2 chain of the transfer; `null` when the record of the payment names none. */
+  chainId: string | null;
+  /** What it credited to the invoice, in base units of the token. */
+  amount: string;
+  /** The token it was paid in; `null` when the merchant no longer has that payment method. */
+  symbol: string | null;
+  /** The decimals of that token; `null` like `symbol`. */
+  decimals: number | null;
+  /** The address that sent it (the first one, when a Solana transfer names several); `null` when none is on record. */
+  from: string | null;
+  /** When the network included it (ISO), or when Quasar verified it if the network named no time. */
+  at: string;
+}
+
 /** A payment of the invoice that failed, as the checkout lists it ({@link CheckoutInvoice.rejectedPayments}). */
 export interface CheckoutRejectedPayment {
   /** The transaction's `txKey`, or the `userOpHash` of a gasless relay that failed before it had a transaction. */
@@ -153,7 +178,9 @@ export interface CheckoutRejectedPayment {
    * recipient), `tx_already_used` (the transaction pays another invoice of the merchant: the one the wallet that sent
    * it confirmed, or whose mark it carries, also when this invoice's page handed it over first or claimed it; with
    * `held`, another invoice holds it for a refund only and it pays none),
-   * `reference_missing`, `too_early`, `not_found` (the network never returned the transaction), `timeout` (no receipt
+   * `reference_missing` (a Solana Pay transfer without the invoice's reference whose amount alone does not tie it to
+   * the invoice: some wallets drop the reference; with `held` this invoice holds it for a refund), `too_early`,
+   * `not_found` (the network never returned the transaction), `timeout` (no receipt
    * in time), `replaced`, `payer_mismatch` (a transfer from another wallet to an invoice paid or held already; one to a
    * payable invoice is held for a refund only: {@link CheckoutReview}), `payer_unconfirmed` (the same from a wallet that
    * never confirmed the invoice: it pays no invoice; final; a refund only when held, a transfer credited to another
@@ -201,8 +228,9 @@ export interface CheckoutRejectedPayment {
   /**
    * `true` when Quasar records the transfer as a held transfer, which the merchant returns to the wallet that sent it:
    * a `payer_mismatch` or `payer_unconfirmed` rejection (the invoice stays payable from the wallet that confirmed it),
-   * or a `tx_already_used` one whose transfer is held at another invoice of the merchant (`otherInvoice`; say that it is
-   * tied to another invoice, never that it pays one). Quasar versions before October 29, 2026 leave it out.
+   * a `reference_missing` one (held on this invoice, which stays payable), or a `tx_already_used` one whose transfer
+   * is held at another invoice of the merchant (`otherInvoice`; say that it is tied to another invoice, never that it
+   * pays one). Quasar versions before October 29, 2026 leave it out.
    */
   held?: true;
   /** The invoice of the merchant the transaction is credited to or held on, when Quasar names it. */

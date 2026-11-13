@@ -5,9 +5,11 @@ import { defaultLabels } from '../i18n/en';
 import {
   autoPayTerms,
   contactHref,
+  failedPaymentTx,
   formatPeriod,
   methodErrorText,
   needsLeaveConfirm,
+  paymentFailedText,
   receivedAmount,
   underpaidRest,
 } from './outcome';
@@ -88,11 +90,12 @@ describe('needsLeaveConfirm after a payment that left the wallet', () => {
 describe('methodErrorText', () => {
   // Each said "Something went wrong": a transaction that reverted, seen after the price lock or on a rest, and the method
   // refused for a rest
-  it.each([
-    ['payment_failed', 'paymentFailed'],
-    ['rest_method_mismatch', 'restSameMethod'],
-  ] as const)('explains %s', (code, label) => {
-    expect(methodErrorText({ code, message: 'raw' } as never, defaultLabels)).toBe(defaultLabels.method[label]);
+  it('explains a transaction that reverted, and the method refused for a rest', () => {
+    const reverted = { code: 'payment_failed', message: 'raw', reason: 'reverted' };
+    expect(methodErrorText(reverted as never, defaultLabels)).toBe(defaultLabels.method.paymentFailed);
+    expect(methodErrorText({ code: 'rest_method_mismatch', message: 'raw' } as never, defaultLabels)).toBe(
+      defaultLabels.method.restSameMethod,
+    );
   });
 
   it('explains the refusals of a confirmation that arrive after the buyer left its step', () => {
@@ -194,6 +197,27 @@ describe('methodErrorText', () => {
       'Cosmos',
     );
     expect(plain).not.toMatch(/returns it/);
+  });
+
+  // Owner test 2026-11-05, finding 1: Phantom dropped the Solana Pay reference. Held on this invoice, the transfer read
+  // as "tied to another invoice", which sent the buyer looking for an invoice that does not exist
+  it('says that a Solana Pay transfer held for its missing reference is returned, never tied to another invoice', () => {
+    const held = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'reference_missing', held: true } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(held).toBe(
+      'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. Cosmos returns it to the wallet that sent it, and you can still pay the invoice.',
+    );
+    expect(held).not.toMatch(/another invoice/);
+    // Without a held transfer nothing promises a refund
+    const plain = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'reference_missing' } as never,
+      defaultLabels,
+      'Cosmos',
+    );
+    expect(plain).toBe('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
   });
 
   // A transfer held on another invoice for a refund only pays no invoice
@@ -375,5 +399,63 @@ describe('a transfer from a wallet that did not confirm the invoice', () => {
       'The network confirmed your payment, but Quasar has not recorded it. Do not pay again; contact Cosmos with the transaction hash.',
     );
     expect(stopped).not.toMatch(/again daily/);
+  });
+});
+
+// "Only the network fee was spent" was said about every payment Quasar ended as failed. It is true of a transaction that
+// reverted; a Solana transaction whose blockhash expired never landed and spent nothing, and neither did a relay
+// operation that was lost
+describe('what the checkout says about a payment that failed for good', () => {
+  const failed = (reason?: string) =>
+    ({ code: 'payment_failed', message: 'raw', ...(reason ? { reason } : {}) }) as never;
+
+  it('says that the fee was spent only of a transaction that reverted on the network', () => {
+    expect(paymentFailedText(failed('reverted'), defaultLabels, 'Base')).toBe(
+      'The payment failed on Base. Only the network fee was spent; the invoice is still open.',
+    );
+    // The method step does not know the network of the payment
+    expect(paymentFailedText(failed('reverted'), defaultLabels)).toBe(defaultLabels.method.paymentFailed);
+    for (const reason of ['expired', 'cancelled', 'user_operation_lost', 'transaction_failed', undefined]) {
+      expect(paymentFailedText(failed(reason), defaultLabels, 'Solana Devnet'), String(reason)).not.toMatch(/fee/i);
+    }
+  });
+
+  it('says of a transaction that expired before it landed that nothing was sent', () => {
+    expect(paymentFailedText(failed('expired'), defaultLabels, 'Solana Devnet')).toBe(
+      'The transaction was not confirmed in time and expired, so nothing was sent. The invoice is still open.',
+    );
+  });
+
+  it('says of a transaction the buyer cancelled that it was cancelled in the wallet', () => {
+    expect(paymentFailedText(failed('cancelled'), defaultLabels, 'Base')).toBe(
+      'The transaction was cancelled in the wallet. The invoice is still open.',
+    );
+  });
+
+  it('says only that the invoice is not paid when Quasar names another cause, or none', () => {
+    for (const reason of ['user_operation_lost', 'transaction_failed', undefined]) {
+      expect(paymentFailedText(failed(reason), defaultLabels, 'Base'), String(reason)).toBe(
+        'The payment did not go through. The invoice is still open.',
+      );
+    }
+    // On the method step too: it said that the fee was spent of every one of them
+    expect(methodErrorText(failed('expired'), defaultLabels)).toBe(defaultLabels.pay.failedExpired);
+    expect(methodErrorText(failed(), defaultLabels)).toBe(defaultLabels.pay.didNotGoThrough);
+  });
+});
+
+describe('the transaction of a payment that ended without paying the invoice', () => {
+  it('is the one the error names, for a failed payment and for one that does not pay the invoice', () => {
+    expect(failedPaymentTx({ code: 'payment_failed', message: '', txKey: '0xfeed' } as never)).toBe('0xfeed');
+    expect(failedPaymentTx({ code: 'payment_mismatch', message: '', txKey: '5Zsig' } as never)).toBe('5Zsig');
+  });
+
+  it('is none for an error that names no transaction, and for any other error', () => {
+    expect(failedPaymentTx({ code: 'payment_failed', message: '' } as never)).toBeNull();
+    expect(failedPaymentTx({ code: 'payment_failed', message: '', txKey: '' } as never)).toBeNull();
+    // Another error may carry a transaction of its own, shown on its own screen
+    expect(failedPaymentTx({ code: 'payment_unconfirmed', message: '', txKey: '0xfeed' } as never)).toBeNull();
+    expect(failedPaymentTx(null)).toBeNull();
+    expect(failedPaymentTx(undefined)).toBeNull();
   });
 });

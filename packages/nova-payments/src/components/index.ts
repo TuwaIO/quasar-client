@@ -7,6 +7,7 @@ export * from './CheckoutSummary';
 export * from './ConfirmScreen';
 export * from './ConfirmWalletScreen';
 export * from './customization';
+export * from './FailedScreen';
 export * from './LeaveDialog';
 export * from './LocaleSwitcher';
 export * from './MethodScreen';

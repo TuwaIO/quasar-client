@@ -1,4 +1,3 @@
-import { FingerPrintIcon } from '@heroicons/react/24/outline';
 import { cn, WalletIcon } from '@tuwaio/nova-core';
 import { useEffect, useRef, useState } from 'react';
 
@@ -10,7 +9,9 @@ import { formatFiat, minorToDecimal, shortAddress } from '../utils/format';
 import { methodFamily, networkName, payerFor } from '../utils/methods';
 import { addressOfWallet, isSameWallet } from '../utils/outcome';
 import { isConfirmationError, isSmartWallet, payerProofErrorText } from '../utils/payerProof';
-import { focusRing, mono } from './classes';
+import { CapsLabel } from './CapsLabel';
+import { mono, smallAction } from './classes';
+import { FingerPrintIcon } from './icons';
 import {
   ChainLink,
   DetailRow,
@@ -137,10 +138,7 @@ export function ConfirmWalletScreen() {
                 onClick={() => {
                   if (!connectWallet(method)) setCannotConnect(true);
                 }}
-                className={cn(
-                  'novapay:min-h-6 novapay:cursor-pointer novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:bg-transparent novapay:px-2.5 novapay:py-1 novapay:text-xs novapay:font-semibold novapay:text-[var(--tuwa-text-primary)] novapay:hover:bg-[var(--tuwa-bg-muted)]',
-                  focusRing,
-                )}
+                className={smallAction}
               >
                 {labels.pay.change}
               </button>
@@ -185,11 +183,13 @@ export function ConfirmWalletScreen() {
 
         <ScreenFooter>
           <PrimaryButton busy={waiting || quoting} onClick={retry}>
-            {quoting
-              ? labels.method.quoting
-              : waiting
-                ? formatLabel(labels.payerProof.waiting, values)
-                : formatLabel(labels.payerProof.confirm, values)}
+            {quoting ? (
+              labels.method.quoting
+            ) : waiting ? (
+              <CapsLabel label={labels.payerProof.waiting} values={values} />
+            ) : (
+              <CapsLabel label={labels.payerProof.confirm} values={values} />
+            )}
           </PrimaryButton>
           {/* The price is on its way and would open the pay step a moment later */}
           <SecondaryButton disabled={quoting} onClick={back}>

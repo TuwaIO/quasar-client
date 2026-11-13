@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentCheckoutHandlers
 
-Defined in: [nova-payments/src/components/customization.ts:291](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L291)
+Defined in: [nova-payments/src/components/customization.ts:301](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L301)
 
 Handlers of [PaymentCheckout](?path=/docs/packages-nova-payments-payments-functions-paymentcheckout--docs): some wrap an action of the buyer (call `proceed()` or `select()` to run it, or
 do something else instead), the others tell the app what happened. `onPaid`, `onClose` and `onContact` are props of
@@ -16,7 +16,7 @@ the checkout.
 
 > `optional` **onError?**: (`params`) => `void`
 
-Defined in: [nova-payments/src/components/customization.ts:355](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L355)
+Defined in: [nova-payments/src/components/customization.ts:376](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L376)
 
 The checkout got a new error (Quasar refused an action, or did not answer); the screen shows it.
 
@@ -48,7 +48,7 @@ The screen shown.
 
 > `optional` **onExpire?**: (`params`) => `void`
 
-Defined in: [nova-payments/src/components/customization.ts:370](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L370)
+Defined in: [nova-payments/src/components/customization.ts:391](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L391)
 
 The locked price ran out (`quote`), or the invoice expired (`invoice`). Either can happen while a payment is on its
 way: the invoice can still close while it confirms (Quasar waits for a payment it learned of
@@ -87,7 +87,7 @@ could not confirm yet and reads again (`invoicePaymentUnresolved`).
 
 > `optional` **onLocaleChange?**: (`params`) => `void` \| `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/components/customization.ts:334](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L334)
+Defined in: [nova-payments/src/components/customization.ts:344](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L344)
 
 The buyer picked a language. Without the handler the checkout switches to it and saves it on the invoice.
 
@@ -115,11 +115,41 @@ Switches and saves it.
 
 ***
 
+### onLocaleShown?
+
+> `optional` **onLocaleShown?**: (`params`) => `void`
+
+Defined in: [nova-payments/src/components/customization.ts:355](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L355)
+
+The language the checkout is shown in: called once it is known (the invoice is read, or the app gave the language of
+its page with `locale`) and on every change, whoever made it: the buyer in the menu, the page with a new `locale`,
+or the invoice. For a page that keeps `<html lang>`, the labels of Nova or its own texts on the language of the
+checkout.
+
+#### Parameters
+
+##### params
+
+The language.
+
+###### locale
+
+`string`
+
+The language shown, a BCP 47 tag: one of the checkout's, or the language of an invoice the
+checkout has no labels for (it shows English then).
+
+#### Returns
+
+`void`
+
+***
+
 ### onMethodSelect?
 
 > `optional` **onMethodSelect?**: (`params`) => `void`
 
-Defined in: [nova-payments/src/components/customization.ts:299](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L299)
+Defined in: [nova-payments/src/components/customization.ts:309](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L309)
 
 The buyer picked a token or a network. Without the handler the method is chosen.
 
@@ -151,7 +181,7 @@ Chooses it.
 
 > `optional` **onQuote?**: (`params`) => `void` \| `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/components/customization.ts:309](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L309)
+Defined in: [nova-payments/src/components/customization.ts:319](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L319)
 
 The buyer pressed "Continue" on the method step. Without the handler the checkout locks the price for the
 connected wallet (or connects one first), or shows the QR code.
@@ -190,7 +220,7 @@ Goes on as the checkout would.
 
 > `optional` **onStatusChange?**: (`params`) => `void`
 
-Defined in: [nova-payments/src/components/customization.ts:343](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L343)
+Defined in: [nova-payments/src/components/customization.ts:364](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L364)
 
 The phase of the checkout or the status of the invoice changed; also called once with the first ones.
 
@@ -228,7 +258,7 @@ The invoice status, `null` before the invoice loads.
 
 > `optional` **onSubmit?**: (`params`) => `void` \| `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/components/customization.ts:322](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L322)
+Defined in: [nova-payments/src/components/customization.ts:332](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L332)
 
 The buyer pressed the pay button ("Pay", "Sign to pay"). Without the handler the wallet prompt opens.
 

@@ -83,7 +83,7 @@ export function RadioCards<T>({
               'novapay:border',
               selected
                 ? 'novapay:border-[var(--tuwa-text-accent)] novapay:bg-[var(--tuwa-bg-primary)] novapay:ring-1 novapay:ring-[var(--tuwa-text-accent)]'
-                : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-text-secondary)]',
+                : 'novapay:border-[var(--tuwa-border-primary)] novapay:bg-[var(--tuwa-bg-secondary)] novapay:hover:border-[var(--tuwa-border-strong)]',
               focusRing,
               itemClassName?.(selected, item),
             )}
