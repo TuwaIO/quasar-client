@@ -116,7 +116,7 @@
     "@solana-program/token": "^0.17.0",
     "@solana/kit": "^8.5.0",
     "@tuwaio/nova-connect": "^0.15.0",
-    "@tuwaio/nova-core": "^0.15.0",
+    "@tuwaio/nova-core": "^0.15.1",
     "@tuwaio/nova-payments": "workspace:^",
     "@tuwaio/nova-transactions": "^0.15.1",
     "@tuwaio/orbit-core": "^0.6.2",
