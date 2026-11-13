@@ -17,7 +17,7 @@ checkout. Pass a partial object as `labels` of `NovaPaymentsProvider` to overrid
 
 > **autoPay**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:637](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L637)
+Defined in: [nova-payments/src/i18n/types.ts:667](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L667)
 
 The automatic payments offer of a subscription (ERC-7715), after a paid period.
 
@@ -155,7 +155,7 @@ Under the buttons (default: `Your wallet shows this permission (ERC-7715) before
 
 > **autoPayOff**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:605](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L605)
+Defined in: [nova-payments/src/i18n/types.ts:635](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L635)
 
 Turning off automatic payments: the wallet that allowed them sends the transaction that revokes the permission.
 
@@ -429,12 +429,6 @@ Instead of `canClose` once the deadline passed while the payment this page hande
 its way and the invoice is still `open` or `underpaid` (Quasar waits for a payment it learned of before the
 deadline); `{merchant}` may be used (default: `Your payment was sent before the deadline and is being confirmed.`)
 
-#### amount
-
-> **amount**: `string`
-
-Row of the amount (default: `Amount`)
-
 #### canClose
 
 > **canClose**: `string`
@@ -572,6 +566,28 @@ Heading (default: `The checkout can't be opened`)
 
 ***
 
+### failed
+
+> **failed**: `object`
+
+Defined in: [nova-payments/src/i18n/types.ts:599](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L599)
+
+The step after a payment on its way failed for good: the buyer may pay again.
+
+#### summary
+
+> **summary**: `string`
+
+Under the amount: `{network}` (default: `on {network} · the invoice is still open`)
+
+#### title
+
+> **title**: `string`
+
+Heading (default: `Payment failed`)
+
+***
+
 ### language
 
 > **language**: `object`
@@ -610,7 +626,7 @@ Title of the menu (default: `Language`)
 
 > **leave**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:903](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L903)
+Defined in: [nova-payments/src/i18n/types.ts:933](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L933)
 
 The question when the buyer closes the checkout before a transaction is sent.
 
@@ -844,7 +860,7 @@ Badge of the connected wallet's network (default: `Your wallet`)
 
 > **outcome**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:681](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L681)
+Defined in: [nova-payments/src/i18n/types.ts:711](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L711)
 
 The outcomes other than paid.
 
@@ -1272,7 +1288,7 @@ Button that connects another wallet (default: `Use another wallet`)
 
 > **paid**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:576](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L576)
+Defined in: [nova-payments/src/i18n/types.ts:606](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L606)
 
 The paid outcome.
 
@@ -2172,7 +2188,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:984](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L984)
+Defined in: [nova-payments/src/i18n/types.ts:1014](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L1014)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2728,6 +2744,82 @@ The wallet sent it on another network; `{wallet}`, `{network}` (default: `{walle
 
 ***
 
+### status
+
+> **status**: `object`
+
+Defined in: [nova-payments/src/i18n/types.ts:574](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L574)
+
+The chip over the heading of a status screen: one or two words that name the state of the payment.
+
+#### blocked
+
+> **blocked**: `string`
+
+The wallet may not pay the invoice (default: `Blocked`)
+
+#### cancelled
+
+> **cancelled**: `string`
+
+The invoice was cancelled (default: `Cancelled`)
+
+#### expired
+
+> **expired**: `string`
+
+The invoice expired (default: `Expired`)
+
+#### failed
+
+> **failed**: `string`
+
+The payment failed (default: `Failed`)
+
+#### paid
+
+> **paid**: `string`
+
+The invoice is paid (default: `Paid`)
+
+#### pending
+
+> **pending**: `string`
+
+A payment on its way (default: `Pending`)
+
+#### refunded
+
+> **refunded**: `string`
+
+The payment was refunded (default: `Refunded`)
+
+#### replaced
+
+> **replaced**: `string`
+
+The seller corrected the invoice (default: `Corrected`)
+
+#### review
+
+> **review**: `string`
+
+A payment the seller looks at (default: `On review`)
+
+#### unconfirmed
+
+> **unconfirmed**: `string`
+
+Quasar could not confirm the payment (default: `Unconfirmed`)
+
+#### underpaid
+
+> **underpaid**: `string`
+
+A part of the invoice arrived (default: `Part paid`)
+
+***
+
 ### steps
 
 > **steps**: `object`
@@ -2784,7 +2876,7 @@ Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: 
 
 > **summary**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:918](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L918)
+Defined in: [nova-payments/src/i18n/types.ts:948](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L948)
 
 The order panel: the seller, the deadline, the lines and the total.
 

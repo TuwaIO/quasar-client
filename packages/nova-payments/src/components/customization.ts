@@ -195,6 +195,16 @@ export interface PaymentCheckoutClassNames {
    */
   statusIcon?: (params: CheckoutPartState & { kind: OutcomeKind }) => string | undefined;
   /**
+   * The chip over the heading of a status screen (Pending, Paid, Failed and the other outcomes).
+   *
+   * @param params - The state of the checkout, and `tone`, the state the chip shows.
+   * @param params.tone - `pending`, `success`, `error` or `neutral`.
+   * @returns Classes to add.
+   */
+  statusChip?: (
+    params: CheckoutPartState & { tone: 'pending' | 'success' | 'error' | 'neutral' },
+  ) => string | undefined;
+  /**
    * The strip and the wash of the status color along the top of the checkout, on a payment on its way and its outcome.
    *
    * @param params - The state of the checkout, and `tone`, the state the strip shows.

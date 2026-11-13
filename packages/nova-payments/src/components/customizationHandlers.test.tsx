@@ -51,7 +51,9 @@ const { ConfirmScreen } = await import('./ConfirmScreen');
 const { PayScreen } = await import('./PayScreen');
 const { PrimaryButton } = await import('./ScreenParts');
 const { RadioCards } = await import('./RadioCards');
-const { HashLink, TxProgressIndicator, TxStatusVisual } = await import('@tuwaio/nova-transactions');
+const { HashLink, TxProgressIndicator } = await import('@tuwaio/nova-transactions');
+const { StatusHead } = await import('./StatusHead');
+const { StatusSteps } = await import('./StatusSteps');
 
 const { ofType } = fixture;
 
@@ -201,11 +203,13 @@ describe('child customizations of the checkout', () => {
     );
 
     const screen = ConfirmScreen();
-    expect(ofType(screen, TxStatusVisual)[0].props).toMatchObject({ className: 'brand-status', iconClassNames });
-    expect(ofType(screen, TxProgressIndicator)[0].props).toMatchObject({
+    // The mark and the steps are parts of every status screen: each takes its customization itself
+    expect(ofType(screen, StatusHead)[0].props).toMatchObject({ mark: 'waiting', tone: 'pending' });
+    expect(ofType(screen, StatusSteps)[0].props).toEqual({ state: 'processing' });
+    expect(ofType(screen, HashLink)[0].props).toMatchObject({ className: 'brand-link', classNames: hashClassNames });
+    expect(ofType(render(StatusSteps, { state: 'processing' }), TxProgressIndicator)[0].props).toMatchObject({
       className: expect.stringContaining('brand-progress'),
       stepClassNames,
     });
-    expect(ofType(screen, HashLink)[0].props).toMatchObject({ className: 'brand-link', classNames: hashClassNames });
   });
 });

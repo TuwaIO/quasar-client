@@ -1,5 +1,11 @@
 import { cn, Dialog, DialogContent, DialogTitle, QuasarLoader, StatusEdge } from '@tuwaio/nova-core';
-import type { CheckoutApi, CheckoutStore, CheckoutView, EventSourceConstructor } from '@tuwaio/quasar-sdk/checkout';
+import type {
+  CheckoutApi,
+  CheckoutError,
+  CheckoutStore,
+  CheckoutView,
+  EventSourceConstructor,
+} from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
 import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
@@ -40,6 +46,7 @@ import { checkoutLayout, checkoutWidthClasses, screenHeading, screenTitle } from
 import { ConfirmScreen } from './ConfirmScreen';
 import { ConfirmWalletScreen } from './ConfirmWalletScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
+import { FailedScreen } from './FailedScreen';
 import { ExclamationTriangleIcon } from './icons';
 import { LeaveDialog } from './LeaveDialog';
 import { MethodScreen } from './MethodScreen';
@@ -184,6 +191,7 @@ export function ScreenBody() {
   if (screen === 'pay') return <PayScreen />;
   if (screen === 'qr') return <QrScreen />;
   if (screen === 'confirm') return <ConfirmScreen />;
+  if (screen === 'failed') return <FailedScreen />;
   if (screen === 'paid') return <PaidScreen />;
   if (screen === 'autoPay') return <AutoPayScreen />;
   if (screen === 'autoPayOff') return <AutoPayOffScreen />;
@@ -441,14 +449,28 @@ export function PaymentCheckout({
   // English; a language switched to later shows once its labels arrive, without leaving the screen
   const [labelsShown, setLabelsShown] = useState(false);
   if (!labelsShown && checkout && hasLabels(locale)) setLabelsShown(true);
-  const screen = checkoutScreen(state, {
+  const choices = {
     payWith,
     handoff,
     autoPay,
     autoPayOff: autoPayOff === 'open',
     confirmWallet,
     labelsReady: labelsShown || !checkout,
-  });
+  };
+  const step = checkoutScreen(state, choices);
+  // A payment the page showed on its way that failed for good: the failed step says what became of it, where the buyer
+  // was watching, until they go on to pay again. The store itself is back at the step that pays by then
+  const [watched, setWatched] = useState<CheckoutStore | null>(null);
+  const [failure, setFailure] = useState<CheckoutError | null>(null);
+  if (step === 'confirm') {
+    if (watched !== store) setWatched(store);
+  } else if (watched === store) {
+    setWatched(null);
+    if (state.error?.code === 'payment_failed') setFailure(state.error);
+  }
+  // Only while that failure stands: another error, or none, is the store's next word
+  const screen =
+    failure !== null && state.error === failure ? checkoutScreen(state, { ...choices, afterFailure: true }) : step;
   // The price for the wallet set on the store, or the step that confirms the wallet first
   const lockStorePrice = async () => {
     await lockPrice(store, setConfirmWallet);
@@ -606,6 +628,10 @@ export function PaymentCheckout({
       setHandoff(false);
       setConfirmWallet(false);
       store.getState().releaseQuote();
+    },
+    payAfterFailure: () => {
+      setFailure(null);
+      store.getState().clearError();
     },
     confirmWallet,
     setConfirmWallet,

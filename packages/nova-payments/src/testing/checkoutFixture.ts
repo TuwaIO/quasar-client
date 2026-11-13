@@ -114,6 +114,7 @@ export function checkoutContextValue(
     handoff: false,
     setHandoff: vi.fn(),
     backToMethods: vi.fn(),
+    payAfterFailure: vi.fn(),
     confirmWallet: false,
     setConfirmWallet: vi.fn(),
     lockPrice: vi.fn(async () => undefined),

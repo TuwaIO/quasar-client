@@ -38,7 +38,7 @@ The adapter of `NovaPaymentsProvider`, if any.
 
 > **autoPay**: `boolean`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:121](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L121)
+Defined in: [nova-payments/src/components/checkoutContext.ts:126](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L126)
 
 The buyer opened the automatic payments offer after paying a subscription period.
 
@@ -48,7 +48,7 @@ The buyer opened the automatic payments offer after paying a subscription period
 
 > **autoPayOff**: `"open"` \| `"done"` \| `null`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:129](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L129)
+Defined in: [nova-payments/src/components/checkoutContext.ts:134](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L134)
 
 The screen that turns automatic payments off is open (`open`), or they were turned off (`done`).
 
@@ -58,7 +58,7 @@ The screen that turns automatic payments off is open (`open`), or they were turn
 
 > **autoReturnSeconds**: `number`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:153](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L153)
+Defined in: [nova-payments/src/components/checkoutContext.ts:158](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L158)
 
 Seconds before the paid outcome sends the buyer back to the seller; `0` for no automatic return.
 
@@ -106,7 +106,7 @@ Closes the checkout; `undefined` when it cannot be closed (inline without `onClo
 
 > **confirmWallet**: `boolean`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:99](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L99)
+Defined in: [nova-payments/src/components/checkoutContext.ts:104](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L104)
 
 Whether the buyer continued with a wallet that must confirm the invoice before the price: the step that confirms
 it shows while the checkout store waits for the signature (`ConfirmWalletScreen`).
@@ -165,7 +165,7 @@ Whether the page can connect a wallet (Nova Connect or the app's handler).
 
 > **customization**: [`PaymentCheckoutCustomization`](?path=/docs/packages-nova-payments-payments-interfaces-paymentcheckoutcustomization--docs)
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:160](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L160)
+Defined in: [nova-payments/src/components/checkoutContext.ts:165](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L165)
 
 Class name functions and replacement components of the parts (`customization` of `PaymentCheckout`).
 
@@ -175,7 +175,7 @@ Class name functions and replacement components of the parts (`customization` of
 
 > **display**: [`PaymentCheckoutDisplay`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentcheckoutdisplay--docs)
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:158](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L158)
+Defined in: [nova-payments/src/components/checkoutContext.ts:163](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L163)
 
 How the checkout shows (`display` of `PaymentCheckout`): a modal belongs to the page under it, so its paid outcome
 closes it instead of sending the buyer back to the seller's page.
@@ -227,7 +227,7 @@ The language of the checkout (a BCP 47 tag).
 
 > **lockPrice**: () => `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:112](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L112)
+Defined in: [nova-payments/src/components/checkoutContext.ts:117](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L117)
 
 Locks the price for the wallet set on the checkout store, or shows the step that confirms the wallet first while
 the store says it must (before the price).
@@ -254,7 +254,7 @@ Defined in: [nova-payments/src/components/checkoutContext.ts:35](https://github.
 
 > `optional` **onContact?**: () => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:151](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L151)
+Defined in: [nova-payments/src/components/checkoutContext.ts:156](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L156)
 
 Replaces the link of "Contact \<seller\>", when the app handles it.
 
@@ -268,7 +268,7 @@ Replaces the link of "Contact \<seller\>", when the app handles it.
 
 > **onPaymentSent**: (`payment`) => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:119](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L119)
+Defined in: [nova-payments/src/components/checkoutContext.ts:124](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L124)
 
 Takes the payment the wallet sent: the checkout follows it, and hands it over to the app's Pulsar store at once,
 where Nova Transactions shows its toast.
@@ -301,7 +301,7 @@ Whether the page opened on an invoice already paid: the buyer reads its receipt,
 
 > **openInvoice**: (`token`) => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:149](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L149)
+Defined in: [nova-payments/src/components/checkoutContext.ts:154](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L154)
 
 Opens another invoice in this checkout: the one that replaced a corrected invoice.
 
@@ -312,6 +312,21 @@ Opens another invoice in this checkout: the one that replaced a corrected invoic
 `string`
 
 Its checkout token.
+
+#### Returns
+
+`void`
+
+***
+
+### payAfterFailure
+
+> **payAfterFailure**: () => `void`
+
+Defined in: [nova-payments/src/components/checkoutContext.ts:99](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L99)
+
+Leaves the failed step for the step that pays again (the locked price while it holds, else the methods), and drops
+the failure it showed: the buyer has read it.
 
 #### Returns
 
@@ -364,7 +379,7 @@ The checkout showed a QR code for the invoice, which the buyer may have paid wit
 
 > **revokeSent**: `boolean`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:137](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L137)
+Defined in: [nova-payments/src/components/checkoutContext.ts:142](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L142)
 
 Whether the wallet has sent the transaction that revokes the permission of this invoice's subscription.
 
@@ -384,7 +399,7 @@ The screen shown.
 
 > **setAutoPay**: (`autoPay`) => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:127](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L127)
+Defined in: [nova-payments/src/components/checkoutContext.ts:132](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L132)
 
 Opens or closes the automatic payments offer.
 
@@ -406,7 +421,7 @@ Whether it shows.
 
 > **setAutoPayOff**: (`autoPayOff`) => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:135](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L135)
+Defined in: [nova-payments/src/components/checkoutContext.ts:140](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L140)
 
 Opens or closes the screen that turns automatic payments off, or says they were turned off.
 
@@ -428,7 +443,7 @@ The new state.
 
 > **setConfirmWallet**: (`show`) => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:105](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L105)
+Defined in: [nova-payments/src/components/checkoutContext.ts:110](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L110)
 
 Shows or leaves the step that confirms the wallet ("Back to methods").
 
@@ -518,7 +533,7 @@ Sets how the buyer pays.
 
 > **setRevokeSent**: (`sent`) => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:143](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L143)
+Defined in: [nova-payments/src/components/checkoutContext.ts:148](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L148)
 
 Keeps that for as long as the page shows the invoice, so the buyer leaving the screen does not send it twice.
 

@@ -6,11 +6,12 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **ConfirmScreen**(): `Element`
 
-Defined in: [nova-payments/src/components/ConfirmScreen.tsx:39](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/ConfirmScreen.tsx#L39)
+Defined in: [nova-payments/src/components/ConfirmScreen.tsx:40](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/ConfirmScreen.tsx#L40)
 
-The confirm step: the transaction is on its way and Quasar follows it until it is final. It reuses the status and
-progress of Nova Transactions (Sent → Confirming → Paid, in the language of the checkout) and shows the network, the
-amount, the transaction with its explorer link and the sender. The buyer may close the window: the payment keeps
+The confirm step: the transaction is on its way and Quasar follows it until it is final. Its head is the one of every
+status screen (the Quasar loader, the chip "Pending", the heading and the amount, which the paid and the failed step
+go on from), with the progress of Nova Transactions (Sent → Confirming → Paid, in the language of the checkout), the
+network, the transaction with its explorer link and the sender. The buyer may close the window: the payment keeps
 going. It also shows a payment of the invoice that this page did not hand over while Quasar reports it on its way
 (the page was reopened or reloaded, another tab paid, Quasar found a Solana Pay transfer), instead of offering to pay
 again: its note asks the buyer to wait for it. When the invoice deadline passes while a payment is on its way (the

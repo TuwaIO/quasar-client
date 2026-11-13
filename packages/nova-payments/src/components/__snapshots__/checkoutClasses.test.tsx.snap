@@ -51,7 +51,6 @@ exports[`the classes of the inline checkout > confirm 1`] = `
 [
   "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center",
   "novapay:max-w-sm",
-  "novapay:max-w-sm",
   "novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
 ]
 `;
@@ -130,18 +129,13 @@ exports[`the classes of the inline checkout > order total 1`] = `
 
 exports[`the classes of the inline checkout > outcome 1`] = `
 [
-  "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:px-5 novapay:py-6 novapay:text-center",
-  "novapay:h-12 novapay:w-12 novapay:text-[var(--tuwa-text-secondary)]",
-  "novapay:max-w-sm",
+  "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center",
 ]
 `;
 
 exports[`the classes of the inline checkout > paid 1`] = `
 [
   "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center",
-  "novapay:font-mono novapay:tabular-nums novapay:m-0 novapay:text-2xl novapay:font-bold",
-  "novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
-  "novapay:max-w-sm",
 ]
 `;
 
@@ -167,6 +161,15 @@ exports[`the classes of the inline checkout > screen 1`] = `
 [
   "novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-2.5 novapay:px-5 novapay:py-4",
   "novapay-title novapay:font-mono novapay:tabular-nums novapay:m-0 novapay:text-base novapay:font-bold novapay:text-balance novapay:outline-none",
+  "novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
+]
+`;
+
+exports[`the classes of the inline checkout > status head 1`] = `
+[
+  "novapay:flex novapay:w-full novapay:max-w-sm novapay:flex-col novapay:items-center",
+  "novapay:mt-2",
+  "novapay:font-mono novapay:tabular-nums novapay:m-0 novapay:mt-2 novapay:text-2xl novapay:font-bold",
   "novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
 ]
 `;
@@ -229,7 +232,6 @@ exports[`the classes of the modal checkout > compact summary 1`] = `
 exports[`the classes of the modal checkout > confirm 1`] = `
 [
   "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center",
-  "novapay:max-w-sm",
   "novapay:max-w-sm",
   "novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
 ]
@@ -309,18 +311,13 @@ exports[`the classes of the modal checkout > order total 1`] = `
 
 exports[`the classes of the modal checkout > outcome 1`] = `
 [
-  "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:px-5 novapay:py-6 novapay:text-center",
-  "novapay:h-12 novapay:w-12 novapay:text-[var(--tuwa-text-secondary)]",
-  "novapay:max-w-sm",
+  "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center",
 ]
 `;
 
 exports[`the classes of the modal checkout > paid 1`] = `
 [
   "novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center",
-  "novapay:font-mono novapay:tabular-nums novapay:m-0 novapay:text-2xl novapay:font-bold",
-  "novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
-  "novapay:max-w-sm",
 ]
 `;
 
@@ -346,6 +343,15 @@ exports[`the classes of the modal checkout > screen 1`] = `
 [
   "novapay:flex novapay:flex-1 novapay:flex-col novapay:gap-2.5 novapay:px-5 novapay:py-4",
   "novapay-title novapay:font-mono novapay:tabular-nums novapay:m-0 novapay:text-base novapay:font-bold novapay:text-balance novapay:outline-none",
+  "novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
+]
+`;
+
+exports[`the classes of the modal checkout > status head 1`] = `
+[
+  "novapay:flex novapay:w-full novapay:max-w-sm novapay:flex-col novapay:items-center",
+  "novapay:mt-2",
+  "novapay:font-mono novapay:tabular-nums novapay:m-0 novapay:mt-2 novapay:text-2xl novapay:font-bold",
   "novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]",
 ]
 `;

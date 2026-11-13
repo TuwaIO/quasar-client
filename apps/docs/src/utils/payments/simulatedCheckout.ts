@@ -140,6 +140,8 @@ export interface SimulationOptions {
   quoteError?: string;
   /** The checkout read after the first one: the invoice that replaced a corrected one, opened from it. */
   afterReplace?: CheckoutView;
+  /** How many reads still answer the first checkout before `afterReplace` (default 1): a payment that takes a while. */
+  replaceAfterReads?: number;
   /**
    * Quasar refuses the signature that confirms the paying wallet with this code (`payer_proof_invalid`,
    * `payer_proof_unavailable`…); without it the signature is taken.
@@ -166,6 +168,7 @@ export function simulatedCheckoutApi({
   transferFeeBps = 0,
   quoteError,
   afterReplace,
+  replaceAfterReads = 1,
   payerProofError,
 }: SimulationOptions = {}): CheckoutApi {
   let reads = 0;
@@ -192,7 +195,7 @@ export function simulatedCheckoutApi({
       if (mode === 'notFound') return refuse('checkout_not_found', 404);
       if (mode === 'failure') return refuse('request_failed', 503);
       reads += 1;
-      if (afterReplace && reads > 1) current = afterReplace;
+      if (afterReplace && reads > replaceAfterReads) current = afterReplace;
       return Promise.resolve(current);
     },
     // A price locked after a moment, for the next step: a transfer of the method's token to the merchant

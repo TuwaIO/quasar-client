@@ -168,6 +168,47 @@ describe('checkoutScreen of a payment that may still arrive', () => {
   });
 });
 
+// A payment on its way that failed for good sent the page straight back to the pay step: the status the buyer was
+// watching was gone, with a line of red text where it had been
+describe('checkoutScreen after a payment the page followed failed', () => {
+  const failed = { code: 'payment_failed', reason: 'reverted', message: 'failed' } as never;
+  const after = { afterFailure: true };
+
+  it('shows the failed step while the invoice still takes a payment, whatever step comes next', () => {
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE, error: failed }, after)).toBe(
+      'failed',
+    );
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view(), error: failed }, after)).toBe('failed');
+    expect(checkoutScreen({ phase: 'underpaid', checkout: view(), error: failed }, after)).toBe('failed');
+  });
+
+  it('gives way to the step the store is at once the buyer goes on to pay again', () => {
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE, error: failed })).toBe('pay');
+    expect(checkoutScreen({ phase: 'selectMethod', checkout: view(), error: failed })).toBe('method');
+  });
+
+  it('is only for a payment that failed: one that may have moved money keeps its own words', () => {
+    const mismatch = { code: 'payment_mismatch', message: 'moved' } as never;
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE, error: mismatch }, after)).toBe(
+      'pay',
+    );
+    expect(checkoutScreen({ phase: 'awaitingPayment', checkout: view(), quote: QUOTE }, after)).toBe('pay');
+    expect(checkoutScreen({ phase: 'unconfirmed' as never, checkout: view(), error: failed }, after)).toBe(
+      'unconfirmed',
+    );
+  });
+
+  it('never covers the outcome of an invoice that takes no payment any more', () => {
+    expect(checkoutScreen({ phase: 'expired', checkout: view(), error: failed }, after)).toBe('expired');
+    expect(checkoutScreen({ phase: 'paid', checkout: view(), error: failed }, after)).toBe('paid');
+  });
+
+  it('keeps the steps of the header and the countdown: the buyer can still pay', () => {
+    expect(checkoutSteps('failed')?.at(-1)).toEqual({ key: 'confirm', state: 'current' });
+    expect(deadlineState('open', 'failed')).toBe('paying');
+  });
+});
+
 describe('checkoutSteps', () => {
   it('marks the steps before the current one done, and adds the details and automatic payments when they apply', () => {
     expect(checkoutSteps('method')).toEqual([

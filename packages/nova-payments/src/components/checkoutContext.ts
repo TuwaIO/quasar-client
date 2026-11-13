@@ -93,6 +93,11 @@ export interface CheckoutContextValue {
   /** Goes back to the method step: forgets the locked price and the phone hand-off. */
   backToMethods: () => void;
   /**
+   * Leaves the failed step for the step that pays again (the locked price while it holds, else the methods), and drops
+   * the failure it showed: the buyer has read it.
+   */
+  payAfterFailure: () => void;
+  /**
    * Whether the buyer continued with a wallet that must confirm the invoice before the price: the step that confirms
    * it shows while the checkout store waits for the signature (`ConfirmWalletScreen`).
    */

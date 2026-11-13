@@ -26,6 +26,7 @@ const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { DetailRow, PrimaryButton, SecondaryButton } = await import('./ScreenParts');
 const { PaidScreen } = await import('./PaidScreen');
+const { StatusHead } = await import('./StatusHead');
 
 type Props = Record<string, unknown>;
 const SUCCESS = 'https://shop.example/billing';
@@ -110,13 +111,8 @@ describe('the amount of a paid invoice', () => {
   it('is the whole invoice after a rest, not only the last transfer', () => {
     paid('page', 0);
     ctx = { ...ctx, state: { ...ctx.state, quote: rest } as never };
-    const text = fixture
-      .elements(render(PaidScreen, {}))
-      .flatMap((element) => [element.props.children].flat())
-      .filter((child): child is string => typeof child === 'string')
-      .join(' ');
-    expect(text).toContain('89.54 USDC');
-    expect(text).not.toMatch(/(^|\s)9\.54 USDC/);
+    const head = fixture.ofType(render(PaidScreen, {}), StatusHead)[0].props as { amount: string };
+    expect(head.amount).toBe('89.54 USDC');
   });
 });
 

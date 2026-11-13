@@ -26,6 +26,7 @@ const { PaidScreen } = await import('./PaidScreen');
 const { QrScreen } = await import('./QrScreen');
 const { BuyerScreen } = await import('./BuyerScreen');
 const { OutcomeScreen } = await import('./OutcomeScreen');
+const { StatusHead } = await import('./StatusHead');
 const { WalletPrompt } = await import('./WalletPrompt');
 
 /** Every class string of a part: the modal and the inline checkout must keep theirs when the page changes. */
@@ -54,6 +55,11 @@ const PARTS: [string, (...args: never[]) => unknown, Record<string, unknown>][] 
   ['qr', QrScreen, {}],
   ['buyer', BuyerScreen, {}],
   ['outcome', OutcomeScreen, { kind: 'expired' }],
+  [
+    'status head',
+    StatusHead,
+    { mark: 'waiting', tone: 'pending', chip: 'Pending', title: 'Title', amount: '1.00 USDC', note: 'Note' },
+  ],
   ['prompt', WalletPrompt, { title: 'Title', text: 'Text', stepHeight: 400 }],
 ];
 

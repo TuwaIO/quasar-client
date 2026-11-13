@@ -15,7 +15,8 @@ import type {
 /**
  * A screen of the checkout: the steps of a payment (`buyer`, `method`, `confirmWallet` — the paying wallet confirms the
  * invoice with a free signature before the price —, `pay` or `qr`, `confirm`, `autoPay`), a payment Quasar could not
- * confirm (`unconfirmed`: it may still arrive, so the buyer checks the wallet before paying again) or its outcome.
+ * confirm (`unconfirmed`: it may still arrive, so the buyer checks the wallet before paying again), a payment that
+ * failed for good while the invoice still takes one (`failed`: the buyer may pay again) or its outcome.
  */
 export type CheckoutScreen =
   | 'loading'
@@ -27,6 +28,7 @@ export type CheckoutScreen =
   | 'qr'
   | 'confirm'
   | 'unconfirmed'
+  | 'failed'
   | 'paid'
   | 'autoPay'
   | 'autoPayOff'
@@ -62,7 +64,15 @@ export interface CheckoutScreenChoices {
    * after it.
    */
   confirmWallet?: boolean;
+  /**
+   * A payment this page followed has just failed for good, and the buyer has not gone on yet: the `failed` step shows
+   * what became of it, in place of the step the store went back to, until the buyer chooses to pay again.
+   */
+  afterFailure?: boolean;
 }
+
+/** The phases the checkout store goes back to after a payment failed for good, from which the buyer pays again. */
+const RETRY_PHASES: ReadonlySet<string> = new Set(['awaitingPayment', 'selectMethod', 'underpaid']);
 
 /** The reason of a transaction the invoice refused because it takes no more of them. */
 const INVOICE_FULL = 'too_many_payments';
@@ -120,6 +130,10 @@ export function checkoutScreen(
     // payment did not leave my wallet" under it, seen live, told a buyer whose money had gone the opposite
     return unconfirmedFollowUp(state.error) === 'retrying' ? 'confirm' : 'unconfirmed';
   }
+  // The payment the buyer was watching failed for good and the invoice still takes one: the status stays where it was
+  // and says so, before the step that pays again. Only `payment_failed`: a payment that may have moved money, or may
+  // still arrive, keeps its own words
+  if (choices.afterFailure && state.error?.code === 'payment_failed' && RETRY_PHASES.has(state.phase)) return 'failed';
   // The wallet the buyer continued with confirms the invoice, then the price is locked on the same step: the step stays
   // between the signature and the price, unless the price was refused
   const proving =
@@ -176,6 +190,7 @@ const STEP_OF_SCREEN: Partial<Record<CheckoutScreen, CheckoutStep['key']>> = {
   underpaid: 'pay',
   confirm: 'confirm',
   unconfirmed: 'confirm',
+  failed: 'confirm',
   autoPay: 'autoPay',
 };
 
@@ -268,6 +283,7 @@ const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
   'confirmWallet',
   'pay',
   'qr',
+  'failed',
   'underpaid',
   'blocked',
 ]);

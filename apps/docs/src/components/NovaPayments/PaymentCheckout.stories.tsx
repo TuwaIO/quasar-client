@@ -497,6 +497,73 @@ export const Paid: Story = {
   args: { view: settled({ status: 'paid', amountPaid: '89540000', successUrl: 'https://acme.example/thanks' }) },
 };
 
+/** The transaction of the payment the status stories follow. */
+const FOLLOWED_TX = `0x${'7e'.repeat(32)}`;
+
+/**
+ * The payment confirms while the buyer watches, about three seconds in: the same head goes on from "Pending" into
+ * "Paid". The pixels of the Quasar loader fly into the check mark, the chip changes its color and word, the heading
+ * and the line under the amount morph, the amount stays where it was, the line of the steps runs on to "Paid" and the
+ * receipt comes in under the details. "Remount" in the toolbar plays it again.
+ */
+export const PendingToPaid: Story = {
+  args: {
+    pollMs: 500,
+    replaceAfterReads: 6,
+    view: settled({ status: 'processing', pendingPayments: 1 }),
+    afterReplace: settled({ status: 'paid', amountPaid: '89540000', pendingPayments: 0 }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('Pending')).toBeVisible();
+    await expect(await canvas.findByRole('heading', { name: 'Payment received' }, { timeout: 10_000 })).toBeVisible();
+    // The chip over the heading and the last step both say it
+    await waitFor(() => expect(canvas.getAllByText('Paid').length).toBeGreaterThanOrEqual(2));
+    await expect(canvas.queryByText('Pending')).toBeNull();
+  },
+};
+
+/**
+ * The network reverts the payment while the buyer watches: the head turns to a failure where it stood (the cross, the
+ * chip "Failed", the last step), with the transaction and the reason under it, and offers to pay again. Before, the
+ * page jumped to the pay step with a line of red text.
+ */
+export const PendingToFailed: Story = {
+  args: {
+    wallet: METAMASK_ON_BASE_SEPOLIA,
+    pollMs: 500,
+    replaceAfterReads: 6,
+    view: settled({ status: 'processing', pendingPayments: 1 }),
+    afterReplace: settled({
+      status: 'open',
+      pendingPayments: 0,
+      unresolvedPayments: 0,
+      rejectedTxKeys: [FOLLOWED_TX],
+      rejectedPayments: [{ txKey: FOLLOWED_TX, reason: 'reverted', final: true }],
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Payment failed' }, { timeout: 10_000 })).toBeVisible();
+    // The reason comes in a moment after the head has turned
+    await waitFor(() => expect(canvas.getByText(/^The payment failed on Base Sepolia/)).toBeVisible());
+    await waitFor(() => expect(canvas.getAllByText('Failed').length).toBeGreaterThanOrEqual(2));
+    await expect(canvas.getByRole('button', { name: 'Pay again' })).toBeVisible();
+  },
+};
+
+/** "Pay again" on the failed step leads back to the pay step, with nothing left of the failure. */
+export const PayAgainAfterFailure: Story = {
+  args: PendingToFailed.args,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: 'Pay again' }, { timeout: 10_000 }));
+    // Back at the pay step, with nothing left of the failure
+    await expect(await canvas.findByRole('button', { name: /^(Sign to pay|Pay) / })).toBeVisible();
+    await expect(canvas.queryByText(/^The payment failed/)).toBeNull();
+  },
+};
+
 /** A transfer of the sample invoice, as the checkout lists the ones Quasar credited (`invoice.payments`). */
 const creditedTransfer = (fill: string, amount: string, at: string) => ({
   txKey: `0x${fill.repeat(32)}`,

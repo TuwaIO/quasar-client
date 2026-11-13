@@ -25,6 +25,7 @@ const { MethodScreen } = await import('./MethodScreen');
 const { RadioCards } = await import('./RadioCards');
 const { CheckoutStepper } = await import('./CheckoutStepper');
 const { DetailRow } = await import('./ScreenParts');
+const { StatusHead } = await import('./StatusHead');
 const { WalletPrompt } = await import('./WalletPrompt');
 
 afterEach(() => unmount());
@@ -169,28 +170,32 @@ describe('the confirm step on its own page', () => {
   };
   const rows = (tree: unknown) => fixture.ofType(tree, DetailRow).map((row) => row.props.name);
 
-  it('shows the amount where the paid screen does, and no row of it', () => {
+  const headOf = (tree: unknown) => fixture.ofType(tree, StatusHead)[0].props as { amount?: string | null };
+
+  it('shows the amount in the head, where the paid screen does, and no row of it', () => {
     onPage();
     ctx = { ...ctx, state: { ...ctx.state, quote, txKey: '0xabc' } } as unknown as CheckoutContextValue;
     const tree = render(ConfirmScreen, {});
-    expect(rows(tree)).not.toContain(ctx.labels.confirm.amount);
-    expect(allClasses(tree)).toContain('novapay-page-amount');
+    expect(headOf(tree).amount).toBe('1.00 USDC');
+    expect(rows(tree)).toEqual([ctx.labels.confirm.network, ctx.labels.confirm.transaction]);
   });
 
   it('invents no amount for a payment it only found', () => {
     onPage();
     ctx = { ...ctx, state: { ...ctx.state, quote: null, txKey: '0xabc' } } as unknown as CheckoutContextValue;
-    expect(allClasses(render(ConfirmScreen, {}))).not.toContain('novapay-page-amount');
+    expect(headOf(render(ConfirmScreen, {})).amount).toBeNull();
   });
 
-  it('keeps the row in the other displays', () => {
-    onPage();
-    ctx = {
-      ...ctx,
-      display: 'inline',
-      state: { ...ctx.state, quote, txKey: '0xabc' },
-    } as unknown as CheckoutContextValue;
-    expect(rows(render(ConfirmScreen, {}))).toContain(ctx.labels.confirm.amount);
+  // In a modal and inline the amount was a row of the details and jumped up to the head when the payment confirmed
+  it('shows it in the same place in the other displays', () => {
+    for (const display of ['inline', 'modal'] as const) {
+      onPage();
+      ctx = { ...ctx, display, state: { ...ctx.state, quote, txKey: '0xabc' } } as unknown as CheckoutContextValue;
+      const tree = render(ConfirmScreen, {});
+      expect(headOf(tree).amount, display).toBe('1.00 USDC');
+      expect(rows(tree), display).toEqual([ctx.labels.confirm.network, ctx.labels.confirm.transaction]);
+      unmount();
+    }
   });
 });
 

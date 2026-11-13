@@ -16,6 +16,13 @@
   }
 }
 
+@keyframes novapay-status-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
 /* Paper and ink, the wait for a wallet: a segment of the pending color runs round the square frame of its icon, on the
    border itself, as on the connecting screen of Nova Connect (a square frame cannot be a spinning ring). The checkout
    draws it itself, so it needs no stylesheet of Nova Connect. `--novapay-chase-border` is the width of the frame */
@@ -91,9 +98,15 @@
   .novapay-label-fade {
     animation: novapay-page-fade 120ms ease-out;
   }
+  /* Every display: what a status screen adds under the head it took over (the receipt, the reason of a failure) comes
+     in a moment after the head began to change (`StatusReveal`) */
+  .novapay-status-reveal {
+    animation: novapay-status-reveal 300ms ease-out 120ms both;
+  }
   @media (prefers-reduced-motion: reduce) {
     .novapay-page-fade,
-    .novapay-label-fade {
+    .novapay-label-fade,
+    .novapay-status-reveal {
       animation: none;
     }
   }

@@ -27,7 +27,8 @@ export const chip = `${caps} novapay:inline-flex novapay:shrink-0 novapay:items-
 
 /**
  * The colors of a {@link chip}: `neutral` in ink on the surface, `accent` in the accent, which reads on the surface in both
- * themes and not on a tint, and a tint with its text for a gain (`success`) and for something to mind (`pending`). @internal
+ * themes and not on a tint, and a tint with its text for a gain (`success`), for something to mind (`pending`) and for
+ * a failure (`error`). @internal
  */
 export const chipTone = {
   neutral: 'novapay:border-[var(--tuwa-border-strong)] novapay:text-[var(--tuwa-text-primary)]',
@@ -36,6 +37,8 @@ export const chipTone = {
     'novapay:border-[color-mix(in_srgb,var(--tuwa-success-icon)_35%,transparent)] novapay:bg-[var(--tuwa-success-bg)] novapay:text-[var(--tuwa-success-text)]',
   pending:
     'novapay:border-[color-mix(in_srgb,var(--tuwa-pending-icon)_35%,transparent)] novapay:bg-[var(--tuwa-pending-bg)] novapay:text-[var(--tuwa-pending-text)]',
+  error:
+    'novapay:border-[color-mix(in_srgb,var(--tuwa-error-icon)_35%,transparent)] novapay:bg-[var(--tuwa-error-bg)] novapay:text-[var(--tuwa-error-text)]',
 } as const;
 
 /**

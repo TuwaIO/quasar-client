@@ -1,5 +1,5 @@
 import { cn, DrawnCheck } from '@tuwaio/nova-core';
-import { HashLink, TxProgressIndicator, TxStatusVisual } from '@tuwaio/nova-transactions';
+import { HashLink } from '@tuwaio/nova-transactions';
 import { useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
@@ -9,7 +9,7 @@ import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal } from '../utils/format';
 import { methodFamily } from '../utils/methods';
 import { CapsLabel } from './CapsLabel';
-import { mono, primaryAction, secondaryAction, smallAction, textButton } from './classes';
+import { primaryAction, secondaryAction, smallAction, textButton } from './classes';
 import { checkoutClassName } from './customization';
 import { ArrowDownTrayIcon, DocumentTextIcon } from './icons';
 import {
@@ -21,7 +21,9 @@ import {
   ScreenFooter,
   SecondaryButton,
 } from './ScreenParts';
-import { StatusTitle } from './StatusTitle';
+import { StatusHead } from './StatusHead';
+import { StatusReveal } from './StatusReveal';
+import { StatusSteps } from './StatusSteps';
 import { TxLabels } from './TxLabels';
 
 /**
@@ -104,36 +106,15 @@ export function PaidScreen() {
           context.display === 'page' && 'novapay-page-status',
         )}
       >
-        <TxStatusVisual
-          isSucceed
-          {...child?.statusVisual}
-          className={
-            context.display === 'page'
-              ? cn('novapay-page-visual', child?.statusVisual?.className)
-              : child?.statusVisual?.className
-          }
+        <StatusHead
+          mark="paid"
+          tone="success"
+          chip={labels.status.paid}
+          title={labels.paid.title}
+          amount={facts.paidAmount ?? (total && `${total} ${checkout.invoice.currency}`)}
+          note={facts.network ? formatLabel(labels.paid.summary, { network: facts.network, date }) : date}
         />
-        <StatusTitle>{labels.paid.title}</StatusTitle>
-        <div>
-          <p
-            className={cn(
-              mono,
-              'novapay:m-0 novapay:text-2xl novapay:font-bold',
-              context.display === 'page' && 'novapay-page-amount',
-            )}
-          >
-            {facts.paidAmount ?? (total && `${total} ${checkout.invoice.currency}`)}
-          </p>
-          <p className="novapay:m-0 novapay:mt-1 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
-            {facts.network ? formatLabel(labels.paid.summary, { network: facts.network, date }) : date}
-          </p>
-        </div>
-        <TxProgressIndicator
-          isSucceed
-          isConfirmed
-          {...child?.progressIndicator}
-          className={cn('novapay:max-w-sm', child?.progressIndicator?.className)}
-        />
+        <StatusSteps state="succeed" />
         {(facts.network || txKey || parts || facts.from) && (
           <DetailsCard className="novapay:max-w-sm">
             {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
@@ -182,7 +163,7 @@ export function PaidScreen() {
           </p>
         )}
         {state.receiptUrl && (
-          <div className="novapay:flex novapay:w-full novapay:max-w-sm novapay:items-center novapay:gap-3 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-left">
+          <StatusReveal className="novapay:flex novapay:max-w-sm novapay:items-center novapay:gap-3 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-left">
             <DocumentTextIcon
               aria-hidden
               className="novapay:h-6 novapay:w-6 novapay:shrink-0 novapay:text-[var(--tuwa-text-secondary)]"
@@ -202,7 +183,7 @@ export function PaidScreen() {
               <ArrowDownTrayIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
               {labels.paid.download}
             </a>
-          </div>
+          </StatusReveal>
         )}
         {offer?.status === 'active' && (
           <p className="novapay:m-0 novapay:flex novapay:items-center novapay:gap-1.5 novapay:text-xs novapay:text-[var(--tuwa-success-text)]">

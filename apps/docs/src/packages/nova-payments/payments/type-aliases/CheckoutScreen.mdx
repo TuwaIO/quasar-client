@@ -4,10 +4,11 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # CheckoutScreen
 
-> **CheckoutScreen** = `"loading"` \| `"error"` \| `"buyer"` \| `"method"` \| `"confirmWallet"` \| `"pay"` \| `"qr"` \| `"confirm"` \| `"unconfirmed"` \| `"paid"` \| `"autoPay"` \| `"autoPayOff"` \| `"underpaid"` \| `"held"` \| `"refunded"` \| `"expired"` \| `"cancelled"` \| `"replaced"` \| `"blocked"`
+> **CheckoutScreen** = `"loading"` \| `"error"` \| `"buyer"` \| `"method"` \| `"confirmWallet"` \| `"pay"` \| `"qr"` \| `"confirm"` \| `"unconfirmed"` \| `"failed"` \| `"paid"` \| `"autoPay"` \| `"autoPayOff"` \| `"underpaid"` \| `"held"` \| `"refunded"` \| `"expired"` \| `"cancelled"` \| `"replaced"` \| `"blocked"`
 
-Defined in: [nova-payments/src/utils/checkout.ts:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L20)
+Defined in: [nova-payments/src/utils/checkout.ts:21](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L21)
 
 A screen of the checkout: the steps of a payment (`buyer`, `method`, `confirmWallet` — the paying wallet confirms the
 invoice with a free signature before the price —, `pay` or `qr`, `confirm`, `autoPay`), a payment Quasar could not
-confirm (`unconfirmed`: it may still arrive, so the buyer checks the wallet before paying again) or its outcome.
+confirm (`unconfirmed`: it may still arrive, so the buyer checks the wallet before paying again), a payment that
+failed for good while the invoice still takes one (`failed`: the buyer may pay again) or its outcome.

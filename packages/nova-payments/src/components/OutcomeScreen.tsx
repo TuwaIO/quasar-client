@@ -1,7 +1,7 @@
-import { cn, DrawnCross } from '@tuwaio/nova-core';
+import { cn } from '@tuwaio/nova-core';
 import { HashLink } from '@tuwaio/nova-transactions';
 import { parseCaip10AccountId } from '@tuwaio/orbit-core';
-import { type ComponentType, type ReactNode, type SVGProps, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
@@ -32,14 +32,6 @@ import { AutoPayNote } from './AutoPayNote';
 import { CapsLabel } from './CapsLabel';
 import { secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
-import {
-  ArrowPathRoundedSquareIcon,
-  ArrowUturnLeftIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
-  NoSymbolIcon,
-} from './icons';
 import { NameTransaction } from './NameTransaction';
 import {
   ChainLink,
@@ -50,7 +42,8 @@ import {
   ScreenFooter,
   SecondaryButton,
 } from './ScreenParts';
-import { StatusTitle } from './StatusTitle';
+import type { StatusChipTone } from './StatusChip';
+import { StatusHead } from './StatusHead';
 import { TxLabels } from './TxLabels';
 
 /** The outcomes this screen shows. */
@@ -108,19 +101,17 @@ const LEFT_THE_WALLET: ReadonlySet<UnconfirmedFollowUp> = new Set([
 
 /** Whether two account addresses are one: EVM ones in any case, Solana (base58) ones exactly. */
 
-/** A cancelled invoice: the cross of a result, which draws itself. */
-const CancelledMark = ({ className }: SVGProps<SVGSVGElement>) => <DrawnCross variant="disc" className={className} />;
-
-/** The icon and tone of each outcome. */
-const LOOK: Record<OutcomeKind, { Icon: ComponentType<SVGProps<SVGSVGElement>>; tone: string }> = {
-  unconfirmed: { Icon: ExclamationTriangleIcon, tone: 'novapay:text-[var(--tuwa-pending-icon)]' },
-  underpaid: { Icon: ExclamationTriangleIcon, tone: 'novapay:text-[var(--tuwa-pending-icon)]' },
-  held: { Icon: MagnifyingGlassIcon, tone: 'novapay:text-[var(--tuwa-info-icon)]' },
-  refunded: { Icon: ArrowUturnLeftIcon, tone: 'novapay:text-[var(--tuwa-info-icon)]' },
-  expired: { Icon: ClockIcon, tone: 'novapay:text-[var(--tuwa-text-secondary)]' },
-  cancelled: { Icon: CancelledMark, tone: 'novapay:text-[var(--tuwa-text-secondary)]' },
-  replaced: { Icon: ArrowPathRoundedSquareIcon, tone: 'novapay:text-[var(--tuwa-info-icon)]' },
-  blocked: { Icon: NoSymbolIcon, tone: 'novapay:text-[var(--tuwa-error-icon)]' },
+/** The chip of each outcome: its color, and which word of `labels.status` it shows. */
+const CHIP: Record<OutcomeKind, { tone: StatusChipTone; label: keyof NovaPaymentsLabels['status'] }> = {
+  // Something for the buyer to mind: the color of a wait, as the strip along the top
+  unconfirmed: { tone: 'pending', label: 'unconfirmed' },
+  underpaid: { tone: 'pending', label: 'underpaid' },
+  held: { tone: 'neutral', label: 'review' },
+  refunded: { tone: 'neutral', label: 'refunded' },
+  expired: { tone: 'neutral', label: 'expired' },
+  cancelled: { tone: 'neutral', label: 'cancelled' },
+  replaced: { tone: 'neutral', label: 'replaced' },
+  blocked: { tone: 'error', label: 'blocked' },
 };
 
 /** A paragraph of an outcome. */
@@ -135,8 +126,8 @@ const Text = ({ children, muted }: { children: ReactNode; muted?: boolean }) => 
   </p>
 );
 
-/** "Contact <seller>": the seller's support email about the invoice, its site, or the app's handler. */
-function ContactLink() {
+/** "Contact <seller>": the seller's support email about the invoice, its site, or the app's handler. @internal */
+export function ContactLink() {
   const context = useCheckoutContext();
   const { checkout, labels, onContact } = context;
   if (!checkout) return null;
@@ -216,9 +207,6 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
   } = context;
   if (!checkout) return null;
   const merchant = checkout.merchant.name;
-  const { Icon, tone } = LOOK[kind];
-  const StatusIcon = context.customization.components?.StatusIcon;
-  const iconClassName = checkoutClassName(context, 'statusIcon', { kind });
   const quote = state.quote;
   const method = checkout.methods.find((item) => item.id === (state.methodId ?? quote?.methodId));
   // Closed by the seller before its due date: that date says nothing any more
@@ -639,16 +627,12 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       <section
         role={kind === 'blocked' ? 'alert' : undefined}
         className={cn(
-          'novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:px-5 novapay:py-6 novapay:text-center',
-          context.display === 'page' && 'novapay-page-screen',
+          // From the top, as the confirm step: its head goes on into this one without moving
+          'novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:gap-3 novapay:px-5 novapay:py-5 novapay:text-center',
+          context.display === 'page' && 'novapay-page-status',
         )}
       >
-        {StatusIcon ? (
-          <StatusIcon kind={kind} className={iconClassName} />
-        ) : (
-          <Icon aria-hidden className={cn('novapay:h-12 novapay:w-12', tone, iconClassName)} />
-        )}
-        <StatusTitle className="novapay:max-w-sm">{title}</StatusTitle>
+        <StatusHead mark={kind} tone={CHIP[kind].tone} chip={labels.status[CHIP[kind].label]} title={title} />
         {body}
         {cannotConnect && <ScreenError>{labels.pay.connectUnavailable}</ScreenError>}
       </section>

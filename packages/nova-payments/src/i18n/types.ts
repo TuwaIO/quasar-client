@@ -536,8 +536,6 @@ export type NovaPaymentsLabels = {
     failed: string;
     /** Row of the network (default: `Network`) */
     network: string;
-    /** Row of the amount (default: `Amount`) */
-    amount: string;
     /** Row of the transaction (default: `Transaction`) */
     transaction: string;
     /** The same row on an invoice paid in parts, where it names the last one, with a Quasar that does not list the transfers (default: `Last transfer`) */
@@ -571,6 +569,38 @@ export type NovaPaymentsLabels = {
     viewOnExplorer: string;
     /** Accessible name of the copy button of the transaction (default: `Copy the transaction`) */
     copyHash: string;
+  };
+  /** The chip over the heading of a status screen: one or two words that name the state of the payment. */
+  status: {
+    /** A payment on its way (default: `Pending`) */
+    pending: string;
+    /** The invoice is paid (default: `Paid`) */
+    paid: string;
+    /** The payment failed (default: `Failed`) */
+    failed: string;
+    /** A payment the seller looks at (default: `On review`) */
+    review: string;
+    /** A part of the invoice arrived (default: `Part paid`) */
+    underpaid: string;
+    /** The invoice expired (default: `Expired`) */
+    expired: string;
+    /** The invoice was cancelled (default: `Cancelled`) */
+    cancelled: string;
+    /** The payment was refunded (default: `Refunded`) */
+    refunded: string;
+    /** The seller corrected the invoice (default: `Corrected`) */
+    replaced: string;
+    /** The wallet may not pay the invoice (default: `Blocked`) */
+    blocked: string;
+    /** Quasar could not confirm the payment (default: `Unconfirmed`) */
+    unconfirmed: string;
+  };
+  /** The step after a payment on its way failed for good: the buyer may pay again. */
+  failed: {
+    /** Heading (default: `Payment failed`) */
+    title: string;
+    /** Under the amount: `{network}` (default: `on {network} · the invoice is still open`) */
+    summary: string;
   };
   /** The paid outcome. */
   paid: {
