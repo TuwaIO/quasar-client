@@ -200,18 +200,23 @@ describe('the confirm step on its own page', () => {
 });
 
 describe('the steps of a page', () => {
-  it('stay on the paid screen, all done, only there', () => {
+  it('stay on the paid screen, all done', () => {
     expect(checkoutSteps('paid')).toBeNull();
     expect(paidSteps().map((step) => step.state)).toEqual(['done', 'done', 'done']);
     expect(paidSteps({ withDetails: true }).map((step) => step.key)).toEqual(['details', 'method', 'pay', 'confirm']);
   });
 
-  it('show in the header of a paid page, not of an inline checkout', () => {
-    onPage({}, {}, { screen: 'paid' });
+  // In a modal and inline the row went away as the payment confirmed: on a phone it stands over the status, whose
+  // heading jumped up by its height
+  it('show in the header of a paid checkout on every display, and of no other outcome', () => {
     const stepper = (tree: unknown) => fixture.elements(tree).some((element) => element.type === CheckoutStepper);
-    expect(stepper(render(CheckoutHeader, {}))).toBe(true);
-    unmount();
-    ctx = { ...ctx, display: 'inline' } as CheckoutContextValue;
+    for (const display of ['page', 'inline', 'modal'] as const) {
+      onPage({}, {}, { screen: 'paid' });
+      ctx = { ...ctx, display } as CheckoutContextValue;
+      expect(stepper(render(CheckoutHeader, {})), display).toBe(true);
+      unmount();
+    }
+    onPage({}, {}, { screen: 'expired' });
     expect(stepper(render(CheckoutHeader, {}))).toBe(false);
   });
 });

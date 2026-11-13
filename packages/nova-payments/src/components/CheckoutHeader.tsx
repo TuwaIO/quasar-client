@@ -19,10 +19,12 @@ export interface CheckoutHeaderProps {
   withDetails?: boolean;
 }
 
-/** The steps of a screen; on its own page the paid screen keeps them, all done, so the row does not change at the end. */
+/**
+ * The steps of a screen. The paid screen keeps them, all done, so the row does not change at the end: on a phone it
+ * stands over the status, and a row that went away moved the heading the buyer was reading.
+ */
 const stepsOfScreen = (context: CheckoutContextValue, withDetails?: boolean) =>
-  checkoutSteps(context.screen, { withDetails }) ??
-  (context.display === 'page' && context.screen === 'paid' ? paidSteps({ withDetails }) : null);
+  checkoutSteps(context.screen, { withDetails }) ?? (context.screen === 'paid' ? paidSteps({ withDetails }) : null);
 
 /** The steps of the checkout, or their replacement (`customization.components.Stepper`), with their classes. */
 function stepsOf(context: CheckoutContextValue, steps: CheckoutStep[], className?: string) {

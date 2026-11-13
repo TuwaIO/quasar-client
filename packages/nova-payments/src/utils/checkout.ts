@@ -217,8 +217,8 @@ export function checkoutSteps(screen: CheckoutScreen, options: { withDetails?: b
 }
 
 /**
- * The steps of the stepper on the paid screen of a payment page, all done. Elsewhere that screen has no stepper
- * ({@link checkoutSteps}).
+ * The steps of the stepper on the paid screen, all done: the row stays as the payment confirms ({@link checkoutSteps}
+ * gives none for an outcome).
  *
  * @param options - Steps that apply to this invoice.
  * @param options.withDetails - The checkout asked for the buyer details first.

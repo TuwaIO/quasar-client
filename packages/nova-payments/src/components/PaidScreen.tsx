@@ -21,6 +21,7 @@ import {
   ScreenFooter,
   SecondaryButton,
 } from './ScreenParts';
+import { ACTION_ARRIVES, useStatusAction } from './statusAction';
 import { StatusHead } from './StatusHead';
 import { StatusReveal } from './StatusReveal';
 import { StatusSteps } from './StatusSteps';
@@ -75,6 +76,16 @@ export function PaidScreen() {
   // automatic payments off, and not on a receipt opened from its link long after
   const stays = canAutoPay || openedPaid || offer?.status === 'active';
   const countdown = useAutoReturn({ url: successUrl, seconds: stays ? 0 : autoReturnSeconds, now });
+  // The first action of the footer goes on from "Close" of the confirm step
+  const mainLabel = canAutoPay
+    ? labels.paid.autoPayOffer
+    : successUrl
+      ? labels.paid.back
+      : close
+        ? labels.common.close
+        : null;
+  const action = useStatusAction(mainLabel === null ? null : 'primary', mainLabel ?? '');
+  const arrives = action.arrives ? ACTION_ARRIVES : undefined;
   if (!checkout) return null;
 
   const total = checkout.invoice.totalMinor ? formatFiat(minorToDecimal(checkout.invoice.totalMinor), locale) : null;
@@ -163,26 +174,28 @@ export function PaidScreen() {
           </p>
         )}
         {state.receiptUrl && (
-          <StatusReveal className="novapay:flex novapay:max-w-sm novapay:items-center novapay:gap-3 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-left">
-            <DocumentTextIcon
-              aria-hidden
-              className="novapay:h-6 novapay:w-6 novapay:shrink-0 novapay:text-[var(--tuwa-text-secondary)]"
-            />
-            <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col">
-              <span className="novapay:text-[13px] novapay:font-semibold">{labels.paid.receipt}</span>
-              <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
-                {labels.paid.receiptHint}
+          <StatusReveal className="novapay:max-w-sm">
+            <div className="novapay:flex novapay:w-full novapay:items-center novapay:gap-3 novapay:rounded-[var(--tuwa-rounded-corners)] novapay:border novapay:border-[var(--tuwa-border-primary)] novapay:px-3 novapay:py-2 novapay:text-left">
+              <DocumentTextIcon
+                aria-hidden
+                className="novapay:h-6 novapay:w-6 novapay:shrink-0 novapay:text-[var(--tuwa-text-secondary)]"
+              />
+              <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col">
+                <span className="novapay:text-[13px] novapay:font-semibold">{labels.paid.receipt}</span>
+                <span className="novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
+                  {labels.paid.receiptHint}
+                </span>
               </span>
-            </span>
-            <a
-              href={state.receiptUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(smallAction, 'novapay:gap-1.5 novapay:no-underline')}
-            >
-              <ArrowDownTrayIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
-              {labels.paid.download}
-            </a>
+              <a
+                href={state.receiptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(smallAction, 'novapay:gap-1.5 novapay:no-underline')}
+              >
+                <ArrowDownTrayIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5" />
+                {labels.paid.download}
+              </a>
+            </div>
           </StatusReveal>
         )}
         {offer?.status === 'active' && (
@@ -203,7 +216,11 @@ export function PaidScreen() {
         )}
       </section>
       <ScreenFooter>
-        {canAutoPay && <PrimaryButton onClick={() => setAutoPay(true)}>{labels.paid.autoPayOffer}</PrimaryButton>}
+        {canAutoPay && (
+          <PrimaryButton onClick={() => setAutoPay(true)} className={arrives}>
+            {action.label}
+          </PrimaryButton>
+        )}
         {successUrl ? (
           <>
             <a
@@ -211,10 +228,10 @@ export function PaidScreen() {
               className={
                 canAutoPay
                   ? cn(secondaryAction, checkoutClassName(context, 'secondaryButton'))
-                  : cn(primaryAction, checkoutClassName(context, 'primaryButton'))
+                  : cn(primaryAction, arrives, checkoutClassName(context, 'primaryButton'))
               }
             >
-              <CapsLabel label={labels.paid.back} values={{ merchant }} />
+              <CapsLabel label={canAutoPay ? labels.paid.back : action.label} values={{ merchant }} />
             </a>
             {countdown.left !== null && (
               <FooterNote>
@@ -230,7 +247,9 @@ export function PaidScreen() {
           (canAutoPay ? (
             <SecondaryButton onClick={close}>{labels.common.close}</SecondaryButton>
           ) : (
-            <PrimaryButton onClick={close}>{labels.common.close}</PrimaryButton>
+            <PrimaryButton onClick={close} className={arrives}>
+              {action.label}
+            </PrimaryButton>
           ))
         )}
       </ScreenFooter>

@@ -11,6 +11,7 @@ import {
   unconfirmedFollowUp,
 } from '../utils/checkout';
 import { DetailRow, DetailsCard, ScreenFooter, SecondaryButton } from './ScreenParts';
+import { useStatusAction } from './statusAction';
 import { StatusHead } from './StatusHead';
 import { StatusSteps } from './StatusSteps';
 import { TxLabels } from './TxLabels';
@@ -53,6 +54,8 @@ export function ConfirmScreen() {
     checkout !== null && (own || found) && WAITING_STATUSES.has(status ?? '') && dueAt !== null && now >= dueAt;
   const sentInTime = pastDeadline && sentBeforeDeadline({ state, checkout, handedOverAt, dueAt });
   const handingOver = unconfirmedFollowUp(state.error) === 'retrying';
+  // The action of the result goes on from this one
+  const action = useStatusAction(close ? 'secondary' : null, labels.common.close);
   return (
     <TxLabels>
       <section
@@ -106,7 +109,7 @@ export function ConfirmScreen() {
       </section>
       {close && (
         <ScreenFooter>
-          <SecondaryButton onClick={close}>{labels.common.close}</SecondaryButton>
+          <SecondaryButton onClick={close}>{action.label}</SecondaryButton>
         </ScreenFooter>
       )}
     </TxLabels>

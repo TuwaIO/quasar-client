@@ -47,6 +47,7 @@ import { ConfirmScreen } from './ConfirmScreen';
 import { ConfirmWalletScreen } from './ConfirmWalletScreen';
 import { checkoutClassName, type PaymentCheckoutCustomization } from './customization';
 import { FailedScreen } from './FailedScreen';
+import { GlideHeight } from './GlideHeight';
 import { ExclamationTriangleIcon } from './icons';
 import { LeaveDialog } from './LeaveDialog';
 import { MethodScreen } from './MethodScreen';
@@ -283,28 +284,32 @@ export function CheckoutFrame({
             className={cn('novapay:z-20', checkoutClassName(context, 'statusEdge', { tone: statusTone }))}
           />
         )}
-        <Header withDetails={withDetails} />
-        <div className="novapay:sm:hidden">
-          {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
-          <MobileSteps withDetails={withDetails} />
-        </div>
-        {/* A container: a screen lays itself out by the width of this area, 320 px in two panes on a 640 px window */}
-        <div data-novapay-scroll="" className={cn(layout.area, checkoutClassName(context, 'body'))}>
-          {page ? (
-            <div
-              // Not between status screens: "Confirming" goes on into "Paid", and a fade would take that away
-              key={statusTone ? 'status' : screen}
-              className={cn(
-                'novapay:flex novapay:flex-1 novapay:flex-col',
-                !customization.config?.animation?.disabled && 'novapay-page-fade',
-              )}
-            >
+        {/* On a phone the checkout is as tall as its step: between status screens that height glides. Not on its own
+            page, which grows downward from a top that stays */}
+        <GlideHeight active={Boolean(statusTone) && !page && !customization.config?.animation?.disabled}>
+          <Header withDetails={withDetails} />
+          <div className="novapay:sm:hidden">
+            {checkout && <Compact className={checkoutClassName(context, 'compactSummary')} />}
+            <MobileSteps withDetails={withDetails} />
+          </div>
+          {/* A container: a screen lays itself out by the width of this area, 320 px in two panes on a 640 px window */}
+          <div data-novapay-scroll="" className={cn(layout.area, checkoutClassName(context, 'body'))}>
+            {page ? (
+              <div
+                // Not between status screens: "Confirming" goes on into "Paid", and a fade would take that away
+                key={statusTone ? 'status' : screen}
+                className={cn(
+                  'novapay:flex novapay:flex-1 novapay:flex-col',
+                  !customization.config?.animation?.disabled && 'novapay-page-fade',
+                )}
+              >
+                <ScreenBody />
+              </div>
+            ) : (
               <ScreenBody />
-            </div>
-          ) : (
-            <ScreenBody />
-          )}
-        </div>
+            )}
+          </div>
+        </GlideHeight>
       </div>
       <div role="status" aria-live="polite" className="novapay:sr-only">
         {announcement}
@@ -683,7 +688,12 @@ export function PaymentCheckout({
           if (!next) onClose?.();
         }}
       >
-        <DialogContent className="novapay:w-full novapay:sm:w-auto">
+        <DialogContent
+          className="novapay:w-full novapay:sm:w-auto"
+          // On the status screens the checkout glides its own height (`GlideHeight`); two animations of one height
+          // would chase each other
+          animateHeight={statusToneOf(screen) === null}
+        >
           <DialogTitle className="novapay:sr-only">
             {formatLabel(labels.common.dialogTitle, { merchant: checkout?.merchant.name ?? '' })}
           </DialogTitle>

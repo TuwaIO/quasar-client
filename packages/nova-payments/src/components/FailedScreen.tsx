@@ -8,6 +8,7 @@ import { failedPaymentTx, paymentFailedText } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { ContactLink } from './OutcomeScreen';
 import { DetailRow, DetailsCard, PrimaryButton, ScreenFooter } from './ScreenParts';
+import { ACTION_ARRIVES, useStatusAction } from './statusAction';
 import { StatusHead } from './StatusHead';
 import { StatusReveal } from './StatusReveal';
 import { StatusSteps } from './StatusSteps';
@@ -27,6 +28,8 @@ export function FailedScreen() {
   const context = useCheckoutContext();
   const { checkout, state, labels, adapterFor, payAfterFailure, customization, display } = context;
   const facts = usePaymentFacts();
+  // "Close" of the confirm step turns into this action
+  const action = useStatusAction('primary', labels.pay.payAgain);
   if (!checkout || !state.error) return null;
   const page = display === 'page';
   const child = customization.childCustomizations;
@@ -79,8 +82,12 @@ export function FailedScreen() {
         </StatusReveal>
       </section>
       <ScreenFooter>
-        <PrimaryButton onClick={payAfterFailure}>{labels.pay.payAgain}</PrimaryButton>
-        <ContactLink />
+        <PrimaryButton onClick={payAfterFailure} className={action.arrives ? ACTION_ARRIVES : undefined}>
+          {action.label}
+        </PrimaryButton>
+        <StatusReveal>
+          <ContactLink />
+        </StatusReveal>
       </ScreenFooter>
     </TxLabels>
   );

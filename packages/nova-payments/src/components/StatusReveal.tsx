@@ -6,9 +6,11 @@ import { shownLast } from './statusMemory';
 
 /**
  * What a status screen adds under the head it took over from the screen before it: the receipt of a paid invoice, the
- * reason of a failed payment. It comes in over a moment (`novapay-status-reveal` of `styles/app.css`), after the head
- * has begun to change, so the result is read first. On a status screen that is the first one (a receipt opened from its
- * link), with `prefers-reduced-motion` or with the animations of the checkout off, it is just there.
+ * reason of a failed payment, a second action. It opens from its top edge down over a moment
+ * (`novapay-status-reveal` of `styles/app.css`), in step with the height of the checkout, which glides on a phone
+ * (`GlideHeight`): the room is made in one motion and the content shows as it opens. On a status screen that is the first
+ * one (a receipt opened from its link), with `prefers-reduced-motion` or with the animations of the checkout off, it is
+ * just there.
  *
  * @param props - The content, and classes of its container.
  * @returns The content in its container.

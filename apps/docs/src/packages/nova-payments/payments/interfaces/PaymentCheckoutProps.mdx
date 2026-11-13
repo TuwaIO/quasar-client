@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentCheckoutProps
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:64](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L64)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:65](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L65)
 
 Props of [PaymentCheckout](?path=/docs/packages-nova-payments-payments-functions-paymentcheckout--docs).
 
@@ -14,7 +14,7 @@ Props of [PaymentCheckout](?path=/docs/packages-nova-payments-payments-functions
 
 > `optional` **api?**: [`CheckoutApi`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutapi--docs)
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L88)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:89](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L89)
 
 Calls to make instead of the HTTP ones, for tests and simulations (`CheckoutApi` of `@tuwaio/quasar-sdk/checkout`).
 
@@ -24,7 +24,7 @@ Calls to make instead of the HTTP ones, for tests and simulations (`CheckoutApi`
 
 > `optional` **autoReturnSeconds?**: `number`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:119](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L119)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:120](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L120)
 
 Seconds before the paid outcome sends the buyer back to the invoice's `successUrl`, with a visible countdown and
 "Stay here" (`0` for no automatic return). Default `5` on a page; `0` in a modal, whose paid outcome offers Close
@@ -36,7 +36,7 @@ instead, since the page under it is the seller's (handle the payment there with 
 
 > `optional` **baseUrl?**: `string`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:86](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L86)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:87](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L87)
 
 The Quasar API; overrides `baseUrl` of `NovaPaymentsProvider`.
 
@@ -46,7 +46,7 @@ The Quasar API; overrides `baseUrl` of `NovaPaymentsProvider`.
 
 > `optional` **className?**: `string`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:130](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L130)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:131](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L131)
 
 Classes added to the checkout block.
 
@@ -56,7 +56,7 @@ Classes added to the checkout block.
 
 > `optional` **customization?**: [`PaymentCheckoutCustomization`](?path=/docs/packages-nova-payments-payments-interfaces-paymentcheckoutcustomization--docs)
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:136](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L136)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:137](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L137)
 
 Class name functions of the parts, from the state of the checkout, and components that replace parts (the
 header, the order, the steps, the options of the method step, the main button, the QR code, the outcome icon or
@@ -68,7 +68,7 @@ whole screens).
 
 > `optional` **display?**: [`PaymentCheckoutDisplay`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentcheckoutdisplay--docs)
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L74)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:75](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L75)
 
 `modal` (default): a dialog over the page, 760 px wide (less on a narrower window), a sheet from the bottom under
 640 px; `inline`: a block in the page, as wide as its place up to 760 px; `page`: the whole page, as the Quasar
@@ -82,7 +82,7 @@ full-bleed under 640 px.
 
 > `optional` **EventSource?**: [`EventSourceConstructor`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-eventsourceconstructor--docs) \| `null`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:90](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L90)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:91](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L91)
 
 The `EventSource` to follow the invoice with; `null` reads it every `pollMs` (default: the browser's).
 
@@ -92,7 +92,7 @@ The `EventSource` to follow the invoice with; `null` reads it every `pollMs` (de
 
 > `optional` **locale?**: `string`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:128](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L128)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:129](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L129)
 
 The language of the page around the checkout, a BCP 47 tag (for example the `lang` of `<html>`). The checkout opens
 in it instead of the language of the invoice; a language the checkout does not have is left to the invoice. The
@@ -105,7 +105,7 @@ invoice: the documents keep the language of the invoice unless the buyer picks o
 
 > `optional` **onClose?**: () => `void`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:84](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L84)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:85](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L85)
 
 Called when the buyer closes the checkout; without it an inline checkout has no close button.
 
@@ -119,7 +119,7 @@ Called when the buyer closes the checkout; without it an inline checkout has no 
 
 > `optional` **onConnectWallet?**: (`family`) => `void`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:106](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L106)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:107](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L107)
 
 Connects a wallet of a chain family, for apps without Nova Connect; overrides the `onConnectWallet` of
 `NovaPaymentsProvider`. Inside `NovaConnectProvider` (the app's, or Nova's own connection of `NovaPaymentsProvider`)
@@ -143,7 +143,7 @@ The family of the chosen method.
 
 > `optional` **onContact?**: () => `void`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:121](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L121)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:122](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L122)
 
 Replaces the link of "Contact \<seller\>" (the seller's support email, else site) with the app's own handler.
 
@@ -157,7 +157,7 @@ Replaces the link of "Contact \<seller\>" (the seller's support email, else site
 
 > `optional` **onOpenChange?**: (`open`) => `void`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:82](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L82)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:83](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L83)
 
 Called when the modal opens or closes.
 
@@ -179,7 +179,7 @@ The new state.
 
 > `optional` **onPaid?**: (`invoice`) => `void`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:113](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L113)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:114](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L114)
 
 Called once when the invoice is paid (Quasar confirmed the payment). Fulfil orders from the `invoice.paid` webhook
 on your server: this callback is for the page only.
@@ -202,7 +202,7 @@ The paid invoice.
 
 > `optional` **open?**: `boolean`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:76](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L76)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:77](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L77)
 
 Whether the modal is open (`display="modal"`; default `true`).
 
@@ -212,7 +212,7 @@ Whether the modal is open (`display="modal"`; default `true`).
 
 > `optional` **payUrl?**: `string` \| `null`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:98](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L98)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:99](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L99)
 
 The payment page of the invoice (its `payUrl` from the Quasar API, passed as it comes): with it, an EVM method can
 also be paid by scanning a QR code that opens the page on a phone. `null` (a node without a dashboard URL) or
@@ -224,7 +224,7 @@ leaving it out offers the QR code for Solana methods only.
 
 > `optional` **pollMs?**: `number`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:92](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L92)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:93](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L93)
 
 How often to read the invoice without an event stream, in milliseconds (default `5000`).
 
@@ -234,6 +234,6 @@ How often to read the invoice without an event stream, in milliseconds (default 
 
 > **token**: `string`
 
-Defined in: [nova-payments/src/components/PaymentCheckout.tsx:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L66)
+Defined in: [nova-payments/src/components/PaymentCheckout.tsx:67](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PaymentCheckout.tsx#L67)
 
 The checkout token of the invoice (its `checkoutToken`, or the end of its `payUrl`).
