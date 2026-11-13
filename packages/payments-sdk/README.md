@@ -18,16 +18,16 @@ It goes on top of the SDK the way `@tuwaio/evm-sdk` and `@tuwaio/solana-sdk` do:
 pnpm add @tuwaio/payments-sdk @tuwaio/sdk react
 ```
 
-| Import path                       | Provides                                                                                    | Also needs                                                                             |
-| --------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `@tuwaio/payments-sdk`            | Everything from `@tuwaio/nova-payments`: `PaymentCheckout`, `NovaPaymentsProvider`, refunds |                                                                                        |
-| `@tuwaio/payments-sdk/i18n`       | Everything from `@tuwaio/nova-payments/i18n`: the languages of the checkout                 |                                                                                        |
-| `@tuwaio/payments-sdk/evm`        | Everything from `@tuwaio/nova-payments/evm`: the EVM payment adapter                        | `@wagmi/core`, `viem`                                                                  |
-| `@tuwaio/payments-sdk/solana`     | Everything from `@tuwaio/nova-payments/solana`: the Solana payment adapter                  | `@tuwaio/solana-sdk`, `@solana/kit`, `@solana-program/system`, `@solana-program/token` |
-| `@tuwaio/payments-sdk/checkout`   | Everything from `@tuwaio/quasar-sdk/checkout`: the headless checkout and refund stores      |                                                                                        |
-| `@tuwaio/payments-sdk/styles.css` | The stylesheet of the checkout                                                              | The stylesheets of the SDK                                                             |
+| Import path                       | Provides                                                                                                                                                                                | Also needs                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `@tuwaio/payments-sdk`            | Everything from [`@tuwaio/nova-payments`](https://payments.docs.tuwa.io/?path=/docs/packages-nova-payments-payments-overview--docs): `PaymentCheckout`, `NovaPaymentsProvider`, refunds |                                                                                        |
+| `@tuwaio/payments-sdk/i18n`       | Everything from [`@tuwaio/nova-payments/i18n`](https://payments.docs.tuwa.io/?path=/docs/packages-nova-payments-i18n-overview--docs): the languages of the checkout                     |                                                                                        |
+| `@tuwaio/payments-sdk/evm`        | Everything from [`@tuwaio/nova-payments/evm`](https://payments.docs.tuwa.io/?path=/docs/packages-nova-payments-evm-overview--docs): the EVM payment adapter                             | `@wagmi/core`, `viem`                                                                  |
+| `@tuwaio/payments-sdk/solana`     | Everything from [`@tuwaio/nova-payments/solana`](https://payments.docs.tuwa.io/?path=/docs/packages-nova-payments-solana-overview--docs): the Solana payment adapter                    | `@tuwaio/solana-sdk`, `@solana/kit`, `@solana-program/system`, `@solana-program/token` |
+| `@tuwaio/payments-sdk/checkout`   | Everything from [`@tuwaio/quasar-sdk/checkout`](https://payments.docs.tuwa.io/?path=/docs/packages-quasar-sdk-checkout-overview--docs): the headless checkout and refund stores         |                                                                                        |
+| `@tuwaio/payments-sdk/styles.css` | The stylesheet of the checkout                                                                                                                                                          | The stylesheets of the SDK                                                             |
 
-The API client for your server stays in `@tuwaio/quasar-sdk`: it runs without React, and an app that only issues invoices or verifies webhooks needs nothing else.
+The module has no exports of its own, so it has no reference of its own: each link above leads to the reference of what the import path provides. The API client for your server stays in `@tuwaio/quasar-sdk`: it runs without React, and an app that only issues invoices or verifies webhooks needs nothing else.
 
 ---
 
