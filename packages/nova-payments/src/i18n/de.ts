@@ -283,6 +283,7 @@ export const deLabels: NovaPaymentsLabels = {
     amount: 'Betrag',
     transaction: 'Transaktion',
     lastTransfer: 'Letzte Überweisung',
+    transferOf: 'Überweisung {index} von {count}',
     from: 'Von',
     canClose: 'Sie können dieses Fenster schließen: Die Zahlung läuft weiter, und der Verkäufer sendet die Quittung.',
     afterDeadline: 'Ihre Zahlung wurde vor Fristende gesendet und wird bestätigt.',

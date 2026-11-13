@@ -1553,6 +1553,34 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
               'Why a payment waits for, or was flagged to, the seller. `screening`: the sender did not pass the AML check (also a late one). A transfer Quasar could tie to no invoice never holds the invoice: it is a rejected payment with `held`, which the seller returns to the wallet that sent it.',
           }),
         refundedTotalMinor: z.string().nullable().openapi({ description: 'Refunded, in minor units (cents).' }),
+        payments: z
+          .array(
+            z.object({
+              txKey: z.string().openapi({ description: 'The transaction: its hash, or its Solana signature.' }),
+              chainId: z.string().nullable().openapi({ description: 'CAIP-2 chain of the transfer.' }),
+              amount: z
+                .string()
+                .openapi({ description: 'What it credited to the invoice, in base units of the token.' }),
+              symbol: z.string().nullable().openapi({
+                description: 'The token it was paid in; `null` when the merchant no longer has that payment method.',
+              }),
+              decimals: z
+                .number()
+                .nullable()
+                .openapi({ description: 'The decimals of that token; `null` like `symbol`.' }),
+              from: z.string().nullable().openapi({
+                description: 'The address that sent it (the first one, when a Solana transfer names several).',
+              }),
+              at: z.string().openapi({
+                description: 'When the network included it, or when Quasar verified it if the network named no time.',
+              }),
+            }),
+          )
+          .optional()
+          .openapi({
+            description:
+              'Every transfer credited to the invoice, oldest first: an invoice paid in parts has several, and the replacement of a corrected paid invoice lists the transfers of the invoice it replaced. Empty until something is credited.',
+          }),
         pendingPayments: z.number().optional().openapi({
           description:
             'Payments of the invoice handed over and still on their way, whoever handed them over: tracked transactions not yet verified or rejected (recorded within the last 25 minutes), gasless relays still sending (within 35 minutes), and claims of this invoice on a transaction another invoice handed over first that Quasar has not decided yet (made within 25 minutes). A page that finds one on its way should not offer to pay.',

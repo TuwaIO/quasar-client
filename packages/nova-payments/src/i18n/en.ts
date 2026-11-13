@@ -269,6 +269,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     amount: 'Amount',
     transaction: 'Transaction',
     lastTransfer: 'Last transfer',
+    transferOf: 'Transfer {index} of {count}',
     from: 'From',
     canClose: 'You can close this window: the payment keeps going, and the seller sends the receipt.',
     afterDeadline: 'Your payment was sent before the deadline and is being confirmed.',

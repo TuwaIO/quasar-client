@@ -271,6 +271,7 @@ export const ukLabels: NovaPaymentsLabels = {
     amount: 'Сума',
     transaction: 'Транзакція',
     lastTransfer: 'Останній переказ',
+    transferOf: 'Переказ {index} з {count}',
     from: 'Відправник',
     canClose: 'Це вікно можна закрити: платіж триватиме, а продавець надішле квитанцію.',
     afterDeadline: 'Ваш платіж надіслано до кінця строку оплати, і він підтверджується.',

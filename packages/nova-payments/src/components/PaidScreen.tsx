@@ -25,7 +25,8 @@ import { StatusTitle } from './StatusTitle';
 import { TxLabels } from './TxLabels';
 
 /**
- * The paid outcome: the amount, network, time and transaction, the steps done, a refund made later, the receipt to
+ * The paid outcome: the amount, network, time and transaction (every transfer of an invoice paid in parts, each with
+ * its time, amount and explorer link), the steps done, a refund made later, the receipt to
  * download, the automatic payments offer of a subscription, and the way back to the seller (`successUrl`) with a
  * visible countdown and "Stay here" (WCAG 2.2.1). In a modal it offers Close instead: the page under it is the
  * seller's, and loading it again would close everything at once.
@@ -81,6 +82,19 @@ export function PaidScreen() {
       : null;
   const paidAt = checkout.invoice.paidAt ? Date.parse(checkout.invoice.paidAt) : seenAt;
   const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(paidAt);
+  // An invoice paid in parts lists every transfer Quasar credited: the page itself knows only the one it handed over
+  // last, and a receipt opened from its link knows none
+  const { transfers } = facts;
+  const parts = transfers.length > 1 ? transfers : null;
+  const only = transfers.length === 1 ? transfers[0] : null;
+  const txKey = facts.txKey ?? only?.txKey ?? null;
+  const explorerUrl = facts.txKey ? facts.explorerUrl : only?.explorerUrl;
+  const transferTime = new Intl.DateTimeFormat(locale, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 
   return (
     <TxLabels>
@@ -120,14 +134,41 @@ export function PaidScreen() {
           {...child?.progressIndicator}
           className={cn('novapay:max-w-sm', child?.progressIndicator?.className)}
         />
-        {(facts.network || facts.txKey || facts.from) && (
+        {(facts.network || txKey || parts || facts.from) && (
           <DetailsCard className="novapay:max-w-sm">
             {facts.network && <DetailRow name={labels.confirm.network}>{facts.network}</DetailRow>}
-            {facts.txKey && (
-              <DetailRow name={facts.lastOfParts ? labels.confirm.lastTransfer : labels.confirm.transaction}>
-                <HashLink hash={facts.txKey} explorerUrl={facts.explorerUrl} variant="compact" {...child?.hashLink} />
-              </DetailRow>
-            )}
+            {parts
+              ? parts.map((transfer, index) => (
+                  <DetailRow
+                    key={`${transfer.txKey}:${index}`}
+                    name={
+                      <>
+                        <span className="novapay:block">
+                          {formatLabel(labels.confirm.transferOf, { index: index + 1, count: parts.length })}
+                        </span>
+                        <time
+                          dateTime={new Date(transfer.at).toISOString()}
+                          className="novapay:block novapay:text-[11px] novapay:leading-4"
+                        >
+                          {transferTime.format(transfer.at)}
+                        </time>
+                      </>
+                    }
+                  >
+                    {transfer.amount && <span className="novapay:block">{transfer.amount}</span>}
+                    <HashLink
+                      hash={transfer.txKey}
+                      explorerUrl={transfer.explorerUrl}
+                      variant="compact"
+                      {...child?.hashLink}
+                    />
+                  </DetailRow>
+                ))
+              : txKey && (
+                  <DetailRow name={facts.lastOfParts ? labels.confirm.lastTransfer : labels.confirm.transaction}>
+                    <HashLink hash={txKey} explorerUrl={explorerUrl} variant="compact" {...child?.hashLink} />
+                  </DetailRow>
+                )}
             {facts.fromAddress && (
               <DetailRow name={labels.confirm.from}>
                 <HashLink hash={facts.fromAddress} explorerUrl={facts.fromUrl} variant="compact" {...child?.hashLink} />

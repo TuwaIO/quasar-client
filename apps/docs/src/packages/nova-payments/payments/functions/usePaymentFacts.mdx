@@ -6,10 +6,12 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **usePaymentFacts**(): `object`
 
-Defined in: [nova-payments/src/hooks/usePaymentFacts.ts:16](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentFacts.ts#L16)
+Defined in: [nova-payments/src/hooks/usePaymentFacts.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentFacts.ts#L30)
 
 What the confirm and paid steps show of the payment: its network and amount (from the locked quote), the
-transaction (Quasar's hash, else the submitted key) with its explorer link from the chain adapter, and the sender.
+transaction (Quasar's hash, else the submitted key) with its explorer link from the chain adapter, the sender, and
+every transfer Quasar credited to the invoice (`transfers`, oldest first; empty with a Quasar that does not list
+them).
 
 ## Returns
 
@@ -48,6 +50,10 @@ The facts; each is `null` (or `undefined` for the link) when unknown.
 ### paidAmount
 
 > **paidAmount**: `string` \| `null`
+
+### transfers
+
+> **transfers**: [`PaymentTransfer`](?path=/docs/packages-nova-payments-payments-interfaces-paymenttransfer--docs)[]
 
 ### txKey
 

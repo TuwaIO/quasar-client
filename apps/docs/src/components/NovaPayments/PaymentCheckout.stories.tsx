@@ -497,6 +497,42 @@ export const Paid: Story = {
   args: { view: settled({ status: 'paid', amountPaid: '89540000', successUrl: 'https://acme.example/thanks' }) },
 };
 
+/** A transfer of the sample invoice, as the checkout lists the ones Quasar credited (`invoice.payments`). */
+const creditedTransfer = (fill: string, amount: string, at: string) => ({
+  txKey: `0x${fill.repeat(32)}`,
+  chainId: 'eip155:84532',
+  amount,
+  symbol: 'USDC',
+  decimals: 6,
+  from: '0x1111111111111111111111111111111111111111',
+  at,
+});
+
+/**
+ * Paid in two transfers, a first part and its rest: the paid step lists each with its time, its amount and its
+ * transaction, not only the last one.
+ */
+export const PaidInParts: Story = {
+  args: {
+    view: settled({
+      status: 'paid',
+      amountPaid: '89540000',
+      paidAt: '2026-10-08T12:05:00.000Z',
+      payments: [
+        creditedTransfer('4f', '80000000', '2026-10-08T12:01:00.000Z'),
+        creditedTransfer('9c', '9540000', '2026-10-08T12:05:00.000Z'),
+      ],
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('Transfer 1 of 2')).toBeVisible();
+    await expect(canvas.getByText('Transfer 2 of 2')).toBeVisible();
+    await expect(canvas.getByText(/^80\.00 USDC$/)).toBeVisible();
+    await expect(canvas.getByText(/^9\.54 USDC$/)).toBeVisible();
+  },
+};
+
 /**
  * Just paid, with a return link: a visible countdown sends the buyer back, unless "Stay here". A page opened on an invoice
  * paid earlier (`Paid`) stays: it is a receipt, and nothing was just paid.

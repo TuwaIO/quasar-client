@@ -540,8 +540,10 @@ export type NovaPaymentsLabels = {
     amount: string;
     /** Row of the transaction (default: `Transaction`) */
     transaction: string;
-    /** The same row on an invoice paid in parts, where it names the last one; the receipt names them all (default: `Last transfer`) */
+    /** The same row on an invoice paid in parts, where it names the last one, with a Quasar that does not list the transfers (default: `Last transfer`) */
     lastTransfer: string;
+    /** Row of one transfer of an invoice paid in parts, on the paid step; `{index}` from 1, `{count}` of them (default: `Transfer {index} of {count}`) */
+    transferOf: string;
     /** Row of the sender (default: `From`) */
     from: string;
     /** That the window may close */

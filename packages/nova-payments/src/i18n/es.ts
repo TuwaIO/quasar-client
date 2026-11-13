@@ -272,6 +272,7 @@ export const esLabels: NovaPaymentsLabels = {
     amount: 'Importe',
     transaction: 'Transacción',
     lastTransfer: 'Última transferencia',
+    transferOf: 'Transferencia {index} de {count}',
     from: 'Desde',
     canClose: 'Puedes cerrar esta ventana: el pago sigue su curso y el vendedor envía el recibo.',
     afterDeadline: 'Tu pago se envió antes de que venciera el plazo y se está confirmando.',

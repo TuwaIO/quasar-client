@@ -255,6 +255,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     amount: '金额',
     transaction: '交易',
     lastTransfer: '最后一笔转账',
+    transferOf: '第 {index} 笔转账，共 {count} 笔',
     from: '发送方',
     canClose: '您可以关闭此窗口：付款会继续进行，卖方会发送收据。',
     afterDeadline: '您的付款已在截止时间前发送，正在确认中。',

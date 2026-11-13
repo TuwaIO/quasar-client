@@ -1,15 +1,29 @@
 import { parseCaip10AccountId } from '@tuwaio/orbit-core';
 
 import { formatTokenAmount, shortAddress } from '../utils/format';
-import { networkName } from '../utils/methods';
+import { familyOf, networkName } from '../utils/methods';
 import { instructionsChainId } from '../utils/pay';
 import { useCheckoutContext } from './useCheckoutContext';
 
 const SETTLED_STATUSES: ReadonlySet<string> = new Set(['paid', 'held', 'refunded', 'partially_refunded']);
 
+/** A transfer credited to the invoice, as the paid step lists it. */
+export interface PaymentTransfer {
+  /** The transaction: its hash, or its Solana signature. */
+  txKey: string;
+  /** What it credited with its token (`40.00 USDC`); `null` when Quasar names no token for it. */
+  amount: string | null;
+  /** When the network included it, in milliseconds. */
+  at: number;
+  /** Its page in the explorer of its network, from the chain adapter; `undefined` without one. */
+  explorerUrl: string | undefined;
+}
+
 /**
  * What the confirm and paid steps show of the payment: its network and amount (from the locked quote), the
- * transaction (Quasar's hash, else the submitted key) with its explorer link from the chain adapter, and the sender.
+ * transaction (Quasar's hash, else the submitted key) with its explorer link from the chain adapter, the sender, and
+ * every transfer Quasar credited to the invoice (`transfers`, oldest first; empty with a Quasar that does not list
+ * them).
  *
  * @returns The facts; each is `null` (or `undefined` for the link) when unknown.
  */
@@ -22,6 +36,21 @@ export function usePaymentFacts() {
   const chainId = quote ? instructionsChainId(quote.instructions) : null;
   const txKey = state.txHash ?? state.txKey;
   const sender = quote?.payer ? parseCaip10AccountId(quote.payer)?.address : undefined;
+  const transfers: PaymentTransfer[] = (state.checkout?.invoice.payments ?? []).map((payment) => {
+    const family = payment.chainId ? familyOf(payment.chainId) : null;
+    return {
+      txKey: payment.txKey,
+      amount:
+        payment.symbol && payment.decimals !== null
+          ? `${formatTokenAmount(payment.amount, payment.decimals, locale)} ${payment.symbol}`
+          : null,
+      at: Date.parse(payment.at),
+      explorerUrl:
+        family && payment.chainId
+          ? adapterFor(family)?.explorerUrl?.({ chainId: payment.chainId, txKey: payment.txKey })
+          : undefined,
+    };
+  });
   return {
     network: chainId ? networkName(chainId) : null,
     amount: quote
@@ -32,8 +61,9 @@ export function usePaymentFacts() {
       ? `${formatTokenAmount(quote.amountDue === quote.cryptoAmountExpected ? quote.amountToSend : quote.cryptoAmountExpected, quote.decimals, locale)} ${quote.instructions.symbol}`
       : null,
     txKey,
-    // The invoice was paid in parts and this is the last one: the receipt names them all
+    // The invoice was paid in parts and this is the last one: `transfers` has them all, when Quasar lists them
     lastOfParts: quote ? quote.amountDue !== quote.cryptoAmountExpected : false,
+    transfers,
     explorerUrl:
       quote && chainId && txKey ? adapterFor(quote.instructions.family)?.explorerUrl?.({ chainId, txKey }) : undefined,
     from: sender ? shortAddress(sender) : null,
