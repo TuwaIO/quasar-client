@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.2.0...nova-payments-v0.3.0) (2026-11-14)
+
+
+### Features
+
+* **payments:** a gasless payment sent from the page's one-time account ([#17](https://github.com/TuwaIO/quasar-client/issues/17)) ([afdfcab](https://github.com/TuwaIO/quasar-client/commit/afdfcabab5a09da90496f44a32c22f6cdd140e3c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @tuwaio/quasar-sdk bumped to 0.11.0
+  * peerDependencies
+    * @tuwaio/quasar-sdk bumped from >=0.8.0 to >=0.11.0
+
 ## [0.2.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.1.0...nova-payments-v0.2.0) (2026-11-14)
 
 
