@@ -232,51 +232,6 @@ describe('quasar.payments', () => {
     expect(new URL(sent(1).url).pathname).toBe('/v1/payments/methods');
   });
 
-  it('starts subscriptions and changes them: cancel (and take it back), pause and resume', async () => {
-    const SUBSCRIPTION = { id: 'sub_1', object: 'subscription', status: 'active' };
-    fetchMock.mockImplementation(async () =>
-      json({ subscription: SUBSCRIPTION, invoice: INVOICE, checkoutToken: 'tok_1', payUrl: INVOICE.payUrl }),
-    );
-    const { subscription, payUrl } = await quasar.payments.createSubscription(
-      {
-        buyer: { email: 'buyer@example.com' },
-        currency: 'USD',
-        lineItems: [{ name: 'Pro plan', quantity: '1', unitPrice: '49.00' }],
-        interval: 'month',
-        collection: 'send_invoice',
-      },
-      { idempotencyKey: 'sub_42' },
-    );
-    expect(payUrl).toBe(INVOICE.payUrl);
-    expect(sent(0).header('idempotency-key')).toBe('sub_42');
-
-    await quasar.payments.listSubscriptions({ status: 'active', limit: 10 });
-    await quasar.payments.getSubscription(subscription.id);
-    await quasar.payments.cancelSubscription(subscription.id, { atPeriodEnd: true });
-    await quasar.payments.undoSubscriptionCancel(subscription.id);
-    await quasar.payments.pauseSubscription(subscription.id);
-    await quasar.payments.resumeSubscription(subscription.id);
-    // Its invoices and charges grow with every period: lists of their own, a page at a time
-    await quasar.payments.listSubscriptionInvoices(subscription.id, { limit: 5 });
-    await quasar.payments.listSubscriptionCharges(subscription.id, { cursor: 'cur_2' });
-
-    const paths = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
-      const url = new URL(sent(n).url);
-      return `${sent(n).method} ${url.pathname}${url.search}`;
-    });
-    expect(paths).toEqual([
-      'GET /v1/payments/subscriptions?status=active&limit=10',
-      'GET /v1/payments/subscriptions/sub_1',
-      'POST /v1/payments/subscriptions/sub_1/cancel',
-      'POST /v1/payments/subscriptions/sub_1/cancel/undo',
-      'POST /v1/payments/subscriptions/sub_1/pause',
-      'POST /v1/payments/subscriptions/sub_1/resume',
-      'GET /v1/payments/subscriptions/sub_1/invoices?limit=5',
-      'GET /v1/payments/subscriptions/sub_1/charges?cursor=cur_2',
-    ]);
-    expect(await sent(3).body()).toEqual({ atPeriodEnd: true });
-  });
-
   it('turns a refusal of the payments API into an error with its code and the fields at fault', async () => {
     fetchMock.mockResolvedValueOnce(
       json(

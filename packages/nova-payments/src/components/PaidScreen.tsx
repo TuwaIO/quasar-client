@@ -1,4 +1,4 @@
-import { cn, DrawnCheck } from '@tuwaio/nova-core';
+import { cn } from '@tuwaio/nova-core';
 import { HashLink } from '@tuwaio/nova-transactions';
 import { useState } from 'react';
 
@@ -7,20 +7,11 @@ import { useAutoReturn } from '../hooks/useOutcomeEffects';
 import { usePaymentFacts } from '../hooks/usePaymentFacts';
 import { formatLabel } from '../i18n';
 import { formatFiat, minorToDecimal } from '../utils/format';
-import { methodFamily } from '../utils/methods';
 import { CapsLabel } from './CapsLabel';
-import { primaryAction, secondaryAction, smallAction, textButton } from './classes';
+import { primaryAction, smallAction } from './classes';
 import { checkoutClassName } from './customization';
 import { ArrowDownTrayIcon, DocumentTextIcon } from './icons';
-import {
-  DetailRow,
-  DetailsCard,
-  FooterAction,
-  FooterNote,
-  PrimaryButton,
-  ScreenFooter,
-  SecondaryButton,
-} from './ScreenParts';
+import { DetailRow, DetailsCard, FooterAction, FooterNote, PrimaryButton, ScreenFooter } from './ScreenParts';
 import { ACTION_ARRIVES, useStatusAction } from './statusAction';
 import { StatusHead } from './StatusHead';
 import { StatusReveal } from './StatusReveal';
@@ -29,10 +20,9 @@ import { TxLabels } from './TxLabels';
 
 /**
  * The paid outcome: the amount, network, time and transaction (every transfer of an invoice paid in parts, each with
- * its time, amount and explorer link), the steps done, a refund made later, the receipt to
- * download, the automatic payments offer of a subscription, and the way back to the seller (`successUrl`) with a
- * visible countdown and "Stay here" (WCAG 2.2.1). In a modal it offers Close instead: the page under it is the
- * seller's, and loading it again would close everything at once.
+ * its time, amount and explorer link), the steps done, a refund made later, the receipt to download, and the way back
+ * to the seller (`successUrl`) with a visible countdown and "Stay here" (WCAG 2.2.1). In a modal it offers Close
+ * instead: the page under it is the seller's, and loading it again would close everything at once.
  *
  * Side effects: navigates to the seller's `successUrl` when the countdown ends.
  *
@@ -40,22 +30,7 @@ import { TxLabels } from './TxLabels';
  */
 export function PaidScreen() {
   const context = useCheckoutContext();
-  const {
-    checkout,
-    state,
-    labels,
-    locale,
-    now,
-    close,
-    wallet,
-    adapterFor,
-    setAutoPay,
-    autoPayOff,
-    setAutoPayOff,
-    autoReturnSeconds,
-    openedPaid,
-    display,
-  } = context;
+  const { checkout, state, labels, locale, now, close, autoReturnSeconds, openedPaid, display } = context;
   const child = context.customization.childCustomizations;
   const facts = usePaymentFacts();
   // The clock of the page only for an engine that does not send the time yet: a receipt opened from its link days later
@@ -65,25 +40,10 @@ export function PaidScreen() {
   // A modal belongs to the page under it, the seller's: it closes rather than loads that page again, unless the app
   // asks for the return (autoReturnSeconds)
   const successUrl = display === 'modal' && autoReturnSeconds === 0 ? null : (checkout?.invoice.successUrl ?? null);
-  const offer = checkout?.autoCharge ?? null;
-  const offerMethod =
-    offer?.status === 'available' ? checkout?.methods.find((item) => item.id === offer.methodId) : undefined;
-  const offerFamily = offerMethod ? methodFamily(offerMethod) : null;
-  // Just turned off: the same page does not ask for them again
-  const canAutoPay =
-    autoPayOff !== 'done' && Boolean(wallet && offerFamily && adapterFor(offerFamily)?.requestPermission);
-  // The return belongs to the moment of payment: not while the offer waits for an answer, not over the control that turns
-  // automatic payments off, and not on a receipt opened from its link long after
-  const stays = canAutoPay || openedPaid || offer?.status === 'active';
-  const countdown = useAutoReturn({ url: successUrl, seconds: stays ? 0 : autoReturnSeconds, now });
+  // The return belongs to the moment of payment, not to a receipt opened from its link long after
+  const countdown = useAutoReturn({ url: successUrl, seconds: openedPaid ? 0 : autoReturnSeconds, now });
   // The first action of the footer goes on from "Close" of the confirm step
-  const mainLabel = canAutoPay
-    ? labels.paid.autoPayOffer
-    : successUrl
-      ? labels.paid.back
-      : close
-        ? labels.common.close
-        : null;
+  const mainLabel = successUrl ? labels.paid.back : close ? labels.common.close : null;
   const action = useStatusAction(mainLabel === null ? null : 'primary', mainLabel ?? '');
   const arrives = action.arrives ? ACTION_ARRIVES : undefined;
   if (!checkout) return null;
@@ -198,40 +158,12 @@ export function PaidScreen() {
             </div>
           </StatusReveal>
         )}
-        {offer?.status === 'active' && (
-          <p className="novapay:m-0 novapay:flex novapay:items-center novapay:gap-1.5 novapay:text-xs novapay:text-[var(--tuwa-success-text)]">
-            <DrawnCheck variant="disc" className="novapay:h-4 novapay:w-4" />
-            {labels.paid.autoPayActive}
-            {offer.revocation && (
-              <button type="button" onClick={() => setAutoPayOff('open')} className={textButton}>
-                {labels.paid.autoPayOff}
-              </button>
-            )}
-          </p>
-        )}
-        {autoPayOff === 'done' && (
-          <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
-            {formatLabel(labels.paid.autoPayTurnedOff, { merchant })}
-          </p>
-        )}
       </section>
       <ScreenFooter>
-        {canAutoPay && (
-          <PrimaryButton onClick={() => setAutoPay(true)} className={arrives}>
-            {action.label}
-          </PrimaryButton>
-        )}
         {successUrl ? (
           <>
-            <a
-              href={successUrl}
-              className={
-                canAutoPay
-                  ? cn(secondaryAction, checkoutClassName(context, 'secondaryButton'))
-                  : cn(primaryAction, arrives, checkoutClassName(context, 'primaryButton'))
-              }
-            >
-              <CapsLabel label={canAutoPay ? labels.paid.back : action.label} values={{ merchant }} />
+            <a href={successUrl} className={cn(primaryAction, arrives, checkoutClassName(context, 'primaryButton'))}>
+              <CapsLabel label={action.label} values={{ merchant }} />
             </a>
             {countdown.left !== null && (
               <FooterNote>
@@ -243,14 +175,11 @@ export function PaidScreen() {
             )}
           </>
         ) : (
-          close &&
-          (canAutoPay ? (
-            <SecondaryButton onClick={close}>{labels.common.close}</SecondaryButton>
-          ) : (
+          close && (
             <PrimaryButton onClick={close} className={arrives}>
               {action.label}
             </PrimaryButton>
-          ))
+          )
         )}
       </ScreenFooter>
     </TxLabels>

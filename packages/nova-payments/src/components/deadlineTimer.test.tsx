@@ -55,7 +55,6 @@ describe('the countdown to the deadline', () => {
     ['open', 'paid'],
     ['processing', 'paid'],
     ['paid', 'paid'],
-    ['paid', 'autoPay'],
     ['held', 'held'],
     ['refunded', 'refunded'],
     ['expired', 'expired'],

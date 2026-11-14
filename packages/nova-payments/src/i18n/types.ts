@@ -33,8 +33,6 @@ export type NovaPaymentsLabels = {
     pay: string;
     /** Confirmation on the network (default: `Confirm`) */
     confirm: string;
-    /** Automatic payments of a subscription (default: `Auto-pay`) */
-    autoPay: string;
     /** Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: `Step {current} of {total}: {name}`) */
     progress: string;
     /** Accessible name of the stepper (default: `Payment steps`) */
@@ -330,12 +328,7 @@ export type NovaPaymentsLabels = {
      * confirmed it.`)
      */
     mismatchOtherWalletHeld: string;
-    /**
-     * An automatic charge landed after the buyer chose another way to pay; `{merchant}` (default: `An automatic charge
-     * reached {merchant} after you chose another way to pay, so it does not pay this invoice. {merchant} returns it to your
-     * wallet, and you can still pay the invoice.`)
-     */
-    /** A payment sent or charged under an earlier price of the invoice: `{merchant}`. */
+    /** A payment sent under an earlier price of the invoice: `{merchant}`. */
     mismatchChargeHeld: string;
     /** A part past what the invoice takes: `{merchant}`. */
     mismatchTooManyParts: string;
@@ -622,90 +615,6 @@ export type NovaPaymentsLabels = {
     returning: string;
     /** Stops the auto-return (default: `Stay here`) */
     stay: string;
-    /** Button of the automatic payments offer of a subscription (default: `Pay the next periods automatically`) */
-    autoPayOffer: string;
-    /** When automatic payments are on (default: `Automatic payments are on.`) */
-    autoPayActive: string;
-    /** Opens the screen that turns them off, beside that text (default: `Turn off`) */
-    autoPayOff: string;
-    /** After they were turned off: `{merchant}` */
-    autoPayTurnedOff: string;
-  };
-  /** Turning off automatic payments: the wallet that allowed them sends the transaction that revokes the permission. */
-  autoPayOff: {
-    /** Heading (default: `Turn off automatic payments?`) */
-    title: string;
-    /** What it means: `{merchant}` */
-    subtitle: string;
-    /** Row of the wallet (default: `Wallet`) */
-    wallet: string;
-    /** Row of the limit (default: `Allowed now`) */
-    allowed: string;
-    /** Who pays for the transaction: `{network}` */
-    fee: string;
-    /** Main button: `{wallet}` (default: `Turn off in {wallet}`) */
-    confirm: string;
-    /** Main button once the wallet sent it (default: `Check again`) */
-    checkAgain: string;
-    /** Goes back (default: `Keep them on`) */
-    keep: string;
-    /** Main button when that wallet is not connected (default: `Connect that wallet`) */
-    connect: string;
-    /** When that wallet is not connected: `{wallet}` */
-    otherWallet: string;
-    useThisWallet: string;
-    /** While the wallet asks: `{wallet}` (default: `Confirm in {wallet}…`) */
-    inWallet: string;
-    /** While the network confirms (default: `Waiting for the network…`) */
-    waiting: string;
-    /** The network does not show the revocation yet */
-    notYet: string;
-    /** The wallet cannot send it: `{wallet}` */
-    unsupported: string;
-  };
-  /** The automatic payments offer of a subscription (ERC-7715), after a paid period. */
-  autoPay: {
-    /** Heading (default: `Pay next periods automatically?`) */
-    title: string;
-    /** Under it */
-    subtitle: string;
-    /** Above the limit: `{merchant}` (default: `You allow {merchant} to take`) */
-    allow: string;
-    /** The limit: `{amount}` with its symbol (default: `up to {amount}`) */
-    limit: string;
-    /** The period: `{period}` (for example `30 days`) (default: `every {period}`) */
-    every: string;
-    /** Row of the paying wallet (default: `From`) */
-    from: string;
-    /** Row of the merchant's wallet the charges are paid to (default: `To`) */
-    to: string;
-    /** Row of the expiry (default: `Valid until`) */
-    validUntil: string;
-    /** Its value: `{date}` (default: `{date}, or until you turn it off`) */
-    validUntilValue: string;
-    /** First note, on who sends the charges: `{merchant}` (default: `Quasar sends each charge for {merchant}, only to {merchant}'s wallet and within this limit.`) */
-    collector: string;
-    /** Second note (default: `Each charge comes with an invoice and a receipt by email.`) */
-    invoices: string;
-    /** Third note: `{merchant}` (default: `{merchant} can't take more than this limit in a period.`) */
-    cap: string;
-    /** Fourth note, how to turn it off: `{merchant}` */
-    turnOff: string;
-    /** Main button (default: `Allow automatic payments`) */
-    confirm: string;
-    /** Declines (default: `Not now, I'll pay each invoice`) */
-    skip: string;
-    /** Under the buttons (default: `Your wallet shows this permission (ERC-7715) before you approve it.`) */
-    walletNote: string;
-    /** Heading while the wallet asks: `{wallet}` (default: `Approve in {wallet}`) */
-    approveIn: string;
-    /** The wallet cannot grant it: `{wallet}` (default: `{wallet} can't allow automatic payments.`) */
-    unavailable: string;
-    smartAccountNote: string;
-    smartAccountPrompt: string;
-    smartAccountNeeded: string;
-    notGranted: string;
-    invalid: string;
   };
   /** The outcomes other than paid. */
   outcome: {

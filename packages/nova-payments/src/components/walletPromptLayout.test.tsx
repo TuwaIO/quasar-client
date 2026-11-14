@@ -22,9 +22,7 @@ vi.mock('../hooks/useSolanaClusterSync', () => ({ useSolanaClusterSync: vi.fn() 
 const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
 const { PayScreen } = await import('./PayScreen');
-const { AutoPayScreen } = await import('./AutoPayScreen');
 const { WalletPrompt } = await import('./WalletPrompt');
-const { PrimaryButton } = await import('./ScreenParts');
 
 const PAYER = '0x1111111111111111111111111111111111111111';
 const BASE = 'eip155:8453';
@@ -115,45 +113,6 @@ describe('a wallet prompt over a step', () => {
     const step = stepOf(tree);
     expect(step.props.inert).toBe(false);
     expect(classesOf(step)).not.toContain('novapay:hidden');
-  });
-
-  it('takes the automatic payments offer out of the layout while the wallet asks for the permission', () => {
-    const offer = {
-      status: 'available',
-      methodId: 'usdc-base',
-      request: {
-        chainId: '0x2105',
-        to: '0x7a0b0000000000000000000000000000000077e1',
-        permission: { data: { periodAmount: '0x989680', periodDuration: 2_592_000 } },
-        rules: [],
-      },
-    };
-    const checkout = { ...fixture.checkout, autoCharge: offer } as unknown as typeof fixture.checkout;
-    ctx = fixture.checkoutContextValue(
-      {},
-      {
-        checkout,
-        screen: 'autoPay',
-        wallet: wallet as never,
-        // The wallet keeps the request open
-        adapterFor: () => ({ family: 'eip155', requestPermission: () => new Promise(() => undefined) }) as never,
-      },
-    );
-    let tree = render(AutoPayScreen, {});
-    expect(classesOf(stepOf(tree))).not.toContain('novapay:hidden');
-
-    const allow = fixture.ofType(tree, PrimaryButton)[0];
-    (allow.props.onClick as () => void)();
-    tree = render(AutoPayScreen, {});
-    const prompt = fixture.ofType(tree, WalletPrompt);
-    expect(prompt).toHaveLength(1);
-    expect(classesOf(stepOf(tree))).toContain('novapay:hidden');
-
-    // Cancel: the offer comes back
-    (prompt[0].props.onCancel as () => void)();
-    tree = render(AutoPayScreen, {});
-    expect(fixture.ofType(tree, WalletPrompt)).toHaveLength(0);
-    expect(classesOf(stepOf(tree))).not.toContain('novapay:hidden');
   });
 });
 
@@ -341,37 +300,6 @@ describe('the height of the step on a phone, while the wallet asks', () => {
     fire();
     tree = render(PayScreen, {});
     expect(promptOf(tree).props.stepHeight).toBe(300);
-  });
-
-  it('hands the height of the automatic payments offer to its prompt', () => {
-    resizes();
-    const offer = {
-      status: 'available',
-      methodId: 'usdc-base',
-      request: {
-        chainId: '0x2105',
-        to: '0x7a0b0000000000000000000000000000000077e1',
-        permission: { data: { periodAmount: '0x989680', periodDuration: 2_592_000 } },
-        rules: [],
-      },
-    };
-    const checkout = { ...fixture.checkout, autoCharge: offer } as unknown as typeof fixture.checkout;
-    ctx = fixture.checkoutContextValue(
-      {},
-      {
-        checkout,
-        screen: 'autoPay',
-        wallet: wallet as never,
-        adapterFor: () => ({ family: 'eip155', requestPermission: () => new Promise(() => undefined) }) as never,
-      },
-    );
-    let tree = render(AutoPayScreen, {});
-    (stepOf(tree).props.ref as (element: unknown) => void)(stepNode(560, 700));
-    tree = render(AutoPayScreen, {});
-    (fixture.ofType(tree, PrimaryButton)[0].props.onClick as () => void)();
-    tree = render(AutoPayScreen, {});
-
-    expect(promptOf(tree).props.stepHeight).toBe(560);
   });
 
   it('takes that height as its minimum below 640 px only, and nothing without it', () => {

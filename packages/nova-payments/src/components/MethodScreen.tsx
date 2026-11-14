@@ -9,7 +9,6 @@ import { type CheckoutTokenGroup, groupMethodsByToken } from '../utils/checkout'
 import { shortAddress } from '../utils/format';
 import { canPayWithQr, methodFamily, networkName, payerFor, priceAdjustment } from '../utils/methods';
 import { methodErrorText } from '../utils/outcome';
-import { AutoPayNote } from './AutoPayNote';
 import { CapsLabel } from './CapsLabel';
 import { chip, chipTone, focusRing, mono } from './classes';
 import { checkoutClassName } from './customization';
@@ -446,7 +445,6 @@ export function MethodScreen() {
           terms={checkout.merchant.links.terms}
           refundPolicy={checkout.merchant.links.refundPolicy}
         />
-        <AutoPayNote />
       </ScreenFooter>
     </>
   );

@@ -1,18 +1,11 @@
 /**
- * @file What the outcome steps show: how to reach the seller, when to ask before leaving, what a refusal means, the
- * terms of automatic payments, what an underpaid invoice still needs, and what arrived on an invoice.
+ * @file What the outcome steps show: how to reach the seller, when to ask before leaving, what a refusal means, what an
+ * underpaid invoice still needs, and what arrived on an invoice.
  */
 
 import { parseCaip10AccountId } from '@tuwaio/orbit-core';
 import type { RefundPreview } from '@tuwaio/quasar-sdk';
-import type {
-  AutoChargeOffer,
-  CheckoutError,
-  CheckoutMerchant,
-  CheckoutMethod,
-  CheckoutPhase,
-  CheckoutQuote,
-} from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutError, CheckoutMerchant, CheckoutPhase, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { isMovedMoneyFailure, isPaidElsewhere, type UnconfirmedFollowUp, unconfirmedFollowUp } from './checkout';
@@ -104,8 +97,8 @@ const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'pay
  * `pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
  * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, `pay.mismatchOtherWalletHeld`
  * when Quasar recorded it as a held transfer the seller returns, `held`; `pay.mismatchNoReferenceHeld` for a Solana Pay
- * transfer without the invoice's reference held on this invoice, `held`; `pay.mismatchChargeHeld` for an automatic
- * charge that landed after the buyer chose another way to pay), a payment Quasar closed after 24 hours without a result on chain
+ * transfer without the invoice's reference held on this invoice, `held`; `pay.mismatchChargeHeld` for a payment sent
+ * under an earlier price of the invoice, `quote_changed`), a payment Quasar closed after 24 hours without a result on chain
  * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
  * and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
  * Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the
@@ -224,85 +217,6 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
     default:
       return labels.error.generic;
   }
-}
-
-/** The terms of an automatic payments offer, as the checkout shows them. */
-export interface AutoPayTerms {
-  /** The CAIP-2 chain of the charges. */
-  chainId: string;
-  /**
-   * The wallet the charges are paid to: the merchant's, as the `payee` rule of the request names it (the app's
-   * collector, which sends the charges, when the request names no payee).
-   */
-  to: string;
-  /** The most it takes in a period, in base units of the token. */
-  limit: string;
-  /** Decimals of the token. */
-  decimals: number;
-  /** Symbol of the token. */
-  symbol: string;
-  /** The length of a period, in seconds. */
-  periodSeconds: number;
-  /** When the permission ends, in milliseconds; `null` without an expiry rule. */
-  expiresAt: number | null;
-}
-
-/**
- * What the connected wallet may ask its wallet for: the offer, or taking over an active permission that holds nothing.
- *
- * @param offer - The automatic-charge offer of the checkout.
- * @returns The method and the request, or `null` when nothing can be given now.
- */
-export function grantableOffer(
-  offer: AutoChargeOffer | null,
-):
-  | Extract<AutoChargeOffer, { status: 'available' }>
-  | NonNullable<Extract<AutoChargeOffer, { status: 'active' }>['replacement']>
-  | null {
-  if (offer?.status === 'available') return offer;
-  return offer?.status === 'active' ? (offer.replacement ?? null) : null;
-}
-
-/**
- * The terms of an ERC-7715 automatic payments offer: the periodic limit in the token of the method, the period, the
- * expiry and the merchant's wallet the charges are paid to.
- *
- * @param offer - The view's `autoCharge`.
- * @param methods - The view's methods (for the token of the offer).
- * @returns The terms, or `null` when the offer is not available or its method is unknown.
- */
-export function autoPayTerms(offer: AutoChargeOffer | null, methods: CheckoutMethod[]): AutoPayTerms | null {
-  const grantable = grantableOffer(offer);
-  if (!grantable) return null;
-  const method = methods.find((item) => item.id === grantable.methodId);
-  if (!method) return null;
-  const { request } = grantable;
-  const expiry = request.rules.find((rule) => rule.type === 'expiry')?.data as { timestamp?: number } | undefined;
-  // The permission pays only the merchant's wallet; `request.to` is the collector that sends each charge
-  const payee = request.rules.find((rule) => rule.type === 'payee')?.data as { addresses?: string[] } | undefined;
-  return {
-    chainId: `eip155:${Number.parseInt(request.chainId, 16)}`,
-    to: payee?.addresses?.[0] ?? request.to,
-    limit: BigInt(request.permission.data.periodAmount).toString(),
-    decimals: method.decimals,
-    symbol: method.symbol,
-    periodSeconds: request.permission.data.periodDuration,
-    expiresAt: expiry?.timestamp ? expiry.timestamp * 1000 : null,
-  };
-}
-
-/**
- * A period as words of the language: whole days in days, otherwise in hours.
- *
- * @param seconds - The period.
- * @param locale - BCP 47 language of the page.
- * @returns For example `30 days`, `2 hours`, `30 днів`.
- */
-export function formatPeriod(seconds: number, locale: string): string {
-  const days = seconds % 86_400 === 0;
-  return new Intl.NumberFormat(locale, { style: 'unit', unit: days ? 'day' : 'hour', unitDisplay: 'long' }).format(
-    days ? seconds / 86_400 : Math.round(seconds / 3600),
-  );
 }
 
 /**

@@ -21,7 +21,6 @@ export const esLabels: NovaPaymentsLabels = {
     method: 'Método',
     pay: 'Pago',
     confirm: 'Confirmación',
-    autoPay: 'Pago automático',
     progress: 'Paso {current} de {total}: {name}',
     label: 'Pasos del pago',
   },
@@ -171,7 +170,7 @@ export const esLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. {merchant} la devuelve a la billetera que la envió, y aún puedes pagar esta factura desde la billetera que la confirmó.',
     mismatchChargeHeld:
-      'Este pago se envió o se cargó con un precio anterior de esta factura, así que no la paga. {merchant} lo devuelve a tu billetera y aún puedes pagar la factura.',
+      'Este pago se envió con un precio anterior de esta factura, así que no la paga. {merchant} lo devuelve a tu billetera y aún puedes pagar la factura.',
     mismatchTooManyParts:
       'Esta factura ya recibió todos los pagos parciales que admite, así que esta transferencia no la paga. {merchant} la devuelve a tu billetera; envía todo el resto de una vez.',
     mismatchNoReferenceHeld:
@@ -308,57 +307,6 @@ export const esLabels: NovaPaymentsLabels = {
     back: 'Volver a {merchant}',
     returning: 'Volviendo a {merchant} en {seconds} s',
     stay: 'Quedarme aquí',
-    autoPayOffer: 'Pagar los próximos periodos automáticamente',
-    autoPayActive: 'Los pagos automáticos están activados.',
-    autoPayOff: 'Desactivar',
-    autoPayTurnedOff: 'Los pagos automáticos están desactivados. {merchant} ya no puede cobrar a esta billetera.',
-  },
-  autoPay: {
-    title: '¿Pagar los próximos periodos automáticamente?',
-    subtitle: 'Opcional. Si no, recibes una factura en cada periodo y la pagas tú.',
-    allow: 'Permites que {merchant} cobre',
-    limit: 'hasta {amount}',
-    every: 'cada {period}',
-    from: 'Desde',
-    to: 'Para',
-    validUntil: 'Válido hasta',
-    validUntilValue: '{date}, o hasta que los desactives',
-    collector: 'Quasar realiza cada cobro para {merchant}, solo a la billetera de {merchant} y dentro de este límite.',
-    invoices: 'Cada cobro llega con una factura y un recibo por correo.',
-    cap: '{merchant} no puede cobrar más de este límite en un periodo.',
-    turnOff:
-      'Desactívalos cuando quieras en la página de cualquiera de estas facturas: tu billetera envía una transacción. Para cancelar la suscripción, contacta con {merchant}.',
-    confirm: 'Permitir los pagos automáticos',
-    skip: 'Ahora no, pagaré cada factura',
-    walletNote: 'Tu billetera muestra este permiso (ERC-7715) antes de que lo apruebes.',
-    approveIn: 'Aprueba en {wallet}',
-    unavailable: '{wallet} no puede permitir pagos automáticos.',
-    smartAccountNote:
-      'Los pagos automáticos requieren una cuenta inteligente. {wallet} te pedirá cambiar primero: una transacción en {network}, cuya comisión de red pagas tú. Tu dirección no cambia.',
-    smartAccountPrompt:
-      '{wallet} te pide cambiar esta cuenta a una cuenta inteligente. Tu dirección y tus fondos no cambian.',
-    smartAccountNeeded:
-      'Los pagos automáticos requieren una cuenta inteligente. En {wallet}, abre los detalles de esta cuenta, activa su cuenta inteligente para {network} y vuelve a intentarlo.',
-    notGranted: '{wallet} no dio el permiso. Vuelve a intentarlo o paga tú cada factura.',
-    invalid: 'Este permiso no se puede usar. Vuelve a intentarlo o paga tú cada factura.',
-  },
-  autoPayOff: {
-    title: '¿Desactivar los pagos automáticos?',
-    subtitle:
-      '{merchant} ya no podrá cobrar a esta billetera. La suscripción sigue: los siguientes periodos llegan como facturas que pagas tú. Para cancelarla, contacta con {merchant}.',
-    wallet: 'Billetera',
-    allowed: 'Autorizado ahora',
-    fee: 'Tu billetera envía una transacción en {network} y tú pagas su comisión de red.',
-    confirm: 'Desactivar en {wallet}',
-    checkAgain: 'Comprobar de nuevo',
-    keep: 'Mantenerlos activados',
-    connect: 'Conectar esa billetera',
-    otherWallet: 'Solo la billetera que los autorizó, {wallet}, puede desactivarlos.',
-    useThisWallet: 'Usar esta billetera en su lugar',
-    inWallet: 'Confirma en {wallet}…',
-    waiting: 'Esperando a la red…',
-    notYet: 'La red aún no lo muestra. Si tu billetera envió la transacción, comprueba de nuevo en un minuto.',
-    unsupported: '{wallet} no puede enviar esta transacción.',
   },
   outcome: {
     underpaidTitle: 'Ha llegado parte del pago',

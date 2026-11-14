@@ -21,7 +21,6 @@ export const deLabels: NovaPaymentsLabels = {
     method: 'Methode',
     pay: 'Zahlen',
     confirm: 'Bestätigung',
-    autoPay: 'Automatisch zahlen',
     progress: 'Schritt {current} von {total}: {name}',
     label: 'Zahlungsschritte',
   },
@@ -177,7 +176,7 @@ export const deLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       'Dieser Transfer kam von einem Wallet, das diese Rechnung nicht bestätigt hat, und bezahlt sie daher nicht. {merchant} erstattet ihn an das sendende Wallet, und Sie können diese Rechnung weiterhin mit dem Wallet bezahlen, das sie bestätigt hat.',
     mismatchChargeHeld:
-      'Diese Zahlung wurde zu einem früheren Preis dieser Rechnung gesendet oder abgebucht und bezahlt sie daher nicht. {merchant} erstattet sie an Ihr Wallet, und Sie können die Rechnung weiterhin bezahlen.',
+      'Diese Zahlung wurde zu einem früheren Preis dieser Rechnung gesendet und bezahlt sie daher nicht. {merchant} erstattet sie an Ihr Wallet, und Sie können die Rechnung weiterhin bezahlen.',
     mismatchTooManyParts:
       'Diese Rechnung hat so viele Teilzahlungen erhalten, wie sie annimmt, daher bezahlt diese Überweisung sie nicht. {merchant} erstattet sie an Ihr Wallet; senden Sie den gesamten Rest auf einmal.',
     mismatchNoReferenceHeld:
@@ -320,62 +319,6 @@ export const deLabels: NovaPaymentsLabels = {
     back: 'Zurück zu {merchant}',
     returning: 'Zurück zu {merchant} in {seconds} s',
     stay: 'Hier bleiben',
-    autoPayOffer: 'Die nächsten Zeiträume automatisch bezahlen',
-    autoPayActive: 'Automatische Zahlungen sind aktiv.',
-    autoPayOff: 'Deaktivieren',
-    autoPayTurnedOff: 'Automatische Zahlungen sind deaktiviert. {merchant} kann dieses Wallet nicht mehr belasten.',
-  },
-  autoPay: {
-    title: 'Die nächsten Zeiträume automatisch bezahlen?',
-    subtitle:
-      'Optional. Ohne automatische Zahlung erhalten Sie in jedem Zeitraum eine Rechnung und bezahlen sie selbst.',
-    allow: 'Sie erlauben {merchant} den Einzug von',
-    limit: 'bis zu {amount}',
-    every: 'alle {period}',
-    from: 'Von',
-    to: 'An',
-    validUntil: 'Gültig bis',
-    validUntilValue: '{date} oder bis Sie sie deaktivieren',
-    collector:
-      'Quasar sendet jede Abbuchung für {merchant}, nur an das Wallet von {merchant} und innerhalb dieses Limits.',
-    invoices: 'Zu jeder Abbuchung erhalten Sie eine Rechnung und eine Quittung per E-Mail.',
-    cap: '{merchant} kann in einem Zeitraum nicht mehr als dieses Limit einziehen.',
-    turnOff:
-      'Sie können sie jederzeit auf der Seite einer dieser Rechnungen deaktivieren: Ihr Wallet sendet eine Transaktion. Um das Abonnement selbst zu kündigen, wenden Sie sich an {merchant}.',
-    confirm: 'Automatische Zahlungen erlauben',
-    skip: 'Jetzt nicht, ich bezahle jede Rechnung selbst',
-    walletNote: 'Ihr Wallet zeigt diese Erlaubnis (ERC-7715) an, bevor Sie sie bestätigen.',
-    approveIn: 'In {wallet} bestätigen',
-    unavailable: '{wallet} kann automatische Zahlungen nicht erlauben.',
-    smartAccountNote:
-      'Automatische Zahlungen erfordern ein Smart Account. {wallet} fragt zuerst nach dem Wechsel: eine Transaktion auf {network}, deren Netzwerkgebühr Sie zahlen. Ihre Adresse bleibt gleich.',
-    smartAccountPrompt:
-      '{wallet} fragt, ob dieses Konto zu einem Smart Account wechseln soll. Adresse und Guthaben bleiben gleich.',
-    smartAccountNeeded:
-      'Automatische Zahlungen erfordern ein Smart Account. Öffnen Sie in {wallet} die Details dieses Kontos, aktivieren Sie das Smart Account für {network} und versuchen Sie es erneut.',
-    notGranted:
-      '{wallet} hat die Berechtigung nicht erteilt. Versuchen Sie es erneut oder zahlen Sie jede Rechnung selbst.',
-    invalid:
-      'Diese Berechtigung kann nicht verwendet werden. Versuchen Sie es erneut oder zahlen Sie jede Rechnung selbst.',
-  },
-  autoPayOff: {
-    title: 'Automatische Zahlungen deaktivieren?',
-    subtitle:
-      '{merchant} kann dieses Wallet dann nicht mehr belasten. Das Abonnement läuft weiter: Spätere Zeiträume kommen als Rechnungen, die Sie selbst bezahlen. Um es zu kündigen, wenden Sie sich an {merchant}.',
-    wallet: 'Wallet',
-    allowed: 'Derzeit erlaubt',
-    fee: 'Ihr Wallet sendet eine Transaktion im Netzwerk {network}, und Sie zahlen die Netzwerkgebühr.',
-    confirm: 'In {wallet} deaktivieren',
-    checkAgain: 'Erneut prüfen',
-    keep: 'Aktiv lassen',
-    connect: 'Dieses Wallet verbinden',
-    otherWallet: 'Nur das Wallet, das sie erlaubt hat, {wallet}, kann sie deaktivieren.',
-    useThisWallet: 'Stattdessen diese Wallet verwenden',
-    inWallet: 'In {wallet} bestätigen…',
-    waiting: 'Warten auf das Netzwerk…',
-    notYet:
-      'Das Netzwerk zeigt es noch nicht an. Wenn Ihr Wallet die Transaktion gesendet hat, prüfen Sie in einer Minute erneut.',
-    unsupported: '{wallet} kann diese Transaktion nicht senden.',
   },
   outcome: {
     underpaidTitle: 'Ein Teil der Zahlung ist eingegangen',

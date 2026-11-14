@@ -26,9 +26,6 @@ import type {
   Refund,
   RefundPreview,
   RefundStart,
-  Subscription,
-  SubscriptionCharge,
-  SubscriptionStart,
 } from '../../packages/quasar-sdk/src';
 import type {
   CheckoutQuote,
@@ -291,8 +288,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       }),
       replaces: z.string().nullable(),
       replacedBy: z.string().nullable(),
-      subscriptionId: z.string().nullable(),
-      period: z.number().nullable(),
       createdAt: dateTime('When it was created.'),
       updatedAt: dateTime('When it last changed.'),
     })
@@ -624,131 +619,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     .openapi('PaymentMethod');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _checkMethod: z.ZodType<PaymentMethod> = PaymentMethod;
-
-  // -------------------------------------------------------------------------
-  // Subscriptions
-  // -------------------------------------------------------------------------
-  const SubscriptionStatus = z
-    .enum(['trialing', 'incomplete', 'active', 'past_due', 'paused', 'canceled', 'ended'])
-    .openapi('SubscriptionStatus');
-  const Interval = z.enum(['day', 'week', 'month', 'year']);
-  const Subscription = z
-    .object({
-      id: z.string(),
-      object: z.literal('subscription'),
-      status: SubscriptionStatus,
-      environment: Environment,
-      buyer: Buyer.nullable(),
-      expectedPayer: z.string().nullable(),
-      lineItems: z.array(LineInput),
-      currency: Currency,
-      interval: Interval,
-      intervalCount: z.number(),
-      trialDays: z.number(),
-      collection: z.enum(['send_invoice', 'auto_charge']),
-      preferredMethodId: z.string().nullable(),
-      permission: z
-        .object({
-          status: z.enum(['active', 'revoked', 'expired']),
-          chainId: z.string().nullable(),
-          methodId: z.string().nullable(),
-          payer: z.string().nullable(),
-          tokenAddress: z.string().nullable(),
-          periodAmount: z.string().nullable(),
-          periodSeconds: z.number(),
-          startsAt: z.string().nullable(),
-          expiresAt: z.string().nullable(),
-          grantedAt: z.string().nullable(),
-          revokedAt: z.string().nullable(),
-        })
-        .nullable()
-        .openapi({ description: 'The ERC-7715 permission of `auto_charge`, without its context.' }),
-      graceDays: z.number(),
-      currentPeriod: z.number(),
-      currentPeriodStart: z.string().nullable(),
-      currentPeriodEnd: z.string().nullable(),
-      cycles: z.number().nullable(),
-      endsAt: z.string().nullable(),
-      cancelAtPeriodEnd: z.boolean(),
-      canceledAt: z.string().nullable(),
-      cancellationReason: z.string().nullable(),
-      pausedAt: z.string().nullable(),
-      endedAt: z.string().nullable(),
-      metadata: z.record(z.string(), z.unknown()).nullable(),
-      createdAt: z.string(),
-    })
-    .openapi('Subscription', { description: 'A subscription: each period is one invoice.' });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _checkSubscription: z.ZodType<Subscription> = Subscription;
-
-  const AutoChargeRequest = z.object({
-    chainId: z.string(),
-    to: z.string(),
-    permission: z.object({
-      type: z.literal('erc20-token-periodic'),
-      isAdjustmentAllowed: z.boolean(),
-      data: z.object({
-        tokenAddress: z.string(),
-        periodAmount: z.string(),
-        periodDuration: z.number(),
-        startTime: z.number(),
-        justification: z.string(),
-      }),
-    }),
-    rules: z.array(z.object({ type: z.string(), data: z.unknown() })),
-  });
-  const ActiveAutoCharge = z.object({
-    status: z.literal('active'),
-    permission: Subscription.shape.permission,
-    revocation: z.object({ to: z.string(), data: z.string() }).nullable().openapi({
-      description: 'The transaction that revokes the permission, for the wallet that granted it to send and pay for.',
-    }),
-    replacement: z.object({ methodId: z.string(), request: AutoChargeRequest }).optional().openapi({
-      description:
-        'What another wallet asks for to take over, when this wallet cannot pay, when nothing under the permission has moved money and its last charge failed, or when it expired; only on an open invoice of a scheduled subscription. It confirms the invoice and gives its own.',
-    }),
-  });
-  registry.register('Subscription', Subscription);
-
-  const SubscriptionCharge = z
-    .object({
-      id: z.string(),
-      object: z.literal('subscription_charge'),
-      invoiceId: z.string(),
-      period: z.number().nullable(),
-      status: z.enum(['pending', 'sending', 'submitted', 'failed', 'canceled']),
-      reason: z.string().nullable(),
-      attempts: z.number(),
-      amount: z.string().nullable(),
-      chainId: z.string().nullable(),
-      userOpHash: z.string().nullable(),
-      txHash: z.string().nullable(),
-      notBefore: z.string().nullable(),
-      finishedAt: z.string().nullable(),
-      createdAt: z.string(),
-    })
-    .openapi('SubscriptionCharge', { description: 'An automatic charge of a subscription period.' });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _checkSubscriptionCharge: z.ZodType<SubscriptionCharge> = SubscriptionCharge;
-
-  const SubscriptionStart = z
-    .object({
-      subscription: Subscription,
-      invoice: Invoice.nullable(),
-      checkoutToken: z.string().nullable(),
-      payUrl: z.string().nullable(),
-    })
-    .openapi('SubscriptionStart', {
-      description: 'The subscription and the invoice of its first (or resumed) period; `null` during a trial.',
-    });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _checkSubscriptionStart: z.ZodType<SubscriptionStart> = SubscriptionStart;
-  const SubscriptionList = listOf(Subscription, 'SubscriptionList');
-  const SubscriptionChargeList = listOf(SubscriptionCharge, 'SubscriptionChargeList');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _checkSubscriptionChargeList: z.ZodType<PaymentsList<SubscriptionCharge>> = SubscriptionChargeList;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _checkSubscriptionList: z.ZodType<PaymentsList<Subscription>> = SubscriptionList;
 
   // -------------------------------------------------------------------------
   // Merchant routes
@@ -1204,146 +1074,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     },
   });
 
-  const CreateSubscriptionRequest = z
-    .object({
-      ...terms,
-      interval: Interval,
-      intervalCount: z.number().int().optional().openapi({ description: 'A period is at most one year.' }),
-      trialDays: z.number().int().optional(),
-      cycles: z.number().int().optional(),
-      endsAt: z.string().optional(),
-      collection: z.enum(['send_invoice', 'auto_charge']).optional(),
-      preferredMethodId: z.string().optional(),
-      graceDays: z.number().int().optional(),
-    })
-    .openapi('CreateSubscriptionRequest');
-  route(
-    'post',
-    '/subscriptions',
-    'Subscriptions',
-    'Start a subscription',
-    "Each period is one invoice, paid like any invoice (`send_invoice`) or charged with the buyer's ERC-7715 permission (`auto_charge`).",
-    {
-      request: { headers: idempotencyHeader, body: { ...json(CreateSubscriptionRequest), required: true } },
-      responses: {
-        201: { description: 'The subscription and its first invoice.', ...json(SubscriptionStart) },
-        400: invalid('`invalid_lines`, `method_not_found`, `auto_charge_unavailable` (with `reason`)'),
-        ...common,
-        403: forbidden(
-          '`subscriptions_disabled` (the app turned subscriptions off), `secret_key_required`, `not_a_payments_app`, `payments_disabled`',
-        ),
-      },
-    },
-  );
-  route('get', '/subscriptions', 'Subscriptions', 'List subscriptions', 'Newest first.', {
-    request: {
-      query: z.object({
-        status: z.string().optional().openapi({ description: 'One status or several, comma-separated.' }),
-        limit: z.number().int().optional(),
-        cursor: z.string().optional(),
-      }),
-    },
-    responses: { 200: { description: 'A page.', ...json(SubscriptionList) }, ...common },
-  });
-  route(
-    'get',
-    '/subscriptions/{id}',
-    'Subscriptions',
-    'Read a subscription',
-    'Its invoices and charges are lists of their own.',
-    {
-      request: { params: idParam('id', 'Subscription ID.') },
-      responses: {
-        200: { description: 'The subscription.', ...json(Subscription) },
-        404: refused('`subscription_not_found`.'),
-        ...common,
-      },
-    },
-  );
-  for (const [path, summary, description, list] of [
-    ['invoices', 'List the invoices of a subscription', 'The invoices of its periods, newest first.', InvoiceList],
-    [
-      'charges',
-      'List the automatic charges of a subscription',
-      'Its automatic charges, newest first.',
-      SubscriptionChargeList,
-    ],
-  ] as const) {
-    route('get', `/subscriptions/{id}/${path}`, 'Subscriptions', summary, description, {
-      request: {
-        params: idParam('id', 'Subscription ID.'),
-        query: z.object({
-          limit: z
-            .number()
-            .int()
-            .min(1)
-            .max(100)
-            .optional()
-            .openapi({ description: 'Page size, 1 to 100 (default 20).' }),
-          cursor: z.string().optional().openapi({ description: '`nextCursor` of the previous page.' }),
-        }),
-      },
-      responses: {
-        200: { description: 'A page.', ...json(list) },
-        404: refused('`subscription_not_found`.'),
-        ...common,
-      },
-    });
-  }
-  for (const [action, summary, description, response, conflict] of [
-    [
-      'cancel',
-      'Cancel a subscription',
-      'Now (its open invoices are cancelled) or, with `atPeriodEnd`, when the running period ends.',
-      Subscription,
-      '`subscription_not_active`.',
-    ],
-    [
-      'cancel/undo',
-      'Take back a scheduled cancellation',
-      'The subscription renews again (`subscription.cancel_unscheduled`); a next-period invoice the cancellation cancelled is issued anew.',
-      Subscription,
-      '`subscription_not_active`: no cancellation is scheduled.',
-    ],
-    [
-      'pause',
-      'Pause a subscription',
-      'Its open invoices are cancelled and no period is billed until it resumes.',
-      Subscription,
-      '`subscription_not_active`.',
-    ],
-    [
-      'resume',
-      'Resume a subscription',
-      'A new period starts now and is invoiced at once.',
-      SubscriptionStart,
-      '`subscription_not_paused`, `subscription_over`: its cycles or end date are past.',
-    ],
-    [
-      'permission/end',
-      'End the automatic-charge permission',
-      'For a buyer who lost the wallet: Quasar charges it no more (`subscription.permission_revoked`), and the buyer pays from the invoice links or gives a new permission. The delegation stays valid on chain until its wallet revokes it, but Quasar does not use it again.',
-      Subscription,
-      '`permission_not_active`.',
-    ],
-  ] as const) {
-    route('post', `/subscriptions/{id}/${action}`, 'Subscriptions', summary, description, {
-      request: {
-        params: idParam('id', 'Subscription ID.'),
-        ...(action === 'cancel'
-          ? { body: json(z.object({ atPeriodEnd: z.boolean().optional(), reason: z.string().optional() })) }
-          : {}),
-      },
-      responses: {
-        200: { description: 'The subscription.', ...json(response) },
-        ...(action === 'cancel' && { 400: invalid() }),
-        404: refused('`subscription_not_found`.'),
-        409: refused(conflict),
-        ...common,
-      },
-    });
-  }
-
   // -------------------------------------------------------------------------
   // Checkout (the buyer's browser, with the checkout token)
   // -------------------------------------------------------------------------
@@ -1611,20 +1341,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           .openapi({
             description: 'The invoice that replaced this one after a correction; its checkout token while payable.',
           }),
-        subscription: z
-          .object({
-            status: SubscriptionStatus,
-            interval: Interval,
-            intervalCount: z.number(),
-            period: z.number(),
-            periodStart: z.string(),
-            periodEnd: z.string(),
-            cycles: z.number().nullable(),
-            endsAt: z.string().nullable(),
-            cancelAtPeriodEnd: z.boolean(),
-          })
-          .nullable()
-          .openapi({ description: 'The subscription period this invoice bills.' }),
       }),
       buyer: z.object({
         collect: z.enum(['off', 'email', 'full']),
@@ -1679,20 +1395,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         }),
       quoteTtlSeconds: z.number().openapi({ description: 'How long a locked quote holds, in seconds.' }),
       quote: CheckoutQuote.nullable(),
-      autoCharge: z
-        .discriminatedUnion('status', [
-          z.object({
-            status: z.literal('available'),
-            methodId: z.string(),
-            request: AutoChargeRequest,
-          }),
-          ActiveAutoCharge,
-          z.object({ status: z.literal('unavailable'), reason: z.string() }),
-        ])
-        .nullable()
-        .openapi({
-          description: 'For a subscription with automatic charges: the ERC-7715 request to show the wallet.',
-        }),
     })
     .openapi('CheckoutView', { description: 'What a checkout token opens.' });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1725,7 +1427,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     'get',
     '',
     'Open a checkout',
-    'The invoice, its methods, the locked quote and, for a subscription, the automatic-charge offer. Used by `createCheckoutStore`.',
+    'The invoice, its methods and the locked quote. Used by `createCheckoutStore`.',
     {
       responses: { 200: { description: 'The checkout.', ...json(CheckoutView) }, ...checkoutErrors },
     },
@@ -1933,52 +1635,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       },
     },
   );
-  checkout(
-    'post',
-    '/permission',
-    'Grant automatic charges',
-    "The wallet's answer to `wallet_grantPermissions` for a subscription with `auto_charge`, checked by its context and screened like a payer.",
-    {
-      request: {
-        body: json(
-          z.object({
-            payer: z.string(),
-            context: z.string(),
-            delegationManager: z.string(),
-            dependencies: z.array(z.object({ factory: z.string(), factoryData: z.string() })).optional(),
-          }),
-        ),
-      },
-      responses: {
-        200: {
-          description: 'The permission, and what the checkout now offers.',
-          ...json(z.object({ permission: Subscription.shape.permission, autoCharge: ActiveAutoCharge })),
-        },
-        400: invalid(
-          "`payer_chain_mismatch`, `permission_invalid`: the context does not grant the requested terms, or the wallet is not one of the delegation framework's (`details.reason`: `wallet_unknown`), this delegation was ended (`details.reason`: `delegation_ended`: give a new one), or charges of this wallet kept failing on this invoice (`details.reason`: `too_many_failed_charges`: use another wallet)",
-        ),
-        409: refused(
-          '`subscription_not_active`, `auto_charge_unavailable`, `payer_proof_required`, `permission_active`: a permission stays with its wallet, unless that wallet cannot pay, nothing under it has moved money and its last charge failed, or it expired (`replacement` in the offer).',
-        ),
-        ...checkoutErrors,
-      },
-    },
-  );
-  checkout(
-    'post',
-    '/permission/revoked',
-    'Check that automatic charges were revoked',
-    "The wallet sent the transaction of `autoCharge.revocation`. Quasar asks the chain and ends the permission if its delegation is disabled; the page's word changes nothing.",
-    {
-      responses: {
-        200: {
-          description: 'What the checkout now offers: `active` while the chain does not show the revocation yet.',
-          ...json(z.object({ autoCharge: z.unknown().openapi({ description: 'Same as `autoCharge` of the view.' }) })),
-        },
-        ...checkoutErrors,
-      },
-    },
-  );
   checkout('get', '/receipt', 'Download the receipt', 'The receipt PDF of a paid invoice.', {
     responses: {
       200: file('The PDF.'),
@@ -2086,19 +1742,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         'refund.failed',
         'payment.reverted',
         'payment.unverified',
-        'subscription.created',
-        'subscription.renewed',
-        'subscription.past_due',
-        'subscription.paused',
-        'subscription.resumed',
-        'subscription.cancel_scheduled',
-        'subscription.cancel_unscheduled',
-        'subscription.canceled',
-        'subscription.ended',
-        'subscription.permission_granted',
-        'subscription.charge_failed',
-        'subscription.permission_revoked',
-        'subscription.invoice_refused',
       ]),
       createdAt: z.string(),
       sentAt: z.string().openapi({ description: 'When this delivery was sent; signed with the body.' }),
@@ -2116,7 +1759,6 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
             'The transaction to check: `payment.reverted` (a payment Quasar credited is gone from the chain, the invoice waits for you with `reviewReason` `payment_reverted`) and `payment.unverified` (a native coin sent through a contract no receipt shows: check it and record it by hand).',
         }),
         aml: z.object({ decision: z.literal('block'), reasons: z.array(z.unknown()) }).optional(),
-        subscription: Subscription.optional(),
         hold: z
           .object({
             reason: z.enum(['late', 'aml', 'quote_expired']).nullable(),
@@ -2173,7 +1815,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     path: 'payment-event',
     summary: 'Payment event (payments.v1)',
     description:
-      "Sent to the webhook endpoints subscribed to `invoice:*`, `refund:*`, `subscription:*` or the event itself (`invoice.transfer_held` and `invoice.transfer_hold_voided`, notices, are in the default subscriptions of a shop endpoint). `x-quasar-signature` is the hex HMAC-SHA256 of the raw body keyed with the endpoint's signing secret; check it, and `sentAt`, with `verifyWebhook` of `@tuwaio/quasar-sdk`. `data.invoice` is the invoice when the delivery was sent.",
+      "Sent to the webhook endpoints subscribed to `invoice:*`, `refund:*` or the event itself (`invoice.transfer_held` and `invoice.transfer_hold_voided`, notices, are in the default subscriptions of a shop endpoint). `x-quasar-signature` is the hex HMAC-SHA256 of the raw body keyed with the endpoint's signing secret; check it, and `sentAt`, with `verifyWebhook` of `@tuwaio/quasar-sdk`. `data.invoice` is the invoice when the delivery was sent.",
     tags: ['Webhooks'],
     request: {
       headers: z.object({

@@ -43,7 +43,7 @@ export class QuasarSDKError extends Error {
   /** The fields of an invalid request and why each was refused (code `invalid_request`). */
   public readonly issues: QuasarRequestIssue[] | undefined;
 
-  /** Further fields of the refusal (for example `reason` of `auto_charge_unavailable`). */
+  /** Further fields of the refusal (for example `reason` of `payer_proof_invalid`). */
   public readonly details: Record<string, unknown> | undefined;
 
   /**

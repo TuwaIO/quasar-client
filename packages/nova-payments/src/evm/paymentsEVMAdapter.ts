@@ -6,18 +6,15 @@ import {
   estimateFeesPerGas,
   estimateGas,
   getBalance,
-  getBytecode,
   getCapabilities,
   getConnection,
   getConnectorClient,
-  getTransactionReceipt,
   readContract,
   sendCalls,
   sendTransaction,
   signMessage,
   switchChain,
   waitForCallsStatus,
-  waitForTransactionReceipt,
   writeContract,
 } from '@wagmi/core';
 import { type Address, encodeFunctionData, erc20Abi, type Hex } from 'viem';
@@ -37,12 +34,6 @@ const CALLS_LATE_READ_MS = 15_000;
  * and a recipient with an EIP-7702 delegation runs code on receipt, which a wallet's own estimate may leave out.
  */
 const GAS_HEADROOM_PERCENT = 25n;
-
-/** A call that moves nothing, to an address nothing runs at: the batch exists only for the switch it makes the wallet offer. */
-const NO_OP_CALL = { to: '0x000000000000000000000000000000000000dEaD' as Address, value: 0n };
-/** How many times the code of a switched account is read, and how far apart: RPC nodes lag behind the receipt. */
-const UPGRADE_CHECKS = 5;
-const UPGRADE_CHECK_EVERY_MS = 2000;
 
 /** The EVM chain ID of a CAIP-2 chain. */
 function evmChainId(chainId: string): number {
@@ -331,96 +322,6 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       const chain = config.chains.find((item) => item.id === toEvmChainId(chainId));
       const url = chain?.blockExplorers?.default.url;
       return url ? `${url}/address/${address}` : undefined;
-    },
-
-    smartAccountStatus: async ({ chainId, account }) => {
-      const id = evmChainId(chainId);
-      try {
-        const code = await getBytecode(config, { address: account as Address, chainId: id });
-        if (code && code !== '0x') return 'smart';
-        const capabilities = await getCapabilities(config, { account: account as Address, chainId: id });
-        const atomic = (capabilities as { atomic?: { status?: string } }).atomic?.status;
-        return atomic === 'ready' ? 'upgradable' : 'unknown';
-      } catch {
-        // A wallet without EIP-5792 does not answer, and nothing is known of it: Quasar decides on what it gives
-        return 'unknown';
-      }
-    },
-
-    upgradeToSmartAccount: async ({ chainId, account }) => {
-      await refuseSafe();
-      const id = evmChainId(chainId);
-      const address = account as Address;
-      await switchChain(config, { chainId: id });
-      // MetaMask 13.55 signs an ERC-7715 permission for a plain account without switching it to its smart account, and no
-      // site may call `wallet_upgradeAccount`. Quasar then refuses the permission, rightly: nothing could ever charge it.
-      // An atomic batch is what makes the wallet offer the switch itself. Checked live: it takes two calls, as MetaMask
-      // sends a single call as a plain transaction and the account stays as it was. They move nothing
-      const { id: batch } = await sendCalls(config, {
-        account: address,
-        chainId: id,
-        forceAtomic: true,
-        calls: [NO_OP_CALL, NO_OP_CALL],
-      });
-      // Its answer decides nothing. Checked live: MetaMask's gas estimate left the batch out of gas, status 500, with the
-      // authorization of the same transaction applied. Only the code on the network says whether the account switched
-      await waitForCallsStatus(config, { id: batch, timeout: CALLS_TIMEOUT_MS }).catch(() => undefined);
-      for (let check = 0; check < UPGRADE_CHECKS; check++) {
-        const code = await getBytecode(config, { address, chainId: id }).catch(() => undefined);
-        if (code && code !== '0x') return;
-        await new Promise((resolve) => setTimeout(resolve, UPGRADE_CHECK_EVERY_MS));
-      }
-      throw new PaymentWalletError('failed', 'The wallet did not switch the account');
-    },
-
-    requestPermission: async ({ request, account }) => {
-      const chainId = Number.parseInt(request.chainId, 16);
-      // The permission's network may not be the wallet's: the first payment may have gone on another one, and wagmi gives
-      // no client until the wallet is on it
-      await switchChain(config, { chainId });
-      // The ERC-7715 request as MetaMask takes it (checked live with the Quasar engine), from the granting account
-      const client = await getConnectorClient(config, { chainId });
-      const response = (await client.request({
-        method: 'wallet_requestExecutionPermissions',
-        params: [{ ...request, from: account }],
-      } as never)) as unknown;
-      const [granted] = (Array.isArray(response) ? response : [response]) as {
-        context?: string;
-        delegationManager?: string;
-        dependencies?: { factory: string; factoryData: string }[];
-      }[];
-      if (!granted?.context || !granted.delegationManager) {
-        throw new PaymentWalletError('failed', 'The wallet did not grant the permission');
-      }
-      return {
-        context: granted.context,
-        delegationManager: granted.delegationManager,
-        dependencies: granted.dependencies ?? [],
-      };
-    },
-
-    revokePermission: async ({ revocation, chainId, account, onSent }) => {
-      await refuseSafe();
-      const chain = evmChainId(chainId);
-      await switchChain(config, { chainId: chain });
-      const hash = await sendTransaction(config, {
-        account: account as Address,
-        chainId: chain,
-        to: revocation.to as Address,
-        data: revocation.data as Hex,
-      });
-      onSent?.();
-      try {
-        await waitForTransactionReceipt(config, { chainId: chain, hash, timeout: CALLS_TIMEOUT_MS });
-      } catch (error) {
-        // wagmi throws a plain error on a reverted receipt, and so does a wait that ran out. Only the receipt tells them
-        // apart: a reverted revocation left nothing to wait for, and the wallet may be asked again
-        const receipt = await getTransactionReceipt(config, { chainId: chain, hash }).catch(() => null);
-        if (receipt?.status === 'reverted') {
-          throw new PaymentWalletError('failed', 'The revocation reverted', { cause: error });
-        }
-        throw error;
-      }
     },
 
     pulsarTransaction: ({ txKey, instructions, account, connectorType, title, description, payload }) => {

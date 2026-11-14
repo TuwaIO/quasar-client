@@ -23,16 +23,7 @@ describe('statusToneOf', () => {
   });
 
   it('a step of the buyer has no strip: nothing goes on until the buyer acts', () => {
-    const steps: CheckoutScreen[] = [
-      'loading',
-      'buyer',
-      'method',
-      'confirmWallet',
-      'pay',
-      'qr',
-      'autoPay',
-      'autoPayOff',
-    ];
+    const steps: CheckoutScreen[] = ['loading', 'buyer', 'method', 'confirmWallet', 'pay', 'qr'];
     for (const screen of steps) expect(statusToneOf(screen)).toBeNull();
   });
 });

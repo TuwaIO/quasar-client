@@ -31,7 +31,6 @@ import {
 } from '../utils/payerProof';
 import { solanaNetworkHint } from '../utils/solanaNetwork';
 import type { PaymentWalletErrorKind } from '../utils/walletErrors';
-import { AutoPayNote } from './AutoPayNote';
 import { CapsLabel } from './CapsLabel';
 import { focusRing, label, mono, pendingNote, screenHeading, smallAction, smallPrimaryAction } from './classes';
 import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from './icons';
@@ -603,7 +602,6 @@ export function PayScreen() {
               ...(screensPayingWallets(checkout) ? [formatLabel(labels.pay.disclaimerScreening, { merchant })] : []),
             )}
           </FooterNote>
-          <AutoPayNote />
         </ScreenFooter>
       </div>
 

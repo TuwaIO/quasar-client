@@ -8,9 +8,6 @@ import type {
   InvoiceStatus,
   PaymentsCurrency,
   PaymentsEnvironment,
-  SubscriptionInterval,
-  SubscriptionPermission,
-  SubscriptionStatus,
   TaxCategory,
 } from '../modules/payments/types';
 
@@ -133,8 +130,6 @@ export interface CheckoutInvoice {
    * checkout token.
    */
   replacedBy: { number: string | null; checkoutToken: string | null } | null;
-  /** The subscription period this invoice bills; `null` for a one-off invoice. */
-  subscription: CheckoutSubscription | null;
 }
 
 /**
@@ -235,31 +230,6 @@ export interface CheckoutRejectedPayment {
   held?: true;
   /** The invoice of the merchant the transaction is credited to or held on, when Quasar names it. */
   otherInvoice?: string;
-}
-
-/** The subscription period an invoice bills, as the checkout shows it. */
-export interface CheckoutSubscription {
-  /** State of the subscription. */
-  status: SubscriptionStatus;
-  /** Unit of a period. */
-  interval: SubscriptionInterval;
-  /** Units in a period (`3` with `month` is a quarter). */
-  intervalCount: number;
-  /** The period this invoice bills, from 1. */
-  period: number;
-  /**
-   * When the period starts; `null` for a period before the subscription was last resumed, as resuming counts the periods
-   * again from that moment.
-   */
-  periodStart: string | null;
-  /** When it ends, which is when the next one is billed; `null` like {@link CheckoutSubscription.periodStart}. */
-  periodEnd: string | null;
-  /** How many periods the subscription runs; `null` until it is cancelled. */
-  cycles: number | null;
-  /** When it ends at the latest, if set. */
-  endsAt: string | null;
-  /** Whether it ends with the current period. */
-  cancelAtPeriodEnd: boolean;
 }
 
 /** Who is paid and on what terms, as the checkout shows it. */
@@ -522,62 +492,6 @@ export interface CheckoutQuote {
   payerProof?: { required: boolean; proven: boolean; kind: PayerProofKind | null };
 }
 
-/** The ERC-7715 `wallet_grantPermissions` request of a subscription with automatic charges. */
-export interface PermissionRequest {
-  /** Chain as hex. */
-  chainId: string;
-  /** The app's collector account, which redeems the permission. */
-  to: string;
-  /** A periodic ERC-20 allowance. */
-  permission: {
-    type: 'erc20-token-periodic';
-    isAdjustmentAllowed: boolean;
-    data: {
-      tokenAddress: string;
-      periodAmount: string;
-      periodDuration: number;
-      startTime: number;
-      justification: string;
-    };
-  };
-  /** Expiry, payee and redeemer rules. */
-  rules: { type: string; data: unknown }[];
-}
-
-/** For a subscription with automatic charges: whether the page should ask the wallet for the permission. */
-export type AutoChargeOffer =
-  | {
-      /** Ask the wallet with `request`, then pass its answer to `grantPermission` of the checkout store. */
-      status: 'available';
-      /** The method the charges use. */
-      methodId: string;
-      /** The request for `wallet_grantPermissions`. */
-      request: PermissionRequest;
-    }
-  | {
-      /** Already granted. */
-      status: 'active';
-      /** The permission. */
-      permission: SubscriptionPermission | null;
-      /**
-       * The transaction that revokes it, for the wallet that granted it to send and pay for; then
-       * {@link CheckoutState.permissionRevoked}. `null` when it cannot be built.
-       */
-      revocation: { to: string; data: string } | null;
-      /**
-       * What another wallet asks for to take over, when this permission's wallet cannot pay, nothing under it has moved money and
-       * its last charge failed, or it expired: it confirms the invoice and gives its own (`POST permission`). Only on an open
-       * invoice of a scheduled subscription.
-       */
-      replacement?: { methodId: string; request: PermissionRequest };
-    }
-  | {
-      /** Not possible now; the buyer pays each invoice. */
-      status: 'unavailable';
-      /** Why, as a stable code. */
-      reason: string;
-    };
-
 /** What the checkout token opens, as {@link CheckoutState.checkout} holds it. */
 export interface CheckoutView {
   /** Always `checkout`. */
@@ -611,8 +525,6 @@ export interface CheckoutView {
   quoteTtlSeconds: number;
   /** The locked quote, if any. */
   quote: CheckoutQuote | null;
-  /** The automatic-charge offer of a subscription invoice; `null` otherwise. */
-  autoCharge: AutoChargeOffer | null;
 }
 
 /**
@@ -645,24 +557,8 @@ export interface CheckoutApi {
   }) => Promise<{ txKey: string; status: string }>;
   /** Relays the signed EIP-3009 authorization (`POST relay`). */
   relay: (signature: string) => Promise<{ status: 'submitted' | 'sending'; userOpHash?: string; txHash?: string }>;
-  /** Sends the ERC-7715 permission the wallet granted (`POST permission`). */
-  permission: (body: GrantPermissionParams) => Promise<{ permission: unknown; autoCharge: AutoChargeOffer | null }>;
-  /** `POST permission/revoked`: Quasar asks the chain whether the permission was revoked. */
-  permissionRevoked: () => Promise<{ autoCharge: AutoChargeOffer | null }>;
   /** The URL of a route that is read without the store: `receipt`, `logo`, `paymaster`, `events`. */
   url: (route: string) => string;
-}
-
-/** The answer of the wallet to `wallet_grantPermissions`, as `grantPermission` of the checkout store takes it. */
-export interface GrantPermissionParams {
-  /** CAIP-10 account that granted it, on the method's chain. */
-  payer: string;
-  /** The permission context the wallet returned. */
-  context: string;
-  /** The delegation manager it names. */
-  delegationManager: string;
-  /** Account deployments the delegator needs first (ERC-7715 `dependencies`). */
-  dependencies?: { factory: string; factoryData: string }[];
 }
 
 /** One `status` event of the checkout's event stream. */

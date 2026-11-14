@@ -36,8 +36,6 @@ import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm, needsTheClock } from '../utils/outcome';
 import { lockPrice } from '../utils/payerProof';
-import { AutoPayOffScreen } from './AutoPayOffScreen';
-import { AutoPayScreen } from './AutoPayScreen';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
@@ -194,8 +192,6 @@ export function ScreenBody() {
   if (screen === 'confirm') return <ConfirmScreen />;
   if (screen === 'failed') return <FailedScreen />;
   if (screen === 'paid') return <PaidScreen />;
-  if (screen === 'autoPay') return <AutoPayScreen />;
-  if (screen === 'autoPayOff') return <AutoPayOffScreen />;
   return <OutcomeScreen kind={screen} />;
 }
 
@@ -404,9 +400,6 @@ export function PaymentCheckout({
   const adapters = settings.adapters;
   const [payWith, setPayWith] = useState<'wallet' | 'qr'>('wallet');
   const [handoff, setHandoff] = useState(false);
-  const [autoPay, setAutoPay] = useState(false);
-  const [autoPayOff, setAutoPayOff] = useState<'open' | 'done' | null>(null);
-  const [revokeSent, setRevokeSent] = useState(false);
   // What the invoice was when the page first read it: a link opened on a paid invoice shows its receipt, it just was not
   // paid. Per store: another invoice has its own first read
   const [firstRead, setFirstRead] = useState<{ store: typeof store; paid: boolean } | null>(null);
@@ -421,9 +414,6 @@ export function PaymentCheckout({
   if (shownToken !== activeToken) {
     setShownToken(activeToken);
     setHandoff(false);
-    setAutoPay(false);
-    setAutoPayOff(null);
-    setRevokeSent(false);
     setPayWith('wallet');
     setConfirmWallet(false);
   }
@@ -457,8 +447,6 @@ export function PaymentCheckout({
   const choices = {
     payWith,
     handoff,
-    autoPay,
-    autoPayOff: autoPayOff === 'open',
     confirmWallet,
     labelsReady: labelsShown || !checkout,
   };
@@ -536,7 +524,6 @@ export function PaymentCheckout({
     const method = checkout.methods.find((item) => item.id === quote?.methodId);
     const payer = method ? payerFor(wallet, method) : null;
     const next = lockedPriceOnWallet({
-      autoPayOffOpen: autoPayOff === 'open',
       phase,
       quotePayer: quote?.payer,
       payer,
@@ -553,7 +540,7 @@ export function PaymentCheckout({
   const loaded = Boolean(checkout);
   useEffect(
     () => lockForWallet(),
-    [wallet?.address, wallet?.chainId, wallet?.connectorType, autoPayOff, state.phase, quotePayer, loaded],
+    [wallet?.address, wallet?.chainId, wallet?.connectorType, state.phase, quotePayer, loaded],
   );
   // The connect modal closed without a wallet of that family
   useEffect(() => {
@@ -624,8 +611,6 @@ export function PaymentCheckout({
     },
     connectFamily: (family) => connection.connect(family),
     openedPaid: firstRead?.store === store && firstRead.paid,
-    revokeSent,
-    setRevokeSent,
     adapterFor,
     handoff,
     setHandoff,
@@ -642,10 +627,6 @@ export function PaymentCheckout({
     setConfirmWallet,
     lockPrice: lockStorePrice,
     onPaymentSent,
-    autoPay,
-    setAutoPay,
-    autoPayOff,
-    setAutoPayOff,
     openInvoice: (next) => setOpened({ from: token, token: next }),
     onContact,
     autoReturnSeconds: autoReturnSeconds ?? (display === 'modal' ? 0 : 5),
