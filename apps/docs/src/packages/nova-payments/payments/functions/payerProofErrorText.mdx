@@ -6,11 +6,12 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **payerProofErrorText**(`error`, `problem`, `labels`, `values`): `string` \| `null`
 
-Defined in: [nova-payments/src/utils/payerProof.ts:131](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payerProof.ts#L131)
+Defined in: [nova-payments/src/utils/payerProof.ts:137](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payerProof.ts#L137)
 
 What the step that confirms the wallet says about a refusal, with what to do: the wallet's (the buyer declined, the
 wallet cannot sign messages, it failed) or Quasar's (`payer_proof_invalid`, `payer_proof_unavailable`,
-`payer_chain_mismatch`, `too_many_payers`, `rate_limited`…). The buyer stays on the step and can try again.
+`payer_chain_mismatch`, `too_many_payers`, `payer_is_recipient`, `rate_limited`…). The buyer stays on the step and
+can try again.
 
 ## Parameters
 

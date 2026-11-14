@@ -184,6 +184,9 @@ export function methodErrorText(error: CheckoutError, labels: NovaPaymentsLabels
       return labels.method.methodUnavailable;
     case 'payer_not_expected':
       return labels.method.payerNotExpected;
+    // A transfer from the merchant's own wallet to itself would pay nothing
+    case 'payer_is_recipient':
+      return labels.method.payerIsRecipient;
     case 'too_many_payments':
       return formatLabel(labels.method.tooManyPayments, { merchant });
     // Only a wallet that cannot sign for Quasar hears this: one that can is asked to

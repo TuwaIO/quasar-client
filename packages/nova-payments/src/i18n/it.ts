@@ -58,6 +58,7 @@ export const itLabels: NovaPaymentsLabels = {
     tooManyPayments: 'Questa fattura non può più ricevere un pagamento qui. Contatta {merchant}.',
     nativeFromSmartWallet: 'Uno smart wallet non può pagare con questa moneta: scegli un token.',
     payerNotExpected: 'Il venditore ha chiesto di pagare questa fattura da un altro wallet. Collega quel wallet.',
+    payerIsRecipient: 'Questo wallet riceve il pagamento di questa fattura. Paga con un altro wallet.',
     rateLimited: 'Troppi tentativi. Attendi un minuto e riprova.',
     paymentFailed: 'Il pagamento non è riuscito. È stata spesa solo la commissione di rete; la fattura resta aperta.',
     restSameMethod: 'Il resto si paga con lo stesso token e sulla stessa rete della prima parte.',

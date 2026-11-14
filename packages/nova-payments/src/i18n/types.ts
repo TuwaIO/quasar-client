@@ -103,6 +103,8 @@ export type NovaPaymentsLabels = {
     nativeFromSmartWallet: string;
     /** The seller named the paying wallet, and it is another one (`payer_not_expected`) */
     payerNotExpected: string;
+    /** The paying wallet is the wallet the invoice is paid to (`payer_is_recipient`) */
+    payerIsRecipient: string;
     /** Too many tries (`rate_limited`) (default: `Too many tries. Wait a minute and try again.`) */
     rateLimited: string;
     paymentFailed: string;

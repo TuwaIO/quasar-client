@@ -57,6 +57,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     tooManyPayments: 'This invoice can no longer take a payment here. Contact {merchant}.',
     nativeFromSmartWallet: 'A smart wallet cannot pay in this coin: choose a token.',
     payerNotExpected: 'The seller asked for this invoice to be paid from another wallet. Connect that wallet.',
+    payerIsRecipient: 'This wallet receives the payment for this invoice. Pay from another wallet.',
     rateLimited: 'Too many tries. Wait a minute and try again.',
     paymentFailed: 'The payment failed. Only the network fee was spent; the invoice is still open.',
     restSameMethod: 'The rest is paid in the same token on the same network as the first part.',

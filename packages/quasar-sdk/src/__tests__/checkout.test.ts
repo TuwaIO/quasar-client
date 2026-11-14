@@ -3600,6 +3600,14 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
       expect(checkout.getState().error).toBeNull();
     });
 
+    // The wallet the invoice is paid to is refused: another wallet may pay
+    it('forgets that the last wallet receives the payment once another wallet is connected', async () => {
+      const checkout = await ready();
+      checkout.setState({ error: { code: 'payer_is_recipient', message: 'No' } });
+      checkout.getState().setPayer(OTHER);
+      expect(checkout.getState().error).toBeNull();
+    });
+
     it('drops a price that arrives for a wallet the buyer left', async () => {
       const checkout = await ready();
       await checkout.getState().confirmPayer(async () => '0xsig');
