@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.10.0...quasar-sdk-v0.11.0) (2026-11-14)
+
+
+### Features
+
+* **payments:** a gasless payment sent from the page's one-time account ([#17](https://github.com/TuwaIO/quasar-client/issues/17)) ([afdfcab](https://github.com/TuwaIO/quasar-client/commit/afdfcabab5a09da90496f44a32c22f6cdd140e3c))
+
 ## [0.10.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.9.0...quasar-sdk-v0.10.0) (2026-11-14)
 
 
