@@ -59,6 +59,7 @@ export const deLabels: NovaPaymentsLabels = {
     nativeFromSmartWallet: 'Eine Smart Wallet kann nicht mit dieser Coin bezahlen: Wähle einen Token.',
     payerNotExpected:
       'Der Verkäufer möchte, dass diese Rechnung von einem anderen Wallet bezahlt wird. Verbinden Sie das gewünschte Wallet.',
+    payerIsRecipient: 'Dieses Wallet empfängt die Zahlung für diese Rechnung. Zahlen Sie mit einem anderen Wallet.',
     rateLimited: 'Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es erneut.',
     paymentFailed:
       'Die Zahlung ist fehlgeschlagen. Nur die Netzwerkgebühr wurde verbraucht; die Rechnung bleibt offen.',

@@ -712,6 +712,7 @@ const REFUSALS_OF_WALLET: ReadonlySet<string> = new Set([
   'native_from_contract',
   'payer_blocked',
   'payer_not_expected',
+  'payer_is_recipient',
 ]);
 
 /** Whether an error is about the wallet it was given to: another wallet starts clean. */

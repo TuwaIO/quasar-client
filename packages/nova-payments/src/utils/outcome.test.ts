@@ -264,6 +264,10 @@ describe('methodErrorText', () => {
     // A test invoice is paid on a test network only
     expect(text('testnet_required')).toBe(defaultLabels.method.methodUnavailable);
     expect(text('payer_not_expected')).toBe(defaultLabels.method.payerNotExpected);
+    // The merchant's own wallet would send to itself
+    expect(text('payer_is_recipient')).toBe(
+      'This wallet receives the payment for this invoice. Pay from another wallet.',
+    );
     expect(text('rate_limited')).toBe(defaultLabels.method.rateLimited);
     // Quasar could not read the price of the method (its feed or RPC is down, or the seller set up no RPC for its
     // network): another method may work

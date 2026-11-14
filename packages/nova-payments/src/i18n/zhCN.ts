@@ -58,6 +58,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     tooManyPayments: '此发票无法再在此处接受付款。请联系 {merchant}。',
     nativeFromSmartWallet: '智能钱包无法用此币种付款:请选择代币。',
     payerNotExpected: '卖方要求用另一个钱包支付此发票。请连接该钱包。',
+    payerIsRecipient: '此钱包是本发票的收款钱包。请使用其他钱包付款。',
     rateLimited: '尝试次数过多。请等待一分钟后重试。',
     paymentFailed: '付款失败。仅花费了网络费用，发票仍处于未付状态。',
     restSameMethod: '余款须使用与第一笔相同的代币和相同的网络支付。',

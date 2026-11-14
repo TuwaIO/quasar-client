@@ -78,11 +78,16 @@ export async function lockPrice(
 }
 
 /** Codes of Quasar's and the store's refusals of the wallet's confirmation, besides `payer_proof_*`. */
-const PAYER_PROOF_CODES: ReadonlySet<string> = new Set(['payer_chain_mismatch', 'too_many_payers']);
+const PAYER_PROOF_CODES: ReadonlySet<string> = new Set([
+  'payer_chain_mismatch',
+  'too_many_payers',
+  'payer_is_recipient',
+]);
 
 /**
  * Whether the error is a refusal of the wallet's confirmation (`payer_proof_*`, `payer_chain_mismatch`,
- * `too_many_payers`): the pay step shows only these under the confirmation, its other errors have texts of their own.
+ * `too_many_payers`, `payer_is_recipient`): the pay step shows only these under the confirmation, its other errors
+ * have texts of their own.
  *
  * @param error - The checkout store's error, if any.
  * @returns `true` for a refusal of the confirmation.
@@ -117,7 +122,8 @@ export function isConfirmationError(error: CheckoutError | null | undefined): bo
 /**
  * What the step that confirms the wallet says about a refusal, with what to do: the wallet's (the buyer declined, the
  * wallet cannot sign messages, it failed) or Quasar's (`payer_proof_invalid`, `payer_proof_unavailable`,
- * `payer_chain_mismatch`, `too_many_payers`, `rate_limited`…). The buyer stays on the step and can try again.
+ * `payer_chain_mismatch`, `too_many_payers`, `payer_is_recipient`, `rate_limited`…). The buyer stays on the step and
+ * can try again.
  *
  * @param error - The checkout store's error, if any.
  * @param problem - Why the wallet did not sign, when the checkout knows it.
@@ -159,6 +165,9 @@ export function payerProofErrorText(
       return formatLabel(labels.payerProof.wrongNetwork, values);
     case 'too_many_payers':
       return formatLabel(labels.payerProof.tooManyWallets, values);
+    // The wallet the invoice is paid to: another wallet has to pay
+    case 'payer_is_recipient':
+      return labels.method.payerIsRecipient;
     case 'rate_limited':
       return labels.method.rateLimited;
     case 'request_failed':
