@@ -14,15 +14,20 @@ import { PaymentWalletError } from './walletErrors';
 export interface PayInvoiceParams {
   /** The adapter of the quote's chain family. */
   adapter: PaymentsAdapter;
-  /** The checkout store (only `submit` and `relay` are used). */
-  store: { getState: () => Pick<CheckoutState, 'submit' | 'relay'> };
+  /** The checkout store (only `submit`, `relay` and `relayFromPage` are used). */
+  store: {
+    getState: () => Pick<CheckoutState, 'submit' | 'relay'> & Partial<Pick<CheckoutState, 'relayFromPage'>>;
+  };
   /** The locked quote. */
   quote: CheckoutQuote;
   /** The wallet the quote is locked to. */
   wallet: CheckoutWallet;
   /** How the wallet pays, from `payPath`. */
   path: PayPath;
-  /** The checkout's ERC-7677 paymaster URL, for the `paymaster` path. */
+  /**
+   * The checkout's ERC-7677 paymaster URL: the `paymaster` path sends through it, and the `relay` path sends the
+   * authorized call from a one-time account through it when the adapter can (`sendOneTimeRelay`).
+   */
   paymasterUrl: string | null;
   /** Called when the wallet answered, before the payment is handed to Quasar. */
   onWalletDone?: () => void;
@@ -45,8 +50,9 @@ const unsupported = (what: string) => new PaymentWalletError('unsupported', `${w
 
 /**
  * Pays a locked quote: `transfer` sends the transfer and hands its key to Quasar (`submit`), `relay` signs the
- * authorization for Quasar to send (`relay`), `paymaster` sends the sponsored calls and hands their transaction hash
- * to Quasar. A transaction the wallet sent is always handed over, whatever the page shows meanwhile, with the method it
+ * authorization and the page sends the call Quasar answers for it from a one-time account (`relayFromPage` with the
+ * adapter's `sendOneTimeRelay`; without them, or with no paymaster URL, Quasar sends it: `relay`), `paymaster` sends
+ * the sponsored calls and hands their transaction hash to Quasar. A transaction the wallet sent is always handed over, whatever the page shows meanwhile, with the method it
  * was quoted for: the buyer may have gone on to a price on another network while the wallet asked.
  *
  * Side effects: a wallet prompt; requests to the checkout routes of Quasar.
@@ -73,7 +79,14 @@ export async function payInvoice({
     if (!typedData || !adapter.signTransferAuthorization) throw unsupported('A gasless signature');
     const signature = await adapter.signTransferAuthorization({ typedData, account });
     onWalletDone?.();
-    return store.getState().relay(signature);
+    const { relayFromPage, relay } = store.getState();
+    const sendOneTimeRelay = adapter.sendOneTimeRelay;
+    if (relayFromPage && sendOneTimeRelay && paymasterUrl) {
+      return relayFromPage(signature, (authorized) =>
+        sendOneTimeRelay({ chainId: authorized.chainId, call: authorized.call, paymasterUrl }),
+      );
+    }
+    return relay(signature);
   }
   if (path === 'paymaster') {
     const calls = quote.gasless?.paymaster?.calls;

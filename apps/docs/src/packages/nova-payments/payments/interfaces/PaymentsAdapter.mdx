@@ -235,6 +235,51 @@ The pending transaction, for `injectExternalPendingTxs` of the Pulsar store.
 
 ***
 
+### sendOneTimeRelay?
+
+> `optional` **sendOneTimeRelay?**: (`params`) => `Promise`\<`string`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:161](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L161)
+
+Sends the call Quasar authorized for a gasless payment (`relayFromPage` of the checkout store) from a one-time
+account of the page: a key made in memory for this payment only, delegated (EIP-7702) to the account code Quasar's
+paymaster sponsors, whose user operation goes to the merchant's paymaster and bundler through `paymasterUrl`. The
+buyer's wallet is not asked again; the key is never stored or sent anywhere.
+
+#### Parameters
+
+##### params
+
+The chain (CAIP-2), the call and the checkout's paymaster URL.
+
+###### call
+
+\{ `data`: `string`; `to`: `string`; \}
+
+###### call.data
+
+`string`
+
+###### call.to
+
+`string`
+
+###### chainId
+
+`string`
+
+###### paymasterUrl
+
+`string`
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The hash of the user operation.
+
+***
+
 ### sendSponsoredCalls?
 
 > `optional` **sendSponsoredCalls?**: (`params`) => `Promise`\<`string`\>

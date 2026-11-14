@@ -17,6 +17,7 @@ import type {
   CheckoutStatusEvent,
   CheckoutView,
   PayerProofMessage,
+  RelayAuthorized,
 } from './types';
 
 /**
@@ -297,14 +298,18 @@ export interface CheckoutState {
   txHash: string | null;
   /** Why the last action failed; cleared by the next one. */
   error: CheckoutError | null;
-  /** The receipt PDF of a paid invoice (a plain `GET`, for a link); `null` before. */
   /**
    * How far this machine's clock is ahead of Quasar's, in milliseconds, as measured on the last price locked here; `0` until
    * then and within a few seconds. Countdowns subtract it: a wrong clock must not end a price at once or keep an ended one live.
    */
   clockSkewMs: number;
+  /** The receipt PDF of a paid invoice (a plain `GET`, for a link); `null` before. */
   receiptUrl: string | null;
-  /** The ERC-7677 paymaster URL for `wallet_sendCalls` when the quote offers sponsored calls; `null` otherwise. */
+  /**
+   * The checkout's ERC-7677 paymaster URL when the quote can be paid without gas: `wallet_sendCalls` sends the sponsored
+   * calls through it (`gasless.paymaster`), and the page's one-time account the call Quasar authorized
+   * (`gasless.relay`, {@link CheckoutState.relayFromPage}); `null` otherwise.
+   */
   paymasterUrl: string | null;
   /** The merchant's logo (PNG or JPEG, a plain `GET` for an `<img>`); `null` when the merchant has none. */
   logoUrl: string | null;
@@ -461,6 +466,20 @@ export interface CheckoutState {
    *   `txKey` is the transfer's hash when Quasar returns it, `null` while the relay is still `sending`.
    */
   relay: (signature: string) => Promise<boolean>;
+  /**
+   * Pays the quote without gas from the page's one-time account, and Quasar signs nothing for it: Quasar takes the
+   * payer's signature of `quote.gasless.relay.typedData` (`POST relay/authorize`) and answers the one call to make; `send` makes
+   * it from a one-time account the merchant's paymaster sponsors (through {@link CheckoutState.paymasterUrl}) and
+   * answers the hash of its user operation, which the checkout then follows. Asked again before anything was sent,
+   * Quasar answers the same call. An engine without the route (404) relays the signature itself
+   * ({@link CheckoutState.relay}).
+   *
+   * @param signature - The 65-byte EIP-712 signature.
+   * @param send - Sends the call from a one-time account and resolves with the user operation's hash.
+   * @returns Whether it was sent; `phase` is then `confirming`. Quasar's refusals set `error`; an error of `send` is
+   *   thrown, with the phase as it was.
+   */
+  relayFromPage: (signature: string, send: (authorized: RelayAuthorized) => Promise<string>) => Promise<boolean>;
   /**
    * Goes back to the payment from `unconfirmed`, once the buyer checked that the payment did not leave the wallet:
    * `awaitingPayment` while the locked quote is valid, `underpaid` for the rest of an underpaid invoice, otherwise
@@ -1309,7 +1328,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       set({
         ...partial,
         receiptUrl: next.phase === 'paid' || next.phase === 'refunded' ? api.url('receipt') : null,
-        paymasterUrl: next.quote?.gasless?.paymaster ? api.url('paymaster') : null,
+        // The paymaster serves the wallet of path B and the page's one-time account of path A
+        paymasterUrl: next.quote?.gasless?.paymaster || next.quote?.gasless?.relay ? api.url('paymaster') : null,
         logoUrl: next.checkout?.merchant.logo ? api.url('logo') : null,
         payerProof: payerProofOf(next),
         confirmedWallets: confirmedWalletsOf(next),
@@ -2323,6 +2343,33 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           fail(error, phase === 'submitting' ? 'awaitingPayment' : phase);
           return false;
         }
+      },
+
+      relayFromPage: async (signature, send) => {
+        const phase = get().phase;
+        update({ phase: 'submitting', error: null });
+        let authorized: RelayAuthorized;
+        try {
+          authorized = await api.authorizeRelay(signature);
+        } catch (error) {
+          // An engine older than the route sends the relay itself
+          if (error instanceof QuasarSDKError && error.status === 404) {
+            update({ phase });
+            return get().relay(signature);
+          }
+          fail(error, phase === 'submitting' ? 'awaitingPayment' : phase);
+          return false;
+        }
+        let userOpHash: string;
+        try {
+          userOpHash = await send(authorized);
+        } catch (error) {
+          // Nothing left the page: the buyer may try again, and Quasar answers the same call
+          update({ phase });
+          throw error;
+        }
+        handOver([userOpHash], null);
+        return true;
       },
 
       payAgain: () => {

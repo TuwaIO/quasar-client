@@ -18,6 +18,7 @@ const IDLE_API: CheckoutApi = {
   locale: pending,
   submit: pending,
   relay: pending,
+  authorizeRelay: pending,
   url: () => '',
 };
 

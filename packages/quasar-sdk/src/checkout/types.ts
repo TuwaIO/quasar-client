@@ -427,12 +427,15 @@ export interface TransferAuthorizationTypedData {
 }
 
 /**
- * What the merchant sponsors for a quote: `relay`, an EIP-3009 authorization any wallet signs (Quasar sends the
- * transfer), and `paymaster`, the calls a smart wallet sends with the checkout's ERC-7677 paymaster
- * (`paymasterUrl` of the store).
+ * What the merchant sponsors for a quote: `relay`, an EIP-3009 authorization any wallet signs (the page sends the
+ * transfer from a one-time account, or Quasar sends it), and `paymaster`, the calls a smart wallet sends with the
+ * checkout's ERC-7677 paymaster (`paymasterUrl` of the store).
  */
 export interface GaslessOffer {
-  /** Sign `typedData` and pass the signature to {@link CheckoutState.relay}. */
+  /**
+   * Sign `typedData` and pass the signature to {@link CheckoutState.relayFromPage} (the page sends the call Quasar
+   * answers) or {@link CheckoutState.relay} (Quasar sends it).
+   */
   relay?: { typedData: TransferAuthorizationTypedData };
   /** Send these calls with `wallet_sendCalls` and the `paymasterService` capability set to the paymaster URL. */
   paymaster?: { calls: { to: string; value: string; data: string }[] };
@@ -557,8 +560,28 @@ export interface CheckoutApi {
   }) => Promise<{ txKey: string; status: string }>;
   /** Relays the signed EIP-3009 authorization (`POST relay`). */
   relay: (signature: string) => Promise<{ status: 'submitted' | 'sending'; userOpHash?: string; txHash?: string }>;
+  /**
+   * Takes the signed EIP-3009 authorization for the page to send (`POST relay/authorize`): the one call the page's
+   * one-time account may make, on its chain.
+   */
+  authorizeRelay: (signature: string) => Promise<RelayAuthorized>;
   /** The URL of a route that is read without the store: `receipt`, `logo`, `paymaster`, `events`. */
   url: (route: string) => string;
+}
+
+/** The answer of `POST relay/authorize`: the call the page's one-time account makes, and nothing else. */
+export interface RelayAuthorized {
+  /** Always `authorized`. */
+  status: 'authorized';
+  /** The chain of the call, CAIP-2 (`eip155:8453`). */
+  chainId: string;
+  /** `transferWithAuthorization` of the token with the payer's signature. */
+  call: {
+    /** The token's contract. */
+    to: string;
+    /** The call data. */
+    data: string;
+  };
 }
 
 /** One `status` event of the checkout's event stream. */
