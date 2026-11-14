@@ -3,14 +3,7 @@
  * and the types of their bodies.
  */
 
-import type {
-  Invoice,
-  InvoicePayment,
-  InvoiceSettlement,
-  PaymentsEnvironment,
-  Refund,
-  Subscription,
-} from './modules/payments/types';
+import type { Invoice, InvoicePayment, InvoiceSettlement, PaymentsEnvironment, Refund } from './modules/payments/types';
 
 /** The header that carries the signature of a webhook: the hex HMAC-SHA256 of the raw body, keyed with the secret. */
 export const WEBHOOK_SIGNATURE_HEADER = 'x-quasar-signature';
@@ -36,20 +29,7 @@ export type PaymentWebhookEventType =
   | 'refund.confirmed'
   | 'refund.failed'
   | 'payment.reverted'
-  | 'payment.unverified'
-  | 'subscription.created'
-  | 'subscription.renewed'
-  | 'subscription.past_due'
-  | 'subscription.paused'
-  | 'subscription.resumed'
-  | 'subscription.cancel_scheduled'
-  | 'subscription.cancel_unscheduled'
-  | 'subscription.canceled'
-  | 'subscription.ended'
-  | 'subscription.permission_granted'
-  | 'subscription.charge_failed'
-  | 'subscription.permission_revoked'
-  | 'subscription.invoice_refused';
+  | 'payment.unverified';
 
 /**
  * What a hold is about (`data.hold` of `invoice.held`): an invoice paid in a way that waits for your decision. `reason`
@@ -144,7 +124,7 @@ export interface PaymentWebhookEvent {
   environment: PaymentsEnvironment;
   /** What the event is about. */
   data: {
-    /** The invoice now (subscription events carry the invoice of their period, when there is one). */
+    /** The invoice now. */
     invoice?: Invoice;
     /** The payment, once the invoice has one. */
     settlement?: InvoiceSettlement;
@@ -166,8 +146,6 @@ export interface PaymentWebhookEvent {
     heldTransfer?: PaymentWebhookHeldTransfer | PaymentWebhookHeldTransferVoided;
     /** The transaction to check, in `payment.reverted` and `payment.unverified`. */
     transaction?: { txHash: string | null; chainId: string | null };
-    /** The subscription of a subscription event. */
-    subscription?: Subscription;
   };
 }
 

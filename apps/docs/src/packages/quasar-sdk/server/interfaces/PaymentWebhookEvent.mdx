@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentWebhookEvent
 
-Defined in: [webhooks.ts:130](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L130)
+Defined in: [webhooks.ts:110](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L110)
 
 The body of a payment webhook (`payments.v1`). `id`, `type` and `createdAt` are those of the ledger event, so
 deduplicate by `id`; `data.invoice` is the invoice when the delivery was sent, so a retry carries its current state.
@@ -15,7 +15,7 @@ deduplicate by `id`; `data.invoice` is the invoice when the delivery was sent, s
 
 > **apiVersion**: `"payments.v1"`
 
-Defined in: [webhooks.ts:136](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L136)
+Defined in: [webhooks.ts:116](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L116)
 
 Always `payments.v1`.
 
@@ -25,7 +25,7 @@ Always `payments.v1`.
 
 > **createdAt**: `string`
 
-Defined in: [webhooks.ts:140](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L140)
+Defined in: [webhooks.ts:120](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L120)
 
 When it happened (ISO 8601).
 
@@ -35,7 +35,7 @@ When it happened (ISO 8601).
 
 > **data**: `object`
 
-Defined in: [webhooks.ts:146](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L146)
+Defined in: [webhooks.ts:126](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L126)
 
 What the event is about.
 
@@ -70,7 +70,7 @@ What `invoice.held` holds. Quasar versions before October 29, 2026 leave it out.
 
 > `optional` **invoice?**: [`Invoice`](?path=/docs/packages-quasar-sdk-server-interfaces-invoice--docs)
 
-The invoice now (subscription events carry the invoice of their period, when there is one).
+The invoice now.
 
 #### payments?
 
@@ -90,12 +90,6 @@ The refund of a refund event.
 > `optional` **settlement?**: [`InvoiceSettlement`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicesettlement--docs)
 
 The payment, once the invoice has one.
-
-#### subscription?
-
-> `optional` **subscription?**: [`Subscription`](?path=/docs/packages-quasar-sdk-server-interfaces-subscription--docs)
-
-The subscription of a subscription event.
 
 #### transaction?
 
@@ -117,7 +111,7 @@ The transaction to check, in `payment.reverted` and `payment.unverified`.
 
 > **environment**: [`PaymentsEnvironment`](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentsenvironment--docs)
 
-Defined in: [webhooks.ts:144](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L144)
+Defined in: [webhooks.ts:124](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L124)
 
 Live or test.
 
@@ -127,7 +121,7 @@ Live or test.
 
 > **id**: `string`
 
-Defined in: [webhooks.ts:132](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L132)
+Defined in: [webhooks.ts:112](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L112)
 
 Event ID: the same for every delivery and retry of the event.
 
@@ -137,7 +131,7 @@ Event ID: the same for every delivery and retry of the event.
 
 > **object**: `"event"`
 
-Defined in: [webhooks.ts:134](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L134)
+Defined in: [webhooks.ts:114](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L114)
 
 Always `event`.
 
@@ -147,7 +141,7 @@ Always `event`.
 
 > **sentAt**: `string`
 
-Defined in: [webhooks.ts:142](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L142)
+Defined in: [webhooks.ts:122](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L122)
 
 When this delivery was sent; signed with the body, it lets [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebhook--docs) refuse old replays.
 
@@ -157,6 +151,6 @@ When this delivery was sent; signed with the body, it lets [verifyWebhook](?path
 
 > **type**: [`PaymentWebhookEventType`](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentwebhookeventtype--docs)
 
-Defined in: [webhooks.ts:138](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L138)
+Defined in: [webhooks.ts:118](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L118)
 
 What happened.

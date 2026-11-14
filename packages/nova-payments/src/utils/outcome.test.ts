@@ -1,12 +1,10 @@
-import type { AutoChargeOffer, CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 import { describe, expect, it } from 'vitest';
 
 import { defaultLabels } from '../i18n/en';
 import {
-  autoPayTerms,
   contactHref,
   failedPaymentTx,
-  formatPeriod,
   methodErrorText,
   needsLeaveConfirm,
   paymentFailedText,
@@ -272,76 +270,6 @@ describe('methodErrorText', () => {
     expect(text('price_unavailable')).toBe(defaultLabels.method.priceUnavailable);
     expect(text('price_no_rpc')).toBe(defaultLabels.method.priceUnavailable);
     expect(text('something_new')).toBe(defaultLabels.error.generic);
-  });
-});
-
-const method = (extra: Partial<CheckoutMethod> = {}): CheckoutMethod => ({
-  id: 'ap_usdc_base',
-  name: 'USDC on Base',
-  symbol: 'USDC',
-  chainId: 'eip155:84532',
-  assetId: null,
-  decimals: 6,
-  gasless: 'off',
-  featured: false,
-  markupBps: 0,
-  discountBps: 0,
-  ...extra,
-});
-
-describe('autoPayTerms', () => {
-  it('reads the limit, period, expiry and accounts of an ERC-7715 offer', () => {
-    const offer: AutoChargeOffer = {
-      status: 'available',
-      methodId: 'ap_usdc_base',
-      request: {
-        chainId: '0x14a34',
-        to: '0x3333333333333333333333333333333333333333',
-        permission: {
-          type: 'erc20-token-periodic',
-          isAdjustmentAllowed: false,
-          data: {
-            tokenAddress: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
-            periodAmount: '0x2ebae40',
-            periodDuration: 2_592_000,
-            startTime: 1_791_000_000,
-            justification: 'Pro plan',
-          },
-        },
-        rules: [{ type: 'expiry', data: { timestamp: 1_822_536_000 } }],
-      },
-    };
-    expect(autoPayTerms(offer, [method()])).toEqual({
-      chainId: 'eip155:84532',
-      to: '0x3333333333333333333333333333333333333333',
-      limit: '49000000',
-      decimals: 6,
-      symbol: 'USDC',
-      periodSeconds: 2_592_000,
-      expiresAt: 1_822_536_000_000,
-    });
-    expect(autoPayTerms({ status: 'unavailable', reason: 'no_collector' }, [method()])).toBeNull();
-    expect(autoPayTerms(offer, [])).toBeNull();
-
-    // The charges go to the merchant's wallet the payee rule names, not to the collector that sends them
-    const payee = '0x4444444444444444444444444444444444444444';
-    const withPayee: AutoChargeOffer = {
-      ...offer,
-      request: {
-        ...offer.request,
-        rules: [...offer.request.rules, { type: 'payee', data: { addresses: [payee] } }],
-      },
-    };
-    expect(autoPayTerms(withPayee, [method()])?.to).toBe(payee);
-  });
-});
-
-describe('formatPeriod', () => {
-  it('names a period in days, or in hours when it is not whole days', () => {
-    expect(formatPeriod(2_592_000, 'en')).toBe('30 days');
-    expect(formatPeriod(86_400, 'en')).toBe('1 day');
-    expect(formatPeriod(7_200, 'en')).toBe('2 hours');
-    expect(formatPeriod(2_592_000, 'uk')).toBe('30 днів');
   });
 });
 

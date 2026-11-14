@@ -6,15 +6,15 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **leftTheWalletText**(`error`, `labels`, `merchant?`): `string` \| `null`
 
-Defined in: [nova-payments/src/utils/outcome.ts:119](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L119)
+Defined in: [nova-payments/src/utils/outcome.ts:112](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L112)
 
 What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
 does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
 `pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
 `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, `pay.mismatchOtherWalletHeld`
 when Quasar recorded it as a held transfer the seller returns, `held`; `pay.mismatchNoReferenceHeld` for a Solana Pay
-transfer without the invoice's reference held on this invoice, `held`; `pay.mismatchChargeHeld` for an automatic
-charge that landed after the buyer chose another way to pay), a payment Quasar closed after 24 hours without a result on chain
+transfer without the invoice's reference held on this invoice, `held`; `pay.mismatchChargeHeld` for a payment sent
+under an earlier price of the invoice, `quote_changed`), a payment Quasar closed after 24 hours without a result on chain
 (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
 and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
 Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the

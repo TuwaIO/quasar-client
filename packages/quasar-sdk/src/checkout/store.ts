@@ -16,7 +16,6 @@ import type {
   CheckoutRejectedPayment,
   CheckoutStatusEvent,
   CheckoutView,
-  GrantPermissionParams,
   PayerProofMessage,
 } from './types';
 
@@ -313,7 +312,7 @@ export interface CheckoutState {
    * Reads the checkout (`GET`) and, while the invoice can change, follows it (server-sent events, else a read every
    * `pollMs`). An event that brings an outcome (underpaid, held, paid, refunded, expired, cancelled) updates
    * `checkout.invoice.amountPaid` at once and reads the checkout again for the rest (`review`, the refund, the invoice
-   * that replaced it, `autoCharge`). A checkout whose invoice has a payment on its way (a reloaded or reopened page)
+   * that replaced it). A checkout whose invoice has a payment on its way (a reloaded or reopened page)
    * starts in `confirming`, not at the payment, and the store follows that payment as its own. One whose latest
    * payment Quasar could not confirm (its latest rejection is not `final`), or that has a payment that may still arrive
    * ({@link CheckoutState.invoicePaymentUnresolved}) with none on its way, starts in `unconfirmed` (`expired` stays
@@ -462,26 +461,6 @@ export interface CheckoutState {
    *   `txKey` is the transfer's hash when Quasar returns it, `null` while the relay is still `sending`.
    */
   relay: (signature: string) => Promise<boolean>;
-  /**
-   * Passes the wallet's answer to `wallet_grantPermissions` for a subscription's automatic charges (`POST permission`).
-   *
-   * Quasar takes a permission only from a wallet that confirmed the invoice: with `sign`, a refusal for that has the
-   * wallet sign the free confirmation and the permission is passed again.
-   *
-   * @param params - The granting account, the permission context, its delegation manager and dependencies.
-   * @param sign - Has the wallet sign Quasar's message, as for {@link CheckoutState.confirmPayer}.
-   * @returns Whether Quasar accepted it; `checkout.autoCharge` is then `active`.
-   */
-  grantPermission: (params: GrantPermissionParams, sign?: PayerProofSigner) => Promise<boolean>;
-  /**
-   * Tells Quasar that the wallet sent the transaction that revokes the permission (`autoCharge.revocation`): Quasar asks
-   * the chain (`POST permission/revoked`), and `checkout.autoCharge` follows what it finds. Neither the phase nor the
-   * error of the store change: it may be asked from any screen, and what that screen says stands.
-   *
-   * @returns Whether the permission has ended; `false` while the chain does not show it yet; `null` when Quasar could not
-   * be asked.
-   */
-  permissionRevoked: () => Promise<boolean | null>;
   /**
    * Goes back to the payment from `unconfirmed`, once the buyer checked that the payment did not leave the wallet:
    * `awaitingPayment` while the locked quote is valid, `underpaid` for the rest of an underpaid invoice, otherwise
@@ -821,7 +800,7 @@ const quoteValid = (quote: CheckoutQuote | null, now: number): quote is Checkout
 
 /**
  * The outcomes whose details an event does not carry: why a payment waits (`review`), the refund, the invoice that
- * replaced a cancelled one, the automatic payments offer after a paid period. The checkout is read again for them.
+ * replaced a cancelled one. The checkout is read again for them.
  */
 const OUTCOMES: ReadonlySet<string> = new Set([...FINAL, 'underpaid']);
 
@@ -1339,8 +1318,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
     const fail = (error: unknown, fallback: CheckoutPhase) => {
       const refusal = errorOf(error);
       const status = get().invoiceStatus;
-      // An invoice that no longer takes a payment keeps its outcome: a refused offer on a paid invoice, or a relay answered
-      // after it expired, says why and hides no receipt
+      // An invoice that no longer takes a payment keeps its outcome: an action refused once it was paid, or a relay
+      // answered after it expired, says why and hides no receipt
       if (status && (SETTLED.has(status) || CLOSED.has(status))) {
         update({ error: refusal, ...(UNDER_WAY.has(get().phase) ? { phase: phaseOfStatus(status) } : {}) });
         return;
@@ -2342,55 +2321,6 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         } catch (error) {
           fail(error, phase === 'submitting' ? 'awaitingPayment' : phase);
           return false;
-        }
-      },
-
-      grantPermission: async (params, sign) => {
-        update({ error: null });
-        const grant = async () => {
-          const { autoCharge } = await api.permission(params);
-          const checkout = get().checkout;
-          if (checkout) update({ checkout: { ...checkout, autoCharge } });
-          return true;
-        };
-        try {
-          try {
-            return await grant();
-          } catch (error) {
-            const { payerProofMessage, payerProof } = api;
-            const unproven = error instanceof QuasarSDKError && error.code === 'payer_proof_required';
-            if (!unproven || !sign || !payerProofMessage || !payerProof) throw error;
-            const request = await payerProofMessage({ payer: params.payer });
-            if (request.proven) confirmedHere.push({ payer: request.payer, chainId: request.chainId });
-            else {
-              let signature: string;
-              try {
-                signature = await sign(request.message, request);
-              } catch {
-                // The wallet's own error says nothing to Quasar's codes: it would read as a server that did not answer
-                update({ error: { code: 'payer_proof_declined', message: PROOF_DECLINED } });
-                return false;
-              }
-              // Remembered: this wallet is not asked to confirm the invoice again before it pays
-              confirmedHere.push(await payerProof({ payer: params.payer, message: request.message, signature }));
-            }
-            return await grant();
-          }
-        } catch (error) {
-          fail(error, get().phase);
-          return false;
-        }
-      },
-
-      permissionRevoked: async () => {
-        // Asked from any screen, so what the screen says stands: an error here may say not to pay again
-        try {
-          const { autoCharge } = await api.permissionRevoked();
-          const checkout = get().checkout;
-          if (checkout) update({ checkout: { ...checkout, autoCharge } });
-          return autoCharge?.status !== 'active';
-        } catch {
-          return null;
         }
       },
 

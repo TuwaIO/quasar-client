@@ -34,31 +34,11 @@ The adapter of `NovaPaymentsProvider`, if any.
 
 ***
 
-### autoPay
-
-> **autoPay**: `boolean`
-
-Defined in: [nova-payments/src/components/checkoutContext.ts:126](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L126)
-
-The buyer opened the automatic payments offer after paying a subscription period.
-
-***
-
-### autoPayOff
-
-> **autoPayOff**: `"open"` \| `"done"` \| `null`
-
-Defined in: [nova-payments/src/components/checkoutContext.ts:134](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L134)
-
-The screen that turns automatic payments off is open (`open`), or they were turned off (`done`).
-
-***
-
 ### autoReturnSeconds
 
 > **autoReturnSeconds**: `number`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:158](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L158)
+Defined in: [nova-payments/src/components/checkoutContext.ts:134](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L134)
 
 Seconds before the paid outcome sends the buyer back to the seller; `0` for no automatic return.
 
@@ -165,7 +145,7 @@ Whether the page can connect a wallet (Nova Connect or the app's handler).
 
 > **customization**: [`PaymentCheckoutCustomization`](?path=/docs/packages-nova-payments-payments-interfaces-paymentcheckoutcustomization--docs)
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:165](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L165)
+Defined in: [nova-payments/src/components/checkoutContext.ts:141](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L141)
 
 Class name functions and replacement components of the parts (`customization` of `PaymentCheckout`).
 
@@ -175,7 +155,7 @@ Class name functions and replacement components of the parts (`customization` of
 
 > **display**: [`PaymentCheckoutDisplay`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentcheckoutdisplay--docs)
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:163](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L163)
+Defined in: [nova-payments/src/components/checkoutContext.ts:139](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L139)
 
 How the checkout shows (`display` of `PaymentCheckout`): a modal belongs to the page under it, so its paid outcome
 closes it instead of sending the buyer back to the seller's page.
@@ -254,7 +234,7 @@ Defined in: [nova-payments/src/components/checkoutContext.ts:35](https://github.
 
 > `optional` **onContact?**: () => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:156](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L156)
+Defined in: [nova-payments/src/components/checkoutContext.ts:132](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L132)
 
 Replaces the link of "Contact \<seller\>", when the app handles it.
 
@@ -301,7 +281,7 @@ Whether the page opened on an invoice already paid: the buyer reads its receipt,
 
 > **openInvoice**: (`token`) => `void`
 
-Defined in: [nova-payments/src/components/checkoutContext.ts:154](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L154)
+Defined in: [nova-payments/src/components/checkoutContext.ts:130](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L130)
 
 Opens another invoice in this checkout: the one that replaced a corrected invoice.
 
@@ -375,16 +355,6 @@ The checkout showed a QR code for the invoice, which the buyer may have paid wit
 
 ***
 
-### revokeSent
-
-> **revokeSent**: `boolean`
-
-Defined in: [nova-payments/src/components/checkoutContext.ts:142](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L142)
-
-Whether the wallet has sent the transaction that revokes the permission of this invoice's subscription.
-
-***
-
 ### screen
 
 > **screen**: [`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
@@ -392,50 +362,6 @@ Whether the wallet has sent the transaction that revokes the permission of this 
 Defined in: [nova-payments/src/components/checkoutContext.ts:21](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L21)
 
 The screen shown.
-
-***
-
-### setAutoPay
-
-> **setAutoPay**: (`autoPay`) => `void`
-
-Defined in: [nova-payments/src/components/checkoutContext.ts:132](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L132)
-
-Opens or closes the automatic payments offer.
-
-#### Parameters
-
-##### autoPay
-
-`boolean`
-
-Whether it shows.
-
-#### Returns
-
-`void`
-
-***
-
-### setAutoPayOff
-
-> **setAutoPayOff**: (`autoPayOff`) => `void`
-
-Defined in: [nova-payments/src/components/checkoutContext.ts:140](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L140)
-
-Opens or closes the screen that turns automatic payments off, or says they were turned off.
-
-#### Parameters
-
-##### autoPayOff
-
-`"open"` \| `"done"` \| `null`
-
-The new state.
-
-#### Returns
-
-`void`
 
 ***
 
@@ -522,28 +448,6 @@ Sets how the buyer pays.
 `"wallet"` \| `"qr"`
 
 `wallet` or `qr`.
-
-#### Returns
-
-`void`
-
-***
-
-### setRevokeSent
-
-> **setRevokeSent**: (`sent`) => `void`
-
-Defined in: [nova-payments/src/components/checkoutContext.ts:148](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/checkoutContext.ts#L148)
-
-Keeps that for as long as the page shows the invoice, so the buyer leaving the screen does not send it twice.
-
-#### Parameters
-
-##### sent
-
-`boolean`
-
-Whether it was sent.
 
 #### Returns
 

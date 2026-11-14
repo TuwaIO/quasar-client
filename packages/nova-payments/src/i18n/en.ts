@@ -20,7 +20,6 @@ export const defaultLabels: NovaPaymentsLabels = {
     method: 'Method',
     pay: 'Pay',
     confirm: 'Confirm',
-    autoPay: 'Auto-pay',
     progress: 'Step {current} of {total}: {name}',
     label: 'Payment steps',
   },
@@ -169,7 +168,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. {merchant} returns it to the wallet that sent it, and you can still pay this invoice from the wallet that confirmed it.',
     mismatchChargeHeld:
-      'This payment was sent or charged under an earlier price of this invoice, so it does not pay it. {merchant} returns it to your wallet, and you can still pay the invoice.',
+      'This payment was sent under an earlier price of this invoice, so it does not pay it. {merchant} returns it to your wallet, and you can still pay the invoice.',
     mismatchTooManyParts:
       'This invoice has taken as many parts as it can, so this transfer does not pay it. {merchant} returns it to your wallet; send the whole rest at once.',
     mismatchNoReferenceHeld:
@@ -305,57 +304,6 @@ export const defaultLabels: NovaPaymentsLabels = {
     back: 'Back to {merchant}',
     returning: 'Returning to {merchant} in {seconds} s',
     stay: 'Stay here',
-    autoPayOffer: 'Pay the next periods automatically',
-    autoPayActive: 'Automatic payments are on.',
-    autoPayOff: 'Turn off',
-    autoPayTurnedOff: 'Automatic payments are off. {merchant} can no longer charge this wallet.',
-  },
-  autoPay: {
-    title: 'Pay next periods automatically?',
-    subtitle: 'Optional. Without it, you get an invoice each period and pay it yourself.',
-    allow: 'You allow {merchant} to take',
-    limit: 'up to {amount}',
-    every: 'every {period}',
-    from: 'From',
-    to: 'To',
-    validUntil: 'Valid until',
-    validUntilValue: '{date}, or until you turn it off',
-    collector: "Quasar sends each charge for {merchant}, only to {merchant}'s wallet and within this limit.",
-    invoices: 'Each charge comes with an invoice and a receipt by email.',
-    cap: "{merchant} can't take more than this limit in a period.",
-    turnOff:
-      'You can turn it off at any time on the page of any of these invoices: your wallet sends one transaction. To cancel the subscription itself, contact {merchant}.',
-    confirm: 'Allow automatic payments',
-    skip: "Not now, I'll pay each invoice",
-    walletNote: 'Your wallet shows this permission (ERC-7715) before you approve it.',
-    approveIn: 'Approve in {wallet}',
-    unavailable: "{wallet} can't allow automatic payments.",
-    smartAccountNote:
-      'Automatic payments need a smart account. {wallet} asks you to switch to it first: one transaction on {network}, and you pay its network fee. Your address stays the same.',
-    smartAccountPrompt:
-      '{wallet} asks you to switch this account to a smart account. Your address and your funds stay the same.',
-    smartAccountNeeded:
-      'Automatic payments need a smart account. In {wallet}, open the details of this account, turn on its smart account for {network}, then try again.',
-    notGranted: '{wallet} did not give the permission. Try again, or pay each invoice yourself.',
-    invalid: "This permission can't be used. Try again, or pay each invoice yourself.",
-  },
-  autoPayOff: {
-    title: 'Turn off automatic payments?',
-    subtitle:
-      '{merchant} can no longer charge this wallet. The subscription goes on: later periods come as invoices you pay yourself. To cancel it, contact {merchant}.',
-    wallet: 'Wallet',
-    allowed: 'Allowed now',
-    fee: 'Your wallet sends one transaction on {network} and you pay its network fee.',
-    confirm: 'Turn off in {wallet}',
-    checkAgain: 'Check again',
-    keep: 'Keep them on',
-    connect: 'Connect that wallet',
-    otherWallet: 'Only the wallet that allowed them, {wallet}, can turn them off.',
-    useThisWallet: 'Use this wallet instead',
-    inWallet: 'Confirm in {wallet}…',
-    waiting: 'Waiting for the network…',
-    notYet: 'The network does not show it yet. If your wallet sent the transaction, check again in a minute.',
-    unsupported: "{wallet} can't send this transaction.",
   },
   outcome: {
     underpaidTitle: 'Part of the payment arrived',

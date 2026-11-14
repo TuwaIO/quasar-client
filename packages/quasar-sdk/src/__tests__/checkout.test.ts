@@ -81,7 +81,6 @@ const view = (overrides: Partial<CheckoutView> = {}): CheckoutView => ({
     review: null,
     refundedTotalMinor: null,
     replacedBy: null,
-    subscription: null,
   },
   buyer: { collect: 'off', required: false, companyInvoice: false },
   consent: null,
@@ -102,7 +101,6 @@ const view = (overrides: Partial<CheckoutView> = {}): CheckoutView => ({
   ],
   quoteTtlSeconds: 900,
   quote: null,
-  autoCharge: null,
   ...overrides,
 });
 
@@ -261,22 +259,6 @@ describe('createCheckoutStore', () => {
     checkout.getState().setPayer(QUOTE.payer);
     expect(await checkout.getState().requestQuote()).toBeNull();
     expect(checkout.getState()).toMatchObject({ phase: 'paid', error: null });
-    checkout.getState().destroy();
-  });
-
-  it('asks whether a permission ended without touching what the screen says', async () => {
-    fetchMock
-      .mockResolvedValueOnce(json(view({ invoice: { ...view().invoice, status: 'expired' } })))
-      .mockRejectedValueOnce(new Error('network'))
-      .mockResolvedValueOnce(json({ autoCharge: null }));
-    const checkout = store();
-    await checkout.getState().load();
-    const shut = { code: 'payment_mismatch', message: 'Do not pay again' };
-    checkout.setState({ error: shut });
-    expect(await checkout.getState().permissionRevoked()).toBeNull();
-    expect(checkout.getState()).toMatchObject({ phase: 'expired', error: shut });
-    expect(await checkout.getState().permissionRevoked()).toBe(true);
-    expect(checkout.getState()).toMatchObject({ phase: 'expired', error: shut });
     checkout.getState().destroy();
   });
 
@@ -888,91 +870,10 @@ describe('createCheckoutStore', () => {
     expect(checkout.getState().phase).toBe('expired');
   });
 
-  // Quasar takes a permission only from a wallet that confirmed the invoice: a delegation is public once it was charged
-  it('has the wallet confirm the invoice when Quasar asks, and passes the permission again', async () => {
-    const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
+  it('pays without gas through the relay', async () => {
     fetchMock
-      .mockResolvedValueOnce(json(view()))
-      .mockResolvedValueOnce(json(refusal, 409))
-      .mockResolvedValueOnce(json({ message: 'sign me', payer: QUOTE.payer, chainId: 'eip155:8453', proven: false }))
-      .mockResolvedValueOnce(json({ payer: QUOTE.payer, chainId: 'eip155:8453', kind: 'eoa' }))
-      .mockResolvedValueOnce(json({ autoCharge: { status: 'active', permission: {}, revocation: null } }));
-    const checkout = store();
-    await checkout.getState().load();
-
-    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
-    const sign = vi.fn().mockResolvedValue('0xsig');
-    expect(await checkout.getState().grantPermission(granted, sign)).toBe(true);
-
-    expect(sign).toHaveBeenCalledWith('sign me', expect.objectContaining({ message: 'sign me' }));
-    expect(await sent(4)).toMatchObject({ path: '/v1/payments/checkout/tok_1/permission', body: granted });
-    expect(checkout.getState().error).toBeNull();
-  });
-
-  // The raw wallet error became "The payment server did not answer"
-  it('says that the wallet declined the free confirmation asked for a permission', async () => {
-    const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
-    fetchMock
-      .mockResolvedValueOnce(json(view()))
-      .mockResolvedValueOnce(json(refusal, 409))
-      .mockResolvedValueOnce(json({ message: 'sign me', payer: QUOTE.payer, chainId: 'eip155:8453', proven: false }));
-    const checkout = store();
-    await checkout.getState().load();
-    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
-    const sign = vi.fn().mockRejectedValue(new Error('User rejected'));
-    expect(await checkout.getState().grantPermission(granted, sign)).toBe(false);
-    expect(checkout.getState().error).toMatchObject({ code: 'payer_proof_declined' });
-  });
-
-  // "Confirm your wallet" showed next for a wallet that had just signed
-  it('remembers the wallet that confirmed the invoice for a permission', async () => {
-    const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
-    fetchMock
-      .mockResolvedValueOnce(json(view()))
-      .mockResolvedValueOnce(json(refusal, 409))
-      .mockResolvedValueOnce(json({ message: 'sign me', payer: QUOTE.payer, chainId: 'eip155:8453', proven: false }))
-      .mockResolvedValueOnce(json({ payer: QUOTE.payer, chainId: 'eip155:8453', kind: 'eoa' }))
-      .mockResolvedValueOnce(json({ autoCharge: { status: 'active', permission: {}, revocation: null } }));
-    const checkout = store();
-    await checkout.getState().load();
-    checkout.getState().selectMethod('ap_1');
-    checkout.getState().setPayer(QUOTE.payer);
-    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
-    expect(await checkout.getState().grantPermission(granted, async () => '0xsig')).toBe(true);
-    expect(checkout.getState().confirmedWallets).toContain(QUOTE.payer);
-  });
-
-  it('leaves the refusal without a way to sign', async () => {
-    const refusal = { error: { code: 'payer_proof_required', message: 'Confirm', details: { payer: QUOTE.payer } } };
-    fetchMock.mockResolvedValueOnce(json(view())).mockResolvedValueOnce(json(refusal, 409));
-    const checkout = store();
-    await checkout.getState().load();
-    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
-    expect(await checkout.getState().grantPermission(granted)).toBe(false);
-    expect(checkout.getState().error).toMatchObject({ code: 'payer_proof_required' });
-  });
-
-  it('pays without gas through the relay, and grants the automatic charges of a subscription', async () => {
-    const autoCharge = {
-      status: 'available',
-      methodId: 'ap_1',
-      request: { chainId: '0x2105', to: '0x4', permission: {}, rules: [] },
-    };
-    fetchMock
-      .mockResolvedValueOnce(json(view({ quote: QUOTE as never, autoCharge: autoCharge as never })))
-      .mockResolvedValueOnce(json({ status: 'submitted', userOpHash: '0xop', txHash: '0xbeef' }))
-      .mockResolvedValueOnce(
-        json({
-          permission: { status: 'active', payer: QUOTE.payer },
-          autoCharge: {
-            status: 'active',
-            permission: { status: 'active', payer: QUOTE.payer },
-            revocation: { to: '0x5', data: '0xdead' },
-          },
-        }),
-      )
-      .mockResolvedValueOnce(json({ autoCharge: { status: 'active', permission: {}, revocation: null } }))
-      .mockResolvedValueOnce(json({ autoCharge: autoCharge }));
+      .mockResolvedValueOnce(json(view({ quote: QUOTE as never })))
+      .mockResolvedValueOnce(json({ status: 'submitted', userOpHash: '0xop', txHash: '0xbeef' }));
     const checkout = store();
     await checkout.getState().load();
 
@@ -980,21 +881,6 @@ describe('createCheckoutStore', () => {
     expect(await checkout.getState().relay(signature)).toBe(true);
     expect(await sent(1)).toEqual({ method: 'POST', path: '/v1/payments/checkout/tok_1/relay', body: { signature } });
     expect(checkout.getState()).toMatchObject({ phase: 'confirming', txKey: '0xbeef' });
-
-    const granted = { payer: QUOTE.payer, context: '0xabcd', delegationManager: '0x5' };
-    expect(await checkout.getState().grantPermission(granted)).toBe(true);
-    expect(await sent(2)).toEqual({ method: 'POST', path: '/v1/payments/checkout/tok_1/permission', body: granted });
-    expect(checkout.getState().checkout?.autoCharge).toMatchObject({
-      status: 'active',
-      revocation: { to: '0x5', data: '0xdead' },
-    });
-
-    // The wallet sent the revocation: the chain does not show it yet, then it does
-    expect(await checkout.getState().permissionRevoked()).toBe(false);
-    expect(await sent(3)).toEqual({ method: 'POST', path: '/v1/payments/checkout/tok_1/permission/revoked', body: {} });
-    expect(checkout.getState().checkout?.autoCharge).toMatchObject({ status: 'active' });
-    expect(await checkout.getState().permissionRevoked()).toBe(true);
-    expect(checkout.getState().checkout?.autoCharge).toEqual(autoCharge);
     checkout.getState().destroy();
   });
 
@@ -1046,8 +932,6 @@ describe('createCheckoutStore', () => {
       locale: vi.fn().mockResolvedValue({ locale: 'uk' }),
       submit: vi.fn().mockResolvedValue({ txKey: '0xbeef', status: 'processing' }),
       relay: vi.fn(),
-      permission: vi.fn(),
-      permissionRevoked: vi.fn(),
       url: (route: string) => `sim://checkout/${route}`,
     };
     const checkout = createCheckoutStore({ token: 'tok_1', api, EventSource: null, pollMs: 1_000 });
@@ -2218,8 +2102,6 @@ describe('createCheckoutStore: honest re-check states, moved money, hand-overs k
       locale: async (locale) => ({ locale }),
       submit: () => Promise.reject(new TypeError('Failed')),
       relay: async () => ({ status: 'submitted', txHash: '0xfeed' }),
-      permission: async () => ({ permission: null, autoCharge: null }),
-      permissionRevoked: async () => ({ autoCharge: null }),
       url: (route) => `sim://${route}`,
     };
     const playground = createCheckoutStore({ token: 'tok_1', api, EventSource: null });
@@ -3035,8 +2917,6 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
       locale: vi.fn(),
       submit: vi.fn(),
       relay: vi.fn(),
-      permission: vi.fn(),
-      permissionRevoked: vi.fn(),
       payerProofMessage: vi.fn().mockResolvedValue(messageOf(PAYER)),
       payerProof: vi.fn().mockResolvedValue(proofOf(PAYER)),
       url: (route: string) => `sim://checkout/${route}`,
@@ -3864,11 +3744,12 @@ describe('createCheckoutStore: a page left open', () => {
     await checkout.getState().load();
     expect(checkout.getState().phase).toBe('paid');
     const { receiptUrl } = checkout.getState();
+    // Buyer details sent as the invoice got paid
     fetchMock.mockImplementation(async () =>
-      json({ error: { code: 'payer_not_expected', message: 'Another wallet is expected' } }, 403),
+      json({ error: { code: 'invoice_not_payable', message: 'The invoice is paid' } }, 409),
     );
-    await checkout.getState().grantPermission({ payer: QUOTE.payer } as never);
-    expect(checkout.getState()).toMatchObject({ phase: 'paid', receiptUrl, error: { code: 'payer_not_expected' } });
+    expect(await checkout.getState().setBuyer({ email: 'buyer@example.com' } as never)).toBe(false);
+    expect(checkout.getState()).toMatchObject({ phase: 'paid', receiptUrl, error: { code: 'invoice_not_payable' } });
     checkout.getState().destroy();
   });
 

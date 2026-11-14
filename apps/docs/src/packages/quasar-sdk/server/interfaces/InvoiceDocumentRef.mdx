@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # InvoiceDocumentRef
 
-Defined in: [modules/payments/types.ts:360](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L360)
+Defined in: [modules/payments/types.ts:356](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L356)
 
 A document issued for an invoice, as [PaymentsModule.listInvoiceDocuments](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#listinvoicedocuments) lists it: the invoice, its receipt
 or a credit note, in one format. [PaymentsModule.getDocument](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#getdocument) downloads the invoice and the receipt,
@@ -16,7 +16,7 @@ or a credit note, in one format. [PaymentsModule.getDocument](?path=/docs/packag
 
 > **format**: `"pdf"` \| `"ubl"`
 
-Defined in: [modules/payments/types.ts:364](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L364)
+Defined in: [modules/payments/types.ts:360](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L360)
 
 `pdf`, or `ubl` for the e-invoice.
 
@@ -26,7 +26,7 @@ Defined in: [modules/payments/types.ts:364](https://github.com/TuwaIO/quasar-cli
 
 > **issuedAt**: `string`
 
-Defined in: [modules/payments/types.ts:370](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L370)
+Defined in: [modules/payments/types.ts:366](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L366)
 
 When it was issued.
 
@@ -36,7 +36,7 @@ When it was issued.
 
 > **kind**: `"invoice"` \| `"receipt"` \| `"credit_note"`
 
-Defined in: [modules/payments/types.ts:362](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L362)
+Defined in: [modules/payments/types.ts:358](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L358)
 
 What it is.
 
@@ -46,7 +46,7 @@ What it is.
 
 > **number**: `string`
 
-Defined in: [modules/payments/types.ts:366](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L366)
+Defined in: [modules/payments/types.ts:362](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L362)
 
 Its number.
 
@@ -56,6 +56,6 @@ Its number.
 
 > **refundId**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:368](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L368)
+Defined in: [modules/payments/types.ts:364](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L364)
 
 The refund a credit note credits; `null` for the invoice, the receipt and the credit note of a correction.

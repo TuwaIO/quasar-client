@@ -1,16 +1,14 @@
 /**
- * @file Payments module of the Quasar client: invoices, refunds, documents, quotes, payment methods and
- * subscriptions of a Payments app.
+ * @file Payments module of the Quasar client: invoices, refunds, documents, quotes and payment methods of a Payments
+ * app.
  */
 
 import { PAYMENTS_ENDPOINT } from '../../constants';
 import type { QuasarClient } from '../../core/client';
 import type {
-  CancelSubscriptionParams,
   CorrectInvoiceParams,
   CreateInvoiceParams,
   CreateOptions,
-  CreateSubscriptionParams,
   GetEventsParams,
   HeldTransfer,
   Invoice,
@@ -22,8 +20,6 @@ import type {
   ListHeldTransfersParams,
   ListInvoiceItemsParams,
   ListInvoicesParams,
-  ListSubscriptionItemsParams,
-  ListSubscriptionsParams,
   PaymentDocument,
   PaymentDocumentKind,
   PaymentMethod,
@@ -35,9 +31,6 @@ import type {
   RefundPreview,
   RefundStart,
   SubmitRefundParams,
-  Subscription,
-  SubscriptionCharge,
-  SubscriptionStart,
 } from './types';
 
 /** A path segment: IDs are encoded, so one never names another path. */
@@ -238,7 +231,7 @@ export class PaymentsModule {
    * Gives an invoice, in any status, a new checkout token and payment page (`POST /v1/payments/invoices/:id/checkout`),
    * for example when its link leaked. The earlier link stops working, also in the emails already sent, and so does the
    * link of an invoice this one replaced; the current link needs no call: the invoice shows it (`payUrl`). The link of a
-   * settled invoice stops opening 90 days after it settled, unless its subscription still runs.
+   * settled invoice stops opening 90 days after it settled.
    *
    * @param invoiceId - The invoice.
    * @returns The invoice with its new token and page.
@@ -438,169 +431,5 @@ export class PaymentsModule {
    */
   async listMethods(): Promise<{ object: 'list'; data: PaymentMethod[] }> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/methods`, { method: 'GET' });
-  }
-
-  /**
-   * Starts a subscription (`POST /v1/payments/subscriptions`): each period is one invoice, issued ahead of the period
-   * and paid like any invoice (`send_invoice`) or charged with the buyer's ERC-7715 permission (`auto_charge`).
-   *
-   * @param params - The plan, its interval and terms.
-   * @param options - `idempotencyKey`: a retry with the same key returns the subscription started first.
-   * @returns The subscription and, without a trial, its first invoice with the payment page.
-   * @throws {QuasarSDKError} `invalid_request` (400), `subscriptions_disabled` (403), `auto_charge_unavailable` with
-   *   `details.reason` (400), a timeout or a network error.
-   */
-  async createSubscription(params: CreateSubscriptionParams, options?: CreateOptions): Promise<SubscriptionStart> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions`, {
-      method: 'POST',
-      body: { ...params, endsAt: iso(params.endsAt) },
-      headers: idempotency(options),
-    });
-  }
-
-  /**
-   * Lists subscriptions, newest first (`GET /v1/payments/subscriptions`).
-   *
-   * @param params - Filters and paging.
-   * @returns One page.
-   * @throws {QuasarSDKError} `invalid_request` or `invalid_cursor` (400), a timeout or a network error.
-   */
-  async listSubscriptions(params: ListSubscriptionsParams = {}): Promise<PaymentsList<Subscription>> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions`, {
-      method: 'GET',
-      query: query({ status: several(params.status), limit: params.limit, cursor: params.cursor }),
-    });
-  }
-
-  /**
-   * Reads a subscription (`GET /v1/payments/subscriptions/:id`). The invoices of its periods and its automatic
-   * charges are lists of their own: {@link PaymentsModule.listSubscriptionInvoices} and
-   * {@link PaymentsModule.listSubscriptionCharges}.
-   *
-   * @param subscriptionId - The subscription.
-   * @returns The subscription.
-   * @throws {QuasarSDKError} `subscription_not_found` (404), a timeout or a network error.
-   */
-  async getSubscription(subscriptionId: string): Promise<Subscription> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}`, { method: 'GET' });
-  }
-
-  /**
-   * Lists the invoices of a subscription's periods, newest first (`GET /v1/payments/subscriptions/:id/invoices`).
-   *
-   * @param subscriptionId - The subscription.
-   * @param params - Paging.
-   * @returns One page; pass `nextCursor` as `cursor` for the next.
-   * @throws {QuasarSDKError} `subscription_not_found` (404), `invalid_request` or `invalid_cursor` (400), a timeout
-   *   or a network error.
-   */
-  async listSubscriptionInvoices(
-    subscriptionId: string,
-    params: ListSubscriptionItemsParams = {},
-  ): Promise<PaymentsList<Invoice>> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/invoices`, {
-      method: 'GET',
-      query: query({ limit: params.limit, cursor: params.cursor }),
-    });
-  }
-
-  /**
-   * Lists the automatic charges of a subscription, newest first (`GET /v1/payments/subscriptions/:id/charges`).
-   *
-   * @param subscriptionId - The subscription.
-   * @param params - Paging.
-   * @returns One page; pass `nextCursor` as `cursor` for the next.
-   * @throws {QuasarSDKError} `subscription_not_found` (404), `invalid_request` or `invalid_cursor` (400), a timeout
-   *   or a network error.
-   */
-  async listSubscriptionCharges(
-    subscriptionId: string,
-    params: ListSubscriptionItemsParams = {},
-  ): Promise<PaymentsList<SubscriptionCharge>> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/charges`, {
-      method: 'GET',
-      query: query({ limit: params.limit, cursor: params.cursor }),
-    });
-  }
-
-  /**
-   * Cancels a subscription now (its open invoices are cancelled) or when the running period ends
-   * (`POST /v1/payments/subscriptions/:id/cancel`).
-   *
-   * @param subscriptionId - The subscription.
-   * @param params - `atPeriodEnd` and `reason`.
-   * @returns The subscription.
-   * @throws {QuasarSDKError} `subscription_not_found` (404), `subscription_not_active` (409), a timeout or a network
-   *   error.
-   */
-  async cancelSubscription(subscriptionId: string, params: CancelSubscriptionParams = {}): Promise<Subscription> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/cancel`, {
-      method: 'POST',
-      body: params,
-    });
-  }
-
-  /**
-   * Takes back a cancellation scheduled for the period end (`POST /v1/payments/subscriptions/:id/cancel/undo`): the
-   * subscription renews again (`subscription.cancel_unscheduled`). Nothing scheduled: nothing changes.
-   *
-   * @param subscriptionId - The subscription.
-   * @returns The subscription.
-   * @throws {QuasarSDKError} `subscription_not_found` (404), a canceled or ended subscription (409), a timeout or a
-   *   network error.
-   */
-  async undoSubscriptionCancel(subscriptionId: string): Promise<Subscription> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/cancel/undo`, {
-      method: 'POST',
-      body: {},
-    });
-  }
-
-  /**
-   * Ends the automatic-charge permission of a subscription (`POST /v1/payments/subscriptions/:id/permission/end`), for a
-   * buyer who lost the wallet: Quasar charges it no more, and the buyer pays from the invoice links or gives a new
-   * permission. The delegation stays valid on chain until its wallet revokes it, but Quasar does not use it again.
-   *
-   * @param subscriptionId - The subscription.
-   * @returns The subscription.
-   * @throws {QuasarSDKError} `subscription_not_found` (404), `permission_not_active` (409), a timeout or a network error.
-   */
-  async endSubscriptionPermission(subscriptionId: string): Promise<Subscription> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/permission/end`, {
-      method: 'POST',
-      body: {},
-    });
-  }
-
-  /**
-   * Pauses a subscription (`POST /v1/payments/subscriptions/:id/pause`): its open invoices are cancelled and no period
-   * is billed until it resumes.
-   *
-   * @param subscriptionId - The subscription.
-   * @returns The subscription.
-   * @throws {QuasarSDKError} `subscription_not_found` (404), `subscription_not_active` (409), a timeout or a network
-   *   error.
-   */
-  async pauseSubscription(subscriptionId: string): Promise<Subscription> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/pause`, {
-      method: 'POST',
-      body: {},
-    });
-  }
-
-  /**
-   * Resumes a paused subscription (`POST /v1/payments/subscriptions/:id/resume`) with a new period that starts now
-   * and is invoiced at once.
-   *
-   * @param subscriptionId - The subscription.
-   * @returns The subscription and the new period's invoice with its payment page.
-   * @throws {QuasarSDKError} `subscription_not_found` (404), `subscription_not_paused` or `subscription_over` (409),
-   *   a timeout or a network error.
-   */
-  async resumeSubscription(subscriptionId: string): Promise<SubscriptionStart> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/subscriptions/${segment(subscriptionId)}/resume`, {
-      method: 'POST',
-      body: {},
-    });
   }
 }

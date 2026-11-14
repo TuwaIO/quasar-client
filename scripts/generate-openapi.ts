@@ -482,7 +482,7 @@ const document = generator.generateDocument({
     title: 'Quasar API',
     version: '1.0.0',
     description:
-      "The endpoints of the Quasar API that `@tuwaio/quasar-sdk` calls: syncing Pulsar transactions (EVM and Solana), which Quasar then tracks on the server, and reading their history; and, for a Payments app, invoices, refunds and subscriptions paid in crypto straight to your wallets, with the checkout that the buyer's browser calls with a checkout token. Quasar Cloud serves it at `https://api.tuwa.io`; a self-hosted Quasar server serves the same endpoints at its own URL (Payments where it runs with `PAYMENTS_ENABLED=true`).",
+      "The endpoints of the Quasar API that `@tuwaio/quasar-sdk` calls: syncing Pulsar transactions (EVM and Solana), which Quasar then tracks on the server, and reading their history; and, for a Payments app, invoices and refunds paid in crypto straight to your wallets, with the checkout that the buyer's browser calls with a checkout token. Quasar Cloud serves it at `https://api.tuwa.io`; a self-hosted Quasar server serves the same endpoints at its own URL (Payments where it runs with `PAYMENTS_ENABLED=true`).",
     contact: {
       name: 'TUWA Team',
       url: 'https://github.com/TuwaIO',
@@ -510,10 +510,6 @@ const document = generator.generateDocument({
     {
       name: 'Refunds',
       description: 'Refunds sent from your wallet, verified by Quasar, with credit notes.',
-    },
-    {
-      name: 'Subscriptions',
-      description: 'Plans billed every period as one invoice.',
     },
     {
       name: 'Checkout',

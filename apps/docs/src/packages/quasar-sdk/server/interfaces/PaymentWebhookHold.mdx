@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentWebhookHold
 
-Defined in: [webhooks.ts:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L60)
+Defined in: [webhooks.ts:40](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L40)
 
 What a hold is about (`data.hold` of `invoice.held`): an invoice paid in a way that waits for your decision. `reason`
 (`late`, `aml`, `quote_expired`), its transaction (`txHash`) and network (`chainId`), the wallets that sent it
@@ -17,7 +17,7 @@ is refused (`sender_blocked`).
 
 > `optional` **chainId?**: `string` \| `null`
 
-Defined in: [webhooks.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L66)
+Defined in: [webhooks.ts:46](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L46)
 
 CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out.
 
@@ -27,7 +27,7 @@ CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave 
 
 > `optional` **late?**: `true`
 
-Defined in: [webhooks.ts:70](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L70)
+Defined in: [webhooks.ts:50](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L50)
 
 It arrived after the invoice expired or was cancelled, or was handed over after `dueAt`.
 
@@ -37,7 +37,7 @@ It arrived after the invoice expired or was cancelled, or was handed over after 
 
 > **reason**: `"late"` \| `"quote_expired"` \| `"aml"` \| `null`
 
-Defined in: [webhooks.ts:62](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L62)
+Defined in: [webhooks.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L42)
 
 Why the payment is held; `null` when Quasar did not record why.
 
@@ -47,7 +47,7 @@ Why the payment is held; `null` when Quasar did not record why.
 
 > `optional` **senders?**: `string`[]
 
-Defined in: [webhooks.ts:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L68)
+Defined in: [webhooks.ts:48](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L48)
 
 The wallets that sent it.
 
@@ -57,6 +57,6 @@ The wallets that sent it.
 
 > **txHash**: `string` \| `null`
 
-Defined in: [webhooks.ts:64](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L64)
+Defined in: [webhooks.ts:44](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L44)
 
 The transaction of the held payment.
