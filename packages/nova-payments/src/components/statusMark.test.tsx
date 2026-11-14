@@ -105,7 +105,7 @@ describe('the mark of a status screen', () => {
     const looks = {
       unconfirmed: [icons.ExclamationTriangleIcon, 'pending-icon'],
       underpaid: [icons.ExclamationTriangleIcon, 'pending-icon'],
-      held: [icons.MagnifyingGlassIcon, 'info-icon'],
+      needs_review: [icons.MagnifyingGlassIcon, 'info-icon'],
       refunded: [icons.ArrowUturnLeftIcon, 'info-icon'],
       expired: [icons.ClockIcon, 'text-secondary'],
       replaced: [icons.ArrowPathRoundedSquareIcon, 'info-icon'],

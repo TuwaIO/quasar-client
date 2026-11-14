@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Invoice
 
-Defined in: [modules/payments/types.ts:256](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L256)
+Defined in: [modules/payments/types.ts:265](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L265)
 
 An invoice as the Payments API returns it. Amounts are decimal strings in the invoice currency.
 
@@ -18,7 +18,7 @@ An invoice as the Payments API returns it. Amounts are decimal strings in the in
 
 > **aml**: [`InvoiceAml`](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceaml--docs) \| `null`
 
-Defined in: [modules/payments/types.ts:332](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L332)
+Defined in: [modules/payments/types.ts:341](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L341)
 
 The payer's AML screening, once there was one.
 
@@ -28,7 +28,7 @@ The payer's AML screening, once there was one.
 
 > **buyer**: [`Buyer`](?path=/docs/packages-quasar-sdk-server-interfaces-buyer--docs) & `object` \| `null`
 
-Defined in: [modules/payments/types.ts:280](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L280)
+Defined in: [modules/payments/types.ts:289](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L289)
 
 The buyer as printed.
 
@@ -38,7 +38,7 @@ The buyer as printed.
 
 > **buyerReference**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:284](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L284)
+Defined in: [modules/payments/types.ts:293](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L293)
 
 BT-10.
 
@@ -48,7 +48,7 @@ BT-10.
 
 > **cancelUrl**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:312](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L312)
+Defined in: [modules/payments/types.ts:321](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L321)
 
 Where the checkout sends a buyer who gives up.
 
@@ -58,7 +58,7 @@ Where the checkout sends a buyer who gives up.
 
 > **checkoutToken**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:317](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L317)
+Defined in: [modules/payments/types.ts:326](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L326)
 
 The checkout token while the invoice can be paid (`open`, `processing`, `underpaid`), for a checkout embedded in
 your page; `null` otherwise.
@@ -69,7 +69,7 @@ your page; `null` otherwise.
 
 > **createdAt**: `string`
 
-Defined in: [modules/payments/types.ts:346](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L346)
+Defined in: [modules/payments/types.ts:355](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L355)
 
 When it was created.
 
@@ -79,7 +79,7 @@ When it was created.
 
 > **currency**: [`PaymentsCurrency`](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentscurrency--docs)
 
-Defined in: [modules/payments/types.ts:268](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L268)
+Defined in: [modules/payments/types.ts:277](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L277)
 
 Currency.
 
@@ -89,7 +89,7 @@ Currency.
 
 > **dueAt**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:276](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L276)
+Defined in: [modules/payments/types.ts:285](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L285)
 
 When it stops being payable.
 
@@ -99,7 +99,7 @@ When it stops being payable.
 
 > **eInvoiceSkipped**: `string`[] \| `null`
 
-Defined in: [modules/payments/types.ts:336](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L336)
+Defined in: [modules/payments/types.ts:345](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L345)
 
 What the e-invoice lacked when the invoice was issued as a plain PDF, for example `buyer.country`.
 
@@ -109,7 +109,7 @@ What the e-invoice lacked when the invoice was issued as a plain PDF, for exampl
 
 > **environment**: [`PaymentsEnvironment`](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentsenvironment--docs) \| `null`
 
-Defined in: [modules/payments/types.ts:266](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L266)
+Defined in: [modules/payments/types.ts:275](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L275)
 
 Live or test.
 
@@ -119,7 +119,7 @@ Live or test.
 
 > **expectedPayer**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:282](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L282)
+Defined in: [modules/payments/types.ts:291](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L291)
 
 The CAIP-10 account you expected to pay.
 
@@ -129,7 +129,7 @@ The CAIP-10 account you expected to pay.
 
 > **id**: `string`
 
-Defined in: [modules/payments/types.ts:258](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L258)
+Defined in: [modules/payments/types.ts:267](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L267)
 
 Invoice ID.
 
@@ -139,7 +139,7 @@ Invoice ID.
 
 > **issuedAt**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:272](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L272)
+Defined in: [modules/payments/types.ts:281](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L281)
 
 When it was issued (ISO 8601).
 
@@ -149,7 +149,7 @@ When it was issued (ISO 8601).
 
 > **lineItems**: [`InvoiceLine`](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceline--docs)[]
 
-Defined in: [modules/payments/types.ts:288](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L288)
+Defined in: [modules/payments/types.ts:297](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L297)
 
 The lines.
 
@@ -159,7 +159,7 @@ The lines.
 
 > **locale**: [`InvoiceLocale`](?path=/docs/packages-quasar-sdk-server-type-aliases-invoicelocale--docs) \| `null`
 
-Defined in: [modules/payments/types.ts:270](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L270)
+Defined in: [modules/payments/types.ts:279](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L279)
 
 Language of its documents and emails.
 
@@ -169,7 +169,7 @@ Language of its documents and emails.
 
 > **metadata**: `Record`\<`string`, `unknown`\> \| `null`
 
-Defined in: [modules/payments/types.ts:308](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L308)
+Defined in: [modules/payments/types.ts:317](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L317)
 
 Your data.
 
@@ -179,7 +179,7 @@ Your data.
 
 > **notes**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:302](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L302)
+Defined in: [modules/payments/types.ts:311](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L311)
 
 The note printed on the invoice.
 
@@ -189,7 +189,7 @@ The note printed on the invoice.
 
 > **number**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:262](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L262)
+Defined in: [modules/payments/types.ts:271](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L271)
 
 Series number, for example `INV-2026-42` (`TEST-` for test invoices).
 
@@ -199,7 +199,7 @@ Series number, for example `INV-2026-42` (`TEST-` for test invoices).
 
 > **object**: `"invoice"`
 
-Defined in: [modules/payments/types.ts:260](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L260)
+Defined in: [modules/payments/types.ts:269](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L269)
 
 Always `invoice`.
 
@@ -209,7 +209,7 @@ Always `invoice`.
 
 > **orderReference**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:286](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L286)
+Defined in: [modules/payments/types.ts:295](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L295)
 
 BT-13.
 
@@ -219,7 +219,7 @@ BT-13.
 
 > **payUrl**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:319](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L319)
+Defined in: [modules/payments/types.ts:328](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L328)
 
 The payment page while the invoice can be paid: the link its emails carry.
 
@@ -229,7 +229,7 @@ The payment page while the invoice can be paid: the link its emails carry.
 
 > **pricesIncludeTax**: `boolean` \| `null`
 
-Defined in: [modules/payments/types.ts:290](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L290)
+Defined in: [modules/payments/types.ts:299](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L299)
 
 Whether unit prices include VAT.
 
@@ -239,7 +239,7 @@ Whether unit prices include VAT.
 
 > **quote**: [`InvoiceQuote`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicequote--docs) \| `null`
 
-Defined in: [modules/payments/types.ts:321](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L321)
+Defined in: [modules/payments/types.ts:330](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L330)
 
 The locked quote, once there is one.
 
@@ -249,7 +249,7 @@ The locked quote, once there is one.
 
 > **receiptNumber**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:334](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L334)
+Defined in: [modules/payments/types.ts:343](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L343)
 
 The receipt number, once paid.
 
@@ -259,7 +259,7 @@ The receipt number, once paid.
 
 > **refundedTotal**: `string`
 
-Defined in: [modules/payments/types.ts:338](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L338)
+Defined in: [modules/payments/types.ts:347](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L347)
 
 Refunded so far, in the invoice currency.
 
@@ -269,7 +269,7 @@ Refunded so far, in the invoice currency.
 
 > `optional` **refundShort?**: `string`
 
-Defined in: [modules/payments/types.ts:340](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L340)
+Defined in: [modules/payments/types.ts:349](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L349)
 
 What refunds that arrived short delivered, of those nothing completes yet: a new refund has that much less to return. Read with one invoice only.
 
@@ -279,7 +279,7 @@ What refunds that arrived short delivered, of those nothing completes yet: a new
 
 > **replacedBy**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:344](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L344)
+Defined in: [modules/payments/types.ts:353](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L353)
 
 The invoice that corrects this one.
 
@@ -289,7 +289,7 @@ The invoice that corrects this one.
 
 > **replaces**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:342](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L342)
+Defined in: [modules/payments/types.ts:351](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L351)
 
 The invoice this one corrects.
 
@@ -299,7 +299,7 @@ The invoice this one corrects.
 
 > **reverseCharge**: `boolean` \| `null`
 
-Defined in: [modules/payments/types.ts:304](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L304)
+Defined in: [modules/payments/types.ts:313](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L313)
 
 Whether it is a reverse-charge invoice.
 
@@ -309,12 +309,12 @@ Whether it is a reverse-charge invoice.
 
 > **reviewReason**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:330](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L330)
+Defined in: [modules/payments/types.ts:339](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L339)
 
 Why the payment waits for you: `overpaid` when the app flags overpayments, `quote_expired` when it arrived after
 its locked quote expired, `payment_reverted` when a payment Quasar credited is gone from the chain (check the
 transaction `payment.reverted` names; the invoice keeps its status). A transfer Quasar could tie to no invoice
-never holds the invoice: it is a held transfer of its own.
+never puts the invoice under review: it is an unmatched transfer of its own.
 
 ***
 
@@ -322,7 +322,7 @@ never holds the invoice: it is a held transfer of its own.
 
 > **rounding**: `string`
 
-Defined in: [modules/payments/types.ts:296](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L296)
+Defined in: [modules/payments/types.ts:305](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L305)
 
 Rounding.
 
@@ -332,7 +332,7 @@ Rounding.
 
 > **seller**: [`InvoiceSeller`](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceseller--docs) \| `null`
 
-Defined in: [modules/payments/types.ts:278](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L278)
+Defined in: [modules/payments/types.ts:287](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L287)
 
 The seller as printed, from the app's settings at issue.
 
@@ -342,7 +342,7 @@ The seller as printed, from the app's settings at issue.
 
 > **settlement**: [`InvoiceSettlement`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicesettlement--docs) \| `null`
 
-Defined in: [modules/payments/types.ts:323](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L323)
+Defined in: [modules/payments/types.ts:332](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L332)
 
 The payment, once there is one.
 
@@ -352,7 +352,7 @@ The payment, once there is one.
 
 > **status**: [`InvoiceStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-invoicestatus--docs)
 
-Defined in: [modules/payments/types.ts:264](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L264)
+Defined in: [modules/payments/types.ts:273](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L273)
 
 State of the invoice.
 
@@ -362,7 +362,7 @@ State of the invoice.
 
 > **subtotal**: `string`
 
-Defined in: [modules/payments/types.ts:292](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L292)
+Defined in: [modules/payments/types.ts:301](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L301)
 
 Total without VAT.
 
@@ -372,7 +372,7 @@ Total without VAT.
 
 > **successUrl**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:310](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L310)
+Defined in: [modules/payments/types.ts:319](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L319)
 
 Where the checkout sends the buyer after paying.
 
@@ -382,7 +382,7 @@ Where the checkout sends the buyer after paying.
 
 > **supplyDate**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:274](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L274)
+Defined in: [modules/payments/types.ts:283](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L283)
 
 Date of supply.
 
@@ -392,7 +392,7 @@ Date of supply.
 
 > **taxBreakdown**: `object`[]
 
-Defined in: [modules/payments/types.ts:300](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L300)
+Defined in: [modules/payments/types.ts:309](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L309)
 
 VAT per category and rate.
 
@@ -418,7 +418,7 @@ VAT per category and rate.
 
 > **taxExemptionReason**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:306](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L306)
+Defined in: [modules/payments/types.ts:315](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L315)
 
 Why its lines are exempt.
 
@@ -428,7 +428,7 @@ Why its lines are exempt.
 
 > **taxTotal**: `string`
 
-Defined in: [modules/payments/types.ts:294](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L294)
+Defined in: [modules/payments/types.ts:303](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L303)
 
 VAT.
 
@@ -438,7 +438,7 @@ VAT.
 
 > **total**: `string`
 
-Defined in: [modules/payments/types.ts:298](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L298)
+Defined in: [modules/payments/types.ts:307](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L307)
 
 Total to pay.
 
@@ -448,6 +448,6 @@ Total to pay.
 
 > **updatedAt**: `string`
 
-Defined in: [modules/payments/types.ts:348](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L348)
+Defined in: [modules/payments/types.ts:357](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L357)
 
 When it last changed.

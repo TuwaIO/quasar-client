@@ -274,7 +274,7 @@ describe('RefundButton', () => {
       expect(textOf(amountStep(flow))).not.toContain('Check the wallet first');
     });
 
-    it('asks nothing when the price held: a stablecoin at par goes straight on', async () => {
+    it('asks nothing when the price stayed: a stablecoin at par goes straight on', async () => {
       const flow = flowOf({
         step: 'amount',
         preview: vi.fn(async () => ({ ...PREVIEW, cryptoAmount: '40100000000000000' })),
@@ -340,8 +340,8 @@ describe('RefundButton', () => {
     expect(flow.send).toHaveBeenCalled();
   });
 
-  it('names the sender of a held transfer as the one its refund goes back to', () => {
-    const flow = flowOf({ refund: { ...(flowOf().refund as object), heldTransfer: 'ht_1' } as never });
+  it('names the sender of an unmatched transfer as the one its refund goes back to', () => {
+    const flow = flowOf({ refund: { ...(flowOf().refund as object), unmatchedTransfer: 'ut_1' } as never });
     const text = textOf(confirm(flow));
     expect(text).toContain('the sender of this transfer');
     expect(text).not.toContain('the payer');
@@ -402,11 +402,11 @@ describe('RefundButton', () => {
     const failed = (flow: RefundFlow) =>
       render(FailedStep, { flow, labels: defaultLabels, locale: 'en', values: {}, recordAction: null, close: vi.fn() });
 
-    it("sends a held transfer's refund back to its row: asked again here it would refund the whole invoice", () => {
+    it("sends an unmatched transfer's refund back to its row: asked again here it would refund the whole invoice", () => {
       const flow = flowOf({
         step: 'failed',
         phase: 'failed',
-        refund: { id: 'rf_2', mode: 'exact_received', heldTransfer: 'ht_1', creditNoteNumber: null } as never,
+        refund: { id: 'rf_2', mode: 'exact_received', unmatchedTransfer: 'ut_1', creditNoteNumber: null } as never,
       });
       const close = vi.fn();
       const tree = render(FailedStep, {
@@ -417,7 +417,7 @@ describe('RefundButton', () => {
         recordAction: 'record',
         close,
       });
-      expect(textOf(tree)).toContain(defaultLabels.refund.failedHeldNote);
+      expect(textOf(tree)).toContain(defaultLabels.refund.failedUnmatchedNote);
       expect(fixture.ofType(tree, SecondaryButton)).toHaveLength(0);
       (button(tree, PrimaryButton).props.onClick as () => void)();
       expect(close).toHaveBeenCalledOnce();
@@ -469,14 +469,14 @@ describe('RefundButton', () => {
       ['refund_from_buyer', 'failedFromBuyer'],
       ['dropped', 'failedDropped'],
       ['withdrawn', 'failedWithdrawn'],
-    ] as const)("says why a held transfer's refund failed in words, never as %s", (failureReason, label) => {
+    ] as const)("says why an unmatched transfer's refund failed in words, never as %s", (failureReason, label) => {
       const flow = flowOf({
         step: 'failed',
         phase: 'failed',
         refund: {
           id: 'rf_4',
           mode: 'exact_received',
-          heldTransfer: 'ht_1',
+          unmatchedTransfer: 'ut_1',
           failureReason,
           creditNoteNumber: null,
         } as never,
@@ -503,14 +503,14 @@ describe('RefundButton', () => {
       },
     );
 
-    it('heads a withdrawn refund of a held transfer the same way', () => {
+    it('heads a withdrawn refund of an unmatched transfer the same way', () => {
       const flow = flowOf({
         step: 'failed',
         phase: 'failed',
         refund: {
           id: 'rf_7',
           mode: 'exact_received',
-          heldTransfer: 'ht_1',
+          unmatchedTransfer: 'ut_1',
           failureReason: 'withdrawn',
           creditNoteNumber: null,
         } as never,

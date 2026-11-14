@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # CheckoutPhase
 
-> **CheckoutPhase** = `"loading"` \| `"buyer"` \| `"selectMethod"` \| `"quoting"` \| `"awaitingPayment"` \| `"submitting"` \| `"confirming"` \| `"unconfirmed"` \| `"paid"` \| `"underpaid"` \| `"held"` \| `"refunded"` \| `"expired"` \| `"cancelled"` \| `"blocked"` \| `"error"`
+> **CheckoutPhase** = `"loading"` \| `"buyer"` \| `"selectMethod"` \| `"quoting"` \| `"awaitingPayment"` \| `"submitting"` \| `"confirming"` \| `"unconfirmed"` \| `"paid"` \| `"underpaid"` \| `"needs_review"` \| `"refunded"` \| `"expired"` \| `"cancelled"` \| `"blocked"` \| `"error"`
 
 Defined in: [checkout/store.ts:57](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L57)
 
@@ -31,12 +31,12 @@ Where the payment stands:
   Quasar decides about a transaction another invoice handed over first (`reason` `tx_already_used`), and for a
   payment the network confirmed that Quasar has not recorded yet (`reason` `settlement_failed`); for these two
   [CheckoutState.payAgain](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#payagain) does nothing.
-- `paid`, `underpaid` (the buyer may top it up), `held` (the merchant looks at the payment), `refunded`, `expired`,
-  `cancelled`: the invoice's outcome. An invoice that expires or is cancelled while a payment is on its way (one this
-  store handed over with `submit` or `relay`, or one Quasar reports) is not over: the payment may still arrive, and
-  the invoice then becomes `paid` (Quasar lets a payment it learned of before `dueAt` confirm for up to 30 minutes)
-  or `held` (a late payment, or one to a cancelled invoice, that the merchant accepts or returns). The store keeps
-  following it while [CheckoutState.paymentOnTheWay](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#paymentontheway) or [CheckoutState.invoicePaymentOnTheWay](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#invoicepaymentontheway) is
+- `paid`, `underpaid` (the buyer may top it up), `needs_review` (the merchant looks at the payment; the money is
+  already in the merchant's wallet), `refunded`, `expired`, `cancelled`: the invoice's outcome. An invoice that
+  expires or is cancelled while a payment is on its way (one this store handed over with `submit` or `relay`, or one
+  Quasar reports) is not over: the payment may still arrive, and the invoice then becomes `paid` (Quasar lets a
+  payment it learned of before `dueAt` confirm for up to 30 minutes) or `needs_review` (a late payment, or one to a
+  cancelled invoice, that the merchant accepts or returns). The store keeps following it while [CheckoutState.paymentOnTheWay](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#paymentontheway) or [CheckoutState.invoicePaymentOnTheWay](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#invoicepaymentontheway) is
   `true`, for a limited time.
 - `blocked`: AML screening refused the payer's wallet.
 - `error`: the checkout could not be read (a wrong or retired link, the network).

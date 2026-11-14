@@ -164,17 +164,17 @@ export const esLabels: NovaPaymentsLabels = {
     mismatch: 'Esta transacción no paga la factura. Si salió dinero de tu billetera, contacta con {merchant}.',
     mismatchTakenElsewhere:
       'Esta transacción paga otra factura. Si era tu pago de esta, contacta con {merchant} e indica el hash de la transacción.',
-    mismatchHeldElsewhere:
-      'Esta transacción está vinculada a otra factura, que la retiene para devolverla a la billetera que la envió. No cuenta para esta factura. Si era tu pago de esta, contacta con {merchant} con el hash de la transacción.',
+    mismatchUnmatchedElsewhere:
+      'Esta transacción está vinculada a otra factura; {merchant} la devuelve a la billetera que la envió. No cuenta para esta factura. Si era tu pago de esta, contacta con {merchant} con el hash de la transacción.',
     mismatchOtherWallet:
       'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. Si salió dinero de tu billetera, contacta con {merchant}.',
-    mismatchOtherWalletHeld:
+    mismatchOtherWalletUnmatched:
       'Esta transferencia llegó desde una billetera que no confirmó esta factura, así que no la paga. {merchant} la devuelve a la billetera que la envió, y aún puedes pagar esta factura desde la billetera que la confirmó.',
-    mismatchChargeHeld:
+    mismatchChargeUnmatched:
       'Este pago se envió con un precio anterior de esta factura, así que no la paga. {merchant} lo devuelve a tu billetera y aún puedes pagar la factura.',
     mismatchTooManyParts:
       'Esta factura ya recibió todos los pagos parciales que admite, así que esta transferencia no la paga. {merchant} la devuelve a tu billetera; envía todo el resto de una vez.',
-    mismatchNoReferenceHeld:
+    mismatchNoReferenceUnmatched:
       'Esta transferencia llegó sin la referencia de Solana Pay de esta factura, y su importe por sí solo no la vincula a la factura, así que no la paga. {merchant} la devuelve a la billetera que la envió, y aún puedes pagar la factura.',
     payAgain: 'Pagar de nuevo',
     unsupported: '{wallet} no puede hacer este pago.',
@@ -324,13 +324,13 @@ export const esLabels: NovaPaymentsLabels = {
     payRestFirstWallet:
       'Solo la billetera que pagó primero, {wallet}, puede pagar el resto. Conecta esa billetera para pagarlo.',
     payRest: 'Pagar el resto',
-    heldTitle: 'Pago recibido, {merchant} lo está revisando',
-    heldScreening: '{merchant} revisa el pago antes de confirmar el pedido.',
-    heldLate: 'El pago llegó después de que se cerrara la factura. {merchant} lo acepta o lo devuelve.',
-    heldOverpaid:
+    reviewTitle: 'Pago recibido, {merchant} lo está revisando',
+    reviewScreening: '{merchant} revisa el pago antes de confirmar el pedido.',
+    reviewLate: 'El pago llegó después de que se cerrara la factura. {merchant} lo acepta o lo devuelve.',
+    reviewOverpaid:
       'Enviaste más de lo que indica la factura. {merchant} confirma el pedido o te devuelve la diferencia a tu billetera.',
-    heldQuoteExpired: 'El pago llegó después de que venciera el precio fijado. {merchant} lo acepta o lo devuelve.',
-    heldNote: 'El vendedor se pondrá en contacto contigo si hace falta algo.',
+    reviewQuoteExpired: 'El pago llegó después de que venciera el precio fijado. {merchant} lo acepta o lo devuelve.',
+    reviewNote: 'El vendedor se pondrá en contacto contigo si hace falta algo.',
     refundedTitle: 'Reembolsado',
     refundedText: '{merchant} reembolsó esta factura: {amount} {currency}.',
     expiredTitle: 'Esta factura ha vencido',
@@ -339,7 +339,7 @@ export const esLabels: NovaPaymentsLabels = {
     expiredPartNoAmount: 'Se podía pagar hasta el {date}. Llegó parte del pago.',
     closedPartText: '{merchant} cerró esta factura. Llegaron {amount} del pago.',
     expiredPartRefund: '{merchant} puede reembolsarla a la billetera que pagó; contacta con {merchant}.',
-    expiredNote: 'Un pago enviado después del plazo queda retenido hasta que el vendedor lo reembolse o lo acepte.',
+    expiredNote: 'Un pago enviado después del plazo llega igualmente al vendedor, que lo acepta o lo reembolsa.',
     expiredWhileConfirming:
       'La factura se cerró mientras se confirmaba tu pago. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
     expiredAfterQr: 'Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
@@ -502,7 +502,8 @@ export const esLabels: NovaPaymentsLabels = {
       'Lo cancelaste en tu billetera. Podrás enviarlo de nuevo cuando la cancelación sea definitiva, normalmente en unos minutos.',
     failedCancelled: 'Lo cancelaste en tu billetera, así que no se envió nada. Puedes enviarlo de nuevo.',
     failedResendConfirmed: 'Confirmaste que no salió de tu billetera: se puede enviar de nuevo.',
-    failedHeldNote: 'La transferencia sigue retenida. Cierra esta ventana: su fila indica qué hacer a continuación.',
+    failedUnmatchedNote:
+      'La transferencia sigue pendiente de devolución. Cierra esta ventana: su fila indica qué hacer a continuación.',
     notSent: 'No enviado',
     notEnough: 'No hay suficiente {symbol} en {address}: tiene {balance}.',
     declined: 'Rechazaste la solicitud en {wallet}.',
@@ -513,7 +514,7 @@ export const esLabels: NovaPaymentsLabels = {
     unreachable: 'Quasar no responde, así que no se envió nada. Inténtalo de nuevo en un momento.',
     refusedAmount: 'El importe supera lo que queda por reembolsar.',
     refusedNotRefundable: 'Este pago ya no se puede reembolsar.',
-    refusedWhole: 'Una transferencia retenida se devuelve entera.',
+    refusedWhole: 'Un pago en revisión se reembolsa entero.',
     refusedBlocked: 'Un control de cumplimiento bloquea la billetera a reembolsar. No se le puede enviar nada.',
     refusedNotWaiting: 'Este reembolso ya no espera una transacción. No se envió nada.',
     refusedMayHaveLanded:

@@ -65,7 +65,12 @@ const merchantWallet = (chainId = 'eip155:8453'): CheckoutWallet => ({
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function setup(
-  options: { balance?: bigint; to?: string | null; submit?: RefundStoreOptions['submit']; heldTransfer?: string } = {},
+  options: {
+    balance?: bigint;
+    to?: string | null;
+    submit?: RefundStoreOptions['submit'];
+    unmatchedTransfer?: string;
+  } = {},
 ) {
   const adapter: PaymentsAdapter = {
     family: 'eip155',
@@ -77,7 +82,9 @@ function setup(
   settings.adapters = [adapter];
   settings.pulsar = undefined;
   const request = vi.fn(async () => ({
-    refund: options.heldTransfer ? ({ ...(refund as object), heldTransfer: options.heldTransfer } as never) : refund,
+    refund: options.unmatchedTransfer
+      ? ({ ...(refund as object), unmatchedTransfer: options.unmatchedTransfer } as never)
+      : refund,
     instructions: { ...instructions, to: options.to === undefined ? PAYER : options.to },
   }));
   const submit = vi.fn(
@@ -502,8 +509,8 @@ describe('useRefund', () => {
     expect(adapter.sendTransfer).not.toHaveBeenCalled();
   });
 
-  it('describes the refund of a held transfer as going back to the sender of the transfer', async () => {
-    const { adapter, flow, store } = setup({ heldTransfer: 'ht_1' });
+  it('describes the refund of an unmatched transfer as going back to the sender of the transfer', async () => {
+    const { adapter, flow, store } = setup({ unmatchedTransfer: 'ut_1' });
     settings.pulsar = { injectExternalPendingTxs: vi.fn(async () => undefined) };
     adapter.pulsarTransaction = vi.fn((params) => ({ txKey: params.txKey, title: params.title }) as never);
     wallet = merchantWallet();

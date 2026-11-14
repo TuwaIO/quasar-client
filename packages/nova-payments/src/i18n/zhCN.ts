@@ -156,17 +156,17 @@ export const zhCNLabels: NovaPaymentsLabels = {
     didNotGoThrough: '付款未成功。发票仍可支付。',
     mismatch: '此交易未支付该发票。如果有款项从您的钱包转出，请联系 {merchant}。',
     mismatchTakenElsewhere: '此交易支付的是另一张发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
-    mismatchHeldElsewhere:
-      '此交易已关联到另一张发票，该发票暂扣此交易，以便退回给发送它的钱包。它不计入此发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
+    mismatchUnmatchedElsewhere:
+      '此交易已关联到另一张发票，{merchant} 会将其退回到发送它的钱包。它不计入此发票。如果这是您对此发票的付款，请提供交易哈希联系 {merchant}。',
     mismatchOtherWallet:
       '此转账来自未确认此发票的钱包，因此不支付此发票。如果有款项从您的钱包转出，请联系 {merchant}。',
-    mismatchOtherWalletHeld:
+    mismatchOtherWalletUnmatched:
       '此转账来自未确认此发票的钱包，因此不支付此发票。{merchant} 会将其退回到发送它的钱包，您仍可使用已确认此发票的钱包支付此发票。',
-    mismatchChargeHeld:
+    mismatchChargeUnmatched:
       '此付款是按此发票先前的价格发送的，因此不计入此发票。{merchant} 会将其退回您的钱包，您仍可支付此发票。',
     mismatchTooManyParts:
       '此发票接受的部分付款已达上限，因此这笔转账不计入此发票。{merchant} 会将其退回您的钱包；请一次发送全部余额。',
-    mismatchNoReferenceHeld:
+    mismatchNoReferenceUnmatched:
       '此转账没有携带此发票的 Solana Pay 付款参考信息，仅凭金额也无法将其与此发票对应，因此不计入此发票。{merchant} 会将其退回到发送它的钱包，您仍可支付此发票。',
     payAgain: '再次付款',
     unsupported: '{wallet} 无法完成此笔付款。',
@@ -302,12 +302,12 @@ export const zhCNLabels: NovaPaymentsLabels = {
     underpaidBlocked: '此钱包未通过钱包检查，因此无法支付剩余款项。请联系 {merchant}。',
     payRestFirstWallet: '只有最先付款的钱包 {wallet} 才能支付剩余款项。请连接该钱包后支付。',
     payRest: '支付剩余款项',
-    heldTitle: '已收到付款，{merchant} 正在核查',
-    heldScreening: '{merchant} 会在确认订单之前核查这笔付款。',
-    heldLate: '付款在发票关闭后才到账。{merchant} 会接受或退回这笔款项。',
-    heldOverpaid: '您发送的金额超过了发票金额。{merchant} 会确认订单，或将差额退回您的钱包。',
-    heldQuoteExpired: '付款在价格锁定到期后才到账。{merchant} 会接受或退回这笔款项。',
-    heldNote: '如有需要，卖方会与您联系。',
+    reviewTitle: '已收到付款，{merchant} 正在核查',
+    reviewScreening: '{merchant} 会在确认订单之前核查这笔付款。',
+    reviewLate: '付款在发票关闭后才到账。{merchant} 会接受或退回这笔款项。',
+    reviewOverpaid: '您发送的金额超过了发票金额。{merchant} 会确认订单，或将差额退回您的钱包。',
+    reviewQuoteExpired: '付款在价格锁定到期后才到账。{merchant} 会接受或退回这笔款项。',
+    reviewNote: '如有需要，卖方会与您联系。',
     refundedTitle: '已退款',
     refundedText: '{merchant} 已退还此发票的款项：{amount} {currency}。',
     expiredTitle: '此发票已过期',
@@ -316,7 +316,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     expiredPartNoAmount: '付款截止时间为 {date}。已收到部分付款。',
     closedPartText: '{merchant} 已关闭此发票。已收到 {amount} 付款。',
     expiredPartRefund: '{merchant} 可以将这笔款项退回付款钱包；请联系 {merchant}。',
-    expiredNote: '截止时间之后发送的付款会被保留，由卖方退款或接受。',
+    expiredNote: '截止时间之后发送的付款仍会到达卖方，由卖方接受或退款。',
     expiredWhileConfirming:
       '您的付款确认期间发票已关闭。如果付款到账，将被记录并显示给 {merchant}，由其接受或退回这笔款项。',
     expiredAfterQr: '如果您已通过二维码付款，{merchant} 会在款项到账后接受或退回这笔款项。',
@@ -465,7 +465,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     failedCancelling: '您已在钱包中取消此退款。取消最终确认后即可再次发送，通常需要几分钟。',
     failedCancelled: '您已在钱包中取消此退款，因此未发送任何款项。您可以再次发送。',
     failedResendConfirmed: '您已确认该退款未从您的钱包转出：可以重新发送。',
-    failedHeldNote: '该转账仍被暂扣。请关闭此窗口，其所在行会说明下一步操作。',
+    failedUnmatchedNote: '该转账仍在等待退款。请关闭此窗口，其所在行会说明下一步操作。',
     notSent: '未发送',
     notEnough: '{address} 上的 {symbol} 不足：余额为 {balance}。',
     declined: '您在 {wallet} 中拒绝了请求。',
@@ -476,7 +476,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     unreachable: 'Quasar 没有响应，因此未发送任何内容。请稍后重试。',
     refusedAmount: '金额超过了可退还的余额。',
     refusedNotRefundable: '此付款已无法退款。',
-    refusedWhole: '被扣留的转账只能全额退还。',
+    refusedWhole: '待审核的付款只能全额退款。',
     refusedBlocked: '合规检查已阻止要退款的钱包，无法向其发送。',
     refusedNotWaiting: '此退款已不再等待交易。未发送任何内容。',
     refusedMayHaveLanded: '此退款之前的交易可能已成功。请先核实，再重新申请。',

@@ -43,7 +43,7 @@ export interface RefundState {
   /**
    * What a refund would send, through the option `preview`: nothing is asked for.
    *
-   * @param invoiceId - The paid or held invoice.
+   * @param invoiceId - The paid invoice, or one that needs review.
    * @param params - Amount (everything left when omitted), mode and reason.
    * @returns The preview; `null` without the option, or when it failed (`error` says why).
    */
@@ -53,7 +53,7 @@ export interface RefundState {
    * not handed over, that refund comes back instead (`sentTransaction`), or is followed when Quasar took it after all, and
    * nothing new is asked for while Quasar does not say what became of it.
    *
-   * @param invoiceId - The paid or held invoice.
+   * @param invoiceId - The paid invoice, or one that needs review.
    * @param params - Amount (everything left when omitted), mode and reason.
    * @returns Whether it was asked for or came back; `phase` is then `awaitingTransfer` (`confirming` when taken).
    */
@@ -316,7 +316,7 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
       start: async (invoiceId, params = {}) => {
         stop();
         set({ phase: 'requesting', error: null, refund: null, instructions: null, sentTransaction: null });
-        // A transaction went out for an earlier refund of this invoice and Quasar never took it. Quasar still holds that
+        // A transaction went out for an earlier refund of this invoice and Quasar never took it. Quasar still keeps that
         // refund open and knows nothing of the transaction, so a new one would refund the buyer twice
         const kept = keptTransactions().find((entry) => entry.invoiceId === invoiceId);
         if (kept) {

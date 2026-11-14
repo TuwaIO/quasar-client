@@ -310,38 +310,39 @@ export type NovaPaymentsLabels = {
      */
     mismatchTakenElsewhere: string;
     /**
-     * Instead of `mismatch` when another invoice of the seller holds the transaction for a refund only
-     * (`tx_already_used` with `held`): it pays neither invoice, so never say that it pays one: `{merchant}` (default:
-     * `This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not
-     * count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.`)
+     * Instead of `mismatch` when the transaction is an unmatched transfer at another invoice of the seller, refunded
+     * only (`tx_already_used` with `unmatched`): it pays neither invoice, so never say that it pays one: `{merchant}`
+     * (default: `This transaction is tied to another invoice; {merchant} returns it to the wallet that sent it. It does
+     * not count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.`)
      */
-    mismatchHeldElsewhere: string;
+    mismatchUnmatchedElsewhere: string;
     /**
      * Instead of `mismatch` for a transfer from a wallet that did not confirm the invoice (`payer_mismatch`,
-     * `payer_unconfirmed`): it does not pay the invoice, and no hold promises a refund (a held invoice shows its own
-     * outcome): `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does
+     * `payer_unconfirmed`): it does not pay the invoice, and nothing promises a refund (an invoice under review shows
+     * its own outcome): `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does
      * not pay it. If money left your wallet, contact {merchant}.`)
      */
     mismatchOtherWallet: string;
     /**
-     * Instead of `mismatchOtherWallet` when Quasar recorded the transfer as a held transfer, which the seller returns:
+     * Instead of `mismatchOtherWallet` when Quasar recorded the transfer as an unmatched transfer, which the seller
+     * returns:
      * `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does not pay
      * it. {merchant} returns it to the wallet that sent it, and you can still pay this invoice from the wallet that
      * confirmed it.`)
      */
-    mismatchOtherWalletHeld: string;
+    mismatchOtherWalletUnmatched: string;
     /** A payment sent under an earlier price of the invoice: `{merchant}`. */
-    mismatchChargeHeld: string;
+    mismatchChargeUnmatched: string;
     /** A part past what the invoice takes: `{merchant}`. */
     mismatchTooManyParts: string;
     /**
      * Instead of `mismatch` for a Solana Pay transfer without the invoice's reference whose amount alone does not tie it
-     * to the invoice, which Quasar holds on this invoice for a refund (`reference_missing` with `held`): never say that
-     * another invoice holds it: `{merchant}` (default: `This transfer arrived without the Solana Pay reference of this
+     * to the invoice, which Quasar records on this invoice as an unmatched transfer for a refund (`reference_missing`
+     * with `unmatched`): never say that another invoice has it: `{merchant}` (default: `This transfer arrived without the Solana Pay reference of this
      * invoice, and its amount alone does not tie it to the invoice, so it does not pay it. {merchant} returns it to the
      * wallet that sent it, and you can still pay the invoice.`)
      */
-    mismatchNoReferenceHeld: string;
+    mismatchNoReferenceUnmatched: string;
     /** Button after a failed transaction (default: `Pay again`) */
     payAgain: string;
     /** The wallet cannot pay this way: `{wallet}` (default: `{wallet} can't make this payment.`) */
@@ -653,18 +654,18 @@ export type NovaPaymentsLabels = {
     payRestFirstWallet: string;
     /** Button that pays the rest (default: `Pay the rest`) */
     payRest: string;
-    /** Heading of a payment on review: `{merchant}` (default: `Payment received, {merchant} is checking it`) */
-    heldTitle: string;
+    /** Heading of a payment under review: `{merchant}` (default: `Payment received, {merchant} is checking it`) */
+    reviewTitle: string;
     /** Reason `screening`, also while the reason is unknown or not read yet: `{merchant}` (default: `{merchant} checks the payment before confirming the order.`) */
-    heldScreening: string;
+    reviewScreening: string;
     /** Reason `late`: `{merchant}` */
-    heldLate: string;
+    reviewLate: string;
     /** Reason `overpaid`: `{merchant}` */
-    heldOverpaid: string;
+    reviewOverpaid: string;
     /** Reason `quote_expired`: `{merchant}` (default: `The payment arrived after the price lock ran out. {merchant} accepts it or returns it.`) */
-    heldQuoteExpired: string;
+    reviewQuoteExpired: string;
     /** Under it (default: `The seller contacts you if anything is needed.`) */
-    heldNote: string;
+    reviewNote: string;
     /** Heading of a refunded invoice (default: `Refunded`) */
     refundedTitle: string;
     /** Its text: `{merchant}`, `{amount}`, `{currency}` (default: `{merchant} refunded this invoice: {amount} {currency}.`) */
@@ -685,8 +686,8 @@ export type NovaPaymentsLabels = {
     expiredNote: string;
     /**
      * Instead of `expiredText` and `expiredNote` when the invoice expired while the payment this page sent was still
-     * confirming: `{merchant}`. Quasar records a payment that arrives after the invoice closed and holds it for the
-     * seller (default: `The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to
+     * confirming: `{merchant}`. Quasar records a payment that arrives after the invoice closed for the seller to review
+     * (default: `The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to
      * {merchant}, who accepts it or returns it.`)
      */
     expiredWhileConfirming: string;
@@ -811,7 +812,7 @@ export type NovaPaymentsLabels = {
     cancelledText: string;
     /**
      * Instead of `cancelledText` while a payment may still arrive (on its way, not confirmed yet, read again by Quasar),
-     * which Quasar records and holds for the seller: `{merchant}` (default: `{merchant} cancelled it. If your payment
+     * which Quasar records for the seller to review: `{merchant}` (default: `{merchant} cancelled it. If your payment
      * arrives, it is recorded and shown to {merchant}, who accepts it or returns it.`)
      */
     cancelledWhilePaying: string;
@@ -980,7 +981,7 @@ export type NovaPaymentsLabels = {
     to: string;
     /** After the recipient (default: `the payer`) */
     thePayer: string;
-    /** After the recipient of the refund of a held transfer (default: `the sender of this transfer`) */
+    /** After the recipient of the refund of an unmatched transfer (default: `the sender of this transfer`) */
     theSender: string;
     /** Row: the sending wallet (default: `From`) */
     from: string;
@@ -1052,8 +1053,11 @@ export type NovaPaymentsLabels = {
     failedCancelled: string;
     /** Why it failed: `resend_confirmed` (the merchant confirmed that it did not leave the wallet). */
     failedResendConfirmed: string;
-    /** After the failure of a held transfer's refund (default: `The transfer stays held. Close this window: its row says what to do next.`) */
-    failedHeldNote: string;
+    /**
+     * After the failure of an unmatched transfer's refund (default: `The transfer still waits for its refund. Close
+     * this window: its row says what to do next.`)
+     */
+    failedUnmatchedNote: string;
     /** Heading of a refund the wallet did not send (default: `Not sent`) */
     notSent: string;
     /** The wallet holds too little; `{symbol}`, `{address}`, `{balance}` (default: `Not enough {symbol} on {address}: it holds {balance}.`) */
@@ -1074,7 +1078,7 @@ export type NovaPaymentsLabels = {
     refusedAmount: string;
     /** Refused: the payment cannot be refunded any more (default: `This payment cannot be refunded any more.`) */
     refusedNotRefundable: string;
-    /** Refused: `held_refund_must_be_whole` (default: `A held transfer is returned whole.`) */
+    /** Refused: `review_refund_must_be_whole` (default: `A payment under review is refunded whole.`) */
     refusedWhole: string;
     /** Refused: `sender_blocked` (default: `A compliance check blocks the wallet to refund. Nothing can be sent to it.`) */
     refusedBlocked: string;
@@ -1106,7 +1110,7 @@ export type NovaPaymentsLabels = {
     txTitle: string;
     /** Its description; `{amount}` (default: `{amount} to the payer`) */
     txDescription: string;
-    /** Its description for the refund of a held transfer; `{amount}` (default: `{amount} to the sender of the transfer`) */
+    /** Its description for the refund of an unmatched transfer; `{amount}` (default: `{amount} to the sender of the transfer`) */
     txDescriptionSender: string;
   };
 };

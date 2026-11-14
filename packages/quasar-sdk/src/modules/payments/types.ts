@@ -18,11 +18,20 @@ export type TaxCategory = 'S' | 'Z' | 'E' | 'AE' | 'K' | 'G' | 'O';
 
 /**
  * State of an invoice: `open` until paid, `processing` while a payment is being confirmed, then `paid`, `underpaid`
- * (the buyer may top it up), `held` (the merchant releases or refunds it), `partially_refunded`, `refunded`, or
+ * (the buyer may top it up), `needs_review` (the merchant accepts the payment or refunds it; the money is already in
+ * the merchant's wallet, the status does not mean that TUWA has it), `partially_refunded`, `refunded`, or
  * `expired`/`cancelled` without a payment.
  */
 export type InvoiceStatus =
-  'open' | 'processing' | 'paid' | 'underpaid' | 'held' | 'partially_refunded' | 'refunded' | 'expired' | 'cancelled';
+  | 'open'
+  | 'processing'
+  | 'paid'
+  | 'underpaid'
+  | 'needs_review'
+  | 'partially_refunded'
+  | 'refunded'
+  | 'expired'
+  | 'cancelled';
 
 /** Whether an invoice belongs to the live or the test app: the key that issued it decides. */
 export type PaymentsEnvironment = 'live' | 'test';
@@ -325,7 +334,7 @@ export interface Invoice {
    * Why the payment waits for you: `overpaid` when the app flags overpayments, `quote_expired` when it arrived after
    * its locked quote expired, `payment_reverted` when a payment Quasar credited is gone from the chain (check the
    * transaction `payment.reverted` names; the invoice keeps its status). A transfer Quasar could tie to no invoice
-   * never holds the invoice: it is a held transfer of its own.
+   * never puts the invoice under review: it is an unmatched transfer of its own.
    */
   reviewReason: string | null;
   /** The payer's AML screening, once there was one. */
@@ -396,8 +405,11 @@ export interface InvoiceAttempt {
   amount: string | null;
   /** The addresses that sent what it carried. */
   senders: string[];
-  /** The held transfer it became, for a refund to its sender (see `listHeldTransfers`, which keeps its state). */
-  heldTransfer: string | null;
+  /**
+   * The unmatched transfer it became, for a refund to its sender (see `listUnmatchedTransfers`, which keeps its
+   * state).
+   */
+  unmatchedTransfer: string | null;
   /** When it was recorded. */
   at: string;
 }
@@ -612,10 +624,10 @@ export interface Refund {
   failureReason: string | null;
   /** The transaction that took the place of a cancelled one, when Quasar knows it. */
   replacedBy?: string | null;
-  /** Its credit note, once confirmed; none for a held transfer or a payment that stayed on a corrected invoice. */
+  /** Its credit note, once confirmed; none for an unmatched transfer or a payment that stayed on a corrected invoice. */
   creditNoteNumber: string | null;
-  /** The held transfer it returns to its sender ({@link HeldTransfer}), or `null` for a refund of the invoice. */
-  heldTransfer: string | null;
+  /** The unmatched transfer it returns to its sender ({@link UnmatchedTransfer}), or `null` for a refund of the invoice. */
+  unmatchedTransfer: string | null;
   /** When it was asked for. */
   createdAt: string;
   /** When it last changed; absent from an engine that does not send it yet. */
@@ -624,24 +636,27 @@ export interface Refund {
   confirmedAt: string | null;
 }
 
-/** How far a {@link HeldTransfer} got: held, its refund on the way, refunded, or voided because it paid an invoice. */
-export type HeldTransferStatus = 'held' | 'refunding' | 'refunded' | 'voided';
+/**
+ * How far an {@link UnmatchedTransfer} got: waiting for its refund (`awaiting_refund`), its refund on the way,
+ * refunded, or voided because it paid an invoice.
+ */
+export type UnmatchedTransferStatus = 'awaiting_refund' | 'refunding' | 'refunded' | 'voided';
 
 /**
  * A transfer that reached the address of one of your invoices without being tied to it by proof: from another wallet
  * than the one the quote was for (`payer_mismatch`), from the quoted wallet that never confirmed the invoice
  * (`payer_unconfirmed`), or a Solana Pay transfer without the invoice's reference whose amount alone does not tie it to
- * the invoice (`reference_missing`). It paid nothing and the invoice stays as it was; refund it as a whole to the wallet
- * that sent it with {@link PaymentsModule.refundHeldTransfer}. When the same transaction is proven to pay an invoice,
- * Quasar voids the record (`voided`, `voidedBy`).
+ * the invoice (`reference_missing`). It paid nothing and the invoice stays as it was; the money is in your wallet, and
+ * you refund it as a whole to the wallet that sent it with {@link PaymentsModule.refundUnmatchedTransfer}. When the
+ * same transaction is proven to pay an invoice, Quasar voids the record (`voided`, `voidedBy`).
  */
-export interface HeldTransfer {
-  /** Held transfer ID. */
+export interface UnmatchedTransfer {
+  /** Unmatched transfer ID. */
   id: string;
   /** The invoice whose address it reached. */
   invoice: string;
   /** Where it is. */
-  status: HeldTransferStatus;
+  status: UnmatchedTransferStatus;
   /** Why it is tied to no invoice. */
   reason:
     'payer_mismatch' | 'payer_unconfirmed' | 'reference_missing' | 'already_paid' | 'quote_changed' | 'too_many_parts';
@@ -677,12 +692,12 @@ export interface HeldTransfer {
   updatedAt: string;
 }
 
-/** What {@link PaymentsModule.listHeldTransfers} takes. */
-export interface ListHeldTransfersParams {
-  /** Only the held transfers of one invoice. */
+/** What {@link PaymentsModule.listUnmatchedTransfers} takes. */
+export interface ListUnmatchedTransfersParams {
+  /** Only the unmatched transfers of one invoice. */
   invoice?: string;
-  /** Only those in one state; `held` for those still to refund. */
-  status?: HeldTransferStatus;
+  /** Only those in one state; `awaiting_refund` for those still to refund. */
+  status?: UnmatchedTransferStatus;
 }
 
 /** The answer of {@link PaymentsModule.refund}: the refund and what to send where. */
@@ -707,8 +722,8 @@ export interface RefundStart {
 }
 
 /**
- * What a refund would send, as {@link PaymentsModule.previewRefund} returns it. A requested refund holds its amount until
- * it is sent, so look before asking: the same amount in the invoice currency sends a different number of tokens once a
+ * What a refund would send, as {@link PaymentsModule.previewRefund} returns it. A requested refund keeps its token
+ * amount until it is sent, so look before asking: the same amount in the invoice currency sends a different number of tokens once a
  * volatile asset has moved.
  */
 export interface RefundPreview {

@@ -7,7 +7,7 @@ describe('needsTheClock', () => {
     expect(needsTheClock(phase, undefined, true)).toBe(true);
   });
 
-  it.each(['held', 'refunded', 'expired', 'cancelled', 'blocked', 'error'])('rests on %s', (phase) => {
+  it.each(['needs_review', 'refunded', 'expired', 'cancelled', 'blocked', 'error'])('rests on %s', (phase) => {
     expect(needsTheClock(phase, undefined, true)).toBe(false);
   });
 

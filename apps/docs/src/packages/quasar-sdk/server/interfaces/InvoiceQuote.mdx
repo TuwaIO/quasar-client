@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # InvoiceQuote
 
-Defined in: [modules/payments/types.ts:164](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L164)
+Defined in: [modules/payments/types.ts:173](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L173)
 
 The price an invoice was quoted at, once a buyer chose how to pay.
 
@@ -14,7 +14,7 @@ The price an invoice was quoted at, once a buyer chose how to pay.
 
 > **amountDue**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:175](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L175)
+Defined in: [modules/payments/types.ts:184](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L184)
 
 What must still arrive, in base units, while the invoice takes a payment: the whole amount, or the rest of an
 `underpaid` invoice. `null` otherwise.
@@ -25,7 +25,7 @@ What must still arrive, in base units, while the invoice takes a payment: the wh
 
 > **amountToSend**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:180](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L180)
+Defined in: [modules/payments/types.ts:189](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L189)
 
 What the buyer sends, in base units: what must still arrive (the whole price, or the rest of an `underpaid` invoice)
 grossed up for a token's transfer fee.
@@ -36,7 +36,7 @@ grossed up for a token's transfer fee.
 
 > **cryptoAmountExpected**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:170](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L170)
+Defined in: [modules/payments/types.ts:179](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L179)
 
 Token amount that settles the invoice, in base units.
 
@@ -46,7 +46,7 @@ Token amount that settles the invoice, in base units.
 
 > **expiresAt**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:184](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L184)
+Defined in: [modules/payments/types.ts:193](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L193)
 
 When the quote expires.
 
@@ -56,7 +56,7 @@ When the quote expires.
 
 > **lockedAt**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:182](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L182)
+Defined in: [modules/payments/types.ts:191](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L191)
 
 When the quote was locked.
 
@@ -66,7 +66,7 @@ When the quote was locked.
 
 > **methodId**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:166](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L166)
+Defined in: [modules/payments/types.ts:175](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L175)
 
 The payment method.
 
@@ -76,7 +76,7 @@ The payment method.
 
 > **payer**: `string`
 
-Defined in: [modules/payments/types.ts:168](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L168)
+Defined in: [modules/payments/types.ts:177](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L177)
 
 CAIP-10 account the quote was issued to.
 
@@ -86,7 +86,7 @@ CAIP-10 account the quote was issued to.
 
 > **rate**: `unknown`
 
-Defined in: [modules/payments/types.ts:186](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L186)
+Defined in: [modules/payments/types.ts:195](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L195)
 
 The price rounds the quote used, as evidence.
 
@@ -96,6 +96,6 @@ The price rounds the quote used, as evidence.
 
 > **reference**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:188](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L188)
+Defined in: [modules/payments/types.ts:197](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L197)
 
 Solana Pay reference key of the quote.

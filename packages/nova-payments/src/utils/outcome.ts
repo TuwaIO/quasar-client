@@ -86,19 +86,20 @@ export function failedPaymentTx(error: CheckoutError | null | undefined): string
 
 /**
  * Rejection reasons of a transfer Quasar ties to no invoice: it came from a wallet that did not confirm the invoice.
- * With `held` Quasar recorded it as a held transfer, which the seller returns, and the invoice stays payable; without
- * it the text promises no refund.
+ * With `unmatched` Quasar recorded it as an unmatched transfer, which the seller returns, and the invoice stays
+ * payable; without it the text promises no refund.
  */
 const FROM_ANOTHER_WALLET: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
 
 /**
  * What the checkout says about a payment that left the wallet, or may have, from the store's error: a transaction that
  * does not pay the invoice (`pay.mismatch`; `pay.mismatchTakenElsewhere` when Quasar credited it to another invoice;
- * `pay.mismatchHeldElsewhere` when another invoice holds it for a refund only, `held`;
- * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice, `pay.mismatchOtherWalletHeld`
- * when Quasar recorded it as a held transfer the seller returns, `held`; `pay.mismatchNoReferenceHeld` for a Solana Pay
- * transfer without the invoice's reference held on this invoice, `held`; `pay.mismatchChargeHeld` for a payment sent
- * under an earlier price of the invoice, `quote_changed`), a payment Quasar closed after 24 hours without a result on chain
+ * `pay.mismatchUnmatchedElsewhere` when it is an unmatched transfer at another invoice, refunded only, `unmatched`;
+ * `pay.mismatchOtherWallet` for a transfer from a wallet that did not confirm the invoice,
+ * `pay.mismatchOtherWalletUnmatched` when Quasar recorded it as an unmatched transfer the seller returns, `unmatched`;
+ * `pay.mismatchNoReferenceUnmatched` for a Solana Pay transfer without the invoice's reference recorded on this
+ * invoice, `unmatched`; `pay.mismatchChargeUnmatched` for a payment sent under an earlier price of the invoice,
+ * `quote_changed`), a payment Quasar closed after 24 hours without a result on chain
  * (`outcome.unconfirmedClosed`), a transaction another invoice handed over first (`outcome.unconfirmedTakenElsewhere`)
  * and a payment the network confirmed that Quasar has not recorded yet (`outcome.unconfirmedSettlementRetrying` while
  * Quasar settles it again daily, for 30 days, else `outcome.unconfirmedSettlementFailed`). Never "it failed", "only the
@@ -116,18 +117,21 @@ export function leftTheWalletText(
 ): string | null {
   if (isMovedMoneyFailure(error)) {
     const reason = (error as { reason?: string }).reason ?? '';
-    // `held`: Quasar recorded the transfer as a held transfer, here or at another invoice; it pays neither
-    const held = (error as { held?: boolean }).held === true;
-    if (reason === 'quote_changed') return formatLabel(labels.pay.mismatchChargeHeld, { merchant });
+    // `unmatched`: Quasar recorded the transfer as an unmatched transfer, here or at another invoice; it pays neither
+    const unmatched = (error as { unmatched?: boolean }).unmatched === true;
+    if (reason === 'quote_changed') return formatLabel(labels.pay.mismatchChargeUnmatched, { merchant });
     if (reason === 'too_many_parts') return formatLabel(labels.pay.mismatchTooManyParts, { merchant });
-    // Held on this invoice, not another one: the wallet dropped the Solana Pay reference (owner test 11-05, finding 1)
-    if (reason === 'reference_missing' && held) return formatLabel(labels.pay.mismatchNoReferenceHeld, { merchant });
+    // Recorded on this invoice, not another one: the wallet dropped the Solana Pay reference, and "tied to another
+    // invoice" would send the buyer looking for an invoice that does not exist
+    if (reason === 'reference_missing' && unmatched) {
+      return formatLabel(labels.pay.mismatchNoReferenceUnmatched, { merchant });
+    }
     const text = FROM_ANOTHER_WALLET.has(reason)
-      ? held
-        ? labels.pay.mismatchOtherWalletHeld
+      ? unmatched
+        ? labels.pay.mismatchOtherWalletUnmatched
         : labels.pay.mismatchOtherWallet
-      : held
-        ? labels.pay.mismatchHeldElsewhere
+      : unmatched
+        ? labels.pay.mismatchUnmatchedElsewhere
         : isPaidElsewhere(error)
           ? labels.pay.mismatchTakenElsewhere
           : labels.pay.mismatch;
@@ -319,7 +323,14 @@ export function refundRateMoved(
 }
 
 /** The phases nothing counts down on: their page stays as it is until the invoice changes. */
-const STILL_PHASES: ReadonlySet<string> = new Set(['held', 'refunded', 'expired', 'cancelled', 'blocked', 'error']);
+const STILL_PHASES: ReadonlySet<string> = new Set([
+  'needs_review',
+  'refunded',
+  'expired',
+  'cancelled',
+  'blocked',
+  'error',
+]);
 
 /**
  * Whether the checkout needs its second tick: for the deadline, the price lock and the return countdown. A receipt or an

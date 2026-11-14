@@ -5,7 +5,7 @@ import { familyOf, networkName } from '../utils/methods';
 import { instructionsChainId } from '../utils/pay';
 import { useCheckoutContext } from './useCheckoutContext';
 
-const SETTLED_STATUSES: ReadonlySet<string> = new Set(['paid', 'held', 'refunded', 'partially_refunded']);
+const SETTLED_STATUSES: ReadonlySet<string> = new Set(['paid', 'needs_review', 'refunded', 'partially_refunded']);
 
 /** A transfer credited to the invoice, as the paid step lists it. */
 export interface PaymentTransfer {

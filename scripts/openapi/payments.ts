@@ -8,7 +8,6 @@ import type { OpenAPIRegistry, RouteConfig } from '@asteasolutions/zod-to-openap
 import { z } from 'zod';
 
 import type {
-  HeldTransfer,
   Invoice,
   InvoiceAttempt,
   InvoiceCorrection,
@@ -26,6 +25,7 @@ import type {
   Refund,
   RefundPreview,
   RefundStart,
+  UnmatchedTransfer,
 } from '../../packages/quasar-sdk/src';
 import type {
   CheckoutQuote,
@@ -59,10 +59,20 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       'VAT category (EN 16931 UNCL5305): `S` standard, `Z` zero rated, `E` exempt (needs `taxExemptionReason`), `AE` reverse charge, `K` intra-community, `G` export, `O` outside the scope of VAT.',
   });
   const InvoiceStatus = z
-    .enum(['open', 'processing', 'paid', 'underpaid', 'held', 'partially_refunded', 'refunded', 'expired', 'cancelled'])
+    .enum([
+      'open',
+      'processing',
+      'paid',
+      'underpaid',
+      'needs_review',
+      'partially_refunded',
+      'refunded',
+      'expired',
+      'cancelled',
+    ])
     .openapi('InvoiceStatus', {
       description:
-        '`open` until paid; `processing` while a payment is confirmed; `paid`, `underpaid` (the buyer may top it up), `held` (released or refunded by the merchant), `partially_refunded`, `refunded`; `expired` or `cancelled` without a payment (`expired` up to 30 minutes after `dueAt` while a payment sent before it confirms; a payment that still arrives later makes it `held`, `late`).',
+        "`open` until paid; `processing` while a payment is confirmed; `paid`, `underpaid` (the buyer may top it up), `needs_review` (the merchant accepts the payment or refunds it; the money is already in the merchant's wallet, the status does not mean that TUWA has it), `partially_refunded`, `refunded`; `expired` or `cancelled` without a payment (`expired` up to 30 minutes after `dueAt` while a payment sent before it confirms; a payment that still arrives later makes it `needs_review`, `late`).",
     });
   const Environment = z.enum(['live', 'test']).openapi('PaymentsEnvironment', {
     description: 'Live or test: the key that issued it decides. Test invoices are paid on test networks.',
@@ -207,7 +217,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       issuedAt: dateTime('When it was issued.').nullable(),
       supplyDate: dateTime('Date of supply (BT-72).').nullable(),
       dueAt: dateTime(
-        'When it stops being payable. A payment Quasar learned of before it (handed over to `/submit` or `/relay`, or a Solana Pay transfer in a block before it: an invoice quoted in a Solana method stays open until Quasar has read its Solana Pay reference at least 30 seconds past `dueAt`) may still confirm for up to 30 minutes after it: the invoice stays payable meanwhile, so `expired` and the `invoice.expired` webhook can come up to 30 minutes after `dueAt`. Confirmed in time, it pays the invoice as usual, except in an asset not pegged to the invoice currency when its block is more than 60 seconds past the end of the locked quote (`held`, `quote_expired`). A payment handed over after `dueAt`, or one that confirms after the invoice expired (Quasar reads a payment whose tracker lost sight of it again for 24 hours), is held as late, with its AML screening.',
+        'When it stops being payable. A payment Quasar learned of before it (handed over to `/submit`, sent through the `paymaster` route after `relay/authorize`, or a Solana Pay transfer in a block before it: an invoice quoted in a Solana method stays open until Quasar has read its Solana Pay reference at least 30 seconds past `dueAt`) may still confirm for up to 30 minutes after it: the invoice stays payable meanwhile, so `expired` and the `invoice.expired` webhook can come up to 30 minutes after `dueAt`. Confirmed in time, it pays the invoice as usual, except in an asset not pegged to the invoice currency when its block is more than 60 seconds past the end of the locked quote (`needs_review`, `quote_expired`). A payment handed over after `dueAt`, or one that confirms after the invoice expired (Quasar reads a payment whose tracker lost sight of it again for 24 hours), needs review as late, with its AML screening.',
       ).nullable(),
       seller: InvoiceSeller.nullable(),
       buyer: Buyer.extend({ companyInvoice: z.boolean().optional() }).nullable(),
@@ -273,7 +283,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         .openapi({ description: 'The payment, once there is one.' }),
       reviewReason: z.string().nullable().openapi({
         description:
-          'Why the payment waits for you: `overpaid` when the app flags overpayments, `quote_expired` when it arrived after its locked quote expired (in an asset not pegged to the invoice currency, a block more than 60 seconds past the end of the quote), `payment_reverted` when a payment Quasar credited is gone from the chain (the invoice keeps its status: check the transaction, `payment.reverted` names it, the replacement of a corrected invoice is marked too). A transfer Quasar could tie to no invoice never holds the invoice: it is a held transfer of its own (`/held-transfers`). A payment held because it came late (handed over after `dueAt`, or arrived after the invoice expired or was cancelled) has no reason here: the ledger marks it `late` (screened like any payment: a sender the screening blocks waits as an AML hold).',
+          'Why the payment waits for you: `overpaid` when the app flags overpayments, `quote_expired` when it arrived after its locked quote expired (in an asset not pegged to the invoice currency, a block more than 60 seconds past the end of the quote), `payment_reverted` when a payment Quasar credited is gone from the chain (the invoice keeps its status: check the transaction, `payment.reverted` names it, the replacement of a corrected invoice is marked too). A transfer Quasar could tie to no invoice never puts the invoice under review: it is an unmatched transfer of its own (`/unmatched-transfers`). A payment under review because it came late (handed over after `dueAt`, or arrived after the invoice expired or was cancelled) has no reason here: the ledger marks it `late` (screened like any payment: a sender the screening blocks waits as an AML review).',
       }),
       aml: z.object({ status: z.string(), reasons: z.array(z.string()), coverage: z.string().nullable() }).nullable(),
       receiptNumber: z.string().nullable(),
@@ -318,10 +328,9 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       reason: z.string().nullable(),
       failureReason: z.string().nullable(),
       creditNoteNumber: z.string().nullable(),
-      heldTransfer: z
-        .string()
-        .nullable()
-        .openapi({ description: 'The held transfer it returns to its sender, or `null` for a refund of the invoice.' }),
+      unmatchedTransfer: z.string().nullable().openapi({
+        description: 'The unmatched transfer it returns to its sender, or `null` for a refund of the invoice.',
+      }),
       createdAt: z.string(),
       confirmedAt: z.string().nullable(),
     })
@@ -357,8 +366,9 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         description: "What it carried to you without paying anything, when it did: base units of the invoice's token.",
       }),
       senders: z.array(z.string()),
-      heldTransfer: z.string().nullable().openapi({
-        description: 'The held transfer it became, for a refund to its sender (`GET /invoices/:id/held-transfers`).',
+      unmatchedTransfer: z.string().nullable().openapi({
+        description:
+          'The unmatched transfer it became, for a refund to its sender (`GET /invoices/:id/unmatched-transfers`).',
       }),
       at: z.string(),
     })
@@ -530,12 +540,12 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _checkRefundPreview: z.ZodType<RefundPreview> = RefundPreview;
 
-  const HeldTransferStatus = z.enum(['held', 'refunding', 'refunded', 'voided']);
-  const HeldTransfer = z
+  const UnmatchedTransferStatus = z.enum(['awaiting_refund', 'refunding', 'refunded', 'voided']);
+  const UnmatchedTransfer = z
     .object({
       id: z.string(),
       invoice: z.string().openapi({ description: 'The invoice whose address it reached.' }),
-      status: HeldTransferStatus,
+      status: UnmatchedTransferStatus,
       reason: z
         .enum([
           'payer_mismatch',
@@ -547,7 +557,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         ])
         .openapi({
           description:
-            "`already_paid`: a relay or an automatic charge Quasar sent reached an invoice already paid; `quote_changed`: a relay or an automatic charge landed after the invoice was quoted in another asset, network or recipient; `too_many_parts`: the invoice took 10 parts already, so the rest cannot be paid in parts any more; `payer_mismatch`: from another wallet than the one the quote was for; `payer_unconfirmed`: from the quoted wallet, which never confirmed the invoice; `reference_missing`: a Solana Pay transfer without the invoice's reference (some wallets drop it) whose amount alone does not tie it to the invoice.",
+            "`already_paid`: a payment under the invoice's quote reached it after it was paid; `quote_changed`: a payment under an earlier quote landed after the invoice was quoted in another asset, network or recipient; `too_many_parts`: the invoice took 10 parts already, so the rest cannot be paid in parts any more; `payer_mismatch`: from another wallet than the one the quote was for; `payer_unconfirmed`: from the quoted wallet, which never confirmed the invoice; `reference_missing`: a Solana Pay transfer without the invoice's reference (some wallets drop it) whose amount alone does not tie it to the invoice.",
         }),
       late: z.boolean(),
       chainId: z.string(),
@@ -568,13 +578,13 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       createdAt: z.string(),
       updatedAt: z.string(),
     })
-    .openapi('HeldTransfer', {
+    .openapi('UnmatchedTransfer', {
       description:
-        'A transfer that reached the address of an invoice without being tied to it by proof: it paid nothing and the invoice stays as it was. Refund it as a whole to the wallet that sent it.',
+        'A transfer that reached the address of an invoice without being tied to it by proof: it paid nothing and the invoice stays as it was. The money is in your wallet: refund it as a whole to the wallet that sent it.',
     });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _checkHeldTransfer: z.ZodType<HeldTransfer> = HeldTransfer;
-  const HeldTransfers = z.object({ heldTransfers: z.array(HeldTransfer) });
+  const _checkUnmatchedTransfer: z.ZodType<UnmatchedTransfer> = UnmatchedTransfer;
+  const UnmatchedTransfers = z.object({ unmatchedTransfers: z.array(UnmatchedTransfer) });
 
   const PaymentQuote = z
     .object({
@@ -723,11 +733,11 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       '`invoice_not_cancellable`, `invoice_processing`: a payment is being confirmed.',
     ],
     [
-      'release',
-      'Release a held payment',
-      'The invoice becomes paid and the buyer gets a receipt. A transfer Quasar could tie to no invoice is never an invoice hold: it is a held transfer, refunded with `POST /held-transfers/{id}/refund`.',
+      'accept',
+      'Accept a payment that needs review',
+      'The invoice becomes paid and the buyer gets a receipt. The money is already in your wallet: accepting moves none. A transfer Quasar could tie to no invoice never puts an invoice under review: it is an unmatched transfer, refunded with `POST /unmatched-transfers/{id}/refund`.',
       z.object({ reason: z.string() }),
-      '`invoice_not_held`, `invoice_partly_refunded` (refund the rest).',
+      '`invoice_not_in_review`, `invoice_partly_refunded` (refund the rest).',
     ],
   ] as const) {
     route('post', `/invoices/{id}/${action}`, 'Invoices', summary, description, {
@@ -892,7 +902,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     '/invoices/{id}/refunds/preview',
     'Refunds',
     'See what a refund would send',
-    'Nothing is asked for. A requested refund holds its amount until it is sent, so look first: the same amount in the invoice currency sends a different number of tokens once a volatile asset has moved. Refused as the refund would be.',
+    'Nothing is asked for. A requested refund keeps its amount until it is sent, so look first: the same amount in the invoice currency sends a different number of tokens once a volatile asset has moved. Refused as the refund would be.',
     {
       request: {
         params: idParam('id', 'Invoice ID.'),
@@ -909,7 +919,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       },
       responses: {
         200: { description: 'What the refund would send.', ...json(RefundPreview) },
-        400: invalid('`amount_exceeds_refundable`, `held_refund_must_be_whole`'),
+        400: invalid('`amount_exceeds_refundable`, `review_refund_must_be_whole`'),
         404: refused('`invoice_not_found`.'),
         409: refused(
           '`invoice_not_refundable`, `exact_refund_needs_whole_invoice`, `payment_unknown`, `sender_blocked`: the AML check blocks the wallet the refund would go to.',
@@ -923,7 +933,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     '/invoices/{id}/refunds',
     'Refunds',
     'Ask for a refund',
-    'Prices the refund; send the amount from your wallet to the payer, then submit the transaction. A refund limit is the value of what arrived: a short payment you released never returns more than it brought. A retry with the same `Idempotency-Key` returns the refund the first call created while it waits for its transaction.',
+    'Prices the refund; send the amount from your wallet to the payer, then submit the transaction. A refund limit is the value of what arrived: a short payment you accepted never returns more than it brought. A retry with the same `Idempotency-Key` returns the refund the first call created while it waits for its transaction.',
     {
       request: {
         params: idParam('id', 'Invoice ID.'),
@@ -946,7 +956,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       },
       responses: {
         201: { description: 'The refund and what to send where.', ...json(RefundStart) },
-        400: invalid('`amount_exceeds_refundable`, `held_refund_must_be_whole`'),
+        400: invalid('`amount_exceeds_refundable`, `review_refund_must_be_whole`'),
         404: refused('`invoice_not_found`.'),
         409: refused(
           '`invoice_not_refundable`, `exact_refund_needs_whole_invoice`, `payment_unknown`: the payment to refund is not known; `sender_blocked`: the AML check blocks the wallet the refund would go to; `refund_top_up_waiting`: a top-up of a short refund waits for its transaction; `idempotency_key_reused`: the key was used for another invoice, mode or amount; `refund_not_waiting`: the key was used for a refund already sent, finished, failed or taken back (`details.refund`): a new refund needs a new key.',
@@ -957,38 +967,40 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
   );
   route(
     'get',
-    '/held-transfers',
+    '/unmatched-transfers',
     'Refunds',
-    'List held transfers',
-    'Transfers that reached your invoices without being tied to them by proof, newest first (at most 100). Used by `quasar.payments.listHeldTransfers`.',
+    'List unmatched transfers',
+    'Transfers that reached your invoices without being tied to them by proof, newest first (at most 100). Used by `quasar.payments.listUnmatchedTransfers`.',
     {
-      request: { query: z.object({ status: HeldTransferStatus.optional() }) },
-      responses: { 200: { description: 'The held transfers.', ...json(HeldTransfers) }, ...common },
+      request: { query: z.object({ status: UnmatchedTransferStatus.optional() }) },
+      responses: { 200: { description: 'The unmatched transfers.', ...json(UnmatchedTransfers) }, ...common },
     },
   );
   route(
     'get',
-    '/invoices/{id}/held-transfers',
+    '/invoices/{id}/unmatched-transfers',
     'Refunds',
-    "List an invoice's held transfers",
-    'Used by `quasar.payments.listHeldTransfers` with `invoice`.',
+    "List an invoice's unmatched transfers",
+    'Used by `quasar.payments.listUnmatchedTransfers` with `invoice`.',
     {
       request: { params: idParam('id', 'Invoice ID.') },
-      responses: { 200: { description: 'The held transfers.', ...json(HeldTransfers) }, ...common },
+      responses: { 200: { description: 'The unmatched transfers.', ...json(UnmatchedTransfers) }, ...common },
     },
   );
   route(
     'post',
-    '/held-transfers/{id}/refund',
+    '/unmatched-transfers/{id}/refund',
     'Refunds',
-    'Refund a held transfer',
-    'The whole transfer back to the wallet that sent it; send it from your wallet, then submit the transaction. Used by `quasar.payments.refundHeldTransfer`.',
+    'Refund an unmatched transfer',
+    'The whole transfer back to the wallet that sent it; send it from your wallet, then submit the transaction. Used by `quasar.payments.refundUnmatchedTransfer`.',
     {
-      request: { params: idParam('id', 'Held transfer ID.') },
+      request: { params: idParam('id', 'Unmatched transfer ID.') },
       responses: {
         201: { description: 'The refund and what to send where.', ...json(RefundStart) },
-        404: refused('`held_transfer_not_found`.'),
-        409: refused('`held_transfer_not_refundable` (it is not `held`), `sender_blocked` (AML blocked its sender).'),
+        404: refused('`unmatched_transfer_not_found`.'),
+        409: refused(
+          '`unmatched_transfer_not_refundable` (it is not `awaiting_refund`), `sender_blocked` (AML blocked its sender).',
+        ),
         ...common,
       },
     },
@@ -998,7 +1010,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     '/refunds/{id}/withdraw',
     'Refunds',
     'Take back a refund that waits',
-    'A refund nothing has been sent for yet ends as `failed` with `failureReason` `withdrawn`, and a held transfer it was for is held again. Used by `quasar.payments.withdrawRefund`.',
+    'A refund nothing has been sent for yet ends as `failed` with `failureReason` `withdrawn`, and an unmatched transfer it was for waits for its refund again (`awaiting_refund`). Used by `quasar.payments.withdrawRefund`.',
     {
       request: { params: idParam('id', 'Refund ID.') },
       responses: {
@@ -1115,7 +1127,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       }),
       reason: z.string().openapi({
         description:
-          "Why: `reverted`, `cancelled`, `expired`, `no_matching_transfer`, `reference_missing` (a Solana Pay transfer without the invoice's reference whose amount alone does not tie it to the invoice: final, `movedMoney`; with `held` this invoice holds it for a refund to the wallet that sent it and stays payable), `too_early`, `tx_already_used` (the transaction pays another invoice of the merchant: the one the wallet that sent it confirmed, or whose mark it carries, also when this invoice handed it over first or claimed it), `not_found`, `timeout`, `replaced`, `payer_mismatch` (a transfer from another wallet than the quoted one) and `payer_unconfirmed` (from the quoted wallet, which never confirmed the invoice): final, `movedMoney`; with `held` Quasar recorded it as a held transfer, which the merchant returns to the wallet that sent it, and the invoice stays payable, `native_from_contract_unverifiable`, `invoice_not_payable` (a transfer to an invoice paid, held or refunded already), `below_minimum` (worth less than one minor unit of the invoice currency: final, `movedMoney`, with no webhook or email), `too_many_transfers` (the invoice holds 10 transfers for the merchant already: final, `movedMoney`), `too_many_parts` and `quote_changed` (with `held`: the merchant returns them to the wallet that sent them), `settlement_failed` (the network confirmed the transaction but Quasar has not recorded it yet: not final, `movedMoney`; Quasar settles it again daily for 30 days after it learned of it, while `rechecked`), `unresolved_after_24h` (final: no result seen on chain within 24 hours, only for a transaction Quasar read again after that day and the network does not have), a relay reason (`user_operation_lost`…), or `transaction_failed`.",
+          "Why: `reverted`, `cancelled`, `expired`, `no_matching_transfer`, `reference_missing` (a Solana Pay transfer without the invoice's reference whose amount alone does not tie it to the invoice: final, `movedMoney`; with `unmatched` it is an unmatched transfer on this invoice, which the merchant returns to the wallet that sent it, and the invoice stays payable), `too_early`, `tx_already_used` (the transaction pays another invoice of the merchant: the one the wallet that sent it confirmed, or whose mark it carries, also when this invoice handed it over first or claimed it), `not_found`, `timeout`, `replaced`, `payer_mismatch` (a transfer from another wallet than the quoted one) and `payer_unconfirmed` (from the quoted wallet, which never confirmed the invoice): final, `movedMoney`; with `unmatched` Quasar recorded it as an unmatched transfer, which the merchant returns to the wallet that sent it, and the invoice stays payable, `native_from_contract_unverifiable`, `invoice_not_payable` (a transfer to an invoice paid, under review or refunded already), `below_minimum` (worth less than one minor unit of the invoice currency: final, `movedMoney`, with no webhook or email), `too_many_transfers` (10 unmatched transfers are on the invoice already: final, `movedMoney`), `too_many_parts` and `quote_changed` (with `unmatched`: the merchant returns them to the wallet that sent them), `settlement_failed` (the network confirmed the transaction but Quasar has not recorded it yet: not final, `movedMoney`; Quasar settles it again daily for 30 days after it learned of it, while `rechecked`), `unresolved_after_24h` (final: no result seen on chain within 24 hours, only for a transaction Quasar read again after that day and the network does not have), a relay reason (`user_operation_lost`…), or `transaction_failed`.",
       }),
       final: z.boolean().openapi({
         description:
@@ -1184,7 +1196,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         .nullable()
         .openapi({
           description:
-            'What the merchant sponsors: sign `relay.typedData` (EIP-3009) and post it to `relay/authorize`, then send the call it answers from a one-time account through the `paymaster` route (or post it to `relay`, and Quasar sends it); or send `paymaster.calls` with the `paymaster` route as the ERC-7677 paymaster service.',
+            'What the merchant sponsors: sign `relay.typedData` (EIP-3009) and post it to `relay/authorize`, then send the call it answers from a one-time account through the `paymaster` route; or send `paymaster.calls` with the `paymaster` route as the ERC-7677 paymaster service.',
         }),
       payerProof: z
         .object({ required: z.boolean(), proven: z.boolean(), kind: PayerProofKind.nullable() })
@@ -1259,7 +1271,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         locale: Locale.nullable(),
         dueAt: z.string().nullable().openapi({
           description:
-            'When it stops being payable. A payment Quasar learned of before it (handed over to `/submit` or `/relay`, or a Solana Pay transfer in a block before it: an invoice quoted in a Solana method stays open until Quasar has read its Solana Pay reference at least 30 seconds past `dueAt`) may still confirm for up to 30 minutes after it: the invoice stays payable meanwhile, so `expired` and the `invoice.expired` webhook can come up to 30 minutes after `dueAt`. Confirmed in time, it pays the invoice as usual, except in an asset not pegged to the invoice currency when its block is more than 60 seconds past the end of the locked quote (`held`, `quote_expired`). A payment handed over after `dueAt`, or one that confirms after the invoice expired (Quasar reads a payment whose tracker lost sight of it again for 24 hours), is held as late, with its AML screening.',
+            'When it stops being payable. A payment Quasar learned of before it (handed over to `/submit`, sent through the `paymaster` route after `relay/authorize`, or a Solana Pay transfer in a block before it: an invoice quoted in a Solana method stays open until Quasar has read its Solana Pay reference at least 30 seconds past `dueAt`) may still confirm for up to 30 minutes after it: the invoice stays payable meanwhile, so `expired` and the `invoice.expired` webhook can come up to 30 minutes after `dueAt`. Confirmed in time, it pays the invoice as usual, except in an asset not pegged to the invoice currency when its block is more than 60 seconds past the end of the locked quote (`needs_review`, `quote_expired`). A payment handed over after `dueAt`, or one that confirms after the invoice expired (Quasar reads a payment whose tracker lost sight of it again for 24 hours), needs review as late, with its AML screening.',
         }),
         successUrl: z.string().nullable(),
         cancelUrl: z.string().nullable(),
@@ -1280,7 +1292,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           .nullable()
           .openapi({
             description:
-              'Why a payment waits for, or was flagged to, the seller. `screening`: the sender did not pass the AML check (also a late one). A transfer Quasar could tie to no invoice never holds the invoice: it is a rejected payment with `held`, which the seller returns to the wallet that sent it.',
+              'Why a payment waits for, or was flagged to, the seller. `screening`: the sender did not pass the AML check (also a late one). A transfer Quasar could tie to no invoice never puts the invoice under review: it is a rejected payment with `unmatched`, which the seller returns to the wallet that sent it.',
           }),
         refundedTotalMinor: z.string().nullable().openapi({ description: 'Refunded, in minor units (cents).' }),
         payments: z
@@ -1321,7 +1333,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         }),
         rejectedPayments: z.array(RejectedPayment).optional().openapi({
           description:
-            'The payments that failed, latest first (at most 10). `final`: the transaction can never pay the invoice (`reverted`, `cancelled`, `expired` Solana blockhash, `no_matching_transfer`, `reference_missing`, `too_early`, `tx_already_used`, `payer_unconfirmed`, `chain_mismatch`, `no_quote`, `no_payment_method`, a relay the bundler refused or never sent, `unresolved_after_24h`), so the buyer may pay again; otherwise (`not_found`, `timeout`, `replaced`, `payer_mismatch`, `settlement_failed`…) the money may still be on its way or with the merchant: ask the buyer to check the wallet before paying again (for `settlement_failed`, confirmed on chain, to contact the merchant and not pay again). `movedMoney`: the transaction went through without paying the invoice, or Quasar has not recorded it yet, and may have moved money. `rechecked`: Quasar still reads the transaction again (a `not_found`, `timeout` or `replaced` rejection, for 24 hours after Quasar learned of the payment, while `unresolvedPayments` counts it: if it arrives, it is recorded, paid within the grace, else held as late; once Quasar reports `unresolvedPayments` 0, such a rejection was resolved; a `settlement_failed` one for 30 days). A transaction sped up in the wallet is followed under its new hash and not rejected; `original` is the hash the checkout handed over.',
+            'The payments that failed, latest first (at most 10). `final`: the transaction can never pay the invoice (`reverted`, `cancelled`, `expired` Solana blockhash, `no_matching_transfer`, `reference_missing`, `too_early`, `tx_already_used`, `payer_unconfirmed`, `chain_mismatch`, `no_quote`, `no_payment_method`, a relay the bundler refused or never sent, `unresolved_after_24h`), so the buyer may pay again; otherwise (`not_found`, `timeout`, `replaced`, `payer_mismatch`, `settlement_failed`…) the money may still be on its way or with the merchant: ask the buyer to check the wallet before paying again (for `settlement_failed`, confirmed on chain, to contact the merchant and not pay again). `movedMoney`: the transaction went through without paying the invoice, or Quasar has not recorded it yet, and may have moved money. `rechecked`: Quasar still reads the transaction again (a `not_found`, `timeout` or `replaced` rejection, for 24 hours after Quasar learned of the payment, while `unresolvedPayments` counts it: if it arrives, it is recorded, paid within the grace, else under review as late; once Quasar reports `unresolvedPayments` 0, such a rejection was resolved; a `settlement_failed` one for 30 days). A transaction sped up in the wallet is followed under its new hash and not rejected; `original` is the hash the checkout handed over.',
         }),
         paymentCountsUntil: z.string().nullable().optional().openapi({
           description:
@@ -1563,7 +1575,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     'post',
     '/submit',
     'Submit the payment transaction',
-    "Quasar tracks it; the invoice is settled when it is final. For an EIP-5792 batch, send the hash of its transaction. An invoice in any state takes it, since the money reaches the merchant whatever the invoice says: an `expired` or `cancelled` invoice holds the payment for the merchant as late (`review.reason` `late`), who credits or returns it; an invoice `paid`, `held` or `refunded` already records it with its amount as a payment that pays nothing (`rejectedPayments`, `invoice_not_payable` or `payer_mismatch`, `movedMoney`). One handed over before `dueAt` keeps the invoice payable for up to 30 minutes past it while it confirms; one handed over after `dueAt` is held as late, even while another payment keeps the invoice payable. The same `txKey` is taken once, and a `txKey` Quasar tracks for this invoice already is answered as taken before anything else is checked: a page that got no answer (network, 5xx) hands it over again, also after a reload (`@tuwaio/quasar-sdk` keeps the hand-over in the tab until it is taken), since the wallet has sent it already. A `txKey` Quasar tracks for another invoice of the app is `409 tx_already_used`, never taken: EVM invoices share the merchant's address and carry no reference, so whoever saw the hash may have handed it over for their own invoice first. For a payment, with a locked quote, Quasar records this invoice's claim on it (once; at most 3 undecided claims) and credits the transaction to the invoice of the organization it is tied to by proof (its mark: a Solana Pay reference, a relay or an automatic charge; or a sender whose wallet confirmed that invoice with `payer-proof`), exact amount first, then the later quote: when that is this invoice it moves here; otherwise this invoice lists it in `rejectedPayments` with `tx_already_used`. A transfer tied to no invoice that reached the merchant is held on the invoice for a refund only (`review.refundOnly`). A transaction is found by its `txKey` and by its executed hash. Until then the claim counts in `pendingPayments` and `unresolvedPayments` (and in `onTimeTxKeys` when made before `dueAt`): the page tells the buyer that the transaction was handed over for another invoice and offers no second payment.",
+    "Quasar tracks it; the invoice is settled when it is final. For an EIP-5792 batch, send the hash of its transaction. An invoice in any state takes it, since the money reaches the merchant whatever the invoice says: an `expired` or `cancelled` invoice records the payment for the merchant to review as late (`review.reason` `late`), who accepts or returns it; an invoice `paid`, `needs_review` or `refunded` already records it with its amount as a payment that pays nothing (`rejectedPayments`, `invoice_not_payable` or `payer_mismatch`, `movedMoney`). One handed over before `dueAt` keeps the invoice payable for up to 30 minutes past it while it confirms; one handed over after `dueAt` needs review as late, even while another payment keeps the invoice payable. The same `txKey` is taken once, and a `txKey` Quasar tracks for this invoice already is answered as taken before anything else is checked: a page that got no answer (network, 5xx) hands it over again, also after a reload (`@tuwaio/quasar-sdk` keeps the hand-over in the tab until it is taken), since the wallet has sent it already. A `txKey` Quasar tracks for another invoice of the app is `409 tx_already_used`, never taken: EVM invoices share the merchant's address and carry no reference, so whoever saw the hash may have handed it over for their own invoice first. For a payment, with a locked quote, Quasar records this invoice's claim on it (once; at most 3 undecided claims) and credits the transaction to the invoice of the organization it is tied to by proof (its mark: a Solana Pay reference, a relay or an automatic charge; or a sender whose wallet confirmed that invoice with `payer-proof`), exact amount first, then the later quote: when that is this invoice it moves here; otherwise this invoice lists it in `rejectedPayments` with `tx_already_used`. A transfer tied to no invoice that reached the merchant is an unmatched transfer, refunded only (`/unmatched-transfers`). A transaction is found by its `txKey` and by its executed hash. Until then the claim counts in `pendingPayments` and `unresolvedPayments` (and in `onTimeTxKeys` when made before `dueAt`): the page tells the buyer that the transaction was handed over for another invoice and offers no second payment.",
     {
       request: {
         body: json(
@@ -1590,40 +1602,9 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
   );
   checkout(
     'post',
-    '/relay',
-    'Pay without gas (EIP-3009)',
-    "The signature of `quote.gasless.relay.typedData`: the app relayer sends the transfer and the merchant pays the gas. The signed authorization confirms the wallet for the invoice (`payerProofs`, kind `authorization`). When someone else sent a copy of the authorization first, the relay reverts while the copy moves the money: Quasar finds the copy and tracks it as this invoice's payment.",
-    {
-      request: {
-        body: json(z.object({ signature: z.string().openapi({ description: '65-byte EIP-712 signature.' }) })),
-      },
-      responses: {
-        200: {
-          description:
-            '`submitted` with the transaction (`txHash` may be that of a copy of the authorization someone else sent first), or `sending` while the receipt is slow or the chain cannot tell yet.',
-          ...json(
-            z.object({
-              status: z.enum(['submitted', 'sending']),
-              userOpHash: z.string().optional(),
-              txHash: z.string().optional(),
-            }),
-          ),
-        },
-        400: invalid('`invalid_signature`'),
-        409: refused('`gasless_unavailable`, `already_relayed`, `quote_required`.'),
-        502: refused('`relay_failed`: pay with a normal transfer or ask for a new quote.'),
-        ...checkoutErrors,
-        429: refused(
-          '`sponsorship_limit` (the gas the merchant sponsors per invoice or day is used up: pay with a normal transfer), `rate_limited`.',
-        ),
-      },
-    },
-  );
-  checkout(
-    'post',
     '/relay/authorize',
     'Authorize a gasless payment sent by the page',
-    "The signature of `quote.gasless.relay.typedData`, with the same checks as `relay`, and nothing is sent: the answer is the one call the page may make, `transferWithAuthorization` of the token with this signature, on the quote's chain. The page sends it from a one-time account (a key it makes for the payment, delegated with EIP-7702 to `Simple7702Account` 0xe6Cae83BdE06E4c305530e199D7217f42808555B of EntryPoint 0.8) through the `paymaster` route, where the merchant's paymaster sponsors exactly that call and the merchant's bundler takes it; Quasar signs nothing and follows the user operation. Asked again before the operation was sent (the page was closed, or its send failed), it answers the same call; once sent, `409 already_relayed`. The signed authorization confirms the wallet for the invoice (`payerProofs`, kind `authorization`).",
+    "The signature of `quote.gasless.relay.typedData`, checked against the quote, and nothing is sent: the answer is the one call the page may make, `transferWithAuthorization` of the token with this signature, on the quote's chain. The page sends it from a one-time account (a key it makes for the payment, delegated with EIP-7702 to `Simple7702Account` 0xe6Cae83BdE06E4c305530e199D7217f42808555B of EntryPoint 0.8) through the `paymaster` route, where the merchant's paymaster sponsors exactly that call and the merchant's bundler takes it; Quasar signs nothing and follows the user operation. Asked again before the operation was sent (the page was closed, or its send failed), it answers the same call; once sent, `409 already_relayed`. The signed authorization confirms the wallet for the invoice (`payerProofs`, kind `authorization`).",
     {
       request: {
         body: json(z.object({ signature: z.string().openapi({ description: '65-byte EIP-712 signature.' }) })),
@@ -1760,10 +1741,10 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         'invoice.processing',
         'invoice.paid',
         'invoice.underpaid',
-        'invoice.held',
-        'invoice.transfer_held',
-        'invoice.transfer_hold_voided',
-        'invoice.released',
+        'invoice.needs_review',
+        'invoice.transfer_unmatched',
+        'invoice.transfer_unmatched_voided',
+        'invoice.payment_accepted',
         'invoice.expired',
         'invoice.cancelled',
         'invoice.refunded',
@@ -1782,7 +1763,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         settlement: Invoice.shape.settlement.unwrap().optional(),
         payments: z.array(InvoicePayment).optional().openapi({
           description:
-            'Every transfer credited to the invoice so far, on `invoice.paid`, `invoice.underpaid`, `invoice.held` and `invoice.released`.',
+            'Every transfer credited to the invoice so far, on `invoice.paid`, `invoice.underpaid`, `invoice.needs_review` and `invoice.payment_accepted`.',
         }),
         refund: Refund.optional(),
         transaction: z.object({ txHash: z.string().nullable(), chainId: z.string().nullable() }).optional().openapi({
@@ -1790,7 +1771,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
             'The transaction to check: `payment.reverted` (a payment Quasar credited is gone from the chain, the invoice waits for you with `reviewReason` `payment_reverted`) and `payment.unverified` (a native coin sent through a contract no receipt shows: check it and record it by hand).',
         }),
         aml: z.object({ decision: z.literal('block'), reasons: z.array(z.unknown()) }).optional(),
-        hold: z
+        review: z
           .object({
             reason: z.enum(['late', 'aml', 'quote_expired']).nullable(),
             txHash: z.string().nullable(),
@@ -1800,9 +1781,10 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           })
           .optional()
           .openapi({
-            description: '`invoice.held`: why (`reason`), its transaction and network, the senders, `late`.',
+            description:
+              '`invoice.needs_review`: why (`reason`), its transaction and network, the senders, `late`. The money is already in your wallet: the status does not mean that TUWA has it.',
           }),
-        heldTransfer: z
+        unmatchedTransfer: z
           .union([
             z.object({
               id: z.string().nullable(),
@@ -1834,7 +1816,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           .optional()
           .openapi({
             description:
-              '`invoice.transfer_held`: a transfer that reached the invoice without being tied to it by proof, recorded as a held transfer (`id`) to refund to its sender; the invoice stays as it was. `invoice.transfer_hold_voided`: the same transaction was proven to pay another invoice of yours (`paidInvoice`), nothing to refund.',
+              '`invoice.transfer_unmatched`: a transfer that reached the invoice without being tied to it by proof, recorded as an unmatched transfer (`id`) to refund to its sender; the invoice stays as it was. `invoice.transfer_unmatched_voided`: the same transaction was proven to pay another invoice of yours (`paidInvoice`), nothing to refund.',
           }),
       }),
     })
@@ -1846,7 +1828,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     path: 'payment-event',
     summary: 'Payment event (payments.v1)',
     description:
-      "Sent to the webhook endpoints subscribed to `invoice:*`, `refund:*` or the event itself (`invoice.transfer_held` and `invoice.transfer_hold_voided`, notices, are in the default subscriptions of a shop endpoint). `x-quasar-signature` is the hex HMAC-SHA256 of the raw body keyed with the endpoint's signing secret; check it, and `sentAt`, with `verifyWebhook` of `@tuwaio/quasar-sdk`. `data.invoice` is the invoice when the delivery was sent.",
+      "Sent to the webhook endpoints subscribed to `invoice:*`, `refund:*` or the event itself (`invoice.transfer_unmatched` and `invoice.transfer_unmatched_voided`, notices, are in the default subscriptions of a shop endpoint). `x-quasar-signature` is the hex HMAC-SHA256 of the raw body keyed with the endpoint's signing secret; check it, and `sentAt`, with `verifyWebhook` of `@tuwaio/quasar-sdk`. `data.invoice` is the invoice when the delivery was sent.",
     tags: ['Webhooks'],
     request: {
       headers: z.object({

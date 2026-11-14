@@ -1,0 +1,63 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/PaymentWebhookReview" />
+
+# PaymentWebhookReview
+
+Defined in: [webhooks.ts:41](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L41)
+
+What a review is about (`data.review` of `invoice.needs_review`): an invoice paid in a way that waits for your
+decision. The money is already in your wallet: the status does not mean that TUWA has it. `reason` (`late`, `aml`,
+`quote_expired`), its transaction (`txHash`) and network (`chainId`), the wallets that sent it (`senders`) and
+whether it came late (`late`). Accept the payment with [PaymentsModule.acceptPayment](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#acceptpayment) or refund it; a refund to
+a wallet AML blocks now is refused (`sender_blocked`).
+
+## Properties
+
+### chainId?
+
+> `optional` **chainId?**: `string` \| `null`
+
+Defined in: [webhooks.ts:47](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L47)
+
+CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out.
+
+***
+
+### late?
+
+> `optional` **late?**: `true`
+
+Defined in: [webhooks.ts:51](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L51)
+
+It arrived after the invoice expired or was cancelled, or was handed over after `dueAt`.
+
+***
+
+### reason
+
+> **reason**: `"late"` \| `"quote_expired"` \| `"aml"` \| `null`
+
+Defined in: [webhooks.ts:43](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L43)
+
+Why the payment needs review; `null` when Quasar did not record why.
+
+***
+
+### senders?
+
+> `optional` **senders?**: `string`[]
+
+Defined in: [webhooks.ts:49](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L49)
+
+The wallets that sent it.
+
+***
+
+### txHash
+
+> **txHash**: `string` \| `null`
+
+Defined in: [webhooks.ts:45](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L45)
+
+The transaction of the payment.

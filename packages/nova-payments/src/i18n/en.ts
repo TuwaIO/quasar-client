@@ -162,17 +162,17 @@ export const defaultLabels: NovaPaymentsLabels = {
     mismatch: 'This transaction does not pay the invoice. If money left your wallet, contact {merchant}.',
     mismatchTakenElsewhere:
       'This transaction pays another invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
-    mismatchHeldElsewhere:
-      'This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
+    mismatchUnmatchedElsewhere:
+      'This transaction is tied to another invoice; {merchant} returns it to the wallet that sent it. It does not count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.',
     mismatchOtherWallet:
       'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact {merchant}.',
-    mismatchOtherWalletHeld:
+    mismatchOtherWalletUnmatched:
       'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. {merchant} returns it to the wallet that sent it, and you can still pay this invoice from the wallet that confirmed it.',
-    mismatchChargeHeld:
+    mismatchChargeUnmatched:
       'This payment was sent under an earlier price of this invoice, so it does not pay it. {merchant} returns it to your wallet, and you can still pay the invoice.',
     mismatchTooManyParts:
       'This invoice has taken as many parts as it can, so this transfer does not pay it. {merchant} returns it to your wallet; send the whole rest at once.',
-    mismatchNoReferenceHeld:
+    mismatchNoReferenceUnmatched:
       'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. {merchant} returns it to the wallet that sent it, and you can still pay the invoice.',
     payAgain: 'Pay again',
     unsupported: "{wallet} can't make this payment.",
@@ -317,13 +317,13 @@ export const defaultLabels: NovaPaymentsLabels = {
     underpaidBlocked: 'This wallet did not pass the wallet check, so it cannot pay the rest. Contact {merchant}.',
     payRestFirstWallet: 'Only the wallet that paid first, {wallet}, can pay the rest. Connect that wallet to pay it.',
     payRest: 'Pay the rest',
-    heldTitle: 'Payment received, {merchant} is checking it',
-    heldScreening: '{merchant} checks the payment before confirming the order.',
-    heldLate: 'The payment arrived after the invoice closed. {merchant} accepts it or returns it.',
-    heldOverpaid:
+    reviewTitle: 'Payment received, {merchant} is checking it',
+    reviewScreening: '{merchant} checks the payment before confirming the order.',
+    reviewLate: 'The payment arrived after the invoice closed. {merchant} accepts it or returns it.',
+    reviewOverpaid:
       'You sent more than the invoice. {merchant} confirms the order or returns the difference to your wallet.',
-    heldQuoteExpired: 'The payment arrived after the price lock ran out. {merchant} accepts it or returns it.',
-    heldNote: 'The seller contacts you if anything is needed.',
+    reviewQuoteExpired: 'The payment arrived after the price lock ran out. {merchant} accepts it or returns it.',
+    reviewNote: 'The seller contacts you if anything is needed.',
     refundedTitle: 'Refunded',
     refundedText: '{merchant} refunded this invoice: {amount} {currency}.',
     expiredTitle: 'This invoice has expired',
@@ -332,7 +332,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     expiredPartNoAmount: 'It was payable until {date}. Part of the payment arrived.',
     closedPartText: '{merchant} closed this invoice. {amount} of the payment arrived.',
     expiredPartRefund: '{merchant} can refund it to the wallet that paid; contact {merchant}.',
-    expiredNote: 'A payment sent after the deadline is held for the seller to refund or accept.',
+    expiredNote: 'A payment sent after the deadline still reaches the seller, who accepts it or refunds it.',
     expiredWhileConfirming:
       'The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
     expiredAfterQr: 'If you paid with the QR code, {merchant} accepts the payment when it arrives or returns it.',
@@ -493,7 +493,7 @@ export const defaultLabels: NovaPaymentsLabels = {
       'You cancelled it in your wallet. It can be sent again once the cancellation is final, usually in a few minutes.',
     failedCancelled: 'You cancelled it in your wallet, so nothing was sent. You can send it again.',
     failedResendConfirmed: 'You confirmed that it did not leave your wallet: it can be sent again.',
-    failedHeldNote: 'The transfer stays held. Close this window: its row says what to do next.',
+    failedUnmatchedNote: 'The transfer still waits for its refund. Close this window: its row says what to do next.',
     notSent: 'Not sent',
     notEnough: 'Not enough {symbol} on {address}: it holds {balance}.',
     declined: 'You declined the request in {wallet}.',
@@ -504,7 +504,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     unreachable: 'Quasar does not answer, so nothing was sent. Try again in a moment.',
     refusedAmount: 'The amount is more than what is left to refund.',
     refusedNotRefundable: 'This payment cannot be refunded any more.',
-    refusedWhole: 'A held transfer is returned whole.',
+    refusedWhole: 'A payment under review is refunded whole.',
     refusedBlocked: 'A compliance check blocks the wallet to refund. Nothing can be sent to it.',
     refusedNotWaiting: 'This refund no longer waits for a transaction. Nothing was sent.',
     refusedMayHaveLanded: 'An earlier transaction of this refund may have gone through. Check it before asking again.',

@@ -361,8 +361,8 @@ const REFUSAL_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']
   amount_exceeds_refundable: 'refusedAmount',
   invoice_not_refundable: 'refusedNotRefundable',
   payment_unknown: 'refusedNotRefundable',
-  held_transfer_not_refundable: 'refusedNotRefundable',
-  held_refund_must_be_whole: 'refusedWhole',
+  unmatched_transfer_not_refundable: 'refusedNotRefundable',
+  review_refund_must_be_whole: 'refusedWhole',
   sender_blocked: 'refusedBlocked',
   refund_not_waiting: 'refusedNotWaiting',
   refund_may_have_landed: 'refusedMayHaveLanded',
@@ -404,7 +404,7 @@ const requestOf = (refund: Refund): RefundRequest => {
 };
 
 /**
- * Asks for a refund after looking at what it would send: once asked for, it holds its amount and nothing cancels it. A
+ * Asks for a refund after looking at what it would send: once asked for, it keeps its amount and nothing cancels it. A
  * refund that would send a noticeably different number of tokens than its amount took at the payment waits on a screen
  * of its own, and going on looks again, so the merchant never sends another number than the one read. Nothing is asked
  * for once the step is gone.
@@ -503,13 +503,14 @@ export function FailedStep({
 }) {
   const text = labels.refund;
   const ask = useAskRefund(flow);
-  // A held transfer's refund is settled on the transfer's row: asked again from here it would refund the whole invoice
-  if (flow.refund?.heldTransfer) {
+  // An unmatched transfer's refund is settled on the transfer's row: asked again from here it would refund the whole
+  // invoice
+  if (flow.refund?.unmatchedTransfer) {
     return (
       <>
         <ScreenContent title={failureTitle(flow.refund, text)}>
           <ScreenError>{failureText(flow.refund, text, values)}</ScreenError>
-          <FooterNote>{text.failedHeldNote}</FooterNote>
+          <FooterNote>{text.failedUnmatchedNote}</FooterNote>
         </ScreenContent>
         <ScreenFooter>
           <PrimaryButton onClick={close}>{text.close}</PrimaryButton>
@@ -592,7 +593,7 @@ export function AmountStep({
   return (
     <>
       <ScreenContent title={text.amountTitle}>
-        {/* Held while it looks: what is asked for is what was typed */}
+        {/* Locked while it looks: what is asked for is what was typed */}
         <fieldset disabled={ask.checking} className="novapay:contents">
           <RadioCards
             label={text.amountTitle}
@@ -723,7 +724,7 @@ export function ConfirmStep({
             <DetailRow name={text.to}>
               {stackedValue(
                 <ChainLink hash={transfer.to} explorerUrl={flow.addressUrl(transfer.to)} labels={labels} />,
-                flow.refund?.heldTransfer ? text.theSender : text.thePayer,
+                flow.refund?.unmatchedTransfer ? text.theSender : text.thePayer,
               )}
             </DetailRow>
           )}

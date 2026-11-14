@@ -1,0 +1,29 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/ListUnmatchedTransfersParams" />
+
+# ListUnmatchedTransfersParams
+
+Defined in: [modules/payments/types.ts:696](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L696)
+
+What [PaymentsModule.listUnmatchedTransfers](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#listunmatchedtransfers) takes.
+
+## Properties
+
+### invoice?
+
+> `optional` **invoice?**: `string`
+
+Defined in: [modules/payments/types.ts:698](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L698)
+
+Only the unmatched transfers of one invoice.
+
+***
+
+### status?
+
+> `optional` **status?**: [`UnmatchedTransferStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-unmatchedtransferstatus--docs)
+
+Defined in: [modules/payments/types.ts:700](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L700)
+
+Only those in one state; `awaiting_refund` for those still to refund.

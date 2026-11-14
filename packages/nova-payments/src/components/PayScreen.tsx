@@ -496,7 +496,7 @@ export function PayScreen() {
               {alternatives.length > 0 && (
                 <div className="novapay:flex novapay:flex-col novapay:gap-1.5">
                   <span className="novapay:text-[var(--tuwa-text-secondary)]">{labels.pay.payFromBalance}</span>
-                  {alternatives.map(({ method: other, balance: held }) => (
+                  {alternatives.map(({ method: other, balance: owned }) => (
                     <button
                       key={other.id}
                       type="button"
@@ -517,7 +517,7 @@ export function PayScreen() {
                       </span>
                       <span className={cn(mono, 'novapay:text-[var(--tuwa-text-secondary)]')}>
                         {formatLabel(labels.pay.youHave, {
-                          amount: `${formatTokenAmount(String(held), other.decimals, locale)} ${other.symbol}`,
+                          amount: `${formatTokenAmount(String(owned), other.decimals, locale)} ${other.symbol}`,
                         })}
                       </span>
                     </button>

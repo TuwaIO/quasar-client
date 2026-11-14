@@ -165,8 +165,12 @@ describe('the note under the pay button', () => {
 
 describe('a payment the seller reviews', () => {
   it('says that it arrived after the price lock ran out', () => {
-    show('held', { status: 'held', amountPaid: '89540000', review: { reason: 'quote_expired' } as never });
-    expect(textOf(OutcomeScreen({ kind: 'held' }))).toContain(
+    show('needs_review', {
+      status: 'needs_review',
+      amountPaid: '89540000',
+      review: { reason: 'quote_expired' } as never,
+    });
+    expect(textOf(OutcomeScreen({ kind: 'needs_review' }))).toContain(
       'The payment arrived after the price lock ran out. Cosmos accepts it or returns it.',
     );
   });
@@ -629,7 +633,7 @@ describe('a payment Quasar could not confirm', () => {
       code = 'payment_unconfirmed',
       txKey = null,
       invoice = {},
-      held = false,
+      unmatched = false,
     }: {
       reason?: string;
       status?: string;
@@ -637,7 +641,7 @@ describe('a payment Quasar could not confirm', () => {
       code?: string;
       txKey?: string | null;
       invoice?: Record<string, unknown>;
-      held?: boolean;
+      unmatched?: boolean;
     } = {},
   ) => {
     show('unconfirmed', { status: status as never, ...invoice });
@@ -650,7 +654,13 @@ describe('a payment Quasar could not confirm', () => {
         invoiceStatus: status,
         paymentOnTheWay: false,
         txKey,
-        error: { code, message: '', reason, ...(rechecked ? { rechecked: true } : {}), ...(held ? { held } : {}) },
+        error: {
+          code,
+          message: '',
+          reason,
+          ...(rechecked ? { rechecked: true } : {}),
+          ...(unmatched ? { unmatched } : {}),
+        },
       } as never,
     };
     return OutcomeScreen({ kind: 'unconfirmed' });
@@ -749,12 +759,12 @@ describe('a payment Quasar could not confirm', () => {
   });
 
   // Quasar read it from the chain, so "it did not leave my wallet" would be false, and the invoice can still be paid
-  it('offers to pay again, as the main button, after a transfer from another wallet that is held', () => {
+  it('offers to pay again, as the main button, after an unmatched transfer from another wallet', () => {
     const payAgain = vi.fn();
     const tree = unconfirmedScreen(payAgain, {
       code: 'payment_mismatch',
       reason: 'payer_mismatch',
-      held: true,
+      unmatched: true,
       rechecked: false,
       txKey: '0xabc',
     });
@@ -766,7 +776,7 @@ describe('a payment Quasar could not confirm', () => {
     expect(showsHash(tree, '0xabc')).toBe(true);
   });
 
-  it('keeps paying again a second action after a transfer nobody holds: the note says to contact the seller', () => {
+  it('keeps paying again a second action after a transfer nobody returns: the note says to contact the seller', () => {
     const tree = unconfirmedScreen(vi.fn(), {
       code: 'payment_mismatch',
       reason: 'payer_mismatch',
@@ -822,7 +832,7 @@ describe('an invoice that expired after the page showed a QR code', () => {
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
     expect(text).toContain('If you paid with the QR code, Cosmos accepts the payment when it arrives or returns it.');
     expect(text).not.toContain('nothing was charged');
-    expect(text).not.toContain('A payment sent after the deadline is held');
+    expect(text).not.toContain('A payment sent after the deadline still reaches the seller');
   });
 
   it('still says what arrived before', () => {

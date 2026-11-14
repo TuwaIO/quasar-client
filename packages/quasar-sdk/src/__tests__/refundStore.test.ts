@@ -379,9 +379,9 @@ describe('createRefundStore', () => {
     expect(store.getState()).toMatchObject({ phase: 'failed', refund: { failureReason: 'wrong_amount' } });
   });
 
-  it('names the invoice a transfer is held on too, for one refund only', async () => {
-    const refusal = new QuasarSDKError('[Quasar SDK] Request Failed (409): Held elsewhere', 409, new Error('x'), {
-      code: 'payment_held_elsewhere',
+  it('passes on the other invoice a refusal names', async () => {
+    const refusal = new QuasarSDKError('[Quasar SDK] Request Failed (409): Not refundable', 409, new Error('x'), {
+      code: 'invoice_not_refundable',
       details: { invoice: 'inv_2' },
     });
     const store = createRefundStore({
@@ -392,7 +392,7 @@ describe('createRefundStore', () => {
     expect(await store.getState().start('inv_1')).toBe(false);
     expect(store.getState()).toMatchObject({
       phase: 'idle',
-      error: { code: 'payment_held_elsewhere', status: 409, otherInvoice: 'inv_2' },
+      error: { code: 'invoice_not_refundable', status: 409, otherInvoice: 'inv_2' },
     });
   });
 

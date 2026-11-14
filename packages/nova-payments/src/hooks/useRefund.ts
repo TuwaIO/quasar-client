@@ -106,7 +106,7 @@ export interface RefundFlow {
   /** The refund store's phase. */
   phase: RefundPhase;
   /**
-   * What a refund would send, before it is asked for: a requested refund holds its amount until it is sent.
+   * What a refund would send, before it is asked for: a requested refund keeps its amount until it is sent.
    *
    * @param request - What to refund.
    * @returns The preview; `null` when the store cannot show one; `refused` when Quasar would refuse it (`error` says why).
@@ -267,9 +267,10 @@ export function useRefund({
           account: from.address,
           connectorType: from.connectorType,
           title: formatLabel(labels.refund.txTitle, values),
-          // The refund of a held transfer goes back to the wallet that sent the transfer, not to a payer of the invoice
+          // The refund of an unmatched transfer goes back to the wallet that sent the transfer, not to a payer of the
+          // invoice
           description: formatLabel(
-            state.refund.heldTransfer ? labels.refund.txDescriptionSender : labels.refund.txDescription,
+            state.refund.unmatchedTransfer ? labels.refund.txDescriptionSender : labels.refund.txDescription,
             values,
           ),
           payload: { quasarRefund: state.refund.id },

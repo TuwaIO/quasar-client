@@ -377,9 +377,9 @@ export interface PaymentCheckoutHandlers {
   /**
    * The locked price ran out (`quote`), or the invoice expired (`invoice`). Either can happen while a payment is on its
    * way: the invoice can still close while it confirms (Quasar waits for a payment it learned of
-   * before the deadline only for a limited time, and holds a payment that lands later for the seller to accept or
+   * before the deadline only for a limited time, and records a payment that lands later for the seller to accept or
    * return), so do not offer a new invoice at once when `paymentOnTheWay` is `true`; the checkout keeps following the
-   * invoice and shows a paid or held outcome if it changes.
+   * invoice and shows a paid or review outcome if it changes.
    *
    * @param params - What expired.
    * @param params.kind - `quote` or `invoice`.
