@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.1.0...nova-payments-v0.2.0) (2026-11-14)
+
+
+### Features
+
+* **payments:** the checkout names a payer that receives the payment ([35a8d6a](https://github.com/TuwaIO/quasar-client/commit/35a8d6a979f88fe0e7d20142986d1c6c9f135a50))
+* **payments:** the SDK and the checkout without subscriptions ([35a8d6a](https://github.com/TuwaIO/quasar-client/commit/35a8d6a979f88fe0e7d20142986d1c6c9f135a50))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @tuwaio/quasar-sdk bumped to 0.10.0
+  * peerDependencies
+    * @tuwaio/quasar-sdk bumped from >=0.8.0 to >=0.10.0
+
 ## [0.1.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.0.1...nova-payments-v0.1.0) (2026-11-13)
 
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.9.0...quasar-sdk-v0.10.0) (2026-11-14)
+
+
+### Features
+
+* **payments:** the checkout names a payer that receives the payment ([35a8d6a](https://github.com/TuwaIO/quasar-client/commit/35a8d6a979f88fe0e7d20142986d1c6c9f135a50))
+* **payments:** the SDK and the checkout without subscriptions ([35a8d6a](https://github.com/TuwaIO/quasar-client/commit/35a8d6a979f88fe0e7d20142986d1c6c9f135a50))
+
 ## [0.9.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.8.0...quasar-sdk-v0.9.0) (2026-11-13)
 
 
