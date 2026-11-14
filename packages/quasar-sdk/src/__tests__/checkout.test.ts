@@ -884,6 +884,95 @@ describe('createCheckoutStore', () => {
     checkout.getState().destroy();
   });
 
+  // Quasar signs nothing for a gasless payment the page sends: it answers the one call the page's one-time account may make
+  describe('a gasless payment sent by the page', () => {
+    const RELAY_QUOTE = { ...QUOTE, gasless: { relay: { typedData: { primaryType: 'TransferWithAuthorization' } } } };
+    const signature = `0x${'1'.repeat(130)}`;
+    const authorized = {
+      status: 'authorized',
+      chainId: 'eip155:8453',
+      call: { to: '0x3', data: '0xe3ee160e' },
+    } as const;
+
+    it('sends the call Quasar authorized through the paymaster route, and follows its user operation', async () => {
+      fetchMock
+        .mockResolvedValueOnce(json(view({ quote: RELAY_QUOTE as never })))
+        .mockResolvedValueOnce(json(authorized));
+      const checkout = store();
+      await checkout.getState().load();
+      // The one-time account sends through the checkout's paymaster route, also when the quote has no paymaster calls
+      expect(checkout.getState().paymasterUrl).toBe(`${BASE}/v1/payments/checkout/tok_1/paymaster`);
+
+      const send = vi.fn(async () => '0xuserop');
+      expect(await checkout.getState().relayFromPage(signature, send)).toBe(true);
+      expect(await sent(1)).toEqual({
+        method: 'POST',
+        path: '/v1/payments/checkout/tok_1/relay/authorize',
+        body: { signature },
+      });
+      expect(send).toHaveBeenCalledWith(authorized);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(checkout.getState()).toMatchObject({
+        phase: 'confirming',
+        paymentOnTheWay: true,
+        txKey: null,
+        error: null,
+      });
+      checkout.getState().destroy();
+    });
+
+    it('lets an engine without the route relay the signature itself', async () => {
+      fetchMock
+        .mockResolvedValueOnce(json(view({ quote: RELAY_QUOTE as never })))
+        // NestJS answers a route it does not have
+        .mockResolvedValueOnce(
+          json({ statusCode: 404, message: 'Cannot POST /relay/authorize', error: 'Not Found' }, 404),
+        )
+        .mockResolvedValueOnce(json({ status: 'submitted', userOpHash: '0xop', txHash: '0xbeef' }));
+      const checkout = store();
+      await checkout.getState().load();
+
+      const send = vi.fn(async () => '0xuserop');
+      expect(await checkout.getState().relayFromPage(signature, send)).toBe(true);
+      expect(await sent(2)).toEqual({ method: 'POST', path: '/v1/payments/checkout/tok_1/relay', body: { signature } });
+      expect(send).not.toHaveBeenCalled();
+      expect(checkout.getState()).toMatchObject({ phase: 'confirming', txKey: '0xbeef' });
+      checkout.getState().destroy();
+    });
+
+    it('says why Quasar refused the signature, and sends nothing', async () => {
+      fetchMock
+        .mockResolvedValueOnce(json(view({ quote: RELAY_QUOTE as never })))
+        .mockResolvedValueOnce(
+          json({ error: { code: 'sponsorship_limit', message: 'Too many gasless payments' } }, 429),
+        );
+      const checkout = store();
+      await checkout.getState().load();
+
+      const send = vi.fn(async () => '0xuserop');
+      expect(await checkout.getState().relayFromPage(signature, send)).toBe(false);
+      expect(send).not.toHaveBeenCalled();
+      expect(checkout.getState()).toMatchObject({ phase: 'awaitingPayment', error: { code: 'sponsorship_limit' } });
+      checkout.getState().destroy();
+    });
+
+    // Nothing left the page: the buyer may sign again, and Quasar answers the same call
+    it('throws what failed in the one-time account and keeps the payment step', async () => {
+      fetchMock
+        .mockResolvedValueOnce(json(view({ quote: RELAY_QUOTE as never })))
+        .mockResolvedValueOnce(json(authorized));
+      const checkout = store();
+      await checkout.getState().load();
+
+      const send = vi.fn(async () => {
+        throw new Error('paymaster refused');
+      });
+      await expect(checkout.getState().relayFromPage(signature, send)).rejects.toThrow('paymaster refused');
+      expect(checkout.getState()).toMatchObject({ phase: 'awaitingPayment', paymentOnTheWay: false, error: null });
+      checkout.getState().destroy();
+    });
+  });
+
   it('keeps what the page says about a payment when the page, not the buyer, chooses a method', async () => {
     fetchMock.mockResolvedValueOnce(
       json(
@@ -932,6 +1021,7 @@ describe('createCheckoutStore', () => {
       locale: vi.fn().mockResolvedValue({ locale: 'uk' }),
       submit: vi.fn().mockResolvedValue({ txKey: '0xbeef', status: 'processing' }),
       relay: vi.fn(),
+      authorizeRelay: vi.fn(),
       url: (route: string) => `sim://checkout/${route}`,
     };
     const checkout = createCheckoutStore({ token: 'tok_1', api, EventSource: null, pollMs: 1_000 });
@@ -2102,6 +2192,9 @@ describe('createCheckoutStore: honest re-check states, moved money, hand-overs k
       locale: async (locale) => ({ locale }),
       submit: () => Promise.reject(new TypeError('Failed')),
       relay: async () => ({ status: 'submitted', txHash: '0xfeed' }),
+      authorizeRelay: async () => {
+        throw new Error('not served');
+      },
       url: (route) => `sim://${route}`,
     };
     const playground = createCheckoutStore({ token: 'tok_1', api, EventSource: null });
@@ -2917,6 +3010,7 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
       locale: vi.fn(),
       submit: vi.fn(),
       relay: vi.fn(),
+      authorizeRelay: vi.fn(),
       payerProofMessage: vi.fn().mockResolvedValue(messageOf(PAYER)),
       payerProof: vi.fn().mockResolvedValue(proofOf(PAYER)),
       url: (route: string) => `sim://checkout/${route}`,

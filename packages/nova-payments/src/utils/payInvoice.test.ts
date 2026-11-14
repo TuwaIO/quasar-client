@@ -84,6 +84,66 @@ describe('payInvoice', () => {
     expect(actions.submit).not.toHaveBeenCalled();
   });
 
+  // Quasar signs nothing for a gasless payment the page sends: it sends the one call Quasar authorized, from a one-time account
+  it('sends the call Quasar authorized for the signature from a one-time account through the paymaster', async () => {
+    const { actions, adapter } = fakes();
+    const call = { to: instructions.token, data: '0xe3ee160e' };
+    const relayFromPage = vi.fn(async (_signature: string, send: (authorized: never) => Promise<string>) => {
+      await expect(send({ status: 'authorized', chainId: 'eip155:8453', call } as never)).resolves.toBe('0xuserop');
+      return true;
+    });
+    const sendOneTimeRelay = vi.fn(async () => '0xuserop');
+    const onSent = vi.fn();
+    await expect(
+      payInvoice({
+        adapter: { ...adapter, sendOneTimeRelay },
+        store: { getState: () => ({ ...actions, relayFromPage }) },
+        quote,
+        wallet,
+        path: 'relay',
+        paymasterUrl: 'https://quasar/paymaster',
+        onSent,
+      }),
+    ).resolves.toBe(true);
+    expect(adapter.signTransferAuthorization).toHaveBeenCalledWith({ typedData, account: ACCOUNT });
+    expect(relayFromPage).toHaveBeenCalledWith('0xsignature', expect.any(Function));
+    expect(sendOneTimeRelay).toHaveBeenCalledWith({
+      chainId: 'eip155:8453',
+      call,
+      paymasterUrl: 'https://quasar/paymaster',
+    });
+    expect(actions.relay).not.toHaveBeenCalled();
+    // A user operation is no transaction of the wallet
+    expect(onSent).not.toHaveBeenCalled();
+  });
+
+  it('lets Quasar relay the signature without the paymaster URL, the store action or the adapter method', async () => {
+    const { actions, store, adapter } = fakes();
+    const relayFromPage = vi.fn(async () => true);
+    const sendOneTimeRelay = vi.fn(async () => '0xuserop');
+    const withPage = { getState: () => ({ ...actions, relayFromPage }) };
+    await payInvoice({
+      adapter: { ...adapter, sendOneTimeRelay },
+      store: withPage,
+      quote,
+      wallet,
+      path: 'relay',
+      paymasterUrl: null,
+    });
+    await payInvoice({
+      adapter: { ...adapter, sendOneTimeRelay },
+      store,
+      quote,
+      wallet,
+      path: 'relay',
+      paymasterUrl: 'https://quasar/pm',
+    });
+    await payInvoice({ adapter, store: withPage, quote, wallet, path: 'relay', paymasterUrl: 'https://quasar/pm' });
+    expect(actions.relay).toHaveBeenCalledTimes(3);
+    expect(relayFromPage).not.toHaveBeenCalled();
+    expect(sendOneTimeRelay).not.toHaveBeenCalled();
+  });
+
   it('sends the sponsored calls with the paymaster and hands the transaction hash to Quasar', async () => {
     const { actions, store, adapter } = fakes();
     // The wallet is still on Ethereum: the calls go on the quote's chain

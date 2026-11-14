@@ -291,6 +291,8 @@ export function simulatedCheckoutApi({
       await new Promise((resolve) => setTimeout(resolve, 600));
       return { txKey, status: 'submitted' };
     },
+    // The simulated engine is older than the relay of the page's one-time account: the checkout relays through it
+    authorizeRelay: async () => refuse('not_found', 404),
     relay: async () => {
       await new Promise((resolve) => setTimeout(resolve, 600));
       return { status: 'submitted' };

@@ -1184,7 +1184,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         .nullable()
         .openapi({
           description:
-            'What the merchant sponsors: sign `relay.typedData` (EIP-3009) and post it to `relay`, or send `paymaster.calls` with the `paymaster` route as the ERC-7677 paymaster service.',
+            'What the merchant sponsors: sign `relay.typedData` (EIP-3009) and post it to `relay/authorize`, then send the call it answers from a one-time account through the `paymaster` route (or post it to `relay`, and Quasar sends it); or send `paymaster.calls` with the `paymaster` route as the ERC-7677 paymaster service.',
         }),
       payerProof: z
         .object({ required: z.boolean(), proven: z.boolean(), kind: PayerProofKind.nullable() })
@@ -1621,9 +1621,38 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
   );
   checkout(
     'post',
+    '/relay/authorize',
+    'Authorize a gasless payment sent by the page',
+    "The signature of `quote.gasless.relay.typedData`, with the same checks as `relay`, and nothing is sent: the answer is the one call the page may make, `transferWithAuthorization` of the token with this signature, on the quote's chain. The page sends it from a one-time account (a key it makes for the payment, delegated with EIP-7702 to `Simple7702Account` 0xe6Cae83BdE06E4c305530e199D7217f42808555B of EntryPoint 0.8) through the `paymaster` route, where the merchant's paymaster sponsors exactly that call and the merchant's bundler takes it; Quasar signs nothing and follows the user operation. Asked again before the operation was sent (the page was closed, or its send failed), it answers the same call; once sent, `409 already_relayed`. The signed authorization confirms the wallet for the invoice (`payerProofs`, kind `authorization`).",
+    {
+      request: {
+        body: json(z.object({ signature: z.string().openapi({ description: '65-byte EIP-712 signature.' }) })),
+      },
+      responses: {
+        200: {
+          description: 'The call to send, and the chain (CAIP-2) to send it on.',
+          ...json(
+            z.object({
+              status: z.literal('authorized'),
+              chainId: z.string(),
+              call: z.object({ to: z.string(), data: z.string() }),
+            }),
+          ),
+        },
+        400: invalid('`invalid_signature`'),
+        409: refused('`gasless_unavailable`, `already_relayed`, `quote_required`.'),
+        ...checkoutErrors,
+        429: refused(
+          '`sponsorship_limit` (the gas the merchant sponsors per invoice or day is used up: pay with a normal transfer), `rate_limited`.',
+        ),
+      },
+    },
+  );
+  checkout(
+    'post',
     '/paymaster',
     'ERC-7677 paymaster',
-    "JSON-RPC `pm_getPaymasterStubData` and `pm_getPaymasterData` for the buyer's smart wallet, sponsored when the user operation is exactly the quoted transfer from the quoted wallet, which confirmed the invoice (`payer-proof`; otherwise a JSON-RPC error `-32000` with `data.reason` `payer_proof_required`). Any origin may call it (the wallet calls from its own site).",
+    "JSON-RPC `pm_getPaymasterStubData` and `pm_getPaymasterData` for the buyer's smart wallet, sponsored when the user operation is exactly the quoted transfer from the quoted wallet, which confirmed the invoice (`payer-proof`; otherwise a JSON-RPC error `-32000` with `data.reason` `payer_proof_required`). For the page's one-time account of a gasless payment (`relay/authorize`) it is also the merchant's bundler: `pm_getPaymasterStubData`, `pm_getPaymasterData`, `eth_estimateUserOperationGas` and `eth_sendUserOperation` (`[userOperation, entryPoint]`) for an operation of an account delegated to `Simple7702Account` whose one call is the authorized one (otherwise `data.reason` `unknown_account` or the refusal of the call), and `pimlico_getUserOperationGasPrice`; the paymaster requests go without the caller's context. Any origin may call it (the wallet calls from its own site).",
     {
       request: {
         body: json(

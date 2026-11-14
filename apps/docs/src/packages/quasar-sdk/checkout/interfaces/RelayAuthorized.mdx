@@ -1,0 +1,51 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/RelayAuthorized" />
+
+# RelayAuthorized
+
+Defined in: [checkout/types.ts:573](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L573)
+
+The answer of `POST relay/authorize`: the call the page's one-time account makes, and nothing else.
+
+## Properties
+
+### call
+
+> **call**: `object`
+
+Defined in: [checkout/types.ts:579](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L579)
+
+`transferWithAuthorization` of the token with the payer's signature.
+
+#### data
+
+> **data**: `string`
+
+The call data.
+
+#### to
+
+> **to**: `string`
+
+The token's contract.
+
+***
+
+### chainId
+
+> **chainId**: `string`
+
+Defined in: [checkout/types.ts:577](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L577)
+
+The chain of the call, CAIP-2 (`eip155:8453`).
+
+***
+
+### status
+
+> **status**: `"authorized"`
+
+Defined in: [checkout/types.ts:575](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L575)
+
+Always `authorized`.

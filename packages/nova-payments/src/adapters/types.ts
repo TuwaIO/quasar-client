@@ -149,4 +149,18 @@ export interface PaymentsAdapter {
     /** Called with the transaction of a batch that landed after the adapter gave up waiting (`sentUnconfirmed`). */
     onLate?: (txKey: string) => void;
   }) => Promise<string>;
+  /**
+   * Sends the call Quasar authorized for a gasless payment (`relayFromPage` of the checkout store) from a one-time
+   * account of the page: a key made in memory for this payment only, delegated (EIP-7702) to the account code Quasar's
+   * paymaster sponsors, whose user operation goes to the merchant's paymaster and bundler through `paymasterUrl`. The
+   * buyer's wallet is not asked again; the key is never stored or sent anywhere.
+   *
+   * @param params - The chain (CAIP-2), the call and the checkout's paymaster URL.
+   * @returns The hash of the user operation.
+   */
+  sendOneTimeRelay?: (params: {
+    chainId: string;
+    call: { to: string; data: string };
+    paymasterUrl: string;
+  }) => Promise<string>;
 }

@@ -9,6 +9,7 @@ import {
   getCapabilities,
   getConnection,
   getConnectorClient,
+  getPublicClient,
   readContract,
   sendCalls,
   sendTransaction,
@@ -17,7 +18,9 @@ import {
   waitForCallsStatus,
   writeContract,
 } from '@wagmi/core';
-import { type Address, encodeFunctionData, erc20Abi, type Hex } from 'viem';
+import { type Address, encodeFunctionData, erc20Abi, type Hex, hexToBigInt, http } from 'viem';
+import { createBundlerClient, createPaymasterClient, toSimple7702SmartAccount } from 'viem/account-abstraction';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import { PaymentWalletError, walletErrorKind } from '../utils/walletErrors';
@@ -97,6 +100,22 @@ async function isSafeThroughWalletConnect(connector: ReturnType<typeof getConnec
   }
 }
 
+/** How long the page waits for the bundler's price. */
+const GAS_PRICE_TIMEOUT_MS = 10_000;
+
+/** One JSON-RPC request without params to the checkout's paymaster route, which also answers the bundler's price. */
+async function routeRequest(url: string, method: string): Promise<unknown> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: [] }),
+    signal: AbortSignal.timeout(GAS_PRICE_TIMEOUT_MS),
+  });
+  const body = (await response.json()) as { result?: unknown; error?: { message?: string } };
+  if (body.error || body.result === undefined) throw new Error(body.error?.message ?? `${method} failed`);
+  return body.result;
+}
+
 /**
  * The adapter that pays EVM methods of a Nova Payments checkout from the wallet connected through wagmi (the config
  * Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
@@ -105,15 +124,18 @@ async function isSafeThroughWalletConnect(connector: ReturnType<typeof getConnec
  * gas of a token transfer, and of any transfer when that read fails),
  * signs the EIP-3009 authorization of a gasless quote with `eth_signTypedData_v4` exactly as Quasar issued it, signs
  * Quasar's message that confirms the paying wallet with `personal_sign`, and sends sponsored calls with
- * `wallet_sendCalls` and the checkout's ERC-7677 paymaster. Before each of these four requests, a wallet that reports
+ * `wallet_sendCalls` and the checkout's ERC-7677 paymaster. A gasless quote Quasar does not send itself is sent from a
+ * one-time account: a key made in memory for the payment, delegated (EIP-7702) to `Simple7702Account` of EntryPoint 0.8,
+ * whose user operation makes the one call Quasar authorized, through the checkout's paymaster route (the merchant's
+ * paymaster and bundler); the key is never stored or sent. Before each of the four wallet requests, a wallet that reports
  * another network than the request's is asked to switch (wagmi would refuse the request before the wallet saw it); a
  * switch that fails is a `PaymentWalletError` of the kind `switchFailed`, a refused one stays `declined`, both with
  * `step: 'switch'`. A Safe wallet
  * is refused: it returns a Safe transaction hash, not the transaction Quasar follows. Pass it in `adapters` of
  * `NovaPaymentsProvider`.
  *
- * Side effects: RPC reads through the wagmi transports (`eth_estimateGas` before each transfer); wallet prompts,
- * including a network switch.
+ * Side effects: RPC reads through the wagmi transports (`eth_estimateGas` before each transfer; the one-time account's
+ * nonce and code); wallet prompts, including a network switch; requests to the checkout's paymaster route.
  *
  * @param config - The wagmi config of the app.
  * @returns The EVM adapter.
@@ -286,6 +308,40 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       void followBatch(batchId, until, onLate).catch(() => undefined);
     },
 
+    sendOneTimeRelay: async ({ chainId, call, paymasterUrl }) => {
+      const evmChain = toEvmChainId(chainId);
+      const client = evmChain === undefined ? undefined : getPublicClient(config, { chainId: evmChain });
+      if (evmChain === undefined || !client) {
+        throw new PaymentWalletError('unsupported', `The network ${chainId} is not configured`);
+      }
+      // A key of this payment only, in memory: it signs nothing but the operation Quasar's paymaster sponsors
+      const owner = privateKeyToAccount(generatePrivateKey());
+      const account = await toSimple7702SmartAccount({ client, owner });
+      const bundler = createBundlerClient({
+        account,
+        client,
+        transport: http(paymasterUrl),
+        paymaster: createPaymasterClient({ transport: http(paymasterUrl) }),
+        userOperation: {
+          // The price the merchant's bundler asks now, as it takes no less
+          estimateFeesPerGas: async () => {
+            const price = (await routeRequest(paymasterUrl, 'pimlico_getUserOperationGasPrice')) as {
+              fast: { maxFeePerGas: Hex; maxPriorityFeePerGas: Hex };
+            };
+            return {
+              maxFeePerGas: hexToBigInt(price.fast.maxFeePerGas),
+              maxPriorityFeePerGas: hexToBigInt(price.fast.maxPriorityFeePerGas),
+            };
+          },
+        },
+      });
+      const authorization = await owner.signAuthorization({
+        chainId: evmChain,
+        contractAddress: account.authorization.address,
+        nonce: 0,
+      });
+      return bundler.sendUserOperation({ calls: [{ to: call.to as Address, data: call.data as Hex }], authorization });
+    },
     sendSponsoredCalls: async ({ calls, paymasterUrl, chainId, account, onSent, onAccepted, onLate }) => {
       await refuseSafe();
       await onChain(evmChainId(chainId));
