@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # VerifyWebhookParams
 
-Defined in: [webhooks.ts:225](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L225)
+Defined in: [webhooks.ts:203](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L203)
 
 What [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebhook--docs) takes.
 
@@ -14,7 +14,7 @@ What [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebh
 
 > **body**: `string` \| `Uint8Array`\<`ArrayBufferLike`\>
 
-Defined in: [webhooks.ts:227](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L227)
+Defined in: [webhooks.ts:205](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L205)
 
 The request body exactly as received, before any parsing: a string or its bytes.
 
@@ -24,7 +24,7 @@ The request body exactly as received, before any parsing: a string or its bytes.
 
 > `optional` **now?**: `Date`
 
-Defined in: [webhooks.ts:240](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L240)
+Defined in: [webhooks.ts:218](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L218)
 
 The current time, for tests. Defaults to now.
 
@@ -34,7 +34,7 @@ The current time, for tests. Defaults to now.
 
 > **secret**: `string`
 
-Defined in: [webhooks.ts:231](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L231)
+Defined in: [webhooks.ts:209](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L209)
 
 The signing secret of the webhook endpoint.
 
@@ -44,7 +44,7 @@ The signing secret of the webhook endpoint.
 
 > **signature**: `string` \| `null` \| `undefined`
 
-Defined in: [webhooks.ts:229](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L229)
+Defined in: [webhooks.ts:207](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L207)
 
 The value of the `x-quasar-signature` header.
 
@@ -54,7 +54,7 @@ The value of the `x-quasar-signature` header.
 
 > `optional` **toleranceSeconds?**: `number` \| `false`
 
-Defined in: [webhooks.ts:238](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L238)
+Defined in: [webhooks.ts:216](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L216)
 
 How far the send time may be from now, in seconds: a finite number above 0, or `false` to turn the check off
 (`0`, a negative number, `NaN` or `Infinity` throw `invalid_options`). Defaults to `300`. The send time is

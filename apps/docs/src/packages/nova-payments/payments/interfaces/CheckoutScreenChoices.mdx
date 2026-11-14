@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # CheckoutScreenChoices
 
-Defined in: [nova-payments/src/utils/checkout.ts:44](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L44)
+Defined in: [nova-payments/src/utils/checkout.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L42)
 
 Choices of the buyer that the checkout store does not hold.
 
@@ -14,30 +14,10 @@ Choices of the buyer that the checkout store does not hold.
 
 > `optional` **afterFailure?**: `boolean`
 
-Defined in: [nova-payments/src/utils/checkout.ts:71](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L71)
+Defined in: [nova-payments/src/utils/checkout.ts:65](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L65)
 
 A payment this page followed has just failed for good, and the buyer has not gone on yet: the `failed` step shows
 what became of it, in place of the step the store went back to, until the buyer chooses to pay again.
-
-***
-
-### autoPay?
-
-> `optional` **autoPay?**: `boolean`
-
-Defined in: [nova-payments/src/utils/checkout.ts:48](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L48)
-
-The buyer opened the automatic payments offer after paying the first period of a subscription.
-
-***
-
-### autoPayOff?
-
-> `optional` **autoPayOff?**: `boolean`
-
-Defined in: [nova-payments/src/utils/checkout.ts:50](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L50)
-
-The buyer opened the screen that turns automatic payments off, while they are on.
 
 ***
 
@@ -45,7 +25,7 @@ The buyer opened the screen that turns automatic payments off, while they are on
 
 > `optional` **confirmWallet?**: `boolean`
 
-Defined in: [nova-payments/src/utils/checkout.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L66)
+Defined in: [nova-payments/src/utils/checkout.ts:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L60)
 
 The buyer continued with a wallet that must confirm the invoice before the price (`payerProof` of the checkout
 store is `required`): the step that confirms it shows while the store waits for the signature and locks the price
@@ -57,7 +37,7 @@ after it.
 
 > `optional` **handoff?**: `boolean`
 
-Defined in: [nova-payments/src/utils/checkout.ts:55](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L55)
+Defined in: [nova-payments/src/utils/checkout.ts:49](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L49)
 
 The buyer continues on a phone: with `payWith` `qr`, the QR code of the payment page shows before any price is
 locked (an EVM method, paid from the phone's wallet on that page).
@@ -68,7 +48,7 @@ locked (an EVM method, paid from the phone's wallet on that page).
 
 > `optional` **labelsReady?**: `boolean`
 
-Defined in: [nova-payments/src/utils/checkout.ts:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L60)
+Defined in: [nova-payments/src/utils/checkout.ts:54](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L54)
 
 The labels of the invoice's language are loaded (default `true`). Until then the checkout stays on `loading`, so
 its first screen never shows in English before the buyer's language arrives.
@@ -79,6 +59,6 @@ its first screen never shows in English before the buyer's language arrives.
 
 > `optional` **payWith?**: `"qr"` \| `"wallet"`
 
-Defined in: [nova-payments/src/utils/checkout.ts:46](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L46)
+Defined in: [nova-payments/src/utils/checkout.ts:44](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L44)
 
 Pay from a wallet in this browser (default) or scan a QR code with a phone.

@@ -12,14 +12,11 @@ const wagmi = vi.hoisted(() => ({
   estimateGas: vi.fn(),
   estimateFeesPerGas: vi.fn(),
   getCapabilities: vi.fn(),
-  getBytecode: vi.fn(),
   switchChain: vi.fn(),
   sendTransaction: vi.fn(),
   writeContract: vi.fn(),
   getConnectorClient: vi.fn(),
   getConnection: vi.fn(),
-  getTransactionReceipt: vi.fn(),
-  waitForTransactionReceipt: vi.fn(),
   sendCalls: vi.fn(),
   waitForCallsStatus: vi.fn(),
   signMessage: vi.fn(),
@@ -271,116 +268,6 @@ describe('paymentsEVMAdapter', () => {
     expect(adapter.explorerUrl!({ chainId: 'eip155:1', txKey: '0xhash' })).toBeUndefined();
   });
 
-  it('asks the wallet for the ERC-7715 permission of automatic payments and returns what Quasar needs', async () => {
-    const request = vi.fn(async () => [
-      { chainId: '0x14a34', context: '0xcontext', delegationManager: '0xmanager', dependencies: [] },
-    ]);
-    wagmi.getConnectorClient.mockResolvedValue({ request });
-    const permission = {
-      chainId: '0x14a34',
-      to: '0x3333333333333333333333333333333333333333',
-      permission: {
-        type: 'erc20-token-periodic' as const,
-        isAdjustmentAllowed: false,
-        data: {
-          tokenAddress: USDC,
-          periodAmount: '0x2ebae40',
-          periodDuration: 2_592_000,
-          startTime: 1,
-          justification: 'Pro',
-        },
-      },
-      rules: [],
-    };
-    await expect(
-      paymentsEVMAdapter(config).requestPermission!({ request: permission, account: ACCOUNT }),
-    ).resolves.toEqual({
-      context: '0xcontext',
-      delegationManager: '0xmanager',
-      dependencies: [],
-    });
-    // wagmi refuses a client on another network than the wallet's: the first payment may have been on another one
-    expect(wagmi.switchChain).toHaveBeenCalledWith(config, { chainId: 84532 });
-    expect(wagmi.switchChain.mock.invocationCallOrder[0]).toBeLessThan(
-      wagmi.getConnectorClient.mock.invocationCallOrder[0],
-    );
-    expect(wagmi.getConnectorClient).toHaveBeenCalledWith(config, { chainId: 84532 });
-    expect(request).toHaveBeenCalledWith({
-      method: 'wallet_requestExecutionPermissions',
-      params: [{ ...permission, from: ACCOUNT }],
-    });
-    request.mockResolvedValueOnce([{} as never]);
-    await expect(
-      paymentsEVMAdapter(config).requestPermission!({ request: permission, account: ACCOUNT }),
-    ).rejects.toMatchObject({
-      kind: 'failed',
-    });
-  });
-
-  describe('the switch of a plain account to its smart account', () => {
-    const adapter = () => paymentsEVMAdapter(config);
-    const params = { chainId: BASE_SEPOLIA, account: ACCOUNT };
-
-    it('tells a smart account, a plain one the wallet can switch, and an account it knows nothing of', async () => {
-      wagmi.getBytecode.mockResolvedValueOnce('0xef0100aa');
-      await expect(adapter().smartAccountStatus!(params)).resolves.toBe('smart');
-
-      wagmi.getBytecode.mockResolvedValue('0x');
-      wagmi.getCapabilities.mockResolvedValueOnce({ atomic: { status: 'ready' } });
-      await expect(adapter().smartAccountStatus!(params)).resolves.toBe('upgradable');
-
-      // Quasar decides on what such a wallet gives: it may deploy through `dependencies`
-      wagmi.getCapabilities.mockResolvedValueOnce({});
-      await expect(adapter().smartAccountStatus!(params)).resolves.toBe('unknown');
-      wagmi.getCapabilities.mockRejectedValueOnce(new Error('no EIP-5792'));
-      await expect(adapter().smartAccountStatus!(params)).resolves.toBe('unknown');
-    });
-
-    // Live on MetaMask 13.55: one call goes out as a plain transaction (type 2) and the account stays as it was
-    it('asks with two calls, atomically, that move nothing', async () => {
-      wagmi.sendCalls.mockResolvedValue({ id: '0xbatch' });
-      wagmi.waitForCallsStatus.mockResolvedValue({ status: 'success' });
-      wagmi.getBytecode.mockResolvedValue('0xef0100aa');
-      await adapter().upgradeToSmartAccount!(params);
-      const sent = wagmi.sendCalls.mock.calls[0][1];
-      expect(sent).toMatchObject({ account: ACCOUNT, chainId: 84532, forceAtomic: true });
-      expect(sent.calls).toHaveLength(2);
-      for (const call of sent.calls) expect(call).toMatchObject({ value: 0n });
-      expect(wagmi.switchChain).toHaveBeenCalledWith(config, { chainId: 84532 });
-    });
-
-    // Live on MetaMask 13.55: its gas estimate leaves the batch out of gas (status 500), the authorization still applied
-    it('goes by the code on the network, not by the status of the batch', async () => {
-      wagmi.sendCalls.mockResolvedValue({ id: '0xbatch' });
-      wagmi.waitForCallsStatus.mockResolvedValue({ status: 'failure', statusCode: 500 });
-      wagmi.getBytecode.mockResolvedValue('0xef0100aa');
-      await expect(adapter().upgradeToSmartAccount!(params)).resolves.toBeUndefined();
-      wagmi.waitForCallsStatus.mockRejectedValueOnce(new Error('no status'));
-      await expect(adapter().upgradeToSmartAccount!(params)).resolves.toBeUndefined();
-    });
-
-    it('fails when the account has no code after all', async () => {
-      vi.useFakeTimers();
-      try {
-        wagmi.sendCalls.mockResolvedValue({ id: '0xbatch' });
-        wagmi.waitForCallsStatus.mockResolvedValue({ status: 'success' });
-        wagmi.getBytecode.mockResolvedValue('0x');
-        const upgrading = adapter().upgradeToSmartAccount!(params);
-        const failure = expect(upgrading).rejects.toMatchObject({ kind: 'failed' });
-        await vi.runAllTimersAsync();
-        await failure;
-      } finally {
-        vi.useRealTimers();
-      }
-    });
-
-    it("leaves the buyer's refusal as it is", async () => {
-      wagmi.sendCalls.mockRejectedValue({ code: 4001 });
-      await expect(adapter().upgradeToSmartAccount!(params)).rejects.toMatchObject({ code: 4001 });
-    });
-  });
-
-  // "The payment failed, only the fee was spent" with Pay live, for a batch that may still land: a second payment
   it('says a sponsored batch is not confirmed yet, and hands it over when it lands', async () => {
     let lands: (value: unknown) => void = () => undefined;
     wagmi.sendCalls.mockResolvedValue({ id: '0xbatch' });
@@ -479,47 +366,6 @@ describe('paymentsEVMAdapter', () => {
     const onLate = vi.fn();
     paymentsEVMAdapter(config).followSponsoredCalls!({ batchId: 'batch-1', until: Date.now() + 60_000, onLate });
     await vi.waitFor(() => expect(onLate).toHaveBeenCalledWith('0xlate'));
-  });
-
-  describe('revoking a permission', () => {
-    const revoke = () =>
-      paymentsEVMAdapter(config).revokePermission!({
-        revocation: { to: MERCHANT, data: '0x3ed01015' },
-        chainId: BASE_SEPOLIA,
-        account: ACCOUNT,
-      });
-    beforeEach(() => {
-      wagmi.sendTransaction.mockResolvedValue('0xrevoke');
-    });
-
-    it('gives the wait for the receipt a limit: it reads the network for as long as it runs', async () => {
-      wagmi.waitForTransactionReceipt.mockResolvedValue({ status: 'success' });
-      await revoke();
-      expect(wagmi.waitForTransactionReceipt).toHaveBeenCalledWith(config, {
-        chainId: 84532,
-        hash: '0xrevoke',
-        timeout: 180_000,
-      });
-    });
-
-    it('says failed for a revert, as nothing is left to wait for', async () => {
-      wagmi.waitForTransactionReceipt.mockRejectedValue(new Error('unknown reason'));
-      wagmi.getTransactionReceipt.mockResolvedValue({ status: 'reverted' });
-      await expect(revoke()).rejects.toMatchObject({ kind: 'failed' });
-    });
-
-    it('passes on any other end of the wait: the transaction may still land', async () => {
-      const ranOut = new Error('timed out');
-      wagmi.waitForTransactionReceipt.mockRejectedValue(ranOut);
-      wagmi.getTransactionReceipt.mockRejectedValue(new Error('not found'));
-      await expect(revoke()).rejects.toBe(ranOut);
-    });
-
-    it('refuses a Safe', async () => {
-      wagmi.getConnection.mockReturnValue({ connector: { id: 'safe', type: 'safe' } });
-      await expect(revoke()).rejects.toMatchObject({ kind: 'unsupported' });
-      expect(wagmi.sendTransaction).not.toHaveBeenCalled();
-    });
   });
 
   describe('a Safe connected through WalletConnect', () => {

@@ -87,7 +87,7 @@ export interface PaymentCheckoutClassNames {
    */
   body?: (params: CheckoutPartState) => string | undefined;
   /**
-   * The content of a step screen (buyer details, method, QR code, automatic payments), with its heading.
+   * The content of a step screen (buyer details, method, QR code), with its heading.
    *
    * @param params - The state of the checkout.
    * @returns Classes to add.
@@ -159,7 +159,7 @@ export interface PaymentCheckoutClassNames {
    */
   consentOption?: (params: CheckoutPartState & { checked: boolean; required: boolean }) => string | undefined;
   /**
-   * A card of grouped facts (the transaction, the rate and fees, the terms of automatic payments).
+   * A card of grouped facts (the transaction, the rate and fees).
    *
    * @param params - The state of the checkout.
    * @returns Classes to add.

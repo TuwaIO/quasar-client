@@ -1,10 +1,5 @@
 import type { Transaction } from '@tuwaio/pulsar-core';
-import type {
-  GrantPermissionParams,
-  PaymentInstructions,
-  PermissionRequest,
-  TransferAuthorizationTypedData,
-} from '@tuwaio/quasar-sdk/checkout';
+import type { PaymentInstructions, TransferAuthorizationTypedData } from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentFamily } from '../utils/methods';
 
@@ -129,45 +124,6 @@ export interface PaymentsAdapter {
    * @returns The link, or `undefined` when the chain has no known explorer.
    */
   explorerAddressUrl?: (params: { chainId: string; address: string }) => string | undefined;
-  /**
-   * What the account is for automatic payments, read before asking for the permission: `smart` has code on the network,
-   * `upgradable` is a plain account its wallet can switch to a smart account, `unknown` says nothing either way. Quasar
-   * decides in the end: it refuses a wallet that could never be charged.
-   *
-   * @param params - The network and the account.
-   * @returns The kind.
-   */
-  smartAccountStatus?: (params: { chainId: string; account: string }) => Promise<'smart' | 'upgradable' | 'unknown'>;
-  /**
-   * Has the wallet switch a plain account to its smart account (`upgradable` of {@link PaymentsAdapter.smartAccountStatus})
-   * and waits until the network includes it. The wallet asks the buyer and the buyer pays the network fee.
-   *
-   * @param params - The network and the account.
-   */
-  upgradeToSmartAccount?: (params: { chainId: string; account: string }) => Promise<void>;
-  /**
-   * Asks the wallet for the ERC-7715 permission of a subscription's automatic payments, with the wallet's prompt.
-   *
-   * @param params - The request of the checkout's auto-charge offer and the granting account.
-   * @returns What the wallet granted, for `grantPermission` of the checkout store (without the payer).
-   */
-  requestPermission?: (params: {
-    request: PermissionRequest;
-    account: string;
-  }) => Promise<Omit<GrantPermissionParams, 'payer'>>;
-  /**
-   * Sends the transaction that revokes the permission of a subscription's automatic payments, with the wallet's prompt,
-   * and waits until the network includes it. The wallet pays its network fee.
-   *
-   * @param params - The transaction of the checkout's auto-charge offer, its CAIP-2 chain, the account that granted the
-   * permission and what to call once the wallet has sent it: a failure while waiting must not send it again.
-   */
-  revokePermission?: (params: {
-    revocation: { to: string; data: string };
-    chainId: string;
-    account: string;
-    onSent?: () => void;
-  }) => Promise<void>;
   /**
    * Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
    * it (and Nova Transactions shows its toast) once the checkout closes.

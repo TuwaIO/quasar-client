@@ -26,12 +26,10 @@ const { OutcomeScreen } = await import('./OutcomeScreen');
 const { StatusHead } = await import('./StatusHead');
 const { NameTransaction } = await import('./NameTransaction');
 const { PrimaryButton, SecondaryButton } = await import('./ScreenParts');
-const { AutoPayScreen } = await import('./AutoPayScreen');
 
 const BASE = 'eip155:8453';
 const PAYER = '0x1111111111111111111111111111111111111111';
 const MERCHANT_WALLET = '0x2222222222222222222222222222222222222222';
-const COLLECTOR = '0x3333333333333333333333333333333333333333';
 
 /** Whether the tree shows the transaction `hash`. */
 const showsHash = (node: unknown, hash: string) =>
@@ -876,45 +874,5 @@ describe('the pay step after a transaction that pays another invoice', () => {
     const text = textOf(render(PayScreen, {}));
     expect(text).toContain(PAYS_ANOTHER);
     expect(text).not.toContain('does not pay the invoice');
-  });
-});
-
-describe('the automatic payments offer', () => {
-  it('says that Quasar sends each charge for the merchant, and shows the merchant’s wallet as the recipient', () => {
-    show(
-      'autoPay',
-      { status: 'paid', amountPaid: '89540000' },
-      {
-        autoCharge: {
-          status: 'available',
-          methodId: 'usdc-base',
-          request: {
-            chainId: '0x2105',
-            to: COLLECTOR,
-            permission: {
-              type: 'erc20-token-periodic',
-              isAdjustmentAllowed: false,
-              data: {
-                tokenAddress: '0x3',
-                periodAmount: '0x2ebae40',
-                periodDuration: 2_592_000,
-                startTime: 1_791_000_000,
-                justification: 'Pro plan',
-              },
-            },
-            rules: [
-              { type: 'payee', data: { addresses: [MERCHANT_WALLET] } },
-              { type: 'redeemer', data: { addresses: [COLLECTOR] } },
-            ],
-          },
-        },
-      },
-    );
-    const tree = render(AutoPayScreen, {});
-    const text = textOf(tree);
-    expect(text).toContain("Quasar sends each charge for Cosmos, only to Cosmos's wallet and within this limit.");
-    expect(text).toContain("Cosmos can't take more than this limit in a period.");
-    expect(showsHash(tree, MERCHANT_WALLET)).toBe(true);
-    expect(text).not.toContain('0x3333…3333');
   });
 });

@@ -134,21 +134,6 @@ export function SimulatedWallet({
           return hash;
         },
         explorerUrl: ({ txKey }) => `https://sepolia.basescan.org/tx/${txKey}`,
-        // MetaMask's answer to the ERC-7715 request of automatic payments
-        requestPermission: async () => {
-          await wait(1500);
-          if (decline) throw new PaymentWalletError('declined', 'The buyer declined');
-          return {
-            context: '0xcontext',
-            delegationManager: '0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3',
-            dependencies: [],
-          };
-        },
-        // The transaction that revokes the permission, included by the network
-        revokePermission: async () => {
-          await wait(1500);
-          if (decline) throw new PaymentWalletError('declined', 'The buyer declined');
-        },
         // The transaction the app's Pulsar store would track after the checkout closed
         pulsarTransaction: (params) => ({ adapter: 'evm', ...params }) as unknown as Transaction,
       },

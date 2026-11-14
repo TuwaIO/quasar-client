@@ -28,7 +28,6 @@ import {
   underpaidRest,
 } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
-import { AutoPayNote } from './AutoPayNote';
 import { CapsLabel } from './CapsLabel';
 import { secondaryAction } from './classes';
 import { checkoutClassName } from './customization';
@@ -639,7 +638,6 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       <ScreenFooter>
         {action}
         <ContactLink />
-        <AutoPayNote />
       </ScreenFooter>
     </>
   );

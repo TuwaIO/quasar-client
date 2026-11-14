@@ -122,30 +122,6 @@ export interface CheckoutContextValue {
    * @param payment - The transaction and what it pays.
    */
   onPaymentSent: (payment: SentPayment) => void;
-  /** The buyer opened the automatic payments offer after paying a subscription period. */
-  autoPay: boolean;
-  /**
-   * Opens or closes the automatic payments offer.
-   *
-   * @param autoPay - Whether it shows.
-   */
-  setAutoPay: (autoPay: boolean) => void;
-  /** The screen that turns automatic payments off is open (`open`), or they were turned off (`done`). */
-  autoPayOff: 'open' | 'done' | null;
-  /**
-   * Opens or closes the screen that turns automatic payments off, or says they were turned off.
-   *
-   * @param autoPayOff - The new state.
-   */
-  setAutoPayOff: (autoPayOff: 'open' | 'done' | null) => void;
-  /** Whether the wallet has sent the transaction that revokes the permission of this invoice's subscription. */
-  revokeSent: boolean;
-  /**
-   * Keeps that for as long as the page shows the invoice, so the buyer leaving the screen does not send it twice.
-   *
-   * @param sent - Whether it was sent.
-   */
-  setRevokeSent: (sent: boolean) => void;
   /**
    * Opens another invoice in this checkout: the one that replaced a corrected invoice.
    *

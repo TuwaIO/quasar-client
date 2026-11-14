@@ -7,15 +7,7 @@ import { ofetch } from 'ofetch';
 import { BASE_API_URL } from '../constants';
 import { QuasarSDKError, toQuasarSDKError } from '../core/errors';
 import type { Buyer, InvoiceLocale } from '../modules/payments/types';
-import type {
-  AutoChargeOffer,
-  CheckoutApi,
-  CheckoutQuote,
-  CheckoutView,
-  GrantPermissionParams,
-  PayerProofConfirmation,
-  PayerProofMessage,
-} from './types';
+import type { CheckoutApi, CheckoutQuote, CheckoutView, PayerProofConfirmation, PayerProofMessage } from './types';
 
 // A request that hangs would never reach the retries: a hand-over with no answer is the case they are for
 /** How long a checkout call may take: pricing and screening a wallet take seconds. */
@@ -80,9 +72,6 @@ export function checkoutApi(token: string, baseUrl: string = BASE_API_URL): Chec
         { signature },
         RELAY_TIMEOUT_MS,
       ),
-    permission: (body: GrantPermissionParams) =>
-      call<{ permission: unknown; autoCharge: AutoChargeOffer | null }>('permission', body),
-    permissionRevoked: () => call<{ autoCharge: AutoChargeOffer | null }>('permission/revoked', {}),
     url: (route: string) => `${baseUrl.replace(/\/+$/, '')}${checkoutPath(token, route)}`,
   };
 }

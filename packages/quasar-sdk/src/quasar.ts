@@ -30,7 +30,7 @@ export class Quasar {
   /** Syncs Pulsar transactions to Quasar and reads their history. */
   public readonly pulsar: PulsarModule;
 
-  /** Invoices, refunds, documents and subscriptions of a Payments app. */
+  /** Invoices, refunds and documents of a Payments app. */
   public readonly payments: PaymentsModule;
 
   /**

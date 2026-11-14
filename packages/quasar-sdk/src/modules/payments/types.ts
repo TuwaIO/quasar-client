@@ -1,9 +1,9 @@
 /**
- * @file Request and response types of the Payments API (`/v1/payments`): invoices, refunds, documents, quotes,
- * payment methods and subscriptions, as the Quasar engine takes and returns them.
+ * @file Request and response types of the Payments API (`/v1/payments`): invoices, refunds, documents, quotes and
+ * payment methods, as the Quasar engine takes and returns them.
  */
 
-/** Fiat currency of an invoice or a subscription plan. */
+/** Fiat currency of an invoice. */
 export type PaymentsCurrency = 'USD' | 'EUR';
 
 /** Language of an invoice, its documents and its emails. */
@@ -24,7 +24,7 @@ export type TaxCategory = 'S' | 'Z' | 'E' | 'AE' | 'K' | 'G' | 'O';
 export type InvoiceStatus =
   'open' | 'processing' | 'paid' | 'underpaid' | 'held' | 'partially_refunded' | 'refunded' | 'expired' | 'cancelled';
 
-/** Whether an invoice or subscription belongs to the live or the test app: the key that issued it decides. */
+/** Whether an invoice belongs to the live or the test app: the key that issued it decides. */
 export type PaymentsEnvironment = 'live' | 'test';
 
 /**
@@ -56,7 +56,7 @@ export interface Buyer {
   externalId?: string;
 }
 
-/** One line of an invoice or a subscription plan, as you send it. */
+/** One line of an invoice, as you send it. */
 export interface InvoiceLineInput {
   /** What is sold. */
   name: string;
@@ -86,11 +86,11 @@ export type InvoiceLinesInput =
       lineItems?: never;
       /** A total as one line, as a decimal string (`'49.00'`). */
       amount: string;
-      /** Name of that one line. Defaults to `Payment` (`Subscription` for a plan). */
+      /** Name of that one line. Defaults to `Payment`. */
       description?: string;
     };
 
-/** Terms that an invoice and a subscription plan share. */
+/** The terms of an invoice. */
 export interface InvoiceTermsInput {
   /** Currency. Defaults to `USD`. */
   currency?: PaymentsCurrency;
@@ -342,10 +342,6 @@ export interface Invoice {
   replaces: string | null;
   /** The invoice that corrects this one. */
   replacedBy: string | null;
-  /** The subscription it bills. */
-  subscriptionId: string | null;
-  /** The subscription period it bills. */
-  period: number | null;
   /** When it was created. */
   createdAt: string;
   /** When it last changed. */
@@ -829,197 +825,10 @@ export interface PaymentMethod {
   featured: boolean;
 }
 
-/** The billing period unit of a subscription. */
-export type SubscriptionInterval = 'day' | 'week' | 'month' | 'year';
-
-/**
- * State of a subscription: `trialing`, `incomplete` (its first or resumed period is unpaid), `active`, `past_due`,
- * `paused`, `canceled`, `ended`.
- */
-export type SubscriptionStatus = 'trialing' | 'incomplete' | 'active' | 'past_due' | 'paused' | 'canceled' | 'ended';
-
-/** What {@link PaymentsModule.createSubscription} takes: a plan, billed every period as one invoice. */
-export type CreateSubscriptionParams = InvoiceLinesInput &
-  InvoiceTermsInput & {
-    /** Period unit. */
-    interval: SubscriptionInterval;
-    /** Units per period; a period is at most one year. Defaults to `1`. */
-    intervalCount?: number;
-    /** Days before the first period starts. */
-    trialDays?: number;
-    /** Periods to bill, then it ends; give it or `endsAt`. */
-    cycles?: number;
-    /** When it ends. */
-    endsAt?: Date | string;
-    /** `send_invoice` (default: the buyer pays each invoice) or `auto_charge` (an ERC-7715 permission). */
-    collection?: 'send_invoice' | 'auto_charge';
-    /** The payment method to charge or offer first. */
-    preferredMethodId?: string;
-    /** Days an invoice stays payable after its period starts. */
-    graceDays?: number;
-  };
-
-/** The automatic-charge permission a buyer granted (ERC-7715), without its context. */
-export interface SubscriptionPermission {
-  /** Whether it can still be charged. */
-  status: 'active' | 'revoked' | 'expired';
-  /** CAIP-2 chain. */
-  chainId: string | null;
-  /** The payment method. */
-  methodId: string | null;
-  /** The buyer's CAIP-10 account. */
-  payer: string | null;
-  /** The token. */
-  tokenAddress: string | null;
-  /** Amount per window, in base units. */
-  periodAmount: string | null;
-  /** Window length. */
-  periodSeconds: number;
-  /** When the first window starts. */
-  startsAt: string | null;
-  /** When it expires. */
-  expiresAt: string | null;
-  /** When it was granted. */
-  grantedAt: string | null;
-  /** When it was revoked. */
-  revokedAt: string | null;
-}
-
-/** A subscription as the Payments API returns it. */
-export interface Subscription {
-  /** Subscription ID. */
-  id: string;
-  /** Always `subscription`. */
-  object: 'subscription';
-  /** State. */
-  status: SubscriptionStatus;
-  /** Live or test. */
-  environment: PaymentsEnvironment;
-  /** The buyer. */
-  buyer: Buyer | null;
-  /** The CAIP-10 account you expect to pay. */
-  expectedPayer: string | null;
-  /** The plan's lines, as you sent them. */
-  lineItems: InvoiceLineInput[];
-  /** Currency. */
-  currency: PaymentsCurrency;
-  /** Period unit. */
-  interval: SubscriptionInterval;
-  /** Units per period. */
-  intervalCount: number;
-  /** Trial days. */
-  trialDays: number;
-  /** How it is collected. */
-  collection: 'send_invoice' | 'auto_charge';
-  /** The preferred payment method. */
-  preferredMethodId: string | null;
-  /** The automatic-charge permission, once granted. */
-  permission: SubscriptionPermission | null;
-  /** Grace days. */
-  graceDays: number;
-  /** The running period, from 1 (0 during a trial). */
-  currentPeriod: number;
-  /** Start of the running period. */
-  currentPeriodStart: string | null;
-  /** End of the running period. */
-  currentPeriodEnd: string | null;
-  /** Periods bought. */
-  cycles: number | null;
-  /** When it ends. */
-  endsAt: string | null;
-  /** Whether it is canceled when the running period ends. */
-  cancelAtPeriodEnd: boolean;
-  /** When it was canceled. */
-  canceledAt: string | null;
-  /** Why. */
-  cancellationReason: string | null;
-  /** When it was paused. */
-  pausedAt: string | null;
-  /** When it ended. */
-  endedAt: string | null;
-  /** Your data. */
-  metadata: Record<string, unknown> | null;
-  /** When it was created. */
-  createdAt: string;
-}
-
-/** An automatic charge of a subscription period. */
-export interface SubscriptionCharge {
-  /** Charge ID. */
-  id: string;
-  /** Always `subscription_charge`. */
-  object: 'subscription_charge';
-  /** The invoice it pays. */
-  invoiceId: string;
-  /** The period. */
-  period: number | null;
-  /**
-   * `pending` (waits for its window or a retry), `sending`, `submitted` (its transaction settles the invoice like any
-   * payment), `failed` or `canceled`.
-   */
-  status: 'pending' | 'sending' | 'submitted' | 'failed' | 'canceled';
-  /** Why it failed (a stable code). */
-  reason: string | null;
-  /** Attempts so far. */
-  attempts: number;
-  /** Amount in base units. */
-  amount: string | null;
-  /** CAIP-2 chain. */
-  chainId: string | null;
-  /** The user operation. */
-  userOpHash: string | null;
-  /** Its transaction. */
-  txHash: string | null;
-  /** Not before. */
-  notBefore: string | null;
-  /** When it finished. */
-  finishedAt: string | null;
-  /** When it was scheduled. */
-  createdAt: string;
-}
-
-/** Paging of {@link PaymentsModule.listSubscriptionInvoices} and {@link PaymentsModule.listSubscriptionCharges}. */
-export interface ListSubscriptionItemsParams {
-  /** Page size, 1 to 100. Defaults to `20`. */
-  limit?: number;
-  /** `nextCursor` of the previous page. */
-  cursor?: string;
-}
-
 /** Paging of {@link PaymentsModule.listInvoiceRefunds} and {@link PaymentsModule.listInvoiceDocuments}. */
 export interface ListInvoiceItemsParams {
   /** Page size, 1 to 100. Defaults to `20`. */
   limit?: number;
   /** `nextCursor` of the previous page. */
   cursor?: string;
-}
-
-/** A started or resumed subscription with the invoice of its period and that invoice's payment page. */
-export interface SubscriptionStart {
-  /** The subscription. */
-  subscription: Subscription;
-  /** The invoice of its first (or resumed) period; `null` during a trial. */
-  invoice: Invoice | null;
-  /** That invoice's checkout token. */
-  checkoutToken: string | null;
-  /** That invoice's payment page. */
-  payUrl: string | null;
-}
-
-/** Filters and paging of {@link PaymentsModule.listSubscriptions}. */
-export interface ListSubscriptionsParams {
-  /** One status or several. */
-  status?: SubscriptionStatus | SubscriptionStatus[];
-  /** Page size, 1 to 100. Defaults to `20`. */
-  limit?: number;
-  /** `nextCursor` of the previous page. */
-  cursor?: string;
-}
-
-/** What {@link PaymentsModule.cancelSubscription} takes. */
-export interface CancelSubscriptionParams {
-  /** Cancel when the running period ends instead of now. */
-  atPeriodEnd?: boolean;
-  /** Why. */
-  reason?: string;
 }

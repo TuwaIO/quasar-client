@@ -55,7 +55,6 @@ export const checkout = {
   },
   methods,
   quoteTtlSeconds: 900,
-  autoCharge: null,
 } as unknown as CheckoutView;
 
 /** The actions of a fake checkout store, as spies. */
@@ -108,8 +107,6 @@ export function checkoutContextValue(
     connectWallet: vi.fn(() => true),
     connectFamily: vi.fn(() => true),
     openedPaid: false,
-    revokeSent: false,
-    setRevokeSent: vi.fn(),
     adapterFor: () => ({ family: 'eip155' }) as never,
     handoff: false,
     setHandoff: vi.fn(),
@@ -119,8 +116,6 @@ export function checkoutContextValue(
     setConfirmWallet: vi.fn(),
     lockPrice: vi.fn(async () => undefined),
     onPaymentSent: vi.fn(),
-    autoPay: false,
-    setAutoPay: vi.fn(),
     openInvoice: vi.fn(),
     autoReturnSeconds: 5,
     display: 'inline',

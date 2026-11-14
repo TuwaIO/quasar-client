@@ -4,7 +4,7 @@
   "private": false,
   "author": "Oleksandr Tkach",
   "license": "Apache-2.0",
-  "description": "L5 client of Quasar (TUWA): the Quasar API client for Quasar Cloud and self-hosted Quasar nodes (transaction sync and history for Pulsar, Payments invoices, refunds and subscriptions, webhook verification), and the quasar-sdk CLI that relays webhooks to localhost.",
+  "description": "L5 client of Quasar (TUWA): the Quasar API client for Quasar Cloud and self-hosted Quasar nodes (transaction sync and history for Pulsar, Payments invoices and refunds, webhook verification), and the quasar-sdk CLI that relays webhooks to localhost.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

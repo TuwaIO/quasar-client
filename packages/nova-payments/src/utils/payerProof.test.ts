@@ -122,6 +122,10 @@ describe('payerProofErrorText', () => {
     expect(payerProofErrorText(refusal('too_many_payers'), null, defaultLabels, values)).toBe(
       'Too many wallets have confirmed this invoice. Pay from one of them, or ask Cosmos for a new invoice.',
     );
+    // The wallet the invoice is paid to would send to itself
+    expect(payerProofErrorText(refusal('payer_is_recipient'), null, defaultLabels, values)).toBe(
+      defaultLabels.method.payerIsRecipient,
+    );
     expect(payerProofErrorText(refusal('rate_limited'), null, defaultLabels, values)).toBe(
       defaultLabels.method.rateLimited,
     );
@@ -159,6 +163,7 @@ describe('isPayerProofError', () => {
     }
     expect(isPayerProofError(refusal('payer_chain_mismatch'))).toBe(true);
     expect(isPayerProofError(refusal('too_many_payers'))).toBe(true);
+    expect(isPayerProofError(refusal('payer_is_recipient'))).toBe(true);
     for (const code of ['request_failed', 'price_unavailable', 'payment_mismatch', 'rate_limited']) {
       expect(isPayerProofError(refusal(code))).toBe(false);
     }

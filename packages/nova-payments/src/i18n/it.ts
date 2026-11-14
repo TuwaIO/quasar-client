@@ -21,7 +21,6 @@ export const itLabels: NovaPaymentsLabels = {
     method: 'Metodo',
     pay: 'Pagamento',
     confirm: 'Conferma',
-    autoPay: 'Pagamento automatico',
     progress: 'Passaggio {current} di {total}: {name}',
     label: 'Passaggi del pagamento',
   },
@@ -59,6 +58,7 @@ export const itLabels: NovaPaymentsLabels = {
     tooManyPayments: 'Questa fattura non può più ricevere un pagamento qui. Contatta {merchant}.',
     nativeFromSmartWallet: 'Uno smart wallet non può pagare con questa moneta: scegli un token.',
     payerNotExpected: 'Il venditore ha chiesto di pagare questa fattura da un altro wallet. Collega quel wallet.',
+    payerIsRecipient: 'Questo wallet riceve il pagamento di questa fattura. Paga con un altro wallet.',
     rateLimited: 'Troppi tentativi. Attendi un minuto e riprova.',
     paymentFailed: 'Il pagamento non è riuscito. È stata spesa solo la commissione di rete; la fattura resta aperta.',
     restSameMethod: 'Il resto si paga con lo stesso token e sulla stessa rete della prima parte.',
@@ -173,7 +173,7 @@ export const itLabels: NovaPaymentsLabels = {
     mismatchOtherWalletHeld:
       "Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. {merchant} lo restituisce al wallet che l'ha inviato, e puoi ancora pagare questa fattura dal wallet che l'ha confermata.",
     mismatchChargeHeld:
-      'Questo pagamento è stato inviato o addebitato a un prezzo precedente di questa fattura, quindi non la paga. {merchant} lo restituisce al tuo wallet e puoi ancora pagare la fattura.',
+      'Questo pagamento è stato inviato a un prezzo precedente di questa fattura, quindi non la paga. {merchant} lo restituisce al tuo wallet e puoi ancora pagare la fattura.',
     mismatchTooManyParts:
       'Questa fattura ha ricevuto tutti i pagamenti parziali che accetta, quindi questo trasferimento non la paga. {merchant} lo restituisce al tuo wallet; invia tutto il resto in una volta.',
     mismatchNoReferenceHeld:
@@ -312,57 +312,6 @@ export const itLabels: NovaPaymentsLabels = {
     back: 'Torna a {merchant}',
     returning: 'Ritorno a {merchant} tra {seconds} s',
     stay: 'Resta qui',
-    autoPayOffer: 'Paga automaticamente i prossimi periodi',
-    autoPayActive: 'I pagamenti automatici sono attivi.',
-    autoPayOff: 'Disattiva',
-    autoPayTurnedOff: 'I pagamenti automatici sono disattivati. {merchant} non può più addebitare questo wallet.',
-  },
-  autoPay: {
-    title: 'Pagare automaticamente i prossimi periodi?',
-    subtitle: 'Facoltativo. Altrimenti ricevi una fattura a ogni periodo e la paghi tu.',
-    allow: 'Consenti a {merchant} di addebitare',
-    limit: 'fino a {amount}',
-    every: 'ogni {period}',
-    from: 'Da',
-    to: 'A',
-    validUntil: 'Valido fino al',
-    validUntilValue: '{date}, o finché non li disattivi',
-    collector: 'Quasar esegue ogni addebito per {merchant}, solo verso il wallet di {merchant} ed entro questo limite.',
-    invoices: 'Ogni addebito arriva con fattura e ricevuta via email.',
-    cap: '{merchant} non può addebitare più di questo limite in un periodo.',
-    turnOff:
-      "Puoi disattivarli in qualsiasi momento dalla pagina di una di queste fatture: il tuo wallet invia una transazione. Per annullare l'abbonamento, contatta {merchant}.",
-    confirm: 'Consenti i pagamenti automatici',
-    skip: 'Non ora, pagherò ogni fattura',
-    walletNote: 'Il tuo wallet mostra questo permesso (ERC-7715) prima che tu lo approvi.',
-    approveIn: 'Approva in {wallet}',
-    unavailable: '{wallet} non può consentire i pagamenti automatici.',
-    smartAccountNote:
-      'I pagamenti automatici richiedono uno smart account. {wallet} ti chiederà prima di passarci: una transazione su {network}, di cui paghi la commissione di rete. Il tuo indirizzo non cambia.',
-    smartAccountPrompt:
-      '{wallet} ti chiede di passare questo account a uno smart account. Indirizzo e fondi restano gli stessi.',
-    smartAccountNeeded:
-      'I pagamenti automatici richiedono uno smart account. In {wallet}, apri i dettagli di questo account, attiva lo smart account per {network} e riprova.',
-    notGranted: '{wallet} non ha dato il permesso. Riprova o paga tu ogni fattura.',
-    invalid: 'Questo permesso non può essere usato. Riprova o paga tu ogni fattura.',
-  },
-  autoPayOff: {
-    title: 'Disattivare i pagamenti automatici?',
-    subtitle:
-      "{merchant} non potrà più addebitare questo wallet. L'abbonamento continua: i periodi successivi arrivano come fatture che paghi tu. Per annullarlo, contatta {merchant}.",
-    wallet: 'Wallet',
-    allowed: 'Autorizzato ora',
-    fee: 'Il tuo wallet invia una transazione su {network} e paghi tu la commissione di rete.',
-    confirm: 'Disattiva in {wallet}',
-    checkAgain: 'Controlla di nuovo',
-    keep: 'Lasciali attivi',
-    connect: 'Collega quel wallet',
-    otherWallet: 'Solo il wallet che li ha autorizzati, {wallet}, può disattivarli.',
-    useThisWallet: 'Usa invece questo wallet',
-    inWallet: 'Conferma in {wallet}…',
-    waiting: 'In attesa della rete…',
-    notYet: 'La rete non lo mostra ancora. Se il wallet ha inviato la transazione, controlla di nuovo tra un minuto.',
-    unsupported: '{wallet} non può inviare questa transazione.',
   },
   outcome: {
     underpaidTitle: 'È arrivata una parte del pagamento',

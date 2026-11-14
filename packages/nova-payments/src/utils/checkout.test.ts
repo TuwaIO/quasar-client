@@ -17,7 +17,6 @@ import {
   screensPayingWallets,
   sentBeforeDeadline,
   shownLocale,
-  takeOverOpens,
   unconfirmedFollowUp,
   unconfirmedTxKey,
   walletOnConfirmStep,
@@ -44,7 +43,7 @@ const SOLANA = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 const QUOTE = { object: 'checkout_quote', payer: 'eip155:8453:0x1' } as CheckoutQuote;
 
 const view = (invoice: Partial<CheckoutView['invoice']> = {}, extra: Partial<CheckoutView> = {}) =>
-  ({ invoice: { replacedBy: null, ...invoice }, autoCharge: null, ...extra }) as CheckoutView;
+  ({ invoice: { replacedBy: null, ...invoice }, ...extra }) as CheckoutView;
 
 describe('checkoutScreen', () => {
   it('shows the step the payment is at', () => {
@@ -108,46 +107,6 @@ describe('checkoutScreen', () => {
     expect(
       checkoutScreen({ phase: 'cancelled', checkout: view({ replacedBy: { number: 'INV-2', checkoutToken: 't' } }) }),
     ).toBe('replaced');
-    const offer = view({}, { autoCharge: { status: 'available' } as CheckoutView['autoCharge'] });
-    expect(checkoutScreen({ phase: 'paid', checkout: offer })).toBe('paid');
-    expect(checkoutScreen({ phase: 'paid', checkout: offer }, { autoPay: true })).toBe('autoPay');
-    expect(checkoutScreen({ phase: 'paid', checkout: view() }, { autoPay: true })).toBe('paid');
-  });
-
-  // "Use this wallet" on a permission that holds nothing: the only way to reach the screen that gives a new one
-  it('opens the permission screen when another wallet takes over one that holds nothing', () => {
-    const request = {} as never;
-    const replaceable = view(
-      {},
-      {
-        autoCharge: {
-          status: 'active',
-          permission: null,
-          revocation: null,
-          replacement: { methodId: 'usdc', request },
-        } as CheckoutView['autoCharge'],
-      },
-    );
-    const paying = view(
-      {},
-      { autoCharge: { status: 'active', permission: null, revocation: null } as CheckoutView['autoCharge'] },
-    );
-    for (const phase of ['selectMethod', 'awaitingPayment'] as const) {
-      expect(checkoutScreen({ phase, checkout: replaceable }, { autoPay: true })).toBe('autoPay');
-      expect(checkoutScreen({ phase, checkout: replaceable })).not.toBe('autoPay');
-      expect(checkoutScreen({ phase, checkout: paying }, { autoPay: true })).not.toBe('autoPay');
-    }
-  });
-});
-
-describe('takeOverOpens', () => {
-  // An outcome keeps its own screen: a button there would close the sheet and open nothing
-  it('is true only where the permission screen can open', () => {
-    expect(takeOverOpens('selectMethod')).toBe(true);
-    expect(takeOverOpens('awaitingPayment')).toBe(true);
-    for (const phase of ['unconfirmed', 'blocked', 'paid', 'expired', undefined]) {
-      expect(takeOverOpens(phase)).toBe(false);
-    }
   });
 });
 
@@ -223,12 +182,6 @@ describe('checkoutSteps', () => {
       'method:current',
       'pay:upcoming',
       'confirm:upcoming',
-    ]);
-    expect(checkoutSteps('autoPay')?.map((step) => `${step.key}:${step.state}`)).toEqual([
-      'method:done',
-      'pay:done',
-      'confirm:done',
-      'autoPay:current',
     ]);
   });
 
@@ -328,7 +281,7 @@ describe('deadlineState', () => {
   });
 
   it('is over once paid, and on an outcome in which a deadline means nothing', () => {
-    for (const screen of ['paid', 'autoPay', 'held', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
+    for (const screen of ['paid', 'held', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
       expect(deadlineState('open', screen), screen).toBeNull();
     }
     for (const status of ['paid', 'held', 'expired', 'cancelled', 'refunded', 'partially_refunded']) {
@@ -734,7 +687,7 @@ describe('walletOnConfirmStep', () => {
 });
 
 describe('lockedPriceOnWallet', () => {
-  const locked = { autoPayOffOpen: false, phase: 'awaitingPayment', quotePayer: '0xa' } as const;
+  const locked = { phase: 'awaitingPayment', quotePayer: '0xa' } as const;
 
   it('locks the price again for another wallet, and goes back to the methods without one', () => {
     expect(lockedPriceOnWallet({ ...locked, payer: '0xb' })).toBe('lock');
@@ -743,11 +696,6 @@ describe('lockedPriceOnWallet', () => {
 
   it('keeps it for the same wallet', () => {
     expect(lockedPriceOnWallet({ ...locked, payer: '0xa' })).toBe('keep');
-  });
-
-  it('keeps it while the wallet was connected only to turn automatic payments off', () => {
-    expect(lockedPriceOnWallet({ ...locked, autoPayOffOpen: true, payer: '0xb' })).toBe('keep');
-    expect(lockedPriceOnWallet({ ...locked, autoPayOffOpen: true, payer: null })).toBe('keep');
   });
 
   it('keeps it when no price is locked for a payer, or once the payment went on', () => {

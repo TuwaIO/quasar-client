@@ -14,7 +14,7 @@ import type {
 
 /**
  * A screen of the checkout: the steps of a payment (`buyer`, `method`, `confirmWallet` — the paying wallet confirms the
- * invoice with a free signature before the price —, `pay` or `qr`, `confirm`, `autoPay`), a payment Quasar could not
+ * invoice with a free signature before the price —, `pay` or `qr`, `confirm`), a payment Quasar could not
  * confirm (`unconfirmed`: it may still arrive, so the buyer checks the wallet before paying again), a payment that
  * failed for good while the invoice still takes one (`failed`: the buyer may pay again) or its outcome.
  */
@@ -30,8 +30,6 @@ export type CheckoutScreen =
   | 'unconfirmed'
   | 'failed'
   | 'paid'
-  | 'autoPay'
-  | 'autoPayOff'
   | 'underpaid'
   | 'held'
   | 'refunded'
@@ -44,10 +42,6 @@ export type CheckoutScreen =
 export interface CheckoutScreenChoices {
   /** Pay from a wallet in this browser (default) or scan a QR code with a phone. */
   payWith?: 'wallet' | 'qr';
-  /** The buyer opened the automatic payments offer after paying the first period of a subscription. */
-  autoPay?: boolean;
-  /** The buyer opened the screen that turns automatic payments off, while they are on. */
-  autoPayOff?: boolean;
   /**
    * The buyer continues on a phone: with `payWith` `qr`, the QR code of the payment page shows before any price is
    * locked (an EVM method, paid from the phone's wallet on that page).
@@ -78,19 +72,6 @@ const RETRY_PHASES: ReadonlySet<string> = new Set(['awaitingPayment', 'selectMet
 const INVOICE_FULL = 'too_many_payments';
 
 /**
- * Whether the permission screen can open from this phase: another wallet takes over a permission from the steps before a
- * payment, not from an outcome that keeps its own screen.
- *
- * @param phase - The phase of the checkout store.
- * @returns Whether "Use this wallet" leads somewhere.
- */
-export const takeOverOpens = (phase: string | undefined): boolean =>
-  phase === 'selectMethod' || phase === 'awaitingPayment';
-
-const replaceablePermission = (offer: CheckoutView['autoCharge'] | undefined) =>
-  offer?.status === 'active' && Boolean(offer.replacement);
-
-/**
  * The screen for the state of a checkout store.
  *
  * @param state - The `phase`, `checkout` and `quote` of the store.
@@ -107,7 +88,7 @@ const replaceablePermission = (offer: CheckoutView['autoCharge'] | undefined) =>
  * confirm the invoice or confirms it, and after it until the price is locked (unless it was refused), also on an
  * underpaid invoice whose rest another wallet pays, `qr` instead of `pay` when the buyer pays
  * with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller
- * corrected, `autoPay` after a paid subscription period while the automatic payments offer is open, `loading` until
+ * corrected, `loading` until
  * the labels of the invoice's language are loaded, `unconfirmed` in the phase of that name of a current
  * `@tuwaio/quasar-sdk` (Quasar could not confirm the payment, which may still arrive). While the store hands a transaction
  * over again (`submit_retrying`) it is `confirm`: only Quasar is out of reach, and the payment goes on.
@@ -123,7 +104,6 @@ export function checkoutScreen(
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
   if (choices.labelsReady === false && state.phase !== 'error') return 'loading';
-  if (choices.autoPayOff && state.checkout?.autoCharge?.status === 'active') return 'autoPayOff';
   // `unconfirmed` is newer than some `@tuwaio/quasar-sdk` alphas: compare it as a string
   if ((state.phase as string) === 'unconfirmed') {
     // The payment left the wallet and only Quasar is out of reach for a moment: nothing to check or do. A warning with "The
@@ -143,8 +123,6 @@ export function checkoutScreen(
   const confirmingWallet = Boolean(choices.confirmWallet && proving);
   switch (state.phase) {
     case 'selectMethod':
-      // Another wallet takes over a permission that holds nothing: from an invoice that still takes one
-      if (choices.autoPay && replaceablePermission(state.checkout?.autoCharge)) return 'autoPay';
       if (confirmingWallet && !(choices.handoff && choices.payWith === 'qr')) return 'confirmWallet';
       return choices.handoff && choices.payWith === 'qr' ? 'qr' : 'method';
     case 'underpaid':
@@ -154,8 +132,6 @@ export function checkoutScreen(
       if (!state.quote) return choices.confirmWallet ? 'confirmWallet' : 'method';
       return choices.payWith === 'qr' || state.quote.payer === null ? 'qr' : 'pay';
     case 'awaitingPayment':
-      if (choices.autoPay && replaceablePermission(state.checkout?.autoCharge)) return 'autoPay';
-    // falls through
     case 'submitting':
       // The buyer went back while the wallet still asked, and confirmed it there: no price to show, Quasar takes the
       // payment. The pay step renders nothing without a quote, which left an empty pane
@@ -164,8 +140,6 @@ export function checkoutScreen(
       return choices.payWith === 'qr' || state.quote?.payer === null ? 'qr' : 'pay';
     case 'confirming':
       return 'confirm';
-    case 'paid':
-      return choices.autoPay && state.checkout?.autoCharge?.status === 'available' ? 'autoPay' : 'paid';
     case 'cancelled':
       return state.checkout?.invoice.replacedBy ? 'replaced' : 'cancelled';
     default:
@@ -175,8 +149,8 @@ export function checkoutScreen(
 
 /** A step of the stepper in the checkout header. */
 export interface CheckoutStep {
-  /** `details` (buyer details), `method`, `pay`, `confirm`, `autoPay` (automatic payments of a subscription). */
-  key: 'details' | 'method' | 'pay' | 'confirm' | 'autoPay';
+  /** `details` (buyer details), `method`, `pay`, `confirm`. */
+  key: 'details' | 'method' | 'pay' | 'confirm';
   /** Before, at or after the current step. */
   state: 'done' | 'current' | 'upcoming';
 }
@@ -191,7 +165,6 @@ const STEP_OF_SCREEN: Partial<Record<CheckoutScreen, CheckoutStep['key']>> = {
   confirm: 'confirm',
   unconfirmed: 'confirm',
   failed: 'confirm',
-  autoPay: 'autoPay',
 };
 
 /**
@@ -210,7 +183,6 @@ export function checkoutSteps(screen: CheckoutScreen, options: { withDetails?: b
     'method',
     'pay',
     'confirm',
-    ...(current === 'autoPay' ? (['autoPay'] as const) : []),
   ];
   const index = keys.indexOf(current);
   return keys.map((key, i) => ({ key, state: i < index ? 'done' : i === index ? 'current' : 'upcoming' }));
@@ -302,8 +274,8 @@ const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
  * @returns `paying` while the buyer can still pay (the countdown shows and screen readers hear the minutes left),
  * `confirming` while the payment is on its way (the countdown shows; at zero the confirm step says that the payment
  * sent in time is being confirmed) and while Quasar could not confirm it (`unconfirmed`: the buyer checks the wallet
- * before paying again, so no minutes left to pay are announced), or `null` once the payment succeeded (`paid`,
- * `autoPay`), on the outcomes in
+ * before paying again, so no minutes left to pay are announced), or `null` once the payment succeeded (`paid`), on the
+ * outcomes in
  * which a deadline means nothing (`held`, `refunded`, `expired`, `cancelled`, `replaced`) and for an invoice that can
  * no longer be paid. `closed` while part of an underpaid invoice arrived and its rest cannot be paid: the countdown still
  * shows, as the time after which the seller can refund, and no minutes left to pay are announced.
@@ -345,24 +317,21 @@ export function deadlineAnnouncement(
 export const QUOTE_WARNING_MS = 60_000;
 
 /**
- * What the active wallet changing does to a locked price. A wallet connected to turn automatic payments off pays
- * nothing, so it changes nothing while that screen is open; back on the payment, what follows applies.
+ * What the active wallet changing does to a locked price.
  *
  * @param params - What the change happens over.
- * @param params.autoPayOffOpen - The screen that turns automatic payments off is open.
  * @param params.phase - The phase of the payment; a price is locked only in `awaitingPayment`.
  * @param params.quotePayer - The payer the price is locked for.
  * @param params.payer - The payer the active wallet gives for the method of that price, or `null`.
  * @returns `keep`: nothing changes; `lock`: lock the price again for `payer`; `release`: release it, back to the methods.
  */
 export function lockedPriceOnWallet(params: {
-  autoPayOffOpen: boolean;
   phase: string;
   quotePayer: string | null | undefined;
   payer: string | null;
 }): 'keep' | 'lock' | 'release' {
-  const { autoPayOffOpen, phase, quotePayer, payer } = params;
-  if (autoPayOffOpen || phase !== 'awaitingPayment' || !quotePayer || payer === quotePayer) return 'keep';
+  const { phase, quotePayer, payer } = params;
+  if (phase !== 'awaitingPayment' || !quotePayer || payer === quotePayer) return 'keep';
   return payer ? 'lock' : 'release';
 }
 

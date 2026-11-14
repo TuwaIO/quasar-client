@@ -35,12 +35,11 @@ const SUCCESS = 'https://shop.example/billing';
 function paid(
   display: CheckoutContextValue['display'],
   autoReturnSeconds: number,
-  options: { openedPaid?: boolean; checkoutOverrides?: object } = {},
+  options: { openedPaid?: boolean } = {},
 ) {
   autoReturn.seconds = [];
   const checkout = {
     ...fixture.checkout,
-    ...options.checkoutOverrides,
     invoice: { ...fixture.checkout.invoice, status: 'paid', successUrl: SUCCESS },
   } as typeof fixture.checkout;
   const close = vi.fn();
@@ -209,11 +208,6 @@ describe('the way back after paying', () => {
   it('opened on an invoice already paid: its receipt stays, the link in the email leads nowhere else', () => {
     const { links } = paid('page', 5, { openedPaid: true });
     expect(links).toHaveLength(1);
-    expect(autoReturn.seconds.every((seconds) => seconds === 0)).toBe(true);
-  });
-
-  it('with automatic payments on: no countdown over the control that turns them off', () => {
-    paid('page', 5, { checkoutOverrides: { autoCharge: { status: 'active', permission: null, revocation: null } } });
     expect(autoReturn.seconds.every((seconds) => seconds === 0)).toBe(true);
   });
 
