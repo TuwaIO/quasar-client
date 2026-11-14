@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.1](https://github.com/TuwaIO/quasar-client/compare/payments-sdk-v0.1.0...payments-sdk-v0.1.1) (2026-11-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @tuwaio/nova-payments bumped to 0.2.0
+    * @tuwaio/quasar-sdk bumped to 0.10.0
+
 ## [0.1.0](https://github.com/TuwaIO/quasar-client/compare/payments-sdk-v0.0.1...payments-sdk-v0.1.0) (2026-11-13)
 
 
