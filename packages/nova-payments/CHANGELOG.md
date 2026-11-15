@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.5.0...nova-payments-v0.5.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **nova-payments:** the step heading takes the focus once the payee is checked, and the phone hand-off link keeps the pins ([#23](https://github.com/TuwaIO/quasar-client/issues/23)) ([5d3279d](https://github.com/TuwaIO/quasar-client/commit/5d3279d15c9ba0895191802458fe057004b773f8))
+
 ## [0.5.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.4.0...nova-payments-v0.5.0) (2026-11-15)
 
 
