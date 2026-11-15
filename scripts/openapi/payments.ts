@@ -1150,6 +1150,22 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     .openapi('CheckoutRejectedPayment');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _checkRejectedPayment: z.ZodType<CheckoutRejectedPayment> = RejectedPayment;
+  const PayoutRecord = z
+    .object({
+      version: z.literal(1),
+      type: z.literal('address'),
+      app: z.string().openapi({ description: 'The Quasar app whose payments the wallet receives.' }),
+      chains: z.array(z.string()).openapi({
+        description: 'The networks it receives on: CAIP-2, of one family, sorted and without repeats.',
+      }),
+      address: z.string().openapi({ description: 'The wallet: EVM in its checksum form (EIP-55), or Solana.' }),
+      issuedAt: z.string().openapi({ description: 'When the record was made: ISO 8601 in UTC with milliseconds.' }),
+    })
+    .openapi('PayoutRecord', {
+      description:
+        "A receiving wallet's signed word that it takes the payments of a Quasar app on the networks it names. The wallet signs the text the record makes, line by line (`payoutRecordText` of `@tuwaio/quasar-sdk/checkout`): EIP-191 `personal_sign` on EVM (an ordinary wallet once for every EVM network, a smart wallet for one network, through its contract: ERC-1271 or ERC-6492), Ed25519 on Solana.",
+    });
+
   const CheckoutQuote = z
     .object({
       object: z.literal('checkout_quote'),
@@ -1204,6 +1220,19 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         .openapi({
           description:
             'Whether the quoted wallet confirmed the invoice (`payer-proof`): `required` on an EVM method, `proven` once it did. An unconfirmed EVM quote exists only for a method the gasless relay may pay: the relay confirms the wallet itself, while a transfer or a paymaster payment from it needs `payer-proof` first, or Quasar credits it to no invoice and the merchant returns it.',
+        }),
+      payee: z
+        .object({
+          record: PayoutRecord,
+          signature: z.string().openapi({
+            description: 'Of the text of the record: hex (EIP-191) on EVM, base58 (Ed25519) on Solana.',
+          }),
+        })
+        .nullable()
+        .optional()
+        .openapi({
+          description:
+            "The payout record of the receiving address (`instructions.to`) with its wallet's signature. A checkout shows the address and asks the wallet to pay only once every place of the address (the instructions, the EIP-3009 authorization, the paymaster calls, the Solana Pay link) names it, the record covers the quote's network and address, the signature is the address's own, and the merchant's pinned addresses (`#payout=` of the payment link), when given, include it. `null`: no record covers the address (Quasar no longer offers or quotes such a method). Left out by Quasar versions before payout records.",
         }),
     })
     .openapi('CheckoutQuote', { description: 'A quote locked to the payer until `expiresAt`.' });
@@ -1466,7 +1495,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         200: { description: 'The quote and its payment instructions.', ...json(CheckoutQuote) },
         400: invalid('`payer_required`, `payer_chain_mismatch`'),
         409: refused(
-          '`payer_mismatch` (the rest of an underpaid invoice is paid from the wallet that paid first; `originWallet` names it), `rest_method_mismatch` (and with the method that paid first; `methodId` names it), `buyer_required`, `consent_required` (a required consent without `consentGiven: true`), `payer_proof_required` (the EVM wallet has not confirmed the invoice: `payer-proof` first; `payer` names it), `invoice_expired`, `invoice_processing`, `invoice_not_payable`, `amount_out_of_range`, `method_not_priced`, `payment_on_its_way` (a payment of the invoice is being followed: wait for it, the quote it pays stays), `native_from_contract` (a smart wallet cannot pay in this coin: choose a token), `payer_is_recipient` (the payer is the wallet the method is paid to: its transfer would pay nothing), `too_many_payments` (the invoice was handed 50 transactions already: the buyer contacts the seller, before any money moves).',
+          '`payer_mismatch` (the rest of an underpaid invoice is paid from the wallet that paid first; `originWallet` names it), `rest_method_mismatch` (and with the method that paid first; `methodId` names it), `buyer_required`, `consent_required` (a required consent without `consentGiven: true`), `payer_proof_required` (the EVM wallet has not confirmed the invoice: `payer-proof` first; `payer` names it), `invoice_expired`, `invoice_processing`, `invoice_not_payable`, `amount_out_of_range`, `method_not_priced`, `payment_on_its_way` (a payment of the invoice is being followed: wait for it, the quote it pays stays), `native_from_contract` (a smart wallet cannot pay in this coin: choose a token), `payer_is_recipient` (the payer is the wallet the method is paid to: its transfer would pay nothing), `too_many_payments` (the invoice was handed 50 transactions already: the buyer contacts the seller, before any money moves), `payee_unsigned` (the wallet of the receiving address has not signed its payout record yet: the merchant signs it in the dashboard).',
         ),
         503: refused('`screening_unavailable` (AML in `block` mode while a source is down), `price_unavailable`.'),
         ...checkoutErrors,

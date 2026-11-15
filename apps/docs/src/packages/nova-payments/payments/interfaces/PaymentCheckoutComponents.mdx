@@ -66,9 +66,11 @@ A QR code. Keep it dark on light: scanners read inverted codes badly.
 
 > `optional` **screens?**: `Partial`\<`Record`\<[`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs), `ComponentType`\<[`CheckoutScreenProps`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutscreenprops--docs)\>\>\>
 
-Defined in: [nova-payments/src/components/customization.ts:293](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L293)
+Defined in: [nova-payments/src/components/customization.ts:297](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/customization.ts#L297)
 
-Whole screens, by the screen they replace (for example `paid` or `loading`).
+Whole screens, by the screen they replace (for example `paid` or `loading`). A replacement of `pay` or `qr` shows
+nothing of the price (its address, its QR code) until `payeeStatus` of the checkout state is `verified`, as
+[PayeeScreen](?path=/docs/packages-nova-payments-payments-functions-payeescreen--docs) does in its place; the checkout sends no payment before that anyway (`payInvoice`).
 
 ***
 

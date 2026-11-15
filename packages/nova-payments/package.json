@@ -85,7 +85,7 @@
     "@tuwaio/orbit-core": ">=0.6.2",
     "@tuwaio/orbit-solana": ">=0.5",
     "@tuwaio/pulsar-core": ">=0.12",
-    "@tuwaio/quasar-sdk": ">=0.8.0",
+    "@tuwaio/quasar-sdk": ">=0.13.0",
     "@tuwaio/satellite-core": ">=0.12",
     "@tuwaio/satellite-react": ">=0.10",
     "@wagmi/core": "3.x.x",

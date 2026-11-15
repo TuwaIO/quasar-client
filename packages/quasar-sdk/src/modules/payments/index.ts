@@ -3,6 +3,7 @@
  * app.
  */
 
+import { withPayoutAddresses } from '../../checkout/payee';
 import { PAYMENTS_ENDPOINT } from '../../constants';
 import type { QuasarClient } from '../../core/client';
 import type {
@@ -46,6 +47,21 @@ const idempotency = (options: CreateOptions | undefined): Record<string, string>
 /** A list filter of one value or several, as the API takes it: comma-separated. */
 const several = <T extends string>(value: T | T[] | undefined) => (Array.isArray(value) ? value.join(',') : value);
 
+/** An EVM address. */
+const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+/** A Solana address: 32 bytes in base58. */
+const SOLANA_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+/**
+ * What {@link PaymentsModule} takes besides the HTTP client.
+ *
+ * @internal
+ */
+export interface PaymentsModuleOptions {
+  /** The merchant's own receiving addresses, pinned in the payment links (`payoutAddresses` of `QuasarConfig`). */
+  payoutAddresses?: readonly string[];
+}
+
 /** A query without the parameters left out. */
 const query = (values: Record<string, string | number | undefined>) =>
   Object.fromEntries(Object.entries(values).filter(([, value]) => value !== undefined));
@@ -74,13 +90,39 @@ const query = (values: Record<string, string | number | undefined>) =>
  * ```
  */
 export class PaymentsModule {
+  /** The merchant's pinned payout addresses, put in the fragment of every payment link the module returns. */
+  private readonly payoutAddresses: readonly string[];
+
   /**
    * Creates the module. The {@link Quasar} client creates it for you.
    *
    * @param client - The HTTP client of the Quasar client.
+   * @param options - The merchant's pinned payout addresses (`payoutAddresses` of `QuasarConfig`).
+   * @throws {Error} When a pinned address is neither an EVM nor a Solana address.
    * @internal
    */
-  constructor(private readonly client: QuasarClient) {}
+  constructor(
+    private readonly client: QuasarClient,
+    options: PaymentsModuleOptions = {},
+  ) {
+    const addresses = options.payoutAddresses ?? [];
+    const wrong = addresses.find((address) => !EVM_ADDRESS.test(address) && !SOLANA_ADDRESS.test(address));
+    if (wrong !== undefined) {
+      throw new Error(`[Quasar SDK] payoutAddresses: "${wrong}" is neither an EVM nor a Solana address.`);
+    }
+    this.payoutAddresses = [...new Set(addresses)];
+  }
+
+  /** An invoice or a checkout whose payment link carries the pinned payout addresses (`#payout=`). */
+  private pinned<T extends { payUrl: string | null }>(value: T): T {
+    if (this.payoutAddresses.length === 0 || !value.payUrl) return value;
+    return { ...value, payUrl: withPayoutAddresses(value.payUrl, this.payoutAddresses) };
+  }
+
+  /** An invoice with its checkout, both payment links pinned. */
+  private pinnedCheckout<T extends InvoiceWithCheckout>(value: T): T {
+    return { ...this.pinned(value), invoice: this.pinned(value.invoice) };
+  }
 
   /**
    * Issues an invoice (`POST /v1/payments/invoices`): numbered, with its PDF and, when the app has e-invoices on and
@@ -88,17 +130,19 @@ export class PaymentsModule {
    *
    * @param params - The lines (or a bare `amount`), the buyer and the terms. Dates go as ISO 8601.
    * @param options - `idempotencyKey`: a retry with the same key returns the invoice issued first, with the same link.
-   * @returns The invoice, its checkout token and its payment page (also in the invoice view while it can be paid).
+   * @returns The invoice, its checkout token and its payment page (also in the invoice view while it can be paid), with
+   *   your pinned payout addresses in its fragment when the client has them (`payoutAddresses`).
    * @throws {QuasarSDKError} `invalid_request` with `issues` (400), `seller_details_missing` and other issuer
    *   refusals (400), an app that is not a Payments app or a node without Payments (403), a timeout or a network
    *   error.
    */
   async createInvoice(params: CreateInvoiceParams, options?: CreateOptions): Promise<InvoiceWithCheckout> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices`, {
+    const created = await this.client.request<InvoiceWithCheckout>(`${PAYMENTS_ENDPOINT}/invoices`, {
       method: 'POST',
       body: { ...params, dueAt: iso(params.dueAt), supplyDate: iso(params.supplyDate) },
       headers: idempotency(options),
     });
+    return this.pinnedCheckout(created);
   }
 
   /**
@@ -113,7 +157,11 @@ export class PaymentsModule {
    * @throws {QuasarSDKError} `invoice_not_found` (404), a timeout or a network error.
    */
   async getInvoice(invoiceId: string): Promise<InvoiceDetails> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}`, { method: 'GET' });
+    return this.pinned(
+      await this.client.request<InvoiceDetails>(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}`, {
+        method: 'GET',
+      }),
+    );
   }
 
   /**
@@ -161,7 +209,7 @@ export class PaymentsModule {
    * @throws {QuasarSDKError} `invalid_request` or `invalid_cursor` (400), a timeout or a network error.
    */
   async listInvoices(params: ListInvoicesParams = {}): Promise<PaymentsList<Invoice>> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices`, {
+    const page = await this.client.request<PaymentsList<Invoice>>(`${PAYMENTS_ENDPOINT}/invoices`, {
       method: 'GET',
       query: query({
         status: several(params.status),
@@ -173,6 +221,7 @@ export class PaymentsModule {
         cursor: params.cursor,
       }),
     });
+    return { ...page, data: page.data.map((invoice) => this.pinned(invoice)) };
   }
 
   /**
@@ -187,10 +236,12 @@ export class PaymentsModule {
    *   error.
    */
   async cancelInvoice(invoiceId: string, params: { reason?: string } = {}): Promise<Invoice> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/cancel`, {
-      method: 'POST',
-      body: params,
-    });
+    return this.pinned(
+      await this.client.request<Invoice>(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/cancel`, {
+        method: 'POST',
+        body: params,
+      }),
+    );
   }
 
   /**
@@ -206,10 +257,12 @@ export class PaymentsModule {
    *   the rest) (409); a timeout or a network error.
    */
   async acceptPayment(invoiceId: string, params: { reason: string }): Promise<Invoice> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/accept`, {
-      method: 'POST',
-      body: params,
-    });
+    return this.pinned(
+      await this.client.request<Invoice>(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/accept`, {
+        method: 'POST',
+        body: params,
+      }),
+    );
   }
 
   /**
@@ -223,10 +276,11 @@ export class PaymentsModule {
    *   (409), a timeout or a network error.
    */
   async correctInvoice(invoiceId: string, params: CorrectInvoiceParams): Promise<InvoiceCorrection> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/correct`, {
-      method: 'POST',
-      body: params,
-    });
+    const correction = await this.client.request<InvoiceCorrection>(
+      `${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/correct`,
+      { method: 'POST', body: params },
+    );
+    return { ...this.pinnedCheckout(correction), replaced: this.pinned(correction.replaced) };
   }
 
   /**
@@ -240,10 +294,12 @@ export class PaymentsModule {
    * @throws {QuasarSDKError} `invoice_not_found` (404), a timeout or a network error.
    */
   async replacePayLink(invoiceId: string): Promise<InvoiceWithCheckout> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/checkout`, {
-      method: 'POST',
-      body: {},
-    });
+    return this.pinnedCheckout(
+      await this.client.request<InvoiceWithCheckout>(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/checkout`, {
+        method: 'POST',
+        body: {},
+      }),
+    );
   }
 
   /**

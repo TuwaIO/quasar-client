@@ -122,6 +122,14 @@ export function checkoutContextValue(
     customization,
     ...extra,
   } as CheckoutContextValue;
+  // A price shows only once the store verified its payee: a state given with a quote has it verified, unless it says
+  // (a test's state is cast: the field may be missing at run time)
+  if (value.state.quote && (value.state as Partial<CheckoutState>).payeeCheck === undefined) {
+    value.state = {
+      ...value.state,
+      payeeCheck: { quote: value.state.quote, status: 'verified', signed: true },
+    } as CheckoutState;
+  }
   // The pick of a language goes to the store of the context, as in the checkout
   value.setLocale ??= async (locale) => {
     await value.store.getState().setLocale(locale);

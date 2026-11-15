@@ -113,6 +113,10 @@ export const zhCNLabels: NovaPaymentsLabels = {
     invoiceTotal: '发票总额',
     invoiceRest: '发票剩余款项',
     backFromRest: '返回',
+    payeeChecking: '正在核验收款地址…',
+    payeeRefusedTitle: '付款已停止',
+    payeeRefused:
+      '无法确认收款地址属于 {merchant}，因此本页不显示该地址，也不会请求钱包付款。未发送任何款项。请选择其他方式或联系 {merchant}。',
     restRateUntil: '此汇率有效至 {time}。此后的付款需等待 {merchant} 接受。',
     restRateEnded: '此汇率是之前锁定的，因此这笔付款需等待 {merchant} 接受。',
     restTimeLeft: '剩余发送时间：{time}',

@@ -32,6 +32,7 @@ export * from './utils/handOver';
 export * from './utils/methods';
 export * from './utils/outcome';
 export * from './utils/pay';
+export * from './utils/payee';
 export * from './utils/payerProof';
 export * from './utils/payInvoice';
 export * from './utils/qr';

@@ -10,6 +10,7 @@ import type {
   PaymentsEnvironment,
   TaxCategory,
 } from '../modules/payments/types';
+import type { CheckoutPayee } from './payee';
 
 /** A line of the invoice as the checkout shows it; amounts are decimal strings, `netMinor` in cents. */
 export interface CheckoutLine {
@@ -489,6 +490,12 @@ export interface CheckoutQuote {
   instructions: PaymentInstructions;
   /** What the merchant sponsors, or `null`: the buyer pays the gas. */
   gasless: GaslessOffer | null;
+  /**
+   * The payout record of the receiving address with its wallet's signature, which the checkout store checks before
+   * the address is shown (`payeeCheck` of the store); `null` when Quasar has none (it quotes no such method). Engines
+   * older than payout records leave it out.
+   */
+  payee?: CheckoutPayee | null;
   /**
    * Whether the quoted wallet confirmed the invoice ({@link CheckoutState.confirmPayer}): `required` on an EVM method,
    * `proven` once it did (`kind` says how). An EVM quote without the confirmation exists only for a method the gasless

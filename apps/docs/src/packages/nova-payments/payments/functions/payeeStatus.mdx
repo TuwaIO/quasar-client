@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/payeeStatus" />
+
+# payeeStatus()
+
+> **payeeStatus**(`state`): [`PayeeStatus`](?path=/docs/packages-nova-payments-payments-type-aliases-payeestatus--docs)
+
+Defined in: [nova-payments/src/utils/payee.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payee.ts#L24)
+
+Where the check of the quote's payee stands, from the checkout store's state.
+
+## Parameters
+
+### state
+
+`quote` and `payeeCheck` of the checkout store.
+
+#### payeeCheck?
+
+[`PayeeCheck`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeecheck--docs) \| `null`
+
+#### quote?
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs) \| `null`
+
+## Returns
+
+[`PayeeStatus`](?path=/docs/packages-nova-payments-payments-type-aliases-payeestatus--docs)
+
+The status for this very quote: a check of another quote counts as `checking`.

@@ -296,4 +296,53 @@ describe('quasar.payments', () => {
     const error = await quasar.payments.getDocument('inv_1', 'receipt').catch((e: unknown) => e);
     expect(error).toMatchObject({ status: 404, code: 'document_not_found', details: { retryAfter: 5 } });
   });
+
+  // The pins come from the merchant's own configuration and travel in the fragment, which no server receives: a swap
+  // in Quasar's database cannot change them
+  describe('payoutAddresses', () => {
+    const EVM = '0x52908400098527886E0F7030069857D2E4169EE7';
+    const SOL = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+    const pinned =
+      'https://app.example/pay/tok_1#payout=0x52908400098527886E0F7030069857D2E4169EE7,7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+
+    it('pins the merchant addresses in every payment link it returns', async () => {
+      const client = new Quasar({
+        secretKey: 'sk_test_1',
+        baseUrl: 'https://quasar.example',
+        payoutAddresses: [EVM, SOL, EVM],
+      });
+      const checkout = { invoice: INVOICE, checkoutToken: 'tok_1', payUrl: INVOICE.payUrl };
+      fetchMock
+        .mockResolvedValueOnce(json(checkout, 201))
+        .mockResolvedValueOnce(json(INVOICE))
+        .mockResolvedValueOnce(
+          json({ object: 'list', data: [INVOICE, { ...INVOICE, payUrl: null }], nextCursor: null }),
+        )
+        .mockResolvedValueOnce(json({ ...checkout, replaced: { ...INVOICE, id: 'inv_0' } }))
+        .mockResolvedValueOnce(json(checkout))
+        .mockResolvedValueOnce(json(INVOICE))
+        .mockResolvedValueOnce(json(INVOICE));
+
+      const created = await client.payments.createInvoice({ amount: '10.00', currency: 'EUR' });
+      expect([created.payUrl, created.invoice.payUrl]).toEqual([pinned, pinned]);
+      expect((await client.payments.getInvoice('inv_1')).payUrl).toBe(pinned);
+      expect((await client.payments.listInvoices()).data.map((invoice) => invoice.payUrl)).toEqual([pinned, null]);
+      const corrected = await client.payments.correctInvoice('inv_0', { reason: 'Wrong name' } as never);
+      expect([corrected.payUrl, corrected.invoice.payUrl, corrected.replaced.payUrl]).toEqual([pinned, pinned, pinned]);
+      expect((await client.payments.replacePayLink('inv_1')).payUrl).toBe(pinned);
+      expect((await client.payments.cancelInvoice('inv_1')).payUrl).toBe(pinned);
+      expect((await client.payments.acceptPayment('inv_1', { reason: 'Paid by phone' })).payUrl).toBe(pinned);
+    });
+
+    it('leaves the links as they are without pins', async () => {
+      fetchMock.mockResolvedValueOnce(json(INVOICE));
+      expect((await quasar.payments.getInvoice('inv_1')).payUrl).toBe(INVOICE.payUrl);
+    });
+
+    it('refuses a pin that is neither an EVM nor a Solana address', () => {
+      expect(() => new Quasar({ secretKey: 'sk_test_1', payoutAddresses: [EVM, 'merchant.eth'] })).toThrow(
+        'payoutAddresses: "merchant.eth" is neither an EVM nor a Solana address',
+      );
+    });
+  });
 });

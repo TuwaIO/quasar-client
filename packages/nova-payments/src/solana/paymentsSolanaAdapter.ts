@@ -5,6 +5,9 @@ import {
   appendTransactionMessageInstructions,
   createTransactionMessage,
   getBase58Decoder,
+  getBase58Encoder,
+  getPublicKeyFromAddress,
+  getUtf8Encoder,
   type Instruction,
   isSolanaError,
   pipe,
@@ -13,6 +16,7 @@ import {
   signAndSendTransactionMessageWithSigners,
   SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND,
   type TransactionSendingSigner,
+  verifySignature,
 } from '@solana/kit';
 import { getTransferSolInstruction } from '@solana-program/system';
 import {
@@ -30,7 +34,7 @@ import {
   type SolanaClusterMoniker,
 } from '@tuwaio/orbit-solana';
 import { type SolanaTransaction, TransactionTracker } from '@tuwaio/pulsar-core';
-import type { PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
+import { type PaymentInstructions, payoutRecordText } from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import { PaymentWalletError } from '../utils/walletErrors';
@@ -241,6 +245,23 @@ export function paymentsSolanaAdapter({ rpcUrls }: PaymentsSolanaAdapterOptions 
           throw new PaymentWalletError('failed', 'The transaction expired in the wallet', { cause: error });
         throw new PaymentWalletError('wrongNetwork', `The wallet is not on ${solana.chainId}`, { cause: error });
       }
+    },
+
+    verifyPayoutRecord: async ({ record, signature }) => {
+      // The Ed25519 signature of the record's text by its address, in base58, checked in the page
+      let bytes: Uint8Array;
+      try {
+        bytes = new Uint8Array(getBase58Encoder().encode(signature));
+      } catch {
+        return false;
+      }
+      if (bytes.length !== 64) return false;
+      const key = await getPublicKeyFromAddress(address(record.address));
+      return verifySignature(
+        key,
+        bytes as Parameters<typeof verifySignature>[1],
+        getUtf8Encoder().encode(payoutRecordText(record)),
+      );
     },
 
     explorerUrl: ({ chainId, txKey }) => getSolanaExplorerLink(`/tx/${txKey}`, clusterOf(chainId)),

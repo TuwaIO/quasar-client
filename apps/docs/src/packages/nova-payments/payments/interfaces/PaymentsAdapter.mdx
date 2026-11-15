@@ -78,7 +78,7 @@ The fee, or `null` when it cannot be estimated.
 
 > `optional` **explorerAddressUrl?**: (`params`) => `string` \| `undefined`
 
-Defined in: [nova-payments/src/adapters/types.ts:126](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L126)
+Defined in: [nova-payments/src/adapters/types.ts:138](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L138)
 
 The link of a wallet address on a block explorer of its chain.
 
@@ -108,7 +108,7 @@ The link, or `undefined` when the chain has no known explorer.
 
 > `optional` **explorerUrl?**: (`params`) => `string` \| `undefined`
 
-Defined in: [nova-payments/src/adapters/types.ts:119](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L119)
+Defined in: [nova-payments/src/adapters/types.ts:131](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L131)
 
 The link of a transaction on a block explorer of its chain.
 
@@ -148,7 +148,7 @@ The chain family it pays on.
 
 > `optional` **followSponsoredCalls?**: (`params`) => `void`
 
-Defined in: [nova-payments/src/adapters/types.ts:140](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L140)
+Defined in: [nova-payments/src/adapters/types.ts:152](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L152)
 
 Follows a batch the wallet took before the page was reloaded, until its transaction comes or `until` passes.
 
@@ -214,7 +214,7 @@ The balance, in base units.
 
 > `optional` **pulsarTransaction?**: (`params`) => `Transaction`
 
-Defined in: [nova-payments/src/adapters/types.ts:134](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L134)
+Defined in: [nova-payments/src/adapters/types.ts:146](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L146)
 
 Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
 it (and Nova Transactions shows its toast) once the checkout closes.
@@ -239,7 +239,7 @@ The pending transaction, for `injectExternalPendingTxs` of the Pulsar store.
 
 > `optional` **sendOneTimeRelay?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:161](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L161)
+Defined in: [nova-payments/src/adapters/types.ts:173](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L173)
 
 Sends the call Quasar authorized for a gasless payment (`relayFromPage` of the checkout store) from a one-time
 account of the page: a key made in memory for this payment only, delegated (EIP-7702) to the account code Quasar's
@@ -284,7 +284,7 @@ The hash of the user operation.
 
 > `optional` **sendSponsoredCalls?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:141](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L141)
+Defined in: [nova-payments/src/adapters/types.ts:153](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L153)
 
 #### Parameters
 
@@ -451,3 +451,42 @@ The chain.
 #### Returns
 
 `Promise`\<`void`\>
+
+***
+
+### verifyPayoutRecord?
+
+> `optional` **verifyPayoutRecord?**: (`params`) => `Promise`\<`boolean`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:116](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L116)
+
+Checks the signature of the payout record of a quote's receiving address (`quote.payee`), without the wallet: the
+checkout shows the address and asks the wallet to pay only once the record is signed by the address it names
+(`payee` of `createCheckoutStore` from `@tuwaio/quasar-sdk/checkout`). On EVM an ordinary wallet's signature is
+recovered in the page; a smart wallet's is put to its contract on the quote's network (ERC-1271, ERC-6492) through
+the app's RPC. On Solana the Ed25519 signature is checked in the page. Without it the checkout matches the record
+with the quote but leaves its signature unchecked.
+
+#### Parameters
+
+##### params
+
+The record, its signature as Quasar sent it, and the network (CAIP-2) of the quote.
+
+###### chainId
+
+`string`
+
+###### record
+
+[`PayoutRecord`](?path=/docs/packages-quasar-sdk-checkout-interfaces-payoutrecord--docs)
+
+###### signature
+
+`string`
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+Whether the signature is the record's address's.

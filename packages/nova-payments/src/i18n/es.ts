@@ -114,6 +114,10 @@ export const esLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Total de la factura',
     invoiceRest: 'Resto de la factura',
     backFromRest: 'Atrás',
+    payeeChecking: 'Comprobando la dirección de destino…',
+    payeeRefusedTitle: 'Pago detenido',
+    payeeRefused:
+      'No se pudo confirmar que la dirección de destino sea de {merchant}, así que esta página no la muestra ni pide a tu billetera que pague. No se envió nada. Elige otro método o contacta con {merchant}.',
     restRateUntil: 'Este tipo de cambio es válido hasta {time}. Un pago posterior espera a que {merchant} lo acepte.',
     restRateEnded: 'Este tipo de cambio se fijó antes, así que este pago espera a que {merchant} lo acepte.',
     restTimeLeft: 'Tiempo restante para enviar: {time}',

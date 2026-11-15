@@ -9,6 +9,7 @@ import { type QuasarRequestIssue, QuasarSDKError } from '../core/errors';
 import type { Buyer, InvoiceLocale, InvoiceStatus } from '../modules/payments/types';
 import { checkoutApi } from './api';
 import { browserSessionStorage } from './browserStorage';
+import { checkQuotePayee, type PayeeCheck, type PayeeOptions } from './payee';
 import type {
   CheckoutApi,
   CheckoutPayerProof,
@@ -228,6 +229,14 @@ export interface CheckoutState {
   readonly confirmedWallets: readonly string[];
   /** The locked quote. */
   quote: CheckoutQuote | null;
+  /**
+   * The check of the locked quote's payee (`checkQuotePayee`), made again for every new quote: `checking` until it
+   * ends, then `verified` (the address may be shown and paid; `signed` says whether the payout record's signature was
+   * checked) or `refused` with the reason. Show the address, the QR code or a wallet prompt only while it is
+   * `verified` for the quote shown: a refused payee may be a swap of the merchant's address. Read-only; `null` without
+   * a quote.
+   */
+  readonly payeeCheck: PayeeCheck | null;
   /** Language of the page and the documents still to be issued. */
   locale: InvoiceLocale | null;
   /**
@@ -536,6 +545,12 @@ export interface CheckoutStoreOptions {
    * Failures of the storage are ignored.
    */
   handOverStorage?: CheckoutHandOverStorage | null;
+  /**
+   * How the payee of each quote is checked before the page shows its address ({@link CheckoutState.payeeCheck}): the
+   * verifier of the payout record's signature (the chain adapters of `@tuwaio/nova-payments` give one) and the
+   * merchant's own receiving addresses. The places of the address are checked even without them.
+   */
+  payee?: PayeeOptions;
 }
 
 /** The part of the browser's `Storage` (`sessionStorage`) the checkout store keeps its hand-overs in. */
@@ -821,6 +836,10 @@ function rejectionsOf(signals: Pick<CheckoutStatusEvent, 'rejectedTxKeys' | 'rej
   // A Quasar before rejection reasons: every rejection ends the payment, as it did then
   return signals.rejectedTxKeys?.map((key) => ({ keys: [keyOf(key)], final: true })) ?? null;
 }
+
+/** What the check of a quote's payee reads: a quote equal in all of it gets the same verdict. */
+const payeeKeyOf = (quote: CheckoutQuote) =>
+  JSON.stringify([quote.instructions, quote.gasless ?? null, quote.payee === undefined ? 'legacy' : quote.payee]);
 
 /** Whether a locked quote can still be paid. */
 const quoteValid = (quote: CheckoutQuote | null, now: number): quote is CheckoutQuote =>
@@ -2042,6 +2061,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       payerProof: 'not_needed',
       confirmedWallets: [],
       quote: null,
+      payeeCheck: null,
       locale: null,
       txKey: null,
       paymentOnTheWay: false,
@@ -2394,6 +2414,35 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         stopWatching();
       },
     };
+  });
+
+  // Every new quote has its payee checked before the page may show its address: the check of an earlier quote that
+  // ends late is dropped. A quote read again with the same content (the rest of an underpaid invoice comes anew with
+  // every read of the invoice) keeps the verdict, so the page does not drop the price for a new check each time
+  let checkedQuote: CheckoutQuote | null = null;
+  let checkedKey: string | null = null;
+  const checkPayee = (quote: CheckoutQuote | null) => {
+    checkedQuote = quote;
+    if (!quote) {
+      checkedKey = null;
+      if (store.getState().payeeCheck) store.setState({ payeeCheck: null });
+      return;
+    }
+    const key = payeeKeyOf(quote);
+    const previous = store.getState().payeeCheck;
+    if (key === checkedKey && previous) {
+      store.setState({ payeeCheck: { ...previous, quote } });
+      return;
+    }
+    checkedKey = key;
+    store.setState({ payeeCheck: { quote, status: 'checking' } });
+    void checkQuotePayee(quote, options.payee).then((result) => {
+      if (destroyed || checkedKey !== key || !checkedQuote) return;
+      store.setState({ payeeCheck: { quote: checkedQuote, ...result } });
+    });
+  };
+  store.subscribe((state) => {
+    if (state.quote !== checkedQuote) checkPayee(state.quote);
   });
 
   return store;

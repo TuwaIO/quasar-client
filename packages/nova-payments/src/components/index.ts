@@ -12,6 +12,7 @@ export * from './LocaleSwitcher';
 export * from './MethodScreen';
 export * from './OutcomeScreen';
 export * from './PaidScreen';
+export * from './PayeeScreen';
 export * from './PaymentCheckout';
 export * from './PayScreen';
 export * from './QrScreen';

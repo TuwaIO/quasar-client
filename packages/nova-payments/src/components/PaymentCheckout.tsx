@@ -5,6 +5,7 @@ import type {
   CheckoutStore,
   CheckoutView,
   EventSourceConstructor,
+  PayeeVerifier,
 } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
 import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
@@ -35,6 +36,7 @@ import {
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm, needsTheClock } from '../utils/outcome';
+import { verifyPayeeWith } from '../utils/payee';
 import { lockPrice } from '../utils/payerProof';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
@@ -95,6 +97,14 @@ export interface PaymentCheckoutProps {
    * leaving it out offers the QR code for Solana methods only.
    */
   payUrl?: string | null;
+  /**
+   * The merchant's own receiving addresses, from the merchant's integration rather than from Quasar (the `#payout=`
+   * part of a `payUrl` the server SDK made with `payoutAddresses`): the checkout refuses to show or pay a quote whose
+   * address is not among them, whatever Quasar's database says. Without them the checkout still requires the address's
+   * own signature of its payout record, which a swap in Quasar's database could carry for its own wallet. EVM addresses
+   * in any letter case. A change makes the checkout read the invoice again.
+   */
+  payoutAddresses?: readonly string[];
   /**
    * Connects a wallet of a chain family, for apps without Nova Connect; overrides the `onConnectWallet` of
    * `NovaPaymentsProvider`. Inside `NovaConnectProvider` (the app's, or Nova's own connection of `NovaPaymentsProvider`)
@@ -353,6 +363,7 @@ export function PaymentCheckout({
   EventSource,
   pollMs,
   payUrl,
+  payoutAddresses,
   onConnectWallet,
   onPaid,
   autoReturnSeconds,
@@ -369,6 +380,12 @@ export function PaymentCheckout({
   // and read the invoice on the server. Opened once it stays, so that a payment under way is still followed when closed
   const [everOpened, setEverOpened] = useState(display !== 'modal' || open);
   if (!everOpened && (display !== 'modal' || open)) setEverOpened(true);
+  // The adapters of the latest render check the payout records' signatures, also for a store made before they changed
+  const adaptersRef = useRef(settings.adapters);
+  useEffect(() => {
+    adaptersRef.current = settings.adapters;
+  }, [settings.adapters]);
+  const verifyPayee = useCallback<PayeeVerifier>((params) => verifyPayeeWith(adaptersRef.current, params), []);
   const store = useCheckoutStore({
     token: activeToken,
     baseUrl: baseUrl ?? settings.baseUrl,
@@ -376,6 +393,7 @@ export function PaymentCheckout({
     EventSource,
     pollMs,
     enabled: everOpened,
+    payee: { verify: verifyPayee, addresses: payoutAddresses },
   });
   const state = useCheckoutState(store, (value) => value);
   const checkout = state.checkout;

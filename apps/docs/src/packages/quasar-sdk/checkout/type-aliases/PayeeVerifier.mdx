@@ -1,0 +1,38 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Type Aliases/PayeeVerifier" />
+
+# PayeeVerifier
+
+> **PayeeVerifier** = (`params`) => `Promise`\<`boolean` \| `null`\>
+
+Defined in: [checkout/payee.ts:48](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L48)
+
+Checks the signature of a payout record by its own address: the chain adapters of `@tuwaio/nova-payments` do it on
+EVM (an EOA by recovery, a smart wallet through its contract on `chainId`, ERC-1271 or ERC-6492) and on Solana
+(Ed25519).
+
+## Parameters
+
+### params
+
+The record, its signature and the network (CAIP-2) of the quote.
+
+#### chainId
+
+`string`
+
+#### record
+
+[`PayoutRecord`](?path=/docs/packages-quasar-sdk-checkout-interfaces-payoutrecord--docs)
+
+#### signature
+
+`string`
+
+## Returns
+
+`Promise`\<`boolean` \| `null`\>
+
+Whether the signature is the record's address's, or `null` when this page cannot check signatures of the
+  network's family (no chain adapter for it): the record is matched, its signature not checked (`signed: false`).

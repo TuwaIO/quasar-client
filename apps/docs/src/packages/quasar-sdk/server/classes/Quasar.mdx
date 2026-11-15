@@ -24,7 +24,7 @@ const history = await quasar.pulsar.getHistory({ walletAddress: '0x...', limit: 
 
 > **new Quasar**(`config`): `Quasar`
 
-Defined in: [quasar.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/quasar.ts#L42)
+Defined in: [quasar.ts:43](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/quasar.ts#L43)
 
 Creates the client. Sends no request.
 
@@ -42,7 +42,8 @@ The secret key of the Quasar app and optional overrides.
 
 #### Throws
 
-If `config.secretKey` is empty.
+If `config.secretKey` is empty, or `config.payoutAddresses` holds something that is not an EVM or a
+  Solana address.
 
 ## Properties
 

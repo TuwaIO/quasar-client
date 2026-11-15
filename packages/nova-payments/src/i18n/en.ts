@@ -113,6 +113,10 @@ export const defaultLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Invoice total',
     invoiceRest: 'Rest of the invoice',
     backFromRest: 'Back',
+    payeeChecking: 'Checking the receiving address…',
+    payeeRefusedTitle: 'Payment stopped',
+    payeeRefused:
+      "The receiving address could not be confirmed as {merchant}'s, so this page does not show it or ask your wallet to pay. Nothing was sent. Choose another method or contact {merchant}.",
     restRateUntil: 'This rate holds until {time}. A payment after that waits for {merchant} to accept it.',
     restRateEnded: 'This rate was locked earlier, so this payment waits for {merchant} to accept it.',
     restTimeLeft: 'Time left to send: {time}',

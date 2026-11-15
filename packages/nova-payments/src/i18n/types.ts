@@ -209,6 +209,15 @@ export type NovaPaymentsLabels = {
     invoiceRest: string;
     /** Button back to the underpaid invoice from the quote of its rest (default: `Back`) */
     backFromRest: string;
+    /** While the receiving address of the price is checked, before the step shows it (default: `Checking the receiving address…`) */
+    payeeChecking: string;
+    /** Title of the step when the receiving address could not be confirmed as the merchant's (default: `Payment stopped`) */
+    payeeRefusedTitle: string;
+    /**
+     * Under it: `{merchant}` (default: `The receiving address could not be confirmed as {merchant}'s, so this page does not
+     * show it or ask your wallet to pay. Nothing was sent. Choose another method or contact {merchant}.`)
+     */
+    payeeRefused: string;
     /**
      * On a rest in an asset that moves against the invoice currency: `{time}`, `{merchant}` (default: `This rate holds until
      * {time}. A payment after that waits for {merchant} to accept it.`)

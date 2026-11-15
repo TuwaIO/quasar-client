@@ -1,0 +1,34 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/PayeeScreen" />
+
+# PayeeScreen()
+
+> **PayeeScreen**(`props`): `Element`
+
+Defined in: [nova-payments/src/components/PayeeScreen.tsx:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/PayeeScreen.tsx#L20)
+
+What the pay and QR steps show instead of the payment until the checkout store verified the payee of the quote. While
+the check runs, a wait that appears only when it takes more than a moment: an ordinary wallet's signature is checked
+in the page at once, a smart wallet's asks its contract on the network. When the address could not be confirmed as
+the merchant's, a refusal: the address is never shown and the wallet never asked, whatever the reason, which
+`data-payee-refusal` names for the integrator (`payee_unsigned`, `payee_mismatch`, `payee_not_pinned`,
+`payee_unverified`).
+
+## Parameters
+
+### props
+
+Where the check stands.
+
+#### payee
+
+\{ `status`: `"checking"`; \} \| \{ `reason`: [`PayeeRefusal`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeerefusal--docs); `status`: `"refused"`; \}
+
+`checking`, or `refused` with its reason ([payeeStatus](?path=/docs/packages-nova-payments-payments-functions-payeestatus--docs)).
+
+## Returns
+
+`Element`
+
+The step.

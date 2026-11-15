@@ -4127,3 +4127,117 @@ describe('createCheckoutStore: a page left open', () => {
     checkout.getState().destroy();
   });
 });
+
+// The page shows an address only once the store checked the payee of its quote: a swapped address must never be paid
+describe('createCheckoutStore: the payee of each quote', () => {
+  const MERCHANT = '0x52908400098527886E0F7030069857D2E4169EE7';
+  const record = {
+    version: 1,
+    type: 'address',
+    app: 'app_1',
+    chains: ['eip155:8453'],
+    address: MERCHANT,
+    issuedAt: '2026-11-15T01:30:00.000Z',
+  };
+  const quote = (lockedAt = '2026-10-10T12:00:00.000Z', amount = QUOTE.instructions.amount) => ({
+    ...QUOTE,
+    lockedAt,
+    instructions: { ...QUOTE.instructions, to: MERCHANT, amount },
+    gasless: null,
+    payee: { record, signature: '0xsig' },
+  });
+  const checkoutWith = (payee: Parameters<typeof createCheckoutStore>[0]['payee']) =>
+    createCheckoutStore({ token: 'tok_1', baseUrl: BASE, pollMs: 1_000, EventSource: FakeEventSource as never, payee });
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+    FakeEventSource.instances = [];
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('checks the payee of the quote the page opens with before it may show the address', async () => {
+    let release!: (value: boolean) => void;
+    const verify = vi.fn(() => new Promise<boolean>((resolve) => (release = resolve)));
+    fetchMock.mockResolvedValueOnce(json(view({ quote: quote() as never })));
+    const checkout = checkoutWith({ verify });
+    await checkout.getState().load();
+    expect(checkout.getState().payeeCheck).toMatchObject({ status: 'checking' });
+    expect(verify).toHaveBeenCalledWith({ record, signature: '0xsig', chainId: 'eip155:8453' });
+    release(true);
+    await vi.waitFor(() =>
+      expect(checkout.getState().payeeCheck).toMatchObject({
+        status: 'verified',
+        signed: true,
+        quote: { methodId: 'ap_1' },
+      }),
+    );
+    checkout.getState().destroy();
+  });
+
+  it("refuses a quote paid to an address outside the merchant's pinned addresses", async () => {
+    fetchMock.mockResolvedValueOnce(json(view({ quote: quote() as never })));
+    const checkout = checkoutWith({
+      verify: async () => true,
+      addresses: ['0x0000000000000000000000000000000000000001'],
+    });
+    await checkout.getState().load();
+    await vi.waitFor(() =>
+      expect(checkout.getState().payeeCheck).toMatchObject({ status: 'refused', reason: 'payee_not_pinned' }),
+    );
+    checkout.getState().destroy();
+  });
+
+  // A check that ends after a newer quote came is about a quote the page no longer shows
+  it('checks every new quote again, and drops the check of an earlier one that ends late', async () => {
+    const pending: ((value: boolean) => void)[] = [];
+    const verify = vi.fn(() => new Promise<boolean>((resolve) => pending.push(resolve)));
+    fetchMock
+      .mockResolvedValueOnce(json(view({ quote: quote() as never })))
+      .mockResolvedValueOnce(json(quote('2026-10-10T12:05:00.000Z', '2000000')));
+    const checkout = checkoutWith({ verify });
+    await checkout.getState().load();
+    checkout.getState().setPayer(QUOTE.payer);
+    await checkout.getState().requestQuote();
+    expect(checkout.getState().quote?.lockedAt).toBe('2026-10-10T12:05:00.000Z');
+    expect(verify).toHaveBeenCalledTimes(2);
+    pending[1](true);
+    await vi.waitFor(() => expect(checkout.getState().payeeCheck).toMatchObject({ status: 'verified' }));
+    pending[0](false);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(checkout.getState().payeeCheck).toMatchObject({
+      status: 'verified',
+      quote: { lockedAt: '2026-10-10T12:05:00.000Z' },
+    });
+    checkout.getState().destroy();
+  });
+
+  // The rest of an underpaid invoice comes anew with every read of the invoice: the page must not drop the price
+  // for a new check each time
+  it('keeps the verdict of a quote read again with the same content, and checks one whose payee changed', async () => {
+    const verify = vi.fn(async () => true);
+    fetchMock.mockResolvedValueOnce(json(view({ quote: quote() as never })));
+    const checkout = checkoutWith({ verify });
+    await checkout.getState().load();
+    await vi.waitFor(() => expect(checkout.getState().payeeCheck).toMatchObject({ status: 'verified' }));
+
+    const again = { ...checkout.getState().quote! };
+    checkout.setState({ quote: again });
+    expect(checkout.getState().payeeCheck).toMatchObject({ status: 'verified', signed: true });
+    expect(checkout.getState().payeeCheck?.quote).toBe(again);
+    expect(verify).toHaveBeenCalledTimes(1);
+
+    checkout.setState({
+      quote: {
+        ...again,
+        payee: { record: { ...record, issuedAt: '2026-11-16T00:00:00.000Z' }, signature: '0xnew' },
+      } as never,
+    });
+    expect(checkout.getState().payeeCheck).toMatchObject({ status: 'checking' });
+    await vi.waitFor(() => expect(checkout.getState().payeeCheck).toMatchObject({ status: 'verified' }));
+    expect(verify).toHaveBeenCalledTimes(2);
+    checkout.getState().destroy();
+  });
+});

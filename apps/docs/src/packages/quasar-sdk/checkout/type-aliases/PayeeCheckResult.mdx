@@ -1,0 +1,34 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Type Aliases/PayeeCheckResult" />
+
+# PayeeCheckResult
+
+> **PayeeCheckResult** = \{ `signed`: `boolean`; `status`: `"verified"`; \} \| \{ `reason`: [`PayeeRefusal`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeerefusal--docs); `status`: `"refused"`; \}
+
+Defined in: [checkout/payee.ts:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L74)
+
+What the check of a quote's payee found ([checkQuotePayee](?path=/docs/packages-quasar-sdk-checkout-functions-checkquotepayee--docs)).
+
+## Union Members
+
+### Type Literal
+
+\{ `signed`: `boolean`; `status`: `"verified"`; \}
+
+#### signed
+
+> **signed**: `boolean`
+
+Whether the record's signature was checked: `false` without a verifier, or for an engine that sends no
+payout record (before payout records); the places of the address and the pinned addresses are checked anyway.
+
+#### status
+
+> **status**: `"verified"`
+
+***
+
+### Type Literal
+
+\{ `reason`: [`PayeeRefusal`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeerefusal--docs); `status`: `"refused"`; \}

@@ -1,0 +1,30 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/PayeeOptions" />
+
+# PayeeOptions
+
+Defined in: [checkout/payee.ts:55](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L55)
+
+How a checkout store checks the payee of each quote (`payee` of `createCheckoutStore`).
+
+## Properties
+
+### addresses?
+
+> `optional` **addresses?**: readonly `string`[]
+
+Defined in: [checkout/payee.ts:62](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L62)
+
+The merchant's own receiving addresses, from their integration rather than from Quasar: a quote paid to any other
+address is refused, whatever Quasar's database says. EVM addresses in any letter case.
+
+***
+
+### verify?
+
+> `optional` **verify?**: [`PayeeVerifier`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeeverifier--docs)
+
+Defined in: [checkout/payee.ts:57](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L57)
+
+Checks the signature of the payout record. Without it the signature is not checked (`signed: false`).
