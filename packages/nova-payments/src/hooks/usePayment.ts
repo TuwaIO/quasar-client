@@ -116,9 +116,9 @@ export function usePayment({
   const [status, setStatus] = useState<PaymentStatus>('idle');
   const [problem, setProblem] = useState<PaymentWalletErrorKind | null>(() => {
     const kept = openRequests.get(store);
-    const stillHeld = kept?.unconfirmed && kept.account === wallet?.address && Date.now() < kept.until;
+    const stillKept = kept?.unconfirmed && kept.account === wallet?.address && Date.now() < kept.until;
     const fromBeforeReload = invoiceId ? keptBatchOf(invoiceId) : null;
-    return stillHeld || fromBeforeReload ? 'sentUnconfirmed' : null;
+    return stillKept || fromBeforeReload ? 'sentUnconfirmed' : null;
   });
   const reportLate = useEffectEvent((payment: SentPayment) => onSent?.(payment));
 

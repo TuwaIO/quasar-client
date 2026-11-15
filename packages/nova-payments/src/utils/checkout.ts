@@ -31,7 +31,7 @@ export type CheckoutScreen =
   | 'failed'
   | 'paid'
   | 'underpaid'
-  | 'held'
+  | 'needs_review'
   | 'refunded'
   | 'expired'
   | 'cancelled'
@@ -265,8 +265,8 @@ const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
  * the wallet signs, the payment is handed to Quasar and it confirms, and on a payer the wallet check refused
  * (`blocked`, where the buyer can pay with another wallet); it ends with the paid outcome and with the outcomes in which
  * a deadline means nothing. A payment sent before the deadline counts: Quasar keeps an `open` or `underpaid` invoice
- * while a payment it learned of before the deadline confirms (for a limited time), and holds a payment that lands after
- * the invoice closed for the seller to accept or return.
+ * while a payment it learned of before the deadline confirms (for a limited time), and records a payment that lands
+ * after the invoice closed for the seller to accept or return.
  *
  * @param status - The invoice state (`checkout.invoice.status`).
  * @param screen - The screen shown.
@@ -275,9 +275,8 @@ const PAYING_SCREENS: ReadonlySet<CheckoutScreen> = new Set([
  * `confirming` while the payment is on its way (the countdown shows; at zero the confirm step says that the payment
  * sent in time is being confirmed) and while Quasar could not confirm it (`unconfirmed`: the buyer checks the wallet
  * before paying again, so no minutes left to pay are announced), or `null` once the payment succeeded (`paid`), on the
- * outcomes in
- * which a deadline means nothing (`held`, `refunded`, `expired`, `cancelled`, `replaced`) and for an invoice that can
- * no longer be paid. `closed` while part of an underpaid invoice arrived and its rest cannot be paid: the countdown still
+ * outcomes in which a deadline means nothing (`needs_review`, `refunded`, `expired`, `cancelled`, `replaced`) and for an
+ * invoice that can no longer be paid. `closed` while part of an underpaid invoice arrived and its rest cannot be paid: the countdown still
  * shows, as the time after which the seller can refund, and no minutes left to pay are announced.
  */
 export function deadlineState(
@@ -337,7 +336,7 @@ export function lockedPriceOnWallet(params: {
 
 /**
  * What the active wallet changing does on the step that confirms the wallet, where no new price is locked yet: the step
- * asks the wallet connected to sign, never the one the store last held.
+ * asks the wallet connected to sign, never the one the store last had.
  *
  * @param params - What the change happens over.
  * @param params.open - The step shows.

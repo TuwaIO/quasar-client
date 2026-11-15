@@ -505,7 +505,8 @@ const document = generator.generateDocument({
     },
     {
       name: 'Invoices',
-      description: 'Invoices of a Payments app: issue, read, cancel, release, correct, documents, quotes and methods.',
+      description:
+        'Invoices of a Payments app: issue, read, cancel, accept a payment that needs review, correct, documents, quotes and methods.',
     },
     {
       name: 'Refunds',

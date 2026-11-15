@@ -203,14 +203,19 @@ describe('createCheckoutStore', () => {
     }
   });
 
-  it('keeps whether the merchant screens paying wallets, and why a held payment waits', async () => {
-    const held = { ...view().invoice, status: 'held', amountPaid: '49000000', review: { reason: 'quote_expired' } };
-    fetchMock.mockResolvedValueOnce(json(view({ amlScreening: false, invoice: held as CheckoutView['invoice'] })));
+  it('keeps whether the merchant screens paying wallets, and why a payment under review waits', async () => {
+    const review = {
+      ...view().invoice,
+      status: 'needs_review',
+      amountPaid: '49000000',
+      review: { reason: 'quote_expired' },
+    };
+    fetchMock.mockResolvedValueOnce(json(view({ amlScreening: false, invoice: review as CheckoutView['invoice'] })));
     const checkout = store({ EventSource: null });
     await checkout.getState().load();
 
     expect(checkout.getState()).toMatchObject({
-      phase: 'held',
+      phase: 'needs_review',
       checkout: { amlScreening: false, invoice: { review: { reason: 'quote_expired' } } },
     });
     expectTypeOf<CheckoutView['amlScreening']>().toEqualTypeOf<boolean>();
@@ -469,27 +474,27 @@ describe('createCheckoutStore', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(checkout.getState().quote).toMatchObject({ methodId: 'ap_1' });
 
-    // A payment held after its price lock ran out says why
+    // A payment under review after its price lock ran out says why
     fetchMock.mockResolvedValueOnce(json(view({ quote: QUOTE as never }))).mockResolvedValueOnce(
       json(
         view({
           quote: QUOTE as never,
-          invoice: { ...invoice, status: 'held', amountPaid: '49000000', review: { reason: 'quote_expired' } },
+          invoice: { ...invoice, status: 'needs_review', amountPaid: '49000000', review: { reason: 'quote_expired' } },
         }),
       ),
     );
-    const held = store();
-    await held.getState().load();
+    const reviewed = store();
+    await reviewed.getState().load();
     FakeEventSource.instances[1].emit('status', {
-      status: 'held',
+      status: 'needs_review',
       ledgerSeq: 5,
       txHash: '0xfeed',
       amountPaid: '49000000',
       quoteExpiresAt: null,
     });
-    expect(held.getState().phase).toBe('held');
-    await vi.waitFor(() => expect(held.getState().checkout?.invoice.review).toEqual({ reason: 'quote_expired' }));
-    held.getState().destroy();
+    expect(reviewed.getState().phase).toBe('needs_review');
+    await vi.waitFor(() => expect(reviewed.getState().checkout?.invoice.review).toEqual({ reason: 'quote_expired' }));
+    reviewed.getState().destroy();
     expect(fetchMock).toHaveBeenCalledTimes(5);
   });
 
@@ -538,7 +543,7 @@ describe('createCheckoutStore', () => {
       return path.endsWith('/submit') ? json({ txKey: '0xfeed', status: 'processing' }, 202) : json(view());
     });
 
-    // The engine held the payment that arrived after the invoice closed
+    // The engine put the payment that arrived after the invoice closed under review
     const late = store();
     await late.getState().load();
     late.getState().selectMethod('ap_1');
@@ -548,8 +553,8 @@ describe('createCheckoutStore', () => {
     lateEvents.emit('status', status('expired', 5));
     expect(late.getState()).toMatchObject({ phase: 'expired', invoiceStatus: 'expired', txKey: '0xfeed' });
     expect(lateEvents.closed).toBe(false);
-    lateEvents.emit('status', status('held', 6));
-    expect(late.getState()).toMatchObject({ phase: 'held', invoiceStatus: 'held' });
+    lateEvents.emit('status', status('needs_review', 6));
+    expect(late.getState()).toMatchObject({ phase: 'needs_review', invoiceStatus: 'needs_review' });
     expect(lateEvents.closed).toBe(true);
 
     // The engine took the payment it learned of before the deadline
@@ -613,7 +618,7 @@ describe('createCheckoutStore', () => {
       .mockResolvedValueOnce(json({ txKey: '0xfeed', status: 'processing' }, 202))
       .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'processing' } })))
       .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'expired' } })))
-      .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'held', amountPaid: '49000000' } })));
+      .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'needs_review', amountPaid: '49000000' } })));
     const checkout = store({ EventSource: null });
     await checkout.getState().load();
     await checkout.getState().submit({ txKey: '0xfeed' });
@@ -625,8 +630,8 @@ describe('createCheckoutStore', () => {
     await vi.advanceTimersByTimeAsync(19_000);
     expect(fetchMock).toHaveBeenCalledTimes(4);
     await vi.advanceTimersByTimeAsync(1_000);
-    expect(checkout.getState().phase).toBe('held');
-    // Held: no more reads
+    expect(checkout.getState().phase).toBe('needs_review');
+    // Under review: no more reads
     await vi.advanceTimersByTimeAsync(60_000);
     expect(fetchMock).toHaveBeenCalledTimes(5);
   });
@@ -747,8 +752,8 @@ describe('createCheckoutStore', () => {
     // The stream reached its time limit: the browser reconnects to a stream that follows the payment
     events.end();
     expect(events.closed).toBe(false);
-    events.emit('status', signal('held', 6, { pendingPayments: 0, rejectedTxKeys: [] }));
-    expect(checkout.getState()).toMatchObject({ phase: 'held', paymentOnTheWay: false });
+    events.emit('status', signal('needs_review', 6, { pendingPayments: 0, rejectedTxKeys: [] }));
+    expect(checkout.getState()).toMatchObject({ phase: 'needs_review', paymentOnTheWay: false });
     expect(events.closed).toBe(true);
   });
 
@@ -835,8 +840,8 @@ describe('createCheckoutStore', () => {
     expect(checkout.getState()).toMatchObject({ phase: 'expired', paymentOnTheWay: true, txKey: '0xfeed' });
     const events = FakeEventSource.instances[1];
     expect(events.closed).toBe(false);
-    events.emit('status', signal('held', 6, { pendingPayments: 0, rejectedTxKeys: [] }));
-    expect(checkout.getState()).toMatchObject({ phase: 'held', paymentOnTheWay: false });
+    events.emit('status', signal('needs_review', 6, { pendingPayments: 0, rejectedTxKeys: [] }));
+    expect(checkout.getState()).toMatchObject({ phase: 'needs_review', paymentOnTheWay: false });
   });
 
   it('reads the invoice every few seconds where there is no event stream', async () => {
@@ -940,6 +945,22 @@ describe('createCheckoutStore', () => {
       checkout.getState().destroy();
     });
 
+    // A 404 that names itself is Quasar's answer: the old route would only add a 404 of its own, without the code
+    it('keeps the refusal of a checkout Quasar does not find, never trying the old relay', async () => {
+      fetchMock
+        .mockResolvedValueOnce(json(view({ quote: RELAY_QUOTE as never })))
+        .mockResolvedValueOnce(json({ error: { code: 'checkout_not_found', message: 'No such checkout' } }, 404));
+      const checkout = store();
+      await checkout.getState().load();
+
+      const send = vi.fn(async () => '0xuserop');
+      expect(await checkout.getState().relayFromPage(signature, send)).toBe(false);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(send).not.toHaveBeenCalled();
+      expect(checkout.getState().error).toMatchObject({ code: 'checkout_not_found', status: 404 });
+      checkout.getState().destroy();
+    });
+
     it('says why Quasar refused the signature, and sends nothing', async () => {
       fetchMock
         .mockResolvedValueOnce(json(view({ quote: RELAY_QUOTE as never })))
@@ -980,7 +1001,7 @@ describe('createCheckoutStore', () => {
           invoice: {
             ...view().invoice,
             rejectedPayments: [
-              { txKey: '0xfeed', reason: 'payer_unconfirmed', final: true, movedMoney: true, held: true },
+              { txKey: '0xfeed', reason: 'payer_unconfirmed', final: true, movedMoney: true, unmatched: true },
             ],
           } as never,
         }),
@@ -988,7 +1009,7 @@ describe('createCheckoutStore', () => {
     );
     const checkout = store();
     await checkout.getState().load();
-    expect(checkout.getState().error).toMatchObject({ code: 'payment_mismatch', held: true });
+    expect(checkout.getState().error).toMatchObject({ code: 'payment_mismatch', unmatched: true });
 
     checkout.getState().selectMethod('ap_1', { keepError: true });
     expect(checkout.getState()).toMatchObject({ methodId: 'ap_1', error: { code: 'payment_mismatch' } });
@@ -1616,8 +1637,8 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
     expect(checkout.getState()).toMatchObject({ phase: 'expired', paymentOnTheWay: true, txKey: '0xfeed' });
     const events = FakeEventSource.instances[1];
     expect(events.closed).toBe(false);
-    events.emit('status', signal('held', 6, { pendingPayments: 0 }));
-    expect(checkout.getState()).toMatchObject({ phase: 'held', paymentOnTheWay: false });
+    events.emit('status', signal('needs_review', 6, { pendingPayments: 0 }));
+    expect(checkout.getState()).toMatchObject({ phase: 'needs_review', paymentOnTheWay: false });
   });
 
   it('keeps handing over a broadcast transaction while the buyer pays again, and says why a retry was refused', async () => {
@@ -2596,8 +2617,8 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
     followed.getState().destroy();
   });
 
-  // A payment that may still arrive on a cancelled invoice is followed until it is held
-  it('follows a cancelled invoice while its payment is on the way, until Quasar holds the payment', async () => {
+  // A payment that may still arrive on a cancelled invoice is followed until it needs review
+  it('follows a cancelled invoice while its payment is on the way, until Quasar records the payment for review', async () => {
     answer({ pendingPayments: 0, rejectedPayments: [] });
     const checkout = store();
     await checkout.getState().load();
@@ -2609,8 +2630,8 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
     expect(events.closed).toBe(false);
     events.end();
     expect(events.closed).toBe(false);
-    events.emit('status', signal('held', 6, { pendingPayments: 0, rejectedPayments: [] }));
-    expect(checkout.getState()).toMatchObject({ phase: 'held', paymentOnTheWay: false });
+    events.emit('status', signal('needs_review', 6, { pendingPayments: 0, rejectedPayments: [] }));
+    expect(checkout.getState()).toMatchObject({ phase: 'needs_review', paymentOnTheWay: false });
     expect(events.closed).toBe(true);
   });
 
@@ -2684,8 +2705,8 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
     expect(handed.getState()).toMatchObject({ phase: 'cancelled', paymentOnTheWay: true, txKey: '0xfeed' });
     const events = FakeEventSource.instances.at(-1)!;
     expect(events.closed).toBe(false);
-    events.emit('status', signal('held', 6, { pendingPayments: 0, rejectedPayments: [] }));
-    expect(handed.getState()).toMatchObject({ phase: 'held', paymentOnTheWay: false });
+    events.emit('status', signal('needs_review', 6, { pendingPayments: 0, rejectedPayments: [] }));
+    expect(handed.getState()).toMatchObject({ phase: 'needs_review', paymentOnTheWay: false });
 
     // Reopened while the payment is on its way
     answer({ status: 'cancelled', pendingPayments: 1, unresolvedPayments: 1, rejectedPayments: [] });
@@ -2694,8 +2715,8 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
     expect(reopened.getState()).toMatchObject({ phase: 'cancelled', invoicePaymentOnTheWay: true, error: null });
     const reopenedEvents = FakeEventSource.instances.at(-1)!;
     expect(reopenedEvents.closed).toBe(false);
-    reopenedEvents.emit('status', signal('held', 7, { pendingPayments: 0, rejectedPayments: [] }));
-    expect(reopened.getState().phase).toBe('held');
+    reopenedEvents.emit('status', signal('needs_review', 7, { pendingPayments: 0, rejectedPayments: [] }));
+    expect(reopened.getState().phase).toBe('needs_review');
 
     // Reopened with a payment that may still arrive but none on its way: never "nothing was charged"
     answer({ status: 'cancelled', pendingPayments: 0, unresolvedPayments: 1, rejectedPayments: [] });
@@ -2710,7 +2731,7 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
   });
 });
 
-describe('createCheckoutStore: the paying wallet confirms the invoice, held transfers, honest follow windows', () => {
+describe('createCheckoutStore: the paying wallet confirms the invoice, unmatched transfers, honest follow windows', () => {
   beforeEach(() => {
     fetchMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
@@ -3036,15 +3057,16 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
     simulated.getState().destroy();
   });
 
-  // A transfer tied to no invoice never holds the invoice: the merchant returns it, the confirmed wallet still pays
-  it('says the merchant returns a held transfer, and keeps the invoice payable', async () => {
-    const held = rejection('0xfeed', 'payer_unconfirmed', true, { held: true });
-    answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [held] } });
+  // A transfer tied to no invoice never puts the invoice under review: the merchant returns it, the confirmed wallet
+  // still pays
+  it('says the merchant returns an unmatched transfer, and keeps the invoice payable', async () => {
+    const unmatched = rejection('0xfeed', 'payer_unconfirmed', true, { unmatched: true });
+    answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [unmatched] } });
     const reopened = store({ EventSource: null });
     await reopened.getState().load();
     expect(reopened.getState()).toMatchObject({
       phase: 'selectMethod',
-      error: { code: 'payment_mismatch', reason: 'payer_unconfirmed', held: true },
+      error: { code: 'payment_mismatch', reason: 'payer_unconfirmed', unmatched: true },
     });
     expect(reopened.getState().error?.message).toMatch(/returns it to the wallet that sent it/);
     expect(reopened.getState().error?.message).toMatch(/can still be paid/);
@@ -3054,16 +3076,16 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
     reopened.getState().destroy();
   });
 
-  // Owner test 2026-11-05, finding 1: Phantom dropped the Solana Pay reference. A transfer held for it on this invoice
-  // read "tied to another invoice", which sent the buyer looking for an invoice that does not exist
-  it('says a Solana Pay transfer held for its missing reference is returned, and never ties it to another invoice', async () => {
-    const held = rejection('5sig', 'reference_missing', true, { movedMoney: true, held: true });
-    answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [held] } });
+  // Phantom dropped the Solana Pay reference. An unmatched transfer for it on this invoice read "tied to another
+  // invoice", which sent the buyer looking for an invoice that does not exist
+  it('says a Solana Pay transfer recorded for its missing reference is returned, and never ties it to another invoice', async () => {
+    const unmatched = rejection('5sig', 'reference_missing', true, { movedMoney: true, unmatched: true });
+    answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [unmatched] } });
     const reopened = store({ EventSource: null });
     await reopened.getState().load();
     expect(reopened.getState()).toMatchObject({
       phase: 'selectMethod',
-      error: { code: 'payment_mismatch', reason: 'reference_missing', held: true },
+      error: { code: 'payment_mismatch', reason: 'reference_missing', unmatched: true },
     });
     const message = reopened.getState().error?.message ?? '';
     expect(message).toMatch(/Solana Pay reference/);
@@ -3074,8 +3096,8 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
     reopened.getState().destroy();
   });
 
-  // A rejection without a held transfer promises no refund
-  it('names a transfer from a wallet that never confirmed the invoice without promising a refund it was not held for', async () => {
+  // A rejection without an unmatched transfer promises no refund
+  it('names a transfer from a wallet that never confirmed the invoice without promising a refund it was not recorded for', async () => {
     const unconfirmed = rejection('0xfeed', 'payer_unconfirmed', true);
     answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [unconfirmed] } });
     const reopened = store({ EventSource: null });
@@ -3198,16 +3220,20 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, held tran
     checkout.getState().destroy();
   });
 
-  // A transfer held on another invoice for a refund only pays nothing
-  it('names a transfer held on another invoice as tied to it, never as paying it', async () => {
-    const held = rejection('0xfeed', 'tx_already_used', true, { movedMoney: true, held: true, otherInvoice: 'inv_2' });
-    answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [held] } });
+  // An unmatched transfer at another invoice, refunded only, pays nothing
+  it('names an unmatched transfer at another invoice as tied to it, never as paying it', async () => {
+    const unmatched = rejection('0xfeed', 'tx_already_used', true, {
+      movedMoney: true,
+      unmatched: true,
+      otherInvoice: 'inv_2',
+    });
+    answer({ invoice: { ...view().invoice, pendingPayments: 0, rejectedPayments: [unmatched] } });
     const reopened = store({ EventSource: null });
     await reopened.getState().load();
     expect(reopened.getState().error).toMatchObject({
       code: 'payment_mismatch',
       reason: 'tx_already_used',
-      held: true,
+      unmatched: true,
       otherInvoice: 'inv_2',
     });
     expect(reopened.getState().error?.message).toMatch(/tied to another invoice/);

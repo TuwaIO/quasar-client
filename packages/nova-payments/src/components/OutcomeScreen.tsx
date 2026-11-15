@@ -48,7 +48,7 @@ import { TxLabels } from './TxLabels';
 /** The outcomes this screen shows. */
 export type OutcomeKind = Extract<
   CheckoutScreen,
-  'unconfirmed' | 'underpaid' | 'held' | 'refunded' | 'expired' | 'cancelled' | 'replaced' | 'blocked'
+  'unconfirmed' | 'underpaid' | 'needs_review' | 'refunded' | 'expired' | 'cancelled' | 'replaced' | 'blocked'
 >;
 
 /** Whether the last error says that Quasar could not confirm a payment, which may still arrive. */
@@ -105,7 +105,7 @@ const CHIP: Record<OutcomeKind, { tone: StatusChipTone; label: keyof NovaPayment
   // Something for the buyer to mind: the color of a wait, as the strip along the top
   unconfirmed: { tone: 'pending', label: 'unconfirmed' },
   underpaid: { tone: 'pending', label: 'underpaid' },
-  held: { tone: 'neutral', label: 'review' },
+  needs_review: { tone: 'neutral', label: 'review' },
   refunded: { tone: 'neutral', label: 'refunded' },
   expired: { tone: 'neutral', label: 'expired' },
   cancelled: { tone: 'neutral', label: 'cancelled' },
@@ -301,11 +301,11 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       const status = state.invoiceStatus ?? checkout.invoice.status;
       if (payAgain && (status === 'open' || status === 'underpaid') && !(followUp && LEFT_THE_WALLET.has(followUp))) {
         // Quasar read this transfer from the chain, so "it did not leave my wallet" would be false: it does not count, and
-        // the invoice can still be paid. When the seller holds it to return it, that is the way on
+        // the invoice can still be paid. When the seller returns it as an unmatched transfer, that is the way on
         // Otherwise not the main button: the buyer pays again only after checking that the payment did not leave the wallet
         action = !isMovedMoneyFailure(state.error) ? (
           <SecondaryButton onClick={() => payAgain()}>{labels.outcome.unconfirmedPayAgain}</SecondaryButton>
-        ) : (state.error as { held?: boolean }).held === true ? (
+        ) : (state.error as { unmatched?: boolean }).unmatched === true ? (
           <PrimaryButton onClick={() => payAgain()}>{labels.pay.payAgain}</PrimaryButton>
         ) : (
           <SecondaryButton onClick={() => payAgain()}>{labels.pay.payAgain}</SecondaryButton>
@@ -411,22 +411,22 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       );
       break;
     }
-    case 'held': {
-      title = formatLabel(labels.outcome.heldTitle, { merchant });
+    case 'needs_review': {
+      title = formatLabel(labels.outcome.reviewTitle, { merchant });
       // `quote_expired` is newer than some `@tuwaio/quasar-sdk` alphas; an unknown reason reads as a check
       const reason: string | undefined = checkout.invoice.review?.reason;
       const text =
         reason === 'late'
-          ? labels.outcome.heldLate
+          ? labels.outcome.reviewLate
           : reason === 'overpaid'
-            ? labels.outcome.heldOverpaid
+            ? labels.outcome.reviewOverpaid
             : reason === 'quote_expired'
-              ? labels.outcome.heldQuoteExpired
-              : labels.outcome.heldScreening;
+              ? labels.outcome.reviewQuoteExpired
+              : labels.outcome.reviewScreening;
       body = (
         <>
           <Text>{formatLabel(text, { merchant })}</Text>
-          <Text muted>{labels.outcome.heldNote}</Text>
+          <Text muted>{labels.outcome.reviewNote}</Text>
         </>
       );
       break;
@@ -454,7 +454,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
       // A payment of the invoice may still arrive: on its way (this page's, or one Quasar reports, as on a reopened
       // page), or one this page handed over that the store no longer follows (its time ran out) and that Quasar did not
       // reject for good. Quasar records it and the seller accepts or returns it, so never "nothing was charged". A
-      // `held` or `paid` invoice the store hears of later replaces this outcome
+      // `needs_review` or `paid` invoice the store hears of later replaces this outcome
       const onItsWay = isPaymentOnTheWay(state) || isInvoicePaymentOnTheWay(state, checkout);
       // Quasar could not confirm a payment (or has not recorded a confirmed one yet: an older store calls it a
       // mismatch), or reports one it reads again (unresolved), with none on its way: check the wallet
@@ -527,7 +527,7 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
     }
     case 'cancelled': {
       title = labels.outcome.cancelledTitle;
-      // As for an expired invoice: a payment that may still arrive is recorded and held for the seller, and a
+      // As for an expired invoice: a payment that may still arrive is recorded for the seller to review, and a
       // transaction that does not pay the invoice may have moved money, so never "nothing was charged"
       // A payment Quasar does not record (one it never reads again, a hand-over the store gave up, one it closed after
       // 24 hours without a result) is for the seller to look at, with its transaction

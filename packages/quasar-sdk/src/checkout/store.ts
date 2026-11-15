@@ -44,12 +44,12 @@ import type {
  *   Quasar decides about a transaction another invoice handed over first (`reason` `tx_already_used`), and for a
  *   payment the network confirmed that Quasar has not recorded yet (`reason` `settlement_failed`); for these two
  *   {@link CheckoutState.payAgain} does nothing.
- * - `paid`, `underpaid` (the buyer may top it up), `held` (the merchant looks at the payment), `refunded`, `expired`,
- *   `cancelled`: the invoice's outcome. An invoice that expires or is cancelled while a payment is on its way (one this
- *   store handed over with `submit` or `relay`, or one Quasar reports) is not over: the payment may still arrive, and
- *   the invoice then becomes `paid` (Quasar lets a payment it learned of before `dueAt` confirm for up to 30 minutes)
- *   or `held` (a late payment, or one to a cancelled invoice, that the merchant accepts or returns). The store keeps
- *   following it while {@link CheckoutState.paymentOnTheWay} or {@link CheckoutState.invoicePaymentOnTheWay} is
+ * - `paid`, `underpaid` (the buyer may top it up), `needs_review` (the merchant looks at the payment; the money is
+ *   already in the merchant's wallet), `refunded`, `expired`, `cancelled`: the invoice's outcome. An invoice that
+ *   expires or is cancelled while a payment is on its way (one this store handed over with `submit` or `relay`, or one
+ *   Quasar reports) is not over: the payment may still arrive, and the invoice then becomes `paid` (Quasar lets a
+ *   payment it learned of before `dueAt` confirm for up to 30 minutes) or `needs_review` (a late payment, or one to a
+ *   cancelled invoice, that the merchant accepts or returns). The store keeps following it while {@link CheckoutState.paymentOnTheWay} or {@link CheckoutState.invoicePaymentOnTheWay} is
  *   `true`, for a limited time.
  * - `blocked`: AML screening refused the payer's wallet.
  * - `error`: the checkout could not be read (a wrong or retired link, the network).
@@ -65,7 +65,7 @@ export type CheckoutPhase =
   | 'unconfirmed'
   | 'paid'
   | 'underpaid'
-  | 'held'
+  | 'needs_review'
   | 'refunded'
   | 'expired'
   | 'cancelled'
@@ -122,8 +122,9 @@ export interface CheckoutError {
    *
    * `payment_mismatch` with `payer_mismatch` or `payer_unconfirmed`: the transfer came from another wallet than the
    * quoted one, or from one that never confirmed the invoice; it pays no invoice and the merchant returns it to the
-   * wallet that sent it. With `reference_missing` and `held`: a Solana Pay transfer without the invoice's reference
-   * whose amount alone does not tie it to the invoice, held on this invoice for a refund to its sender.
+   * wallet that sent it. With `reference_missing` and `unmatched`: a Solana Pay transfer without the invoice's
+   * reference whose amount alone does not tie it to the invoice, an unmatched transfer on this invoice for a refund to
+   * its sender.
    */
   reason?: string;
   /**
@@ -137,14 +138,14 @@ export interface CheckoutError {
    */
   rechecked?: true;
   /**
-   * Set on a `payment_mismatch` with the reason `tx_already_used` when another invoice holds the transfer for a refund
-   * only ({@link CheckoutRejectedPayment.held}): say that the transaction is tied to another invoice, never that it pays
-   * one.
+   * Set on a `payment_mismatch` whose transfer is an unmatched transfer the merchant returns to the wallet that sent it
+   * ({@link CheckoutRejectedPayment.unmatched}); with the reason `tx_already_used` it is at another invoice: say that
+   * the transaction is tied to another invoice, never that it pays one.
    */
-  held?: true;
+  unmatched?: true;
   /**
-   * The other invoice Quasar names: the one a rejected transaction is credited to or held on, or the one whose hold
-   * the merchant refunds instead (`payment_held_elsewhere` of a refund, its `details.invoice`).
+   * The other invoice Quasar names: the one a rejected transaction is credited to or recorded on as an unmatched
+   * transfer, or the one a refused refund names (`details.invoice`).
    */
   otherInvoice?: string;
   /**
@@ -238,8 +239,8 @@ export interface CheckoutState {
   /**
    * Whether a payment this store handed to Quasar ({@link CheckoutState.submit}, {@link CheckoutState.relay}, also a
    * relay still `sending`, without a `txKey`) is on its way: `true` from the hand-over until the payment settles
-   * (the invoice becomes `paid`, `underpaid`, `held`, `refunded` or `cancelled`) or ends. It ends when Quasar lists it
-   * among the rejected payments (`rejectedPayments` of the status events, by its `txKey`, the hash it replaced or the
+   * (the invoice becomes `paid`, `underpaid`, `needs_review`, `refunded` or `cancelled`) or ends. It ends when Quasar
+   * lists it among the rejected payments (`rejectedPayments` of the status events, by its `txKey`, the hash it replaced or the
    * relay's `userOpHash`), on an `open` invoice too: with a final reason `error` is `payment_failed` (reverted,
    * cancelled…) or `payment_mismatch` (a wrong amount or recipient…: it may have moved money) and the buyer may pay
    * again; otherwise (not found, no receipt in time…) `error` is
@@ -277,7 +278,7 @@ export interface CheckoutState {
   /**
    * Whether the payment this store handed over counts as sent before `dueAt`, as Quasar says (one of its keys is in
    * `onTimeTxKeys`): `true` once Quasar lists it, `false` while Quasar lists the payments sent in time without it (one
-   * handed over after `dueAt`, which Quasar holds as late), `null` before Quasar reported it, with a Quasar that does
+   * handed over after `dueAt`, which Quasar counts as late), `null` before Quasar reported it, with a Quasar that does
    * not report it, or without a payment of this page. Use it, not the browser clock. Reset by the next hand-over.
    * Read-only: the store sets it.
    */
@@ -315,7 +316,7 @@ export interface CheckoutState {
   logoUrl: string | null;
   /**
    * Reads the checkout (`GET`) and, while the invoice can change, follows it (server-sent events, else a read every
-   * `pollMs`). An event that brings an outcome (underpaid, held, paid, refunded, expired, cancelled) updates
+   * `pollMs`). An event that brings an outcome (underpaid, needs review, paid, refunded, expired, cancelled) updates
    * `checkout.invoice.amountPaid` at once and reads the checkout again for the rest (`review`, the refund, the invoice
    * that replaced it). A checkout whose invoice has a payment on its way (a reloaded or reopened page)
    * starts in `confirming`, not at the payment, and the store follows that payment as its own. One whose latest
@@ -329,8 +330,8 @@ export interface CheckoutState {
    * state, except `expired` and `cancelled` while {@link CheckoutState.paymentOnTheWay} or
    * {@link CheckoutState.invoicePaymentOnTheWay}: it keeps the event stream while Quasar keeps it open for that payment, and
    * otherwise closes it and reads the checkout every 20 seconds (or every `pollMs`, when longer), until the payment
-   * ends the invoice (`paid`, `held`), fails, Quasar reports no payment on its way, {@link CheckoutState.followingUntil}
-   * comes, or `destroy` is called. A cancelled invoice with a payment that may still arrive
+   * ends the invoice (`paid`, `needs_review`), fails, Quasar reports no payment on its way,
+   * {@link CheckoutState.followingUntil} comes, or `destroy` is called. A cancelled invoice with a payment that may still arrive
    * and none on its way opens with `error` `payment_unconfirmed`, like an expired one. It never expires the invoice by
    * the clock: past `dueAt`, a confirming payment stays `confirming` until Quasar reports the outcome. Sets `phase`
    * `error` when the link is wrong or retired.
@@ -433,9 +434,9 @@ export interface CheckoutState {
    * and then every 30 seconds (Quasar takes a transaction once per `txKey`), for up to an hour or until `destroy`;
    * after the hour `error.reason` is `submit_failed` (Quasar never received it: the buyer contacts the merchant with
    * the transaction hash if money left the wallet). Once Quasar takes it, the store follows it as below; taken while
-   * the invoice is already `paid`, `held` or `refunded`, it leaves the phase as it is (Quasar records it for the
-   * merchant) and the store reads the checkout once more; taken while it is `expired` or `cancelled`, the phase stays
-   * and the store follows the payment until Quasar holds it (or pays the expired invoice in its grace).
+   * the invoice is already `paid`, `needs_review` or `refunded`, it leaves the phase as it is (Quasar records it for
+   * the merchant) and the store reads the checkout once more; taken while it is `expired` or `cancelled`, the phase stays
+   * and the store follows the payment until Quasar records it for review (or pays the expired invoice in its grace).
    *
    * Quasar answers `409 tx_already_used` when it tracks the transaction for another invoice whose page handed it over
    * first (EVM invoices share the merchant's address, so anyone who saw the hash may have done so). That is not a
@@ -452,7 +453,7 @@ export interface CheckoutState {
    * @param params - `txKey`: transaction hash or Solana signature; `from`: the sender, for a Solana Pay quote without
    *   a payer; `connectorType`: the wallet connector, for the record.
    * @returns Whether Quasar took it; `phase` is then `confirming` (`expired` or `cancelled` when the invoice expired or
-   *   was cancelled meanwhile: Quasar still takes the transaction, and holds it as a late payment) and
+   *   was cancelled meanwhile: Quasar still takes the transaction, and records it as a late payment to review) and
    *   {@link CheckoutState.paymentOnTheWay} `true`. `false` while the hand-over is retried, after a refusal, and for
    *   `tx_already_used` (followed all the same).
    */
@@ -468,11 +469,11 @@ export interface CheckoutState {
   relay: (signature: string) => Promise<boolean>;
   /**
    * Pays the quote without gas from the page's one-time account, and Quasar signs nothing for it: Quasar takes the
-   * payer's signature of `quote.gasless.relay.typedData` (`POST relay/authorize`) and answers the one call to make; `send` makes
-   * it from a one-time account the merchant's paymaster sponsors (through {@link CheckoutState.paymasterUrl}) and
-   * answers the hash of its user operation, which the checkout then follows. Asked again before anything was sent,
-   * Quasar answers the same call. An engine without the route (404) relays the signature itself
-   * ({@link CheckoutState.relay}).
+   * payer's signature of `quote.gasless.relay.typedData` (`POST relay/authorize`) and answers the one call to make;
+   * `send` makes it from a one-time account the merchant's paymaster sponsors (through
+   * {@link CheckoutState.paymasterUrl}) and answers the hash of its user operation, which the checkout then follows. Asked again before anything was sent,
+   * Quasar answers the same call. An engine without the route (a 404 with no Payments code) relays the signature
+   * itself ({@link CheckoutState.relay}).
    *
    * @param signature - The 65-byte EIP-712 signature.
    * @param send - Sends the call from a one-time account and resolves with the user operation's hash.
@@ -554,17 +555,24 @@ export type CheckoutStore = StoreApi<CheckoutState>;
 type StateChange = { -readonly [Key in keyof CheckoutState]?: CheckoutState[Key] };
 
 /** Invoice states after which the page has nothing to follow. */
-const FINAL: ReadonlySet<string> = new Set(['paid', 'held', 'expired', 'cancelled', 'refunded', 'partially_refunded']);
+const FINAL: ReadonlySet<string> = new Set([
+  'paid',
+  'needs_review',
+  'expired',
+  'cancelled',
+  'refunded',
+  'partially_refunded',
+]);
 
 /** Invoice states in which a payment has settled: it is no longer on its way. */
-const SETTLED: ReadonlySet<string> = new Set(['paid', 'held', 'refunded', 'partially_refunded']);
+const SETTLED: ReadonlySet<string> = new Set(['paid', 'needs_review', 'refunded', 'partially_refunded']);
 
 /** Invoice states in which a payment on its way may still fail. */
 const UNSETTLED: ReadonlySet<string> = new Set(['open', 'processing', 'underpaid', 'expired', 'cancelled']);
 
 /**
  * Invoice states that no longer take a payment, while a payment on its way still reaches the merchant: Quasar records
- * it and holds it for the merchant (`held`), or pays an expired invoice with it within its grace (`paid`).
+ * it for the merchant to review (`needs_review`), or pays an expired invoice with it within its grace (`paid`).
  */
 const CLOSED: ReadonlySet<string> = new Set(['expired', 'cancelled']);
 
@@ -685,18 +693,18 @@ interface KeptHandOver {
 }
 
 /**
- * Rejection reasons of a transfer from a wallet that did not confirm the invoice. Quasar records such a transfer as a
- * held transfer of its own (`held`), which the merchant returns to the wallet that sent it, and the invoice stays as
- * it was; a rejection without `held` promises no refund.
+ * Rejection reasons of a transfer from a wallet that did not confirm the invoice. Quasar records such a transfer as an
+ * unmatched transfer of its own (`unmatched`), which the merchant returns to the wallet that sent it, and the invoice
+ * stays as it was; a rejection without `unmatched` promises no refund.
  */
 const REFUND_ONLY_REASONS: ReadonlySet<string> = new Set(['payer_mismatch', 'payer_unconfirmed']);
 /**
  * A Solana Pay transfer without the invoice's reference whose amount does not tie it to the invoice either: some wallets
- * drop the reference. With `held` Quasar holds it on this invoice for a refund to its sender, so the text must not send
- * the buyer to another invoice.
+ * drop the reference. With `unmatched` Quasar records it on this invoice for a refund to its sender, so the text must
+ * not send the buyer to another invoice.
  */
 const REFERENCE_MISSING = 'reference_missing';
-/** A payment sent or charged under an earlier price of the invoice: held for a refund, the invoice still open. */
+/** A payment sent or charged under an earlier price of the invoice: an unmatched transfer, the invoice still open. */
 const CHARGE_AFTER_REQUOTE = 'quote_changed';
 
 /** Kinds of payer proof that count on every EVM network: the key behind the address signs for it everywhere. */
@@ -781,7 +789,7 @@ interface Rejection {
   final: boolean;
   movedMoney?: boolean;
   rechecked?: boolean;
-  held?: boolean;
+  unmatched?: boolean;
   otherInvoice?: string;
 }
 
@@ -797,7 +805,7 @@ function rejectionsOf(signals: Pick<CheckoutStatusEvent, 'rejectedTxKeys' | 'rej
         final,
         movedMoney,
         rechecked,
-        held,
+        unmatched,
         otherInvoice,
       }: CheckoutRejectedPayment) => ({
         keys: [txKey, original, userOpHash].filter((key): key is string => Boolean(key)).map(keyOf),
@@ -805,7 +813,7 @@ function rejectionsOf(signals: Pick<CheckoutStatusEvent, 'rejectedTxKeys' | 'rej
         final,
         movedMoney: movedMoney === true || MOVED_MONEY_REASONS.has(reason),
         rechecked: rechecked === true,
-        held: held === true,
+        unmatched: unmatched === true,
         ...(typeof otherInvoice === 'string' ? { otherInvoice } : {}),
       }),
     );
@@ -846,7 +854,7 @@ function phaseOfStatus(status: InvoiceStatus): CheckoutPhase {
       return 'paid';
     case 'refunded':
     case 'underpaid':
-    case 'held':
+    case 'needs_review':
     case 'expired':
       return status;
     case 'cancelled':
@@ -889,7 +897,7 @@ type Ending = {
   reason?: string;
   movedMoney?: boolean;
   rechecked?: boolean;
-  held?: boolean;
+  unmatched?: boolean;
   otherInvoice?: string;
 };
 
@@ -927,50 +935,50 @@ function endedErrorOf(ended: Ending): CheckoutError {
     return {
       code: 'payment_mismatch',
       message:
-        'This payment was sent or charged under an earlier price of this invoice, so it does not pay it. The merchant holds it to return it to the wallet that sent it, and the invoice can still be paid.',
+        'This payment was sent or charged under an earlier price of this invoice, so it does not pay it. The merchant returns it to the wallet that sent it, and the invoice can still be paid.',
       ...reason,
-      held: true,
+      unmatched: true,
     };
   }
   if (ended.reason === 'too_many_parts') {
     return {
       code: 'payment_mismatch',
       message:
-        'This invoice has taken as many parts as it can, so this transfer does not pay it. The merchant holds it to return it to the wallet that sent it; send the whole rest at once.',
+        'This invoice has taken as many parts as it can, so this transfer does not pay it. The merchant returns it to the wallet that sent it; send the whole rest at once.',
       ...reason,
-      held: true,
+      unmatched: true,
     };
   }
   if (ended.reason && REFUND_ONLY_REASONS.has(ended.reason)) {
-    // Held for a refund to its sender, the invoice still open: the confirmed wallet can pay it
+    // An unmatched transfer for a refund to its sender, the invoice still open: the confirmed wallet can pay it
     return {
       code: 'payment_mismatch',
-      message: ended.held
+      message: ended.unmatched
         ? 'This transaction came from a wallet that did not confirm this invoice, so it does not pay it. The merchant returns it to the wallet that sent it, and the invoice can still be paid from the wallet that confirmed it.'
         : 'This transaction came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact the merchant.',
       ...reason,
-      ...(ended.held ? { held: true as const } : {}),
+      ...(ended.unmatched ? { unmatched: true as const } : {}),
     };
   }
-  if (ended.reason === REFERENCE_MISSING && ended.held) {
-    // Held here, not on another invoice: the wallet dropped the reference and the amount is not the quote's
+  if (ended.reason === REFERENCE_MISSING && ended.unmatched) {
+    // Recorded here, not on another invoice: the wallet dropped the reference and the amount is not the quote's
     return {
       code: 'payment_mismatch',
       message:
         'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. The merchant returns it to the wallet that sent it, and the invoice can still be paid.',
       ...reason,
-      held: true,
+      unmatched: true,
     };
   }
   const other = ended.otherInvoice ? { otherInvoice: ended.otherInvoice } : {};
-  if (ended.held) {
-    // Held on another invoice for a refund only: it pays neither invoice
+  if (ended.unmatched) {
+    // An unmatched transfer at another invoice, refunded only: it pays neither invoice
     return {
       code: 'payment_mismatch',
       message:
-        'This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not count for this invoice. If it was your payment for this invoice, contact the merchant.',
+        'This transaction is tied to another invoice of the merchant, which returns it to the wallet that sent it. It does not count for this invoice. If it was your payment for this invoice, contact the merchant.',
       ...reason,
-      held: true,
+      unmatched: true,
       ...other,
     };
   }
@@ -1143,7 +1151,7 @@ function errorOf(error: unknown): CheckoutError {
  * domains, when it lists any; its `Origin` is the site the payer proof message names); a wallet prompt to sign a
  * message through the `sign` passed to {@link CheckoutState.confirmPayer}, never by itself; after `load`, an `EventSource` on its `events` route (or a `GET` every `pollMs`) until
  * the invoice reaches a final state or `destroy` is called (an invoice that expired or was cancelled while a payment
- * confirms is followed on, for a limited time, until that payment ends it as `paid` or `held`), and a `GET` of the
+ * confirms is followed on, for a limited time, until that payment ends it as `paid` or `needs_review`), and a `GET` of the
  * checkout when an event brings an outcome. A hand-over Quasar has not taken yet is kept in the tab's `sessionStorage` under
  * `quasar-sdk:checkoutHandOvers:<token>` ({@link CheckoutStoreOptions.handOverStorage}) until Quasar takes or refuses
  * it; nothing else is stored in the browser.
@@ -1477,8 +1485,8 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
     };
 
     /**
-     * Quasar holds one price per invoice, and another tab or device may have replaced the one this page shows. Paying the old
-     * price would be judged against the new one: from another wallet the transfer ends held, on another network unseen.
+     * Quasar keeps one price per invoice, and another tab or device may have replaced the one this page shows. Paying the old
+     * price would be judged against the new one: from another wallet the transfer ends unmatched, on another network unseen.
      * The same wallet and method simply see the new price.
      */
     const priceLockedElsewhere = (current: CheckoutQuote | null) => {
@@ -1690,7 +1698,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       if (!following()) {
         stopWatching();
       } else if (CLOSED.has(event.status)) {
-        // Expired or cancelled while a payment is on its way: it may still end it (paid in the grace, or held)
+        // Expired or cancelled while a payment is on its way: it may still end it (paid in the grace, or under review)
         streamFollows = (event.pendingPayments ?? 0) > 0;
         followLate(event.status);
         if (source && event.pendingPayments === 0) {
@@ -1701,7 +1709,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         }
       }
       if (!view && event.status !== previous && OUTCOMES.has(event.status)) void refreshView();
-      // The event carries the identity of the price Quasar holds: another one is worth one read
+      // The event carries the identity of the price Quasar keeps: another one is worth one read
       const shown = get().quote;
       if (
         !view &&
@@ -2352,8 +2360,9 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         try {
           authorized = await api.authorizeRelay(signature);
         } catch (error) {
-          // An engine older than the route sends the relay itself
-          if (error instanceof QuasarSDKError && error.status === 404) {
+          // An engine older than the route sends the relay itself. Only a route it does not have: a 404 that names
+          // itself (`checkout_not_found`) is Quasar's answer, and the old route would hide it behind its own 404
+          if (error instanceof QuasarSDKError && error.status === 404 && error.code === undefined) {
             update({ phase });
             return get().relay(signature);
           }

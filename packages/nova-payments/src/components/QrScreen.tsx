@@ -71,7 +71,7 @@ export function QrScreen() {
   // The rest of an underpaid invoice: what is sent is not the total of the invoice
   const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
   const restRate = rest ? restRateText(quote, now, labels, checkout.merchant.name, locale) : null;
-  // Another sender's transfer is held for a refund, so the hint names the wallet that paid first
+  // Another sender's transfer is an unmatched transfer, refunded only, so the hint names the wallet that paid first
   const firstWallet = rest ? checkout.invoice.originWallet : null;
   const hint = firstWallet
     ? formatLabel(labels.qr.restHint, { wallet: shortAddress(addressOfWallet(firstWallet)) })

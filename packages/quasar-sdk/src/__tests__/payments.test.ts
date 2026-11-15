@@ -70,7 +70,7 @@ describe('quasar.payments', () => {
       .mockResolvedValueOnce(json({ ...INVOICE, refunds: [], refundsTotal: 0, creditNotesTotal: 0 }));
 
     const page = await quasar.payments.listInvoices({
-      status: ['paid', 'held'],
+      status: ['paid', 'needs_review'],
       createdAfter: new Date('2026-10-01T00:00:00.000Z'),
       limit: 50,
     });
@@ -78,7 +78,7 @@ describe('quasar.payments', () => {
     const url = new URL(sent(0).url);
     expect(url.pathname).toBe('/v1/payments/invoices');
     expect(Object.fromEntries(url.searchParams)).toEqual({
-      status: 'paid,held',
+      status: 'paid,needs_review',
       createdAfter: '2026-10-01T00:00:00.000Z',
       limit: '50',
     });
@@ -120,32 +120,34 @@ describe('quasar.payments', () => {
   });
 
   // A transfer tied to no invoice is a record of its own, refunded as a whole to the wallet that sent it
-  it('lists held transfers, of the app or of one invoice, and asks for the refund of one', async () => {
-    const transfer = { id: 'ht_1', invoice: 'inv_1', status: 'held' };
+  it('lists unmatched transfers, of the app or of one invoice, and asks for the refund of one', async () => {
+    const transfer = { id: 'ut_1', invoice: 'inv_1', status: 'awaiting_refund' };
     fetchMock
-      .mockResolvedValueOnce(json({ heldTransfers: [transfer] }))
-      .mockResolvedValueOnce(json({ heldTransfers: [transfer, { ...transfer, id: 'ht_2', status: 'refunded' }] }))
-      .mockResolvedValueOnce(json({ refund: { id: 'ref_1', heldTransfer: 'ht_1' }, instructions: {} }));
+      .mockResolvedValueOnce(json({ unmatchedTransfers: [transfer] }))
+      .mockResolvedValueOnce(json({ unmatchedTransfers: [transfer, { ...transfer, id: 'ut_2', status: 'refunded' }] }))
+      .mockResolvedValueOnce(json({ refund: { id: 'ref_1', unmatchedTransfer: 'ut_1' }, instructions: {} }));
 
-    expect(await quasar.payments.listHeldTransfers({ status: 'held' })).toEqual([transfer]);
-    expect(await quasar.payments.listHeldTransfers({ invoice: 'inv/1', status: 'held' })).toEqual([transfer]);
-    expect((await quasar.payments.refundHeldTransfer('ht_1')).refund.heldTransfer).toBe('ht_1');
+    expect(await quasar.payments.listUnmatchedTransfers({ status: 'awaiting_refund' })).toEqual([transfer]);
+    expect(await quasar.payments.listUnmatchedTransfers({ invoice: 'inv/1', status: 'awaiting_refund' })).toEqual([
+      transfer,
+    ]);
+    expect((await quasar.payments.refundUnmatchedTransfer('ut_1')).refund.unmatchedTransfer).toBe('ut_1');
 
     const paths = [0, 1, 2].map((n) => {
       const url = new URL(sent(n).url);
       return `${sent(n).method} ${url.pathname}${url.search}`;
     });
     expect(paths).toEqual([
-      'GET /v1/payments/held-transfers?status=held',
-      'GET /v1/payments/invoices/inv%2F1/held-transfers',
-      'POST /v1/payments/held-transfers/ht_1/refund',
+      'GET /v1/payments/unmatched-transfers?status=awaiting_refund',
+      'GET /v1/payments/invoices/inv%2F1/unmatched-transfers',
+      'POST /v1/payments/unmatched-transfers/ut_1/refund',
     ]);
   });
 
-  it('acts on an invoice: cancel, release, correct, a new payment link and its ledger with the chain check', async () => {
+  it('acts on an invoice: cancel, accept the payment, correct, a new payment link and its ledger with the chain check', async () => {
     fetchMock.mockImplementation(async () => json(INVOICE));
     await quasar.payments.cancelInvoice('inv_1', { reason: 'Duplicate order' });
-    await quasar.payments.releaseInvoice('inv_1', { reason: 'Checked the sender' });
+    await quasar.payments.acceptPayment('inv_1', { reason: 'Checked the sender' });
     await quasar.payments.correctInvoice('inv_1', { buyer: { name: 'Acme Labs GmbH', country: 'DE' } });
     await quasar.payments.replacePayLink('inv_1');
     await quasar.payments.getEvents('inv_1', { verify: true });
@@ -160,7 +162,7 @@ describe('quasar.payments', () => {
     );
     expect(calls).toEqual([
       ['POST', '/v1/payments/invoices/inv_1/cancel', { reason: 'Duplicate order' }],
-      ['POST', '/v1/payments/invoices/inv_1/release', { reason: 'Checked the sender' }],
+      ['POST', '/v1/payments/invoices/inv_1/accept', { reason: 'Checked the sender' }],
       ['POST', '/v1/payments/invoices/inv_1/correct', { buyer: { name: 'Acme Labs GmbH', country: 'DE' } }],
       ['POST', '/v1/payments/invoices/inv_1/checkout', {}],
       ['GET', '/v1/payments/invoices/inv_1/events?verify=true', undefined],

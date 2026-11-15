@@ -181,7 +181,7 @@ Retry buttons (default: `Try again`)
 
 > **confirm**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:517](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L517)
+Defined in: [nova-payments/src/i18n/types.ts:518](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L518)
 
 The confirm step: the transaction is on its way.
 
@@ -334,7 +334,7 @@ Heading (default: `The checkout can't be opened`)
 
 > **failed**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:594](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L594)
+Defined in: [nova-payments/src/i18n/types.ts:595](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L595)
 
 The step after a payment on its way failed for good: the buyer may pay again.
 
@@ -390,7 +390,7 @@ Title of the menu (default: `Language`)
 
 > **leave**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:844](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L844)
+Defined in: [nova-payments/src/i18n/types.ts:845](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L845)
 
 The question when the buyer closes the checkout before a transaction is sent.
 
@@ -630,7 +630,7 @@ Badge of the connected wallet's network (default: `Your wallet`)
 
 > **outcome**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:622](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L622)
+Defined in: [nova-payments/src/i18n/types.ts:623](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L623)
 
 The outcomes other than paid.
 
@@ -671,7 +671,7 @@ Heading of a cancelled invoice (default: `This invoice was cancelled`)
 > **cancelledWhilePaying**: `string`
 
 Instead of `cancelledText` while a payment may still arrive (on its way, not confirmed yet, read again by Quasar),
-which Quasar records and holds for the seller: `{merchant}` (default: `{merchant} cancelled it. If your payment
+which Quasar records for the seller to review: `{merchant}` (default: `{merchant} cancelled it. If your payment
 arrives, it is recorded and shown to {merchant}, who accepts it or returns it.`)
 
 #### closedPartText
@@ -752,8 +752,8 @@ shown to {merchant}, who accepts it or returns it.`)
 > **expiredWhileConfirming**: `string`
 
 Instead of `expiredText` and `expiredNote` when the invoice expired while the payment this page sent was still
-confirming: `{merchant}`. Quasar records a payment that arrives after the invoice closed and holds it for the
-seller (default: `The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to
+confirming: `{merchant}`. Quasar records a payment that arrives after the invoice closed for the seller to review
+(default: `The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to
 {merchant}, who accepts it or returns it.`)
 
 #### followingUntil
@@ -763,42 +763,6 @@ seller (default: `The invoice closed while your payment was confirming. If it ar
 On the expired and cancelled outcomes while this page follows a payment on its way (`followingUntil` of the
 checkout store): `{time}` (default: `This page follows the payment until {time}. Later, reload it to see the
 outcome.`)
-
-#### heldLate
-
-> **heldLate**: `string`
-
-Reason `late`: `{merchant}`
-
-#### heldNote
-
-> **heldNote**: `string`
-
-Under it (default: `The seller contacts you if anything is needed.`)
-
-#### heldOverpaid
-
-> **heldOverpaid**: `string`
-
-Reason `overpaid`: `{merchant}`
-
-#### heldQuoteExpired
-
-> **heldQuoteExpired**: `string`
-
-Reason `quote_expired`: `{merchant}` (default: `The payment arrived after the price lock ran out. {merchant} accepts it or returns it.`)
-
-#### heldScreening
-
-> **heldScreening**: `string`
-
-Reason `screening`, also while the reason is unknown or not read yet: `{merchant}` (default: `{merchant} checks the payment before confirming the order.`)
-
-#### heldTitle
-
-> **heldTitle**: `string`
-
-Heading of a payment on review: `{merchant}` (default: `Payment received, {merchant} is checking it`)
 
 #### nameHash
 
@@ -879,6 +843,42 @@ Its text: `{number}` of the new invoice (default: `{number} replaces it. This in
 > **replacedTitle**: `string`
 
 Heading of a corrected invoice: `{merchant}` (default: `{merchant} corrected this invoice`)
+
+#### reviewLate
+
+> **reviewLate**: `string`
+
+Reason `late`: `{merchant}`
+
+#### reviewNote
+
+> **reviewNote**: `string`
+
+Under it (default: `The seller contacts you if anything is needed.`)
+
+#### reviewOverpaid
+
+> **reviewOverpaid**: `string`
+
+Reason `overpaid`: `{merchant}`
+
+#### reviewQuoteExpired
+
+> **reviewQuoteExpired**: `string`
+
+Reason `quote_expired`: `{merchant}` (default: `The payment arrived after the price lock ran out. {merchant} accepts it or returns it.`)
+
+#### reviewScreening
+
+> **reviewScreening**: `string`
+
+Reason `screening`, also while the reason is unknown or not read yet: `{merchant}` (default: `{merchant} checks the payment before confirming the order.`)
+
+#### reviewTitle
+
+> **reviewTitle**: `string`
+
+Heading of a payment under review: `{merchant}` (default: `Payment received, {merchant} is checking it`)
 
 #### unconfirmedClosed
 
@@ -1058,7 +1058,7 @@ Button that connects another wallet (default: `Use another wallet`)
 
 > **paid**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:601](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L601)
+Defined in: [nova-payments/src/i18n/types.ts:602](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L602)
 
 The paid outcome.
 
@@ -1281,28 +1281,19 @@ reference, sent before the price was locked…): it may have moved money, so nev
 nothing was charged. Also on the method step and on an expired or cancelled invoice: `{merchant}` (default: `This
 transaction does not pay the invoice. If money left your wallet, contact {merchant}.`)
 
-#### mismatchChargeHeld
+#### mismatchChargeUnmatched
 
-> **mismatchChargeHeld**: `string`
+> **mismatchChargeUnmatched**: `string`
 
 A payment sent under an earlier price of the invoice: `{merchant}`.
 
-#### mismatchHeldElsewhere
+#### mismatchNoReferenceUnmatched
 
-> **mismatchHeldElsewhere**: `string`
-
-Instead of `mismatch` when another invoice of the seller holds the transaction for a refund only
-(`tx_already_used` with `held`): it pays neither invoice, so never say that it pays one: `{merchant}` (default:
-`This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not
-count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.`)
-
-#### mismatchNoReferenceHeld
-
-> **mismatchNoReferenceHeld**: `string`
+> **mismatchNoReferenceUnmatched**: `string`
 
 Instead of `mismatch` for a Solana Pay transfer without the invoice's reference whose amount alone does not tie it
-to the invoice, which Quasar holds on this invoice for a refund (`reference_missing` with `held`): never say that
-another invoice holds it: `{merchant}` (default: `This transfer arrived without the Solana Pay reference of this
+to the invoice, which Quasar records on this invoice as an unmatched transfer for a refund (`reference_missing`
+with `unmatched`): never say that another invoice has it: `{merchant}` (default: `This transfer arrived without the Solana Pay reference of this
 invoice, and its amount alone does not tie it to the invoice, so it does not pay it. {merchant} returns it to the
 wallet that sent it, and you can still pay the invoice.`)
 
@@ -1311,15 +1302,16 @@ wallet that sent it, and you can still pay the invoice.`)
 > **mismatchOtherWallet**: `string`
 
 Instead of `mismatch` for a transfer from a wallet that did not confirm the invoice (`payer_mismatch`,
-`payer_unconfirmed`): it does not pay the invoice, and no hold promises a refund (a held invoice shows its own
-outcome): `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does
+`payer_unconfirmed`): it does not pay the invoice, and nothing promises a refund (an invoice under review shows
+its own outcome): `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does
 not pay it. If money left your wallet, contact {merchant}.`)
 
-#### mismatchOtherWalletHeld
+#### mismatchOtherWalletUnmatched
 
-> **mismatchOtherWalletHeld**: `string`
+> **mismatchOtherWalletUnmatched**: `string`
 
-Instead of `mismatchOtherWallet` when Quasar recorded the transfer as a held transfer, which the seller returns:
+Instead of `mismatchOtherWallet` when Quasar recorded the transfer as an unmatched transfer, which the seller
+returns:
 `{merchant}` (default: `This transfer came from a wallet that did not confirm this invoice, so it does not pay
 it. {merchant} returns it to the wallet that sent it, and you can still pay this invoice from the wallet that
 confirmed it.`)
@@ -1337,6 +1329,15 @@ payment for this one, contact {merchant} with the transaction hash.`)
 > **mismatchTooManyParts**: `string`
 
 A part past what the invoice takes: `{merchant}`.
+
+#### mismatchUnmatchedElsewhere
+
+> **mismatchUnmatchedElsewhere**: `string`
+
+Instead of `mismatch` when the transaction is an unmatched transfer at another invoice of the seller, refunded
+only (`tx_already_used` with `unmatched`): it pays neither invoice, so never say that it pays one: `{merchant}`
+(default: `This transaction is tied to another invoice; {merchant} returns it to the wallet that sent it. It does
+not count for this invoice. If it was your payment for this one, contact {merchant} with the transaction hash.`)
 
 #### networkFee
 
@@ -1643,7 +1644,7 @@ Instead of `youSend` on the quote of the rest of an underpaid invoice (default: 
 
 > **payerProof**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:400](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L400)
+Defined in: [nova-payments/src/i18n/types.ts:401](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L401)
 
 The step that confirms the paying wallet: right after the wallet and the method, before the price, the wallet signs
 Quasar's message (a free signature that moves no money) for an EVM payment it sends itself; one signature per
@@ -1834,7 +1835,7 @@ The wallet is on another network than the method's (`payer_chain_mismatch`): `{w
 
 > **qr**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:484](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L484)
+Defined in: [nova-payments/src/i18n/types.ts:485](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L485)
 
 The QR code step: Solana Pay, or this checkout on a phone.
 
@@ -1934,7 +1935,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:925](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L925)
+Defined in: [nova-payments/src/i18n/types.ts:926](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L926)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2076,12 +2077,6 @@ Why it failed: `dropped` (not on the network).
 
 Why it failed: `refund_from_buyer` (the wallet it goes to, or one that paid, sent it).
 
-#### failedHeldNote
-
-> **failedHeldNote**: `string`
-
-After the failure of a held transfer's refund (default: `The transfer stays held. Close this window: its row says what to do next.`)
-
 #### failedNotFound
 
 > **failedNotFound**: `string`
@@ -2121,6 +2116,13 @@ Under it; `{network}` (default: `The transaction failed on {network}; only the n
 > **failedTooEarly**: `string`
 
 Why it failed: `too_early` (older than the payment).
+
+#### failedUnmatchedNote
+
+> **failedUnmatchedNote**: `string`
+
+After the failure of an unmatched transfer's refund (default: `The transfer still waits for its refund. Close
+this window: its row says what to do next.`)
 
 #### failedWithdrawn
 
@@ -2354,7 +2356,7 @@ Refused: `mainnet_disabled_on_node` (default: `This node accepts test networks o
 
 > **refusedWhole**: `string`
 
-Refused: `held_refund_must_be_whole` (default: `A held transfer is returned whole.`)
+Refused: `review_refund_must_be_whole` (default: `A payment under review is refunded whole.`)
 
 #### requesting
 
@@ -2414,7 +2416,7 @@ After the recipient (default: `the payer`)
 
 > **theSender**: `string`
 
-After the recipient of the refund of a held transfer (default: `the sender of this transfer`)
+After the recipient of the refund of an unmatched transfer (default: `the sender of this transfer`)
 
 #### title
 
@@ -2444,7 +2446,7 @@ Its description; `{amount}` (default: `{amount} to the payer`)
 
 > **txDescriptionSender**: `string`
 
-Its description for the refund of a held transfer; `{amount}` (default: `{amount} to the sender of the transfer`)
+Its description for the refund of an unmatched transfer; `{amount}` (default: `{amount} to the sender of the transfer`)
 
 #### txTitle
 
@@ -2494,7 +2496,7 @@ The wallet sent it on another network; `{wallet}`, `{network}` (default: `{walle
 
 > **status**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:569](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L569)
+Defined in: [nova-payments/src/i18n/types.ts:570](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L570)
 
 The chip over the heading of a status screen: one or two words that name the state of the payment.
 
@@ -2616,7 +2618,7 @@ Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: 
 
 > **summary**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:859](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L859)
+Defined in: [nova-payments/src/i18n/types.ts:860](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L860)
 
 The order panel: the seller, the deadline, the lines and the total.
 
@@ -2791,7 +2793,7 @@ Under the countdown; `{date}` is the deadline (default: `until {date}`)
 
 > **walletPrompt**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:363](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L363)
+Defined in: [nova-payments/src/i18n/types.ts:364](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L364)
 
 The window while the wallet asks the buyer.
 

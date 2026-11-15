@@ -10,16 +10,15 @@ import type {
   CreateInvoiceParams,
   CreateOptions,
   GetEventsParams,
-  HeldTransfer,
   Invoice,
   InvoiceCorrection,
   InvoiceDetails,
   InvoiceDocumentRef,
   InvoiceLedger,
   InvoiceWithCheckout,
-  ListHeldTransfersParams,
   ListInvoiceItemsParams,
   ListInvoicesParams,
+  ListUnmatchedTransfersParams,
   PaymentDocument,
   PaymentDocumentKind,
   PaymentMethod,
@@ -31,6 +30,7 @@ import type {
   RefundPreview,
   RefundStart,
   SubmitRefundParams,
+  UnmatchedTransfer,
 } from './types';
 
 /** A path segment: IDs are encoded, so one never names another path. */
@@ -177,7 +177,8 @@ export class PaymentsModule {
 
   /**
    * Cancels an open invoice (`POST /v1/payments/invoices/:id/cancel`): it stops being payable; its number stays
-   * taken. A payment that arrives later is held for you. An underpaid invoice is closed as expired: refund what arrived.
+   * taken. A payment that arrives later needs your review. An underpaid invoice is closed as expired: refund what
+   * arrived.
    *
    * @param invoiceId - The invoice.
    * @param params - `reason`, recorded in the ledger.
@@ -193,18 +194,19 @@ export class PaymentsModule {
   }
 
   /**
-   * Accepts a held payment (`POST /v1/payments/invoices/:id/release`): the invoice becomes paid and the buyer gets a
-   * receipt. A transfer Quasar could tie to no invoice is never an invoice hold: it is a {@link HeldTransfer} of its
-   * own, refunded with {@link PaymentsModule.refundHeldTransfer}.
+   * Accepts the payment of an invoice that needs review (`POST /v1/payments/invoices/:id/accept`): the invoice becomes
+   * paid and the buyer gets a receipt. The money is already in your wallet: accepting moves none. A transfer Quasar
+   * could tie to no invoice never puts an invoice under review: it is an {@link UnmatchedTransfer} of its own, refunded
+   * with {@link PaymentsModule.refundUnmatchedTransfer}.
    *
    * @param invoiceId - The invoice.
    * @param params - `reason`, required, recorded in the ledger.
    * @returns The invoice.
-   * @throws {QuasarSDKError} `invoice_not_found` (404); `invoice_not_held` or `invoice_partly_refunded` (refund the rest)
-   *   (409); a timeout or a network error.
+   * @throws {QuasarSDKError} `invoice_not_found` (404); `invoice_not_in_review` or `invoice_partly_refunded` (refund
+   *   the rest) (409); a timeout or a network error.
    */
-  async releaseInvoice(invoiceId: string, params: { reason: string }): Promise<Invoice> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/release`, {
+  async acceptPayment(invoiceId: string, params: { reason: string }): Promise<Invoice> {
+    return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/accept`, {
       method: 'POST',
       body: params,
     });
@@ -278,8 +280,8 @@ export class PaymentsModule {
   }
 
   /**
-   * Asks for a refund of a paid or held invoice (`POST /v1/payments/invoices/:id/refunds`). Send the returned amount
-   * from your wallet to the payer, then pass the transaction to {@link PaymentsModule.submitRefund}.
+   * Asks for a refund of a paid invoice or one that needs review (`POST /v1/payments/invoices/:id/refunds`). Send the
+   * returned amount from your wallet to the payer, then pass the transaction to {@link PaymentsModule.submitRefund}.
    *
    * @param invoiceId - The invoice.
    * @param params - Amount (everything left when omitted), mode and reason.
@@ -288,8 +290,9 @@ export class PaymentsModule {
    *   the refund in `details.refund`), so nothing is sent twice: a new refund needs a new key. `idempotency_key_reused`
    *   (409): the key was used for another invoice, mode or amount.
    * @returns The refund and what to send where.
-   * @throws {QuasarSDKError} `invalid_request` (400), `invoice_not_found` (404), an invoice that cannot be refunded or
-   *   an amount above what is left (409), a timeout or a network error.
+   * @throws {QuasarSDKError} `invalid_request` or `review_refund_must_be_whole` (a payment that needs review is
+   *   refunded whole) (400), `invoice_not_found` (404), an invoice that cannot be refunded or an amount above what is
+   *   left (409), a timeout or a network error.
    */
   async refund(invoiceId: string, params: RefundParams = {}, options?: CreateOptions): Promise<RefundStart> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/refunds`, {
@@ -300,8 +303,8 @@ export class PaymentsModule {
   }
 
   /**
-   * Takes back a refund still waiting for its transaction (`POST /v1/payments/refunds/:id/withdraw`): it holds its amount
-   * until it goes out, and nothing else ends it. A refund continued later is priced again at the rate of then. Call
+   * Takes back a refund still waiting for its transaction (`POST /v1/payments/refunds/:id/withdraw`): it keeps its
+   * amount until it goes out, and nothing else ends it. A refund continued later is priced again at the rate of then. Call
    * `reset()` on a refund store that holds it (`createRefundStore`): it would still offer to send it, and Quasar would
    * refuse to record what was sent.
    *
@@ -346,39 +349,40 @@ export class PaymentsModule {
   }
 
   /**
-   * Lists held transfers, newest first (`GET /v1/payments/held-transfers`, or `GET /v1/payments/invoices/:id/held-transfers`
-   * with `invoice`): transfers that reached your invoices without being tied to them by proof, to refund to their senders.
+   * Lists unmatched transfers, newest first (`GET /v1/payments/unmatched-transfers`, or
+   * `GET /v1/payments/invoices/:id/unmatched-transfers` with `invoice`): transfers that reached your invoices without
+   * being tied to them by proof, to refund to their senders.
    *
-   * @param params - One invoice, one state (`held` for those still to refund), or neither.
-   * @returns The held transfers, at most 100.
+   * @param params - One invoice, one state (`awaiting_refund` for those still to refund), or neither.
+   * @returns The unmatched transfers, at most 100.
    * @throws {QuasarSDKError} a timeout or a network error.
    */
-  async listHeldTransfers(params: ListHeldTransfersParams = {}): Promise<HeldTransfer[]> {
+  async listUnmatchedTransfers(params: ListUnmatchedTransfersParams = {}): Promise<UnmatchedTransfer[]> {
     const path = params.invoice
-      ? `${PAYMENTS_ENDPOINT}/invoices/${segment(params.invoice)}/held-transfers`
-      : `${PAYMENTS_ENDPOINT}/held-transfers`;
-    const answer = await this.client.request<{ heldTransfers: HeldTransfer[] }>(path, {
+      ? `${PAYMENTS_ENDPOINT}/invoices/${segment(params.invoice)}/unmatched-transfers`
+      : `${PAYMENTS_ENDPOINT}/unmatched-transfers`;
+    const answer = await this.client.request<{ unmatchedTransfers: UnmatchedTransfer[] }>(path, {
       method: 'GET',
       query: params.invoice ? {} : query({ status: params.status }),
     });
     return params.invoice && params.status
-      ? answer.heldTransfers.filter((transfer) => transfer.status === params.status)
-      : answer.heldTransfers;
+      ? answer.unmatchedTransfers.filter((transfer) => transfer.status === params.status)
+      : answer.unmatchedTransfers;
   }
 
   /**
-   * Asks for the refund of a held transfer, the whole of it to the wallet that sent it
-   * (`POST /v1/payments/held-transfers/:id/refund`): send it from your wallet, then hand the transaction over with
-   * {@link PaymentsModule.submitRefund}. The refund's `heldTransfer` names the transfer, which becomes `refunding`, then
-   * `refunded` once the refund is confirmed.
+   * Asks for the refund of an unmatched transfer, the whole of it to the wallet that sent it
+   * (`POST /v1/payments/unmatched-transfers/:id/refund`): send it from your wallet, then hand the transaction over with
+   * {@link PaymentsModule.submitRefund}. The refund's `unmatchedTransfer` names the transfer, which becomes
+   * `refunding`, then `refunded` once the refund is confirmed.
    *
-   * @param heldTransferId - The held transfer.
+   * @param unmatchedTransferId - The unmatched transfer.
    * @returns The refund and what to send where.
-   * @throws {QuasarSDKError} `held_transfer_not_found` (404); `held_transfer_not_refundable` (it is not `held`) or
-   *   `sender_blocked` (AML blocked the wallet that sent it) (409); a timeout or a network error.
+   * @throws {QuasarSDKError} `unmatched_transfer_not_found` (404); `unmatched_transfer_not_refundable` (it is not
+   *   `awaiting_refund`) or `sender_blocked` (AML blocked the wallet that sent it) (409); a timeout or a network error.
    */
-  async refundHeldTransfer(heldTransferId: string): Promise<RefundStart> {
-    return this.client.request(`${PAYMENTS_ENDPOINT}/held-transfers/${segment(heldTransferId)}/refund`, {
+  async refundUnmatchedTransfer(unmatchedTransferId: string): Promise<RefundStart> {
+    return this.client.request(`${PAYMENTS_ENDPOINT}/unmatched-transfers/${segment(unmatchedTransferId)}/refund`, {
       method: 'POST',
       body: {},
     });

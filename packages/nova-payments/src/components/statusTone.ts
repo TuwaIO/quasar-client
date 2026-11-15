@@ -24,7 +24,7 @@ export function statusToneOf(screen: CheckoutScreen): StatusTone | null {
     case 'blocked':
     case 'error':
       return 'error';
-    case 'held':
+    case 'needs_review':
     case 'refunded':
     case 'expired':
     case 'cancelled':

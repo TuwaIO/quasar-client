@@ -17,10 +17,10 @@ export type PaymentWebhookEventType =
   | 'invoice.processing'
   | 'invoice.paid'
   | 'invoice.underpaid'
-  | 'invoice.held'
-  | 'invoice.transfer_held'
-  | 'invoice.transfer_hold_voided'
-  | 'invoice.released'
+  | 'invoice.needs_review'
+  | 'invoice.transfer_unmatched'
+  | 'invoice.transfer_unmatched_voided'
+  | 'invoice.payment_accepted'
   | 'invoice.expired'
   | 'invoice.cancelled'
   | 'invoice.refunded'
@@ -32,15 +32,16 @@ export type PaymentWebhookEventType =
   | 'payment.unverified';
 
 /**
- * What a hold is about (`data.hold` of `invoice.held`): an invoice paid in a way that waits for your decision. `reason`
- * (`late`, `aml`, `quote_expired`), its transaction (`txHash`) and network (`chainId`), the wallets that sent it
- * (`senders`) and whether it came late (`late`). Release it with {@link PaymentsModule.releaseInvoice} or refund it; a refund to a wallet AML blocks now
- * is refused (`sender_blocked`).
+ * What a review is about (`data.review` of `invoice.needs_review`): an invoice paid in a way that waits for your
+ * decision. The money is already in your wallet: the status does not mean that TUWA has it. `reason` (`late`, `aml`,
+ * `quote_expired`), its transaction (`txHash`) and network (`chainId`), the wallets that sent it (`senders`) and
+ * whether it came late (`late`). Accept the payment with {@link PaymentsModule.acceptPayment} or refund it; a refund to
+ * a wallet AML blocks now is refused (`sender_blocked`).
  */
-export interface PaymentWebhookHold {
-  /** Why the payment is held; `null` when Quasar did not record why. */
+export interface PaymentWebhookReview {
+  /** Why the payment needs review; `null` when Quasar did not record why. */
   reason: 'late' | 'aml' | 'quote_expired' | null;
-  /** The transaction of the held payment. */
+  /** The transaction of the payment. */
   txHash: string | null;
   /** CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out. */
   chainId?: string | null;
@@ -51,17 +52,17 @@ export interface PaymentWebhookHold {
 }
 
 /**
- * A transfer that reached the invoice's address without being tied to it by proof (`data.heldTransfer` of
- * `invoice.transfer_held`): it paid nothing and the invoice stays as it was. It is a record of its own, which you
- * refund as a whole to the wallet that sent it ({@link PaymentsModule.refundHeldTransfer}): `reason` is
+ * A transfer that reached the invoice's address without being tied to it by proof (`data.unmatchedTransfer` of
+ * `invoice.transfer_unmatched`): it paid nothing and the invoice stays as it was. It is a record of its own, which you
+ * refund as a whole to the wallet that sent it ({@link PaymentsModule.refundUnmatchedTransfer}): `reason` is
  * `payer_mismatch` (another wallet than the one the quote was for), `payer_unconfirmed` (the quoted wallet never
  * confirmed the invoice), `reference_missing` (a Solana Pay transfer without the invoice's reference whose amount does
  * not tie it to the invoice either), `already_paid`, `quote_changed` or `too_many_parts`.
  */
-export interface PaymentWebhookHeldTransfer {
-  /** Not set: the transfer is held. */
+export interface PaymentWebhookUnmatchedTransfer {
+  /** Not set: the transfer waits for its refund. */
   voided?: undefined;
-  /** The held transfer ({@link HeldTransfer}). */
+  /** The unmatched transfer ({@link UnmatchedTransfer}). */
   id: string | null;
   /** Its transaction. */
   txHash: string | null;
@@ -87,11 +88,11 @@ export interface PaymentWebhookHeldTransfer {
 }
 
 /**
- * A held transfer Quasar voided (`data.heldTransfer` of `invoice.transfer_hold_voided`): the same transaction was
- * proven to pay another invoice of yours since (`paidInvoice`), so there is nothing to refund.
+ * An unmatched transfer Quasar voided (`data.unmatchedTransfer` of `invoice.transfer_unmatched_voided`): the same
+ * transaction was proven to pay another invoice of yours since (`paidInvoice`), so there is nothing to refund.
  */
-export interface PaymentWebhookHeldTransferVoided {
-  /** The held transfer. */
+export interface PaymentWebhookUnmatchedTransferVoided {
+  /** The unmatched transfer. */
   id: string | null;
   /** Always `true`. */
   voided: true;
@@ -129,21 +130,21 @@ export interface PaymentWebhookEvent {
     /** The payment, once the invoice has one. */
     settlement?: InvoiceSettlement;
     /**
-     * Every transfer credited to the invoice so far, on `invoice.paid`, `invoice.underpaid`, `invoice.held` and
-     * `invoice.released`: an invoice paid in parts has several.
+     * Every transfer credited to the invoice so far, on `invoice.paid`, `invoice.underpaid`, `invoice.needs_review`
+     * and `invoice.payment_accepted`: an invoice paid in parts has several.
      */
     payments?: InvoicePayment[];
     /** The refund of a refund event. */
     refund?: Refund;
-    /** Why AML held the payment, on a hold by AML. */
+    /** Why AML flagged the payment, on a review by AML. */
     aml?: { decision: 'block'; reasons: unknown[] };
-    /** What `invoice.held` holds. Quasar versions before October 29, 2026 leave it out. */
-    hold?: PaymentWebhookHold;
+    /** What `invoice.needs_review` is about. */
+    review?: PaymentWebhookReview;
     /**
-     * The transfer of `invoice.transfer_held` and `invoice.transfer_hold_voided`. The refund of a held transfer names
-     * it in `refund.heldTransfer`.
+     * The transfer of `invoice.transfer_unmatched` and `invoice.transfer_unmatched_voided`. The refund of an unmatched
+     * transfer names it in `refund.unmatchedTransfer`.
      */
-    heldTransfer?: PaymentWebhookHeldTransfer | PaymentWebhookHeldTransferVoided;
+    unmatchedTransfer?: PaymentWebhookUnmatchedTransfer | PaymentWebhookUnmatchedTransferVoided;
     /** The transaction to check, in `payment.reverted` and `payment.unverified`. */
     transaction?: { txHash: string | null; chainId: string | null };
   };

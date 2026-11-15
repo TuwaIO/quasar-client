@@ -53,6 +53,15 @@ describe('checkout languages', () => {
     },
   );
 
+  // A payment reaches the seller's wallet directly: words that read as escrow ("held", "on hold") would say that
+  // someone else keeps the money, in the keys a page overrides and in the texts a buyer reads
+  it('never says that a payment or a transfer is held, in a key or in an English text', () => {
+    for (const [key, text] of texts(defaultLabels)) {
+      expect(key, key).not.toMatch(/held|hold/i);
+      expect(text, key).not.toMatch(/\bheld\b|\bon hold\b|\bholds? (?:it|the payment|the transfer)\b/i);
+    }
+  });
+
   // "antes del plazo" reads as "early"; the payment was sent before the deadline passed
   it('says in Spanish that the payment was sent before the deadline passed', async () => {
     const es = await loadLabels('es');

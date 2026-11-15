@@ -1,0 +1,204 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/UnmatchedTransfer" />
+
+# UnmatchedTransfer
+
+Defined in: [modules/payments/types.ts:653](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L653)
+
+A transfer that reached the address of one of your invoices without being tied to it by proof: from another wallet
+than the one the quote was for (`payer_mismatch`), from the quoted wallet that never confirmed the invoice
+(`payer_unconfirmed`), or a Solana Pay transfer without the invoice's reference whose amount alone does not tie it to
+the invoice (`reference_missing`). It paid nothing and the invoice stays as it was; the money is in your wallet, and
+you refund it as a whole to the wallet that sent it with [PaymentsModule.refundUnmatchedTransfer](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#refundunmatchedtransfer). When the
+same transaction is proven to pay an invoice, Quasar voids the record (`voided`, `voidedBy`).
+
+## Properties
+
+### amount
+
+> **amount**: `string`
+
+Defined in: [modules/payments/types.ts:676](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L676)
+
+What it carried, in base units.
+
+***
+
+### assetId
+
+> **assetId**: `string`
+
+Defined in: [modules/payments/types.ts:668](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L668)
+
+CAIP-19 asset it carried.
+
+***
+
+### chainId
+
+> **chainId**: `string`
+
+Defined in: [modules/payments/types.ts:666](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L666)
+
+CAIP-2 chain.
+
+***
+
+### createdAt
+
+> **createdAt**: `string`
+
+Defined in: [modules/payments/types.ts:690](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L690)
+
+When Quasar recorded it.
+
+***
+
+### currency
+
+> **currency**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:680](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L680)
+
+Currency of `valueMinor`.
+
+***
+
+### decimals
+
+> **decimals**: `number`
+
+Defined in: [modules/payments/types.ts:672](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L672)
+
+Decimals of the token.
+
+***
+
+### id
+
+> **id**: `string`
+
+Defined in: [modules/payments/types.ts:655](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L655)
+
+Unmatched transfer ID.
+
+***
+
+### invoice
+
+> **invoice**: `string`
+
+Defined in: [modules/payments/types.ts:657](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L657)
+
+The invoice whose address it reached.
+
+***
+
+### late
+
+> **late**: `boolean`
+
+Defined in: [modules/payments/types.ts:664](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L664)
+
+Whether it arrived after the invoice expired or was cancelled.
+
+***
+
+### reason
+
+> **reason**: `"payer_mismatch"` \| `"payer_unconfirmed"` \| `"reference_missing"` \| `"already_paid"` \| `"quote_changed"` \| `"too_many_parts"`
+
+Defined in: [modules/payments/types.ts:661](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L661)
+
+Why it is tied to no invoice.
+
+***
+
+### screening
+
+> **screening**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:686](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L686)
+
+The sanctions screening of the sender: `blocked` gets no refund.
+
+***
+
+### sender
+
+> **sender**: `string`
+
+Defined in: [modules/payments/types.ts:682](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L682)
+
+The wallet it came from (CAIP-10): the refund goes back to it.
+
+***
+
+### senders
+
+> **senders**: `string`[]
+
+Defined in: [modules/payments/types.ts:684](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L684)
+
+Every wallet that sent it.
+
+***
+
+### status
+
+> **status**: [`UnmatchedTransferStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-unmatchedtransferstatus--docs)
+
+Defined in: [modules/payments/types.ts:659](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L659)
+
+Where it is.
+
+***
+
+### symbol
+
+> **symbol**: `string`
+
+Defined in: [modules/payments/types.ts:670](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L670)
+
+Symbol of the token.
+
+***
+
+### txHash
+
+> **txHash**: `string`
+
+Defined in: [modules/payments/types.ts:674](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L674)
+
+Its transaction.
+
+***
+
+### updatedAt
+
+> **updatedAt**: `string`
+
+Defined in: [modules/payments/types.ts:692](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L692)
+
+When it last changed.
+
+***
+
+### valueMinor
+
+> **valueMinor**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:678](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L678)
+
+Its value at the rate of the invoice's quote, in minor units of `currency`.
+
+***
+
+### voidedBy
+
+> **voidedBy**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:688](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L688)
+
+The invoice it paid, once voided.

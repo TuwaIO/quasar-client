@@ -670,7 +670,7 @@ export const PayRestMovingAsset: Story = {
 
 /** The buyer sent more: the seller reviews the payment. */
 export const OnReview: Story = {
-  args: { view: settled({ status: 'held', amountPaid: '91000000', review: { reason: 'overpaid' } }) },
+  args: { view: settled({ status: 'needs_review', amountPaid: '91000000', review: { reason: 'overpaid' } }) },
 };
 
 /** The seller refunded the whole invoice. */
@@ -877,11 +877,11 @@ export const ConfirmBeforePayingGas: Story = {
 };
 
 /**
- * A transfer from a wallet that never confirmed the invoice: Quasar ties it to no invoice and records it as a held
- * transfer, which the seller returns to the wallet that sent it. The invoice stays open: the page says so, and that
- * the confirmed wallet can still pay it. Never "the seller checks your payment".
+ * A transfer from a wallet that never confirmed the invoice: Quasar ties it to no invoice and records it as an
+ * unmatched transfer, which the seller returns to the wallet that sent it. The invoice stays open: the page says so,
+ * and that the confirmed wallet can still pay it. Never "the seller checks your payment".
  */
-export const HeldTransfer: Story = {
+export const UnmatchedTransfer: Story = {
   args: {
     view: sampleCheckout(
       {},
@@ -893,7 +893,7 @@ export const HeldTransfer: Story = {
             reason: 'payer_unconfirmed',
             final: true,
             movedMoney: true,
-            held: true,
+            unmatched: true,
             at: Date.parse('2026-11-03T14:02:00.000Z'),
           },
         ],
@@ -1334,5 +1334,5 @@ export const PageUnderpaid: Story = onPage(Underpaid);
 /** The payment page of an invoice that expired. */
 export const PageExpired: Story = onPage(Expired);
 
-/** The payment page after a transfer from another wallet, which the seller holds. */
-export const PageHeldTransfer: Story = onPage(HeldTransfer);
+/** The payment page after a transfer from another wallet, which the seller returns. */
+export const PageUnmatchedTransfer: Story = onPage(UnmatchedTransfer);

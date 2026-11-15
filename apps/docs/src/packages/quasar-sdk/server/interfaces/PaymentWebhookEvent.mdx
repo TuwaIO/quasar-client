@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentWebhookEvent
 
-Defined in: [webhooks.ts:110](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L110)
+Defined in: [webhooks.ts:111](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L111)
 
 The body of a payment webhook (`payments.v1`). `id`, `type` and `createdAt` are those of the ledger event, so
 deduplicate by `id`; `data.invoice` is the invoice when the delivery was sent, so a retry carries its current state.
@@ -15,7 +15,7 @@ deduplicate by `id`; `data.invoice` is the invoice when the delivery was sent, s
 
 > **apiVersion**: `"payments.v1"`
 
-Defined in: [webhooks.ts:116](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L116)
+Defined in: [webhooks.ts:117](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L117)
 
 Always `payments.v1`.
 
@@ -25,7 +25,7 @@ Always `payments.v1`.
 
 > **createdAt**: `string`
 
-Defined in: [webhooks.ts:120](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L120)
+Defined in: [webhooks.ts:121](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L121)
 
 When it happened (ISO 8601).
 
@@ -35,7 +35,7 @@ When it happened (ISO 8601).
 
 > **data**: `object`
 
-Defined in: [webhooks.ts:126](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L126)
+Defined in: [webhooks.ts:127](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L127)
 
 What the event is about.
 
@@ -43,7 +43,7 @@ What the event is about.
 
 > `optional` **aml?**: `object`
 
-Why AML held the payment, on a hold by AML.
+Why AML flagged the payment, on a review by AML.
 
 ##### aml.decision
 
@@ -52,19 +52,6 @@ Why AML held the payment, on a hold by AML.
 ##### aml.reasons
 
 > **reasons**: `unknown`[]
-
-#### heldTransfer?
-
-> `optional` **heldTransfer?**: [`PaymentWebhookHeldTransfer`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookheldtransfer--docs) \| [`PaymentWebhookHeldTransferVoided`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookheldtransfervoided--docs)
-
-The transfer of `invoice.transfer_held` and `invoice.transfer_hold_voided`. The refund of a held transfer names
-it in `refund.heldTransfer`.
-
-#### hold?
-
-> `optional` **hold?**: [`PaymentWebhookHold`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookhold--docs)
-
-What `invoice.held` holds. Quasar versions before October 29, 2026 leave it out.
 
 #### invoice?
 
@@ -76,14 +63,20 @@ The invoice now.
 
 > `optional` **payments?**: [`InvoicePayment`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicepayment--docs)[]
 
-Every transfer credited to the invoice so far, on `invoice.paid`, `invoice.underpaid`, `invoice.held` and
-`invoice.released`: an invoice paid in parts has several.
+Every transfer credited to the invoice so far, on `invoice.paid`, `invoice.underpaid`, `invoice.needs_review`
+and `invoice.payment_accepted`: an invoice paid in parts has several.
 
 #### refund?
 
 > `optional` **refund?**: [`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)
 
 The refund of a refund event.
+
+#### review?
+
+> `optional` **review?**: [`PaymentWebhookReview`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookreview--docs)
+
+What `invoice.needs_review` is about.
 
 #### settlement?
 
@@ -105,13 +98,20 @@ The transaction to check, in `payment.reverted` and `payment.unverified`.
 
 > **txHash**: `string` \| `null`
 
+#### unmatchedTransfer?
+
+> `optional` **unmatchedTransfer?**: [`PaymentWebhookUnmatchedTransfer`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookunmatchedtransfer--docs) \| [`PaymentWebhookUnmatchedTransferVoided`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookunmatchedtransfervoided--docs)
+
+The transfer of `invoice.transfer_unmatched` and `invoice.transfer_unmatched_voided`. The refund of an unmatched
+transfer names it in `refund.unmatchedTransfer`.
+
 ***
 
 ### environment
 
 > **environment**: [`PaymentsEnvironment`](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentsenvironment--docs)
 
-Defined in: [webhooks.ts:124](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L124)
+Defined in: [webhooks.ts:125](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L125)
 
 Live or test.
 
@@ -121,7 +121,7 @@ Live or test.
 
 > **id**: `string`
 
-Defined in: [webhooks.ts:112](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L112)
+Defined in: [webhooks.ts:113](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L113)
 
 Event ID: the same for every delivery and retry of the event.
 
@@ -131,7 +131,7 @@ Event ID: the same for every delivery and retry of the event.
 
 > **object**: `"event"`
 
-Defined in: [webhooks.ts:114](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L114)
+Defined in: [webhooks.ts:115](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L115)
 
 Always `event`.
 
@@ -141,7 +141,7 @@ Always `event`.
 
 > **sentAt**: `string`
 
-Defined in: [webhooks.ts:122](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L122)
+Defined in: [webhooks.ts:123](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L123)
 
 When this delivery was sent; signed with the body, it lets [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebhook--docs) refuse old replays.
 
@@ -151,6 +151,6 @@ When this delivery was sent; signed with the body, it lets [verifyWebhook](?path
 
 > **type**: [`PaymentWebhookEventType`](?path=/docs/packages-quasar-sdk-server-type-aliases-paymentwebhookeventtype--docs)
 
-Defined in: [webhooks.ts:118](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L118)
+Defined in: [webhooks.ts:119](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L119)
 
 What happened.

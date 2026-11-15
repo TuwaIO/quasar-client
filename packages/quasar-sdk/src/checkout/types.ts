@@ -133,7 +133,8 @@ export interface CheckoutInvoice {
 }
 
 /**
- * Why a payment of a `held` (or flagged) invoice waits for the seller, as {@link CheckoutInvoice.review} says it:
+ * Why a payment of a `needs_review` (or flagged) invoice waits for the seller, as {@link CheckoutInvoice.review} says
+ * it. The money is already in the seller's wallet: the status does not mean that TUWA has it.
  *
  * - `screening`: the sender did not pass the seller's AML check after paying; no details reach the buyer.
  * - `late`: it arrived after the invoice expired or was cancelled; the seller accepts or returns it.
@@ -141,8 +142,8 @@ export interface CheckoutInvoice {
  * - `quote_expired`: it arrived after its locked quote expired, in an asset whose price moved; the seller accepts or
  *   returns it.
  *
- * A transfer Quasar could tie to no invoice never holds the invoice: it is a rejected payment with `held`
- * ({@link CheckoutRejectedPayment.held}), which the seller returns to the wallet that sent it.
+ * A transfer Quasar could tie to no invoice never puts the invoice under review: it is a rejected payment with
+ * `unmatched` ({@link CheckoutRejectedPayment.unmatched}), which the seller returns to the wallet that sent it.
  */
 export type CheckoutReview = { reason: 'screening' | 'late' | 'overpaid' | 'quote_expired' };
 
@@ -172,17 +173,19 @@ export interface CheckoutRejectedPayment {
    * Why: `reverted`, `cancelled`, `expired` (a Solana blockhash), `no_matching_transfer` (a wrong amount, asset or
    * recipient), `tx_already_used` (the transaction pays another invoice of the merchant: the one the wallet that sent
    * it confirmed, or whose mark it carries, also when this invoice's page handed it over first or claimed it; with
-   * `held`, another invoice holds it for a refund only and it pays none),
+   * `unmatched`, it is an unmatched transfer at another invoice, refunded only, and it pays none),
    * `reference_missing` (a Solana Pay transfer without the invoice's reference whose amount alone does not tie it to
-   * the invoice: some wallets drop the reference; with `held` this invoice holds it for a refund), `too_early`,
-   * `not_found` (the network never returned the transaction), `timeout` (no receipt
-   * in time), `replaced`, `payer_mismatch` (a transfer from another wallet to an invoice paid or held already; one to a
-   * payable invoice is held for a refund only: {@link CheckoutReview}), `payer_unconfirmed` (the same from a wallet that
-   * never confirmed the invoice: it pays no invoice; final; a refund only when held, a transfer credited to another
-   * invoice is `tx_already_used`), `native_from_contract_unverifiable`, `invoice_not_payable` (a transfer to an invoice paid, held or refunded
-   * already), `below_minimum` (worth less than one minor unit of the invoice currency), `too_many_transfers` (the
-   * invoice holds 10 transfers for the merchant already), `too_many_parts` (it took 10 parts already) and
-   * `quote_changed` (a relay landed after it was quoted another way), both with `held`, `settlement_failed` (the network confirmed the transaction, but Quasar has not recorded it yet: not final,
+   * the invoice: some wallets drop the reference; with `unmatched` it is an unmatched transfer on this invoice, for a
+   * refund), `too_early`, `not_found` (the network never returned the transaction), `timeout` (no receipt in time),
+   * `replaced`, `payer_mismatch` (a transfer from another wallet to an invoice paid or under review already; one to a
+   * payable invoice is an unmatched transfer, refunded only: {@link CheckoutReview}), `payer_unconfirmed` (the same
+   * from a wallet that never confirmed the invoice: it pays no invoice; final; a refund only when `unmatched`, a
+   * transfer credited to another invoice is `tx_already_used`), `native_from_contract_unverifiable`,
+   * `invoice_not_payable` (a transfer to an invoice paid, under review or refunded already), `below_minimum` (worth
+   * less than one minor unit of the invoice currency), `too_many_transfers` (10 unmatched transfers are on the invoice
+   * already: past them each is only recorded), `too_many_parts` (it took 10 parts already) and `quote_changed` (a relay
+   * landed after it was quoted another way), both with `unmatched`, `settlement_failed` (the network confirmed the
+   * transaction, but Quasar has not recorded it yet: not final,
    * never a second payment, the buyer contacts the merchant; Quasar settles it again daily for 30 days after it learned
    * of it, while `rechecked`), `unresolved_after_24h` (no result seen on chain within 24 hours: only a transaction
    * Quasar read again after that day and the network does not have), a relay's reason (`user_operation_lost`…), or
@@ -205,7 +208,7 @@ export interface CheckoutRejectedPayment {
    * `native_from_contract_unverifiable`, `invoice_not_payable`), or Quasar has not recorded it yet
    * (`settlement_failed`): it may have moved money. Never say that it did not go through or that nothing was charged:
    * say that it does not pay the invoice (for `settlement_failed`: that Quasar has not recorded it yet; for
-   * `payer_mismatch` and `payer_unconfirmed`: promise a refund only on a held invoice), and whom to contact if money
+   * `payer_mismatch` and `payer_unconfirmed`: promise a refund only when `unmatched`), and whom to contact if money
    * left the wallet. Quasar versions before October 29, 2026 leave it out.
    */
   movedMoney?: true;
@@ -221,14 +224,14 @@ export interface CheckoutRejectedPayment {
    */
   rechecked?: true;
   /**
-   * `true` when Quasar records the transfer as a held transfer, which the merchant returns to the wallet that sent it:
-   * a `payer_mismatch` or `payer_unconfirmed` rejection (the invoice stays payable from the wallet that confirmed it),
-   * a `reference_missing` one (held on this invoice, which stays payable), or a `tx_already_used` one whose transfer
-   * is held at another invoice of the merchant (`otherInvoice`; say that it is tied to another invoice, never that it
-   * pays one). Quasar versions before October 29, 2026 leave it out.
+   * `true` when Quasar records the transfer as an unmatched transfer, which the merchant returns to the wallet that
+   * sent it: a `payer_mismatch` or `payer_unconfirmed` rejection (the invoice stays payable from the wallet that
+   * confirmed it), a `reference_missing` one (an unmatched transfer on this invoice, which stays payable), or a
+   * `tx_already_used` one whose transfer is an unmatched transfer at another invoice of the merchant (`otherInvoice`;
+   * say that it is tied to another invoice, never that it pays one).
    */
-  held?: true;
-  /** The invoice of the merchant the transaction is credited to or held on, when Quasar names it. */
+  unmatched?: true;
+  /** The invoice of the merchant the transaction is credited to or recorded on, when Quasar names it. */
   otherInvoice?: string;
 }
 

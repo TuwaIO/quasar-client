@@ -533,9 +533,9 @@ export function PaymentCheckout({
     store.getState().setPayer(payer);
     if (paysInvoice(payer)) void lockStorePrice();
   });
-  // Also when the page settles on a price: a wallet changed while the price was on its way, or while a held transfer was
-  // shown, or one connected before the invoice was read. The pay step then showed another wallet than the price's, and
-  // "Connect a wallet" could not change anything for the wallet already connected
+  // Also when the page settles on a price: a wallet changed while the price was on its way, or while an unmatched
+  // transfer was shown, or one connected before the invoice was read. The pay step then showed another wallet than the
+  // price's, and "Connect a wallet" could not change anything for the wallet already connected
   const quotePayer = state.quote?.payer;
   const loaded = Boolean(checkout);
   useEffect(

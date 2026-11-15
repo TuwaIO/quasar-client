@@ -4,10 +4,11 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # InvoiceStatus
 
-> **InvoiceStatus** = `"open"` \| `"processing"` \| `"paid"` \| `"underpaid"` \| `"held"` \| `"partially_refunded"` \| `"refunded"` \| `"expired"` \| `"cancelled"`
+> **InvoiceStatus** = `"open"` \| `"processing"` \| `"paid"` \| `"underpaid"` \| `"needs_review"` \| `"partially_refunded"` \| `"refunded"` \| `"expired"` \| `"cancelled"`
 
-Defined in: [modules/payments/types.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L24)
+Defined in: [modules/payments/types.ts:25](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L25)
 
 State of an invoice: `open` until paid, `processing` while a payment is being confirmed, then `paid`, `underpaid`
-(the buyer may top it up), `held` (the merchant releases or refunds it), `partially_refunded`, `refunded`, or
+(the buyer may top it up), `needs_review` (the merchant accepts the payment or refunds it; the money is already in
+the merchant's wallet, the status does not mean that TUWA has it), `partially_refunded`, `refunded`, or
 `expired`/`cancelled` without a payment.

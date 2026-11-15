@@ -121,14 +121,14 @@ describe('methodErrorText', () => {
   it('tells a transfer past the parts of an invoice, and one sent under an earlier price, for what they are', () => {
     expect(
       methodErrorText(
-        { code: 'payment_mismatch', message: 'raw', reason: 'too_many_parts', held: true } as never,
+        { code: 'payment_mismatch', message: 'raw', reason: 'too_many_parts', unmatched: true } as never,
         defaultLabels,
         'Cosmos',
       ),
     ).toMatch(/as many parts as it can/);
     expect(
       methodErrorText(
-        { code: 'payment_mismatch', message: 'raw', reason: 'quote_changed', held: true } as never,
+        { code: 'payment_mismatch', message: 'raw', reason: 'quote_changed', unmatched: true } as never,
         defaultLabels,
         'Cosmos',
       ),
@@ -178,17 +178,17 @@ describe('methodErrorText', () => {
     }
   });
 
-  // A transfer from a wallet that did not confirm the invoice is a held transfer: the invoice stays payable
-  it('says that the seller returns a held transfer, and that the confirmed wallet can still pay the invoice', () => {
-    const held = methodErrorText(
-      { code: 'payment_mismatch', message: 'raw', reason: 'payer_unconfirmed', held: true } as never,
+  // A transfer from a wallet that did not confirm the invoice is an unmatched transfer: the invoice stays payable
+  it('says that the seller returns an unmatched transfer, and that the confirmed wallet can still pay the invoice', () => {
+    const unmatched = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'payer_unconfirmed', unmatched: true } as never,
       defaultLabels,
       'Cosmos',
     );
-    expect(held).toBe(
+    expect(unmatched).toBe(
       'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. Cosmos returns it to the wallet that sent it, and you can still pay this invoice from the wallet that confirmed it.',
     );
-    // Without a held transfer nothing promises a refund
+    // Without an unmatched transfer nothing promises a refund
     const plain = methodErrorText(
       { code: 'payment_mismatch', message: 'raw', reason: 'payer_mismatch' } as never,
       defaultLabels,
@@ -197,19 +197,19 @@ describe('methodErrorText', () => {
     expect(plain).not.toMatch(/returns it/);
   });
 
-  // Owner test 2026-11-05, finding 1: Phantom dropped the Solana Pay reference. Held on this invoice, the transfer read
-  // as "tied to another invoice", which sent the buyer looking for an invoice that does not exist
-  it('says that a Solana Pay transfer held for its missing reference is returned, never tied to another invoice', () => {
-    const held = methodErrorText(
-      { code: 'payment_mismatch', message: 'raw', reason: 'reference_missing', held: true } as never,
+  // Phantom dropped the Solana Pay reference. Recorded on this invoice, the transfer read as "tied to another
+  // invoice", which sent the buyer looking for an invoice that does not exist
+  it('says that a Solana Pay transfer recorded for its missing reference is returned, never tied to another invoice', () => {
+    const unmatched = methodErrorText(
+      { code: 'payment_mismatch', message: 'raw', reason: 'reference_missing', unmatched: true } as never,
       defaultLabels,
       'Cosmos',
     );
-    expect(held).toBe(
+    expect(unmatched).toBe(
       'This transfer arrived without the Solana Pay reference of this invoice, and its amount alone does not tie it to the invoice, so it does not pay it. Cosmos returns it to the wallet that sent it, and you can still pay the invoice.',
     );
-    expect(held).not.toMatch(/another invoice/);
-    // Without a held transfer nothing promises a refund
+    expect(unmatched).not.toMatch(/another invoice/);
+    // Without an unmatched transfer nothing promises a refund
     const plain = methodErrorText(
       { code: 'payment_mismatch', message: 'raw', reason: 'reference_missing' } as never,
       defaultLabels,
@@ -218,15 +218,15 @@ describe('methodErrorText', () => {
     expect(plain).toBe('This transaction does not pay the invoice. If money left your wallet, contact Cosmos.');
   });
 
-  // A transfer held on another invoice for a refund only pays no invoice
-  it('says that a transfer held on another invoice is tied to it, never that it pays it', () => {
+  // An unmatched transfer at another invoice, refunded only, pays no invoice
+  it('says that an unmatched transfer at another invoice is tied to it, never that it pays it', () => {
     const text = methodErrorText(
-      { code: 'payment_mismatch', message: 'raw', reason: 'tx_already_used', held: true } as never,
+      { code: 'payment_mismatch', message: 'raw', reason: 'tx_already_used', unmatched: true } as never,
       defaultLabels,
       'Cosmos',
     );
     expect(text).toBe(
-      'This transaction is tied to another invoice, which holds it for a refund to the wallet that sent it. It does not count for this invoice. If it was your payment for this one, contact Cosmos with the transaction hash.',
+      'This transaction is tied to another invoice; Cosmos returns it to the wallet that sent it. It does not count for this invoice. If it was your payment for this one, contact Cosmos with the transaction hash.',
     );
     expect(text).not.toMatch(/\bpays\b/);
   });
@@ -300,7 +300,7 @@ describe('a transfer from a wallet that did not confirm the invoice', () => {
   const OTHER_WALLET =
     'This transfer came from a wallet that did not confirm this invoice, so it does not pay it. If money left your wallet, contact Cosmos.';
 
-  it('never promises a refund: without a hold, nothing says the seller returns it', () => {
+  it('never promises a refund: without an unmatched transfer, nothing says the seller returns it', () => {
     for (const reason of ['payer_mismatch', 'payer_unconfirmed']) {
       const error = { code: 'payment_mismatch', message: '', reason } as never;
       expect(methodErrorText(error, defaultLabels, 'Cosmos')).toBe(OTHER_WALLET);

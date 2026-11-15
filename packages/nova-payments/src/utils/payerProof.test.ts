@@ -143,7 +143,7 @@ describe('payerProofErrorText', () => {
   });
 });
 
-// A transfer held from another wallet, or a price refused to the last wallet, opened the step with "Something went wrong"
+// An unmatched transfer from another wallet, or a price refused to the last wallet, opened the step with "Something went wrong"
 describe('isConfirmationError', () => {
   it('takes what is about the confirmation, and nothing else', () => {
     for (const code of ['payer_proof_declined', 'payer_chain_mismatch', 'rate_limited', 'request_failed']) {

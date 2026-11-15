@@ -170,17 +170,17 @@ export const deLabels: NovaPaymentsLabels = {
       'Diese Transaktion bezahlt die Rechnung nicht. Wenn Geld Ihr Wallet verlassen hat, wenden Sie sich an {merchant}.',
     mismatchTakenElsewhere:
       'Diese Transaktion bezahlt eine andere Rechnung. Wenn es Ihre Zahlung für diese Rechnung war, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
-    mismatchHeldElsewhere:
-      'Diese Transaktion ist einer anderen Rechnung zugeordnet, die sie für eine Erstattung an das sendende Wallet zurückhält. Für diese Rechnung zählt sie nicht. Wenn es Ihre Zahlung für diese Rechnung war, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
+    mismatchUnmatchedElsewhere:
+      'Diese Transaktion ist einer anderen Rechnung zugeordnet; {merchant} erstattet sie an das sendende Wallet. Für diese Rechnung zählt sie nicht. Wenn es Ihre Zahlung für diese Rechnung war, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     mismatchOtherWallet:
       'Dieser Transfer kam von einem Wallet, das diese Rechnung nicht bestätigt hat, und bezahlt sie daher nicht. Wenn Geld Ihr Wallet verlassen hat, wenden Sie sich an {merchant}.',
-    mismatchOtherWalletHeld:
+    mismatchOtherWalletUnmatched:
       'Dieser Transfer kam von einem Wallet, das diese Rechnung nicht bestätigt hat, und bezahlt sie daher nicht. {merchant} erstattet ihn an das sendende Wallet, und Sie können diese Rechnung weiterhin mit dem Wallet bezahlen, das sie bestätigt hat.',
-    mismatchChargeHeld:
+    mismatchChargeUnmatched:
       'Diese Zahlung wurde zu einem früheren Preis dieser Rechnung gesendet und bezahlt sie daher nicht. {merchant} erstattet sie an Ihr Wallet, und Sie können die Rechnung weiterhin bezahlen.',
     mismatchTooManyParts:
       'Diese Rechnung hat so viele Teilzahlungen erhalten, wie sie annimmt, daher bezahlt diese Überweisung sie nicht. {merchant} erstattet sie an Ihr Wallet; senden Sie den gesamten Rest auf einmal.',
-    mismatchNoReferenceHeld:
+    mismatchNoReferenceUnmatched:
       'Diese Überweisung kam ohne die Solana-Pay-Referenz dieser Rechnung an, und ihr Betrag allein ordnet sie der Rechnung nicht zu, daher bezahlt sie die Rechnung nicht. {merchant} erstattet sie an das sendende Wallet, und Sie können die Rechnung weiterhin bezahlen.',
     payAgain: 'Erneut zahlen',
     unsupported: '{wallet} kann diese Zahlung nicht ausführen.',
@@ -336,13 +336,14 @@ export const deLabels: NovaPaymentsLabels = {
     payRestFirstWallet:
       'Nur das Wallet, das zuerst bezahlt hat ({wallet}), kann den Rest bezahlen. Verbinden Sie dieses Wallet, um zu zahlen.',
     payRest: 'Rest bezahlen',
-    heldTitle: 'Zahlung eingegangen, {merchant} prüft sie',
-    heldScreening: '{merchant} prüft die Zahlung, bevor die Bestellung bestätigt wird.',
-    heldLate: 'Die Zahlung ging nach Schließung der Rechnung ein. {merchant} nimmt sie an oder erstattet sie.',
-    heldOverpaid:
+    reviewTitle: 'Zahlung eingegangen, {merchant} prüft sie',
+    reviewScreening: '{merchant} prüft die Zahlung, bevor die Bestellung bestätigt wird.',
+    reviewLate: 'Die Zahlung ging nach Schließung der Rechnung ein. {merchant} nimmt sie an oder erstattet sie.',
+    reviewOverpaid:
       'Sie haben mehr als den Rechnungsbetrag gesendet. {merchant} bestätigt die Bestellung oder erstattet die Differenz an Ihr Wallet.',
-    heldQuoteExpired: 'Die Zahlung ging nach Ablauf der Preisbindung ein. {merchant} nimmt sie an oder erstattet sie.',
-    heldNote: 'Der Verkäufer meldet sich, falls etwas benötigt wird.',
+    reviewQuoteExpired:
+      'Die Zahlung ging nach Ablauf der Preisbindung ein. {merchant} nimmt sie an oder erstattet sie.',
+    reviewNote: 'Der Verkäufer meldet sich, falls etwas benötigt wird.',
     refundedTitle: 'Erstattet',
     refundedText: '{merchant} hat für diese Rechnung {amount} {currency} erstattet.',
     expiredTitle: 'Diese Rechnung ist abgelaufen',
@@ -352,7 +353,7 @@ export const deLabels: NovaPaymentsLabels = {
     closedPartText: '{merchant} hat diese Rechnung geschlossen. {amount} der Zahlung sind eingegangen.',
     expiredPartRefund: '{merchant} kann ihn an das zahlende Wallet erstatten; wenden Sie sich an {merchant}.',
     expiredNote:
-      'Eine nach Fristende gesendete Zahlung wird für den Verkäufer zurückgehalten, der sie erstattet oder annimmt.',
+      'Eine nach Fristende gesendete Zahlung erreicht den Verkäufer trotzdem; er nimmt sie an oder erstattet sie.',
     expiredWhileConfirming:
       'Die Rechnung wurde geschlossen, während Ihre Zahlung bestätigt wurde. Wenn sie eingeht, wird sie erfasst und {merchant} angezeigt, der sie annimmt oder erstattet.',
     expiredAfterQr:
@@ -522,8 +523,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Sie haben sie in Ihrer Wallet abgebrochen, es wurde also nichts gesendet. Sie können sie erneut senden.',
     failedResendConfirmed:
       'Sie haben bestätigt, dass sie Ihr Wallet nicht verlassen hat: Sie kann erneut gesendet werden.',
-    failedHeldNote:
-      'Der Transfer bleibt einbehalten. Schließen Sie dieses Fenster: In seiner Zeile steht, wie es weitergeht.',
+    failedUnmatchedNote:
+      'Der Transfer wartet weiter auf seine Erstattung. Schließen Sie dieses Fenster: In seiner Zeile steht, wie es weitergeht.',
     notSent: 'Nicht gesendet',
     notEnough: 'Nicht genug {symbol} auf {address}: Das Guthaben beträgt {balance}.',
     declined: 'Sie haben die Anfrage in {wallet} abgelehnt.',
@@ -536,7 +537,7 @@ export const deLabels: NovaPaymentsLabels = {
     unreachable: 'Quasar antwortet nicht, daher wurde nichts gesendet. Versuchen Sie es gleich noch einmal.',
     refusedAmount: 'Der Betrag ist höher als das, was noch zu erstatten ist.',
     refusedNotRefundable: 'Diese Zahlung kann nicht mehr erstattet werden.',
-    refusedWhole: 'Eine zurückgehaltene Überweisung wird nur vollständig zurückgegeben.',
+    refusedWhole: 'Eine Zahlung in Prüfung wird nur vollständig erstattet.',
     refusedBlocked:
       'Eine Compliance-Prüfung sperrt das Wallet für die Erstattung. Es kann nichts dorthin gesendet werden.',
     refusedNotWaiting: 'Diese Erstattung wartet nicht mehr auf eine Transaktion. Es wurde nichts gesendet.',

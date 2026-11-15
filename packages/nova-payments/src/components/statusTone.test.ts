@@ -17,7 +17,7 @@ describe('statusToneOf', () => {
   });
 
   it('what is neither is neutral: the money did not fail, it went another way', () => {
-    for (const screen of ['held', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
+    for (const screen of ['needs_review', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
       expect(statusToneOf(screen)).toBe('neutral');
     }
   });

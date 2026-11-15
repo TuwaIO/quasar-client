@@ -166,17 +166,17 @@ export const itLabels: NovaPaymentsLabels = {
     mismatch: 'Questa transazione non paga la fattura. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
     mismatchTakenElsewhere:
       "Questa transazione paga un'altra fattura. Se era il tuo pagamento per questa, contatta {merchant} indicando l'hash della transazione.",
-    mismatchHeldElsewhere:
-      "Questa transazione è legata a un'altra fattura, che la trattiene per rimborsarla al wallet che l'ha inviata. Non vale per questa fattura. Se era il tuo pagamento per questa, contatta {merchant} con l'hash della transazione.",
+    mismatchUnmatchedElsewhere:
+      "Questa transazione è legata a un'altra fattura; {merchant} la restituisce al wallet che l'ha inviata. Non vale per questa fattura. Se era il tuo pagamento per questa, contatta {merchant} con l'hash della transazione.",
     mismatchOtherWallet:
       'Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. Se dal tuo wallet sono usciti dei fondi, contatta {merchant}.',
-    mismatchOtherWalletHeld:
+    mismatchOtherWalletUnmatched:
       "Questo trasferimento è arrivato da un wallet che non ha confermato questa fattura, quindi non la paga. {merchant} lo restituisce al wallet che l'ha inviato, e puoi ancora pagare questa fattura dal wallet che l'ha confermata.",
-    mismatchChargeHeld:
+    mismatchChargeUnmatched:
       'Questo pagamento è stato inviato a un prezzo precedente di questa fattura, quindi non la paga. {merchant} lo restituisce al tuo wallet e puoi ancora pagare la fattura.',
     mismatchTooManyParts:
       'Questa fattura ha ricevuto tutti i pagamenti parziali che accetta, quindi questo trasferimento non la paga. {merchant} lo restituisce al tuo wallet; invia tutto il resto in una volta.',
-    mismatchNoReferenceHeld:
+    mismatchNoReferenceUnmatched:
       "Questo trasferimento è arrivato senza il riferimento Solana Pay di questa fattura, e il suo importo da solo non lo collega alla fattura, quindi non la paga. {merchant} lo restituisce al wallet che l'ha inviato, e puoi ancora pagare la fattura.",
     payAgain: 'Paga di nuovo',
     unsupported: '{wallet} non può effettuare questo pagamento.',
@@ -328,14 +328,14 @@ export const itLabels: NovaPaymentsLabels = {
     payRestFirstWallet:
       'Solo il wallet che ha pagato per primo, {wallet}, può pagare il resto. Collega quel wallet per pagarlo.',
     payRest: 'Paga il resto',
-    heldTitle: 'Pagamento ricevuto, {merchant} lo sta verificando',
-    heldScreening: "{merchant} verifica il pagamento prima di confermare l'ordine.",
-    heldLate: 'Il pagamento è arrivato dopo la chiusura della fattura. {merchant} lo accetta o lo restituisce.',
-    heldOverpaid:
+    reviewTitle: 'Pagamento ricevuto, {merchant} lo sta verificando',
+    reviewScreening: "{merchant} verifica il pagamento prima di confermare l'ordine.",
+    reviewLate: 'Il pagamento è arrivato dopo la chiusura della fattura. {merchant} lo accetta o lo restituisce.',
+    reviewOverpaid:
       "Hai inviato più dell'importo della fattura. {merchant} conferma l'ordine o restituisce la differenza al tuo wallet.",
-    heldQuoteExpired:
+    reviewQuoteExpired:
       'Il pagamento è arrivato dopo la scadenza del blocco del prezzo. {merchant} lo accetta o lo restituisce.',
-    heldNote: 'Il venditore ti contatterà se serve qualcosa.',
+    reviewNote: 'Il venditore ti contatterà se serve qualcosa.',
     refundedTitle: 'Rimborsato',
     refundedText: '{merchant} ha rimborsato questa fattura: {amount} {currency}.',
     expiredTitle: 'Questa fattura è scaduta',
@@ -344,8 +344,7 @@ export const itLabels: NovaPaymentsLabels = {
     expiredPartNoAmount: 'Si poteva pagare fino al {date}. È arrivata una parte del pagamento.',
     closedPartText: '{merchant} ha chiuso questa fattura. Sono arrivati {amount} del pagamento.',
     expiredPartRefund: '{merchant} può rimborsarla al wallet che ha pagato; contatta {merchant}.',
-    expiredNote:
-      'Un pagamento inviato dopo la scadenza resta in sospeso finché il venditore non lo rimborsa o lo accetta.',
+    expiredNote: 'Un pagamento inviato dopo la scadenza arriva comunque al venditore, che lo accetta o lo rimborsa.',
     expiredWhileConfirming:
       'La fattura si è chiusa mentre il pagamento veniva confermato. Se arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.',
     expiredAfterQr: 'Se hai pagato con il codice QR, {merchant} accetta il pagamento quando arriva o lo restituisce.',
@@ -510,7 +509,8 @@ export const itLabels: NovaPaymentsLabels = {
       "L'hai annullato nel tuo wallet. Potrai inviarlo di nuovo quando l'annullamento sarà definitivo, di solito in pochi minuti.",
     failedCancelled: "L'hai annullato nel tuo wallet, quindi non è stato inviato nulla. Puoi inviarlo di nuovo.",
     failedResendConfirmed: 'Hai confermato che non è uscito dal tuo wallet: può essere inviato di nuovo.',
-    failedHeldNote: 'Il trasferimento resta trattenuto. Chiudi questa finestra: la sua riga indica cosa fare dopo.',
+    failedUnmatchedNote:
+      'Il trasferimento attende ancora il rimborso. Chiudi questa finestra: la sua riga indica cosa fare dopo.',
     notSent: 'Non inviato',
     notEnough: '{symbol} insufficienti su {address}: contiene {balance}.',
     declined: 'Hai rifiutato la richiesta in {wallet}.',
@@ -521,7 +521,7 @@ export const itLabels: NovaPaymentsLabels = {
     unreachable: 'Quasar non risponde, quindi non è stato inviato nulla. Riprova tra poco.',
     refusedAmount: "L'importo supera quanto resta da rimborsare.",
     refusedNotRefundable: 'Questo pagamento non può più essere rimborsato.',
-    refusedWhole: 'Un trasferimento trattenuto si restituisce per intero.',
+    refusedWhole: 'Un pagamento in revisione si rimborsa per intero.',
     refusedBlocked: 'Un controllo di conformità blocca il wallet da rimborsare. Non è possibile inviargli nulla.',
     refusedNotWaiting: 'Questo rimborso non attende più una transazione. Non è stato inviato nulla.',
     refusedMayHaveLanded:

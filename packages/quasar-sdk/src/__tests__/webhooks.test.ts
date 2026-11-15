@@ -6,7 +6,7 @@ import {
   isPaymentWebhookEvent,
   type PaymentWebhookEvent,
   type PaymentWebhookEventType,
-  type PaymentWebhookHeldTransfer,
+  type PaymentWebhookUnmatchedTransfer,
   QuasarWebhookError,
   verifyWebhook,
   WEBHOOK_SIGNATURE_HEADER,
@@ -238,15 +238,15 @@ describe('verifyWebhook', () => {
     }
   });
 
-  // A transfer tied to no invoice is a record of its own: the invoice is never held for it
-  it('reads a held transfer and the one Quasar voided when its transaction paid another invoice', async () => {
-    const held = JSON.stringify({
+  // A transfer tied to no invoice is a record of its own: the invoice never goes under review for it
+  it('reads an unmatched transfer and the one Quasar voided when its transaction paid another invoice', async () => {
+    const unmatched = JSON.stringify({
       ...JSON.parse(paymentEvent('2026-10-10T11:59:59.000Z')),
-      type: 'invoice.transfer_held',
+      type: 'invoice.transfer_unmatched',
       data: {
         invoice: { id: 'inv_1', object: 'invoice', status: 'open' },
-        heldTransfer: {
-          id: 'ht_1',
+        unmatchedTransfer: {
+          id: 'ut_1',
           txHash: '0xfeed',
           amount: '500000',
           senders: ['0x3f2a'],
@@ -255,31 +255,42 @@ describe('verifyWebhook', () => {
         },
       },
     });
-    const event = await verifyWebhook({ body: held, signature: sign(held), secret: SECRET, now: NOW });
+    const event = await verifyWebhook({ body: unmatched, signature: sign(unmatched), secret: SECRET, now: NOW });
     if (!isPaymentWebhookEvent(event)) throw new Error('A payment event');
-    expect(event.type).toBe('invoice.transfer_held');
-    expect(event.data.heldTransfer).toMatchObject({ id: 'ht_1', reason: 'payer_unconfirmed', late: true });
-    expect(event.data.hold).toBeUndefined();
+    expect(event.type).toBe('invoice.transfer_unmatched');
+    expect(event.data.unmatchedTransfer).toMatchObject({ id: 'ut_1', reason: 'payer_unconfirmed', late: true });
+    expect(event.data.review).toBeUndefined();
 
     const voided = JSON.stringify({
       ...JSON.parse(paymentEvent('2026-10-10T11:59:59.000Z')),
-      type: 'invoice.transfer_hold_voided',
-      data: { heldTransfer: { id: 'ht_1', voided: true, txHash: '0xfeed', paidInvoice: 'inv_2' } },
+      type: 'invoice.transfer_unmatched_voided',
+      data: { unmatchedTransfer: { id: 'ut_1', voided: true, txHash: '0xfeed', paidInvoice: 'inv_2' } },
     });
     const undone = await verifyWebhook({ body: voided, signature: sign(voided), secret: SECRET, now: NOW });
     if (!isPaymentWebhookEvent(undone)) throw new Error('A payment event');
-    expect(undone.data.heldTransfer).toEqual({ id: 'ht_1', voided: true, txHash: '0xfeed', paidInvoice: 'inv_2' });
+    expect(undone.data.unmatchedTransfer).toEqual({
+      id: 'ut_1',
+      voided: true,
+      txHash: '0xfeed',
+      paidInvoice: 'inv_2',
+    });
 
-    expectTypeOf<'invoice.transfer_held' | 'invoice.transfer_hold_voided'>().toExtend<PaymentWebhookEventType>();
-    expectTypeOf<'invoice.hold_voided'>().not.toExtend<PaymentWebhookEventType>();
-    expectTypeOf<NonNullable<PaymentWebhookEvent['data']['hold']>>().toEqualTypeOf<{
+    expectTypeOf<
+      'invoice.transfer_unmatched' | 'invoice.transfer_unmatched_voided'
+    >().toExtend<PaymentWebhookEventType>();
+    // Words that read as escrow are gone from the event names
+    expectTypeOf<
+      'invoice.held' | 'invoice.released' | 'invoice.transfer_held' | 'invoice.transfer_hold_voided'
+    >().not.toExtend<PaymentWebhookEventType>();
+    expectTypeOf<'invoice.needs_review' | 'invoice.payment_accepted'>().toExtend<PaymentWebhookEventType>();
+    expectTypeOf<NonNullable<PaymentWebhookEvent['data']['review']>>().toEqualTypeOf<{
       reason: 'late' | 'aml' | 'quote_expired' | null;
       txHash: string | null;
       chainId?: string | null;
       senders?: string[];
       late?: true;
     }>();
-    // Owner 11-10: the network of the transaction, so that a held transfer opens in the explorer
-    expectTypeOf<PaymentWebhookHeldTransfer['chainId']>().toEqualTypeOf<string | null | undefined>();
+    // The network of the transaction, so that an unmatched transfer opens in the explorer
+    expectTypeOf<PaymentWebhookUnmatchedTransfer['chainId']>().toEqualTypeOf<string | null | undefined>();
   });
 });

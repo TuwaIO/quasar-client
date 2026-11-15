@@ -107,9 +107,9 @@ const CONFIRMATION_REQUEST_CODES: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Whether an error belongs on the step that confirms the wallet. The store's error may be about something else: a
- * transfer held from another wallet, or a price refused to the last wallet, opened the step with "Something went wrong"
- * before the wallet was asked anything.
+ * Whether an error belongs on the step that confirms the wallet. The store's error may be about something else: an
+ * unmatched transfer from another wallet, or a price refused to the last wallet, opened the step with "Something went
+ * wrong" before the wallet was asked anything.
  *
  * @param error - The checkout store's error, if any.
  * @returns `true` for a refusal of the confirmation or a failure of its requests.

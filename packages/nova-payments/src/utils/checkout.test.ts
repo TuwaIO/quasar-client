@@ -95,7 +95,7 @@ describe('checkoutScreen', () => {
     for (const phase of [
       'paid',
       'underpaid',
-      'held',
+      'needs_review',
       'refunded',
       'expired',
       'cancelled',
@@ -195,7 +195,7 @@ describe('checkoutSteps', () => {
   });
 
   it('has no steps on an outcome: the header names it instead', () => {
-    for (const screen of ['loading', 'paid', 'held', 'expired', 'replaced', 'error'] as const) {
+    for (const screen of ['loading', 'paid', 'needs_review', 'expired', 'replaced', 'error'] as const) {
       expect(checkoutSteps(screen)).toBeNull();
     }
   });
@@ -281,10 +281,10 @@ describe('deadlineState', () => {
   });
 
   it('is over once paid, and on an outcome in which a deadline means nothing', () => {
-    for (const screen of ['paid', 'held', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
+    for (const screen of ['paid', 'needs_review', 'refunded', 'expired', 'cancelled', 'replaced'] as const) {
       expect(deadlineState('open', screen), screen).toBeNull();
     }
-    for (const status of ['paid', 'held', 'expired', 'cancelled', 'refunded', 'partially_refunded']) {
+    for (const status of ['paid', 'needs_review', 'expired', 'cancelled', 'refunded', 'partially_refunded']) {
       expect(deadlineState(status, 'method'), status).toBeNull();
     }
   });
@@ -370,7 +370,7 @@ describe('sentBeforeDeadline', () => {
   });
 
   // Quasar may wait for another payment learned of in time while this page's own payment, handed over after the
-  // deadline, will be held
+  // deadline, will need review
   it('says no for a payment this page handed over at or after the deadline', () => {
     expect(
       sentBeforeDeadline({
