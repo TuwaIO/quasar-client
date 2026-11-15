@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.12.0...quasar-sdk-v0.13.0) (2026-11-15)
+
+
+### Features
+
+* **payments:** check the payee of every quote before the checkout shows or pays it, and pin payout addresses ([#21](https://github.com/TuwaIO/quasar-client/issues/21)) ([c5bfa00](https://github.com/TuwaIO/quasar-client/commit/c5bfa009d8e7e5c7257ae9dad9b01f6e28cf112b))
+
 ## [0.12.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.11.0...quasar-sdk-v0.12.0) (2026-11-15)
 
 
