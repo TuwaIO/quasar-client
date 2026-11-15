@@ -259,6 +259,12 @@ export const itLabels: NovaPaymentsLabels = {
     exchangeWarning:
       'Invia dal tuo wallet, non da un exchange: un exchange elimina il riferimento del pagamento, che resterebbe in attesa di un controllo manuale.',
     openInWallet: "Apri nell'app del wallet",
+    evmTitle: "Scansiona con l'app del wallet",
+    evmHint: 'MetaMask, Trust Wallet, Rainbow o un altro wallet sul telefono',
+    evmScanStep: "Scansiona il codice con l'app del wallet",
+    evmCode: 'Codice QR di una richiesta di pagamento di {amount}',
+    exchangeAllowed:
+      "Questa fattura ha un indirizzo proprio: puoi inviare anche da un exchange, esattamente l'importo qui sotto, in questo token e su questa rete.",
     handoffTitle: 'Paga sul telefono',
     handoffHint:
       'Scansiona con la fotocamera del telefono: questo pagamento si apre lì e paghi con il wallet del telefono.',

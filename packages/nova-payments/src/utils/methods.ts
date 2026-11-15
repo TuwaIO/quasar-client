@@ -187,8 +187,9 @@ export function payerFor(wallet: CheckoutWallet | null, method: CheckoutMethod):
 }
 
 /**
- * Whether a method can be paid by scanning a QR code with a phone: Solana with Solana Pay, an EVM method only through
- * the payment page opened on the phone.
+ * Whether a method can be paid by scanning a QR code with a phone: Solana with Solana Pay, an EVM method paid to an
+ * address of the invoice's own with an EIP-681 link (`ownAddress`), any other EVM method only through the payment page
+ * opened on the phone.
  *
  * @param method - The method.
  * @param payUrl - The payment page of the invoice (its `payUrl`), if the app has it.
@@ -196,7 +197,7 @@ export function payerFor(wallet: CheckoutWallet | null, method: CheckoutMethod):
  */
 export function canPayWithQr(method: CheckoutMethod, payUrl?: string | null): boolean {
   const family = methodFamily(method);
-  return family === 'solana' || (family === 'eip155' && Boolean(payUrl));
+  return family === 'solana' || (family === 'eip155' && (method.ownAddress === true || Boolean(payUrl)));
 }
 
 /**

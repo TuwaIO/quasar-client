@@ -167,6 +167,43 @@ describe('the Solana Pay code until the payee of the price is verified', () => {
   });
 });
 
+describe("the EIP-681 code of an invoice's own address until its payee is verified", () => {
+  const OWN = '0x91e3d440bAD234d893C7eBbB7f0cd8DEE584E1Ae';
+  const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+  /** A price locked with no wallet for the QR code, paid to the invoice's own address. */
+  const showOwn = (payeeCheck: (quote: object) => unknown) => {
+    show('eip155', payeeCheck);
+    const state = ctx.state as unknown as { quote: Record<string, unknown>; payeeCheck: unknown };
+    const quote = {
+      ...state.quote,
+      payer: null,
+      instructions: { ...(state.quote.instructions as object), to: OWN },
+      payee: null,
+      invoiceAddress: { record: { address: MERCHANT }, signature: '0x00', index: '0', ephemeralPrivateKey: '0x01' },
+    };
+    ctx = { ...ctx, screen: 'qr', state: { ...ctx.state, quote, payeeCheck: payeeCheck(quote) } as never };
+  };
+
+  it('shows neither the code nor the address before the store verified the payee', () => {
+    showOwn((quote) => ({ quote, status: 'checking' }));
+    const tree = render(QrScreen, {});
+    expect(fixture.ofType(tree, PayeeScreen)).toHaveLength(1);
+    expect(everything(tree)).not.toContain(OWN);
+  });
+
+  // A phone wallet fills in the token, the network, the address and the exact amount; an exchange may pay it too
+  it('shows the EIP-681 request once the payee of this very price is verified, and says an exchange may pay', () => {
+    showOwn((quote) => ({ quote, status: 'verified', signed: true }));
+    const tree = render(QrScreen, {});
+    expect(fixture.ofType(tree, PayeeScreen)).toHaveLength(0);
+    const request = `ethereum:${USDC}@8453/transfer?address=${OWN}&uint256=1000000`;
+    expect(fixture.elements(tree).some((element) => element.props.href === request)).toBe(true);
+    expect(everything(tree)).toContain(ctx.labels.qr.exchangeAllowed);
+    expect(everything(tree)).not.toContain(ctx.labels.qr.exchangeWarning);
+    expect(everything(tree)).toContain(ctx.labels.qr.evmTitle);
+  });
+});
+
 describe('PayeeScreen', () => {
   it('says that the address is checked, as a status', () => {
     show('eip155', (quote) => ({ quote, status: 'checking' }));

@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # GaslessOffer
 
-Defined in: [checkout/types.ts:438](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L438)
+Defined in: [checkout/types.ts:444](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L444)
 
 What the merchant sponsors for a quote: `relay`, an EIP-3009 authorization any wallet signs (the page sends the
 transfer from a one-time account, or Quasar sends it), and `paymaster`, the calls a smart wallet sends with the
@@ -16,7 +16,7 @@ checkout's ERC-7677 paymaster (`paymasterUrl` of the store).
 
 > `optional` **paymaster?**: `object`
 
-Defined in: [checkout/types.ts:445](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L445)
+Defined in: [checkout/types.ts:451](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L451)
 
 Send these calls with `wallet_sendCalls` and the `paymasterService` capability set to the paymaster URL.
 
@@ -30,7 +30,7 @@ Send these calls with `wallet_sendCalls` and the `paymasterService` capability s
 
 > `optional` **relay?**: `object`
 
-Defined in: [checkout/types.ts:443](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L443)
+Defined in: [checkout/types.ts:449](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L449)
 
 Sign `typedData` and pass the signature to [CheckoutState.relayFromPage](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#relayfrompage) (the page sends the call Quasar
 answers) or [CheckoutState.relay](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#relay) (Quasar sends it).

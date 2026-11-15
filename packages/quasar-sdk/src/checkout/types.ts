@@ -311,6 +311,12 @@ export interface CheckoutMethod {
    * before October 29, 2026 leave it out: no confirmation.
    */
   payerProof?: PayerProofNeed;
+  /**
+   * Whether a quote of the method goes to an address of the invoice's own (ERC-5564): it needs no paying wallet, so the
+   * page locks its price with none for a QR code that a phone wallet, or an exchange, pays (`quote.invoiceAddress`).
+   * Quasar versions before invoice addresses leave it out.
+   */
+  ownAddress?: boolean;
 }
 
 /** When a payment with a method needs the paying wallet's confirmation ({@link CheckoutMethod.payerProof}). */

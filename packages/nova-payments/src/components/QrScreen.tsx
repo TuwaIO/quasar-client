@@ -2,6 +2,7 @@ import { cn, QuasarLoader } from '@tuwaio/nova-core';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel } from '../i18n';
+import { eip681Of } from '../utils/eip681';
 import { baseUnitsToDecimal, formatCountdown, formatTokenAmount, shortAddress } from '../utils/format';
 import { networkName } from '../utils/methods';
 import { addressOfWallet, restRateText } from '../utils/outcome';
@@ -52,8 +53,9 @@ function HandoffQr({ payUrl }: { payUrl: string }) {
 /**
  * The QR code step. For Solana, a Solana Pay transfer request a phone wallet scans (or opens with "Open in wallet
  * app"), with the exact amount, the recipient, the price lock and a warning against paying from an exchange; the page
- * waits for the payment, which Quasar finds by the reference key. For an EVM method, the QR code of the payment page
- * opens this checkout on the phone, before any price.
+ * waits for the payment, which Quasar finds by the reference key. For an EVM quote to an invoice's own address, an
+ * EIP-681 request of the same kind, which an exchange may pay too: Quasar finds the payment by the address. For another
+ * EVM method, the QR code of the payment page opens this checkout on the phone, before any price.
  *
  * @returns The QR code step.
  */
@@ -62,12 +64,19 @@ export function QrScreen() {
   const { checkout, state, store, labels, locale, now, payUrl, backToMethods } = context;
   const quote = state.quote;
   if (!checkout) return null;
-  if (!quote || quote.instructions.family !== 'solana') return payUrl ? <HandoffQr payUrl={payUrl} /> : null;
+  // A price of an invoice's own address is paid by its EIP-681 request; another EVM method on the phone's checkout
+  const ownAddress = quote?.instructions.family === 'eip155' && Boolean(quote.invoiceAddress);
+  if (!quote || (quote.instructions.family !== 'solana' && !ownAddress)) {
+    return payUrl ? <HandoffQr payUrl={payUrl} /> : null;
+  }
   // Neither the code nor the address of a price whose payee is not verified shows
   const payee = payeeStatus(state);
   if (payee.status !== 'verified' && state.phase !== 'submitting') return <PayeeScreen payee={payee} />;
 
   const { instructions } = quote;
+  const solana = instructions.family === 'solana';
+  // What the code holds and the wallet app opens: the Solana Pay request, else the EIP-681 one
+  const request = solana ? instructions.solanaPayUrl : eip681Of(instructions, quote.amountToSend);
   const network = networkName(instructionsChainId(instructions));
   const amount = `${formatTokenAmount(quote.amountToSend, quote.decimals, locale)} ${instructions.symbol}`;
   const left = quote.expiresAt ? Date.parse(quote.expiresAt) - now : Number.POSITIVE_INFINITY;
@@ -80,16 +89,18 @@ export function QrScreen() {
   const firstWallet = rest ? checkout.invoice.originWallet : null;
   const hint = firstWallet
     ? formatLabel(labels.qr.restHint, { wallet: shortAddress(addressOfWallet(firstWallet)) })
-    : labels.qr.solanaHint;
+    : solana
+      ? labels.qr.solanaHint
+      : labels.qr.evmHint;
 
   return (
     <>
-      <ScreenContent title={labels.qr.solanaTitle} subtitle={hint}>
+      <ScreenContent title={solana ? labels.qr.solanaTitle : labels.qr.evmTitle} subtitle={hint}>
         {/* Side by side when the screen area has the room (from 440 px), not by the width of the window */}
         <div className="novapay:flex novapay:flex-col novapay:items-center novapay:gap-4 novapay:@min-[440px]:flex-row novapay:@min-[440px]:items-start">
           <QrCode
-            value={instructions.solanaPayUrl}
-            label={formatLabel(labels.qr.solanaCode, { amount })}
+            value={request}
+            label={formatLabel(solana ? labels.qr.solanaCode : labels.qr.evmCode, { amount })}
             className={cn(
               'novapay:h-44 novapay:w-44 novapay:shrink-0',
               context.display === 'page' && 'novapay-page-qr',
@@ -99,7 +110,7 @@ export function QrScreen() {
           {/* On a phone the facts take the width of the screen under the code, aligned with the rest of it */}
           <div className="novapay:flex novapay:min-w-0 novapay:flex-col novapay:gap-2 novapay:self-stretch novapay:text-xs novapay:@min-[440px]:self-auto">
             <ol className="novapay:m-0 novapay:flex novapay:list-decimal novapay:flex-col novapay:gap-1 novapay:pl-4">
-              <li>{labels.qr.scanStep}</li>
+              <li>{solana ? labels.qr.scanStep : labels.qr.evmScanStep}</li>
               <li>{labels.qr.approveStep}</li>
             </ol>
             {rest && <span className="novapay:text-[var(--tuwa-text-secondary)]">{labels.pay.youSendRest}</span>}
@@ -151,15 +162,22 @@ export function QrScreen() {
         {restRate && (
           <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{restRate}</p>
         )}
-        <p
-          className={cn(
-            pendingNote,
-            'novapay:m-0 novapay:flex novapay:gap-2 novapay:px-3 novapay:py-2 novapay:text-xs',
-          )}
-        >
-          <ExclamationTriangleIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:shrink-0" />
-          {labels.qr.exchangeWarning}
-        </p>
+        {solana ? (
+          <p
+            className={cn(
+              pendingNote,
+              'novapay:m-0 novapay:flex novapay:gap-2 novapay:px-3 novapay:py-2 novapay:text-xs',
+            )}
+          >
+            <ExclamationTriangleIcon aria-hidden className="novapay:h-4 novapay:w-4 novapay:shrink-0" />
+            {labels.qr.exchangeWarning}
+          </p>
+        ) : (
+          // The address is this invoice's alone: a transfer from an exchange pays it as well
+          <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+            {labels.qr.exchangeAllowed}
+          </p>
+        )}
       </ScreenContent>
       <ScreenFooter>
         {expired ? (
@@ -167,10 +185,7 @@ export function QrScreen() {
             {rest ? labels.outcome.payRest : labels.pay.newPrice}
           </PrimaryButton>
         ) : (
-          <a
-            href={instructions.solanaPayUrl}
-            className={cn(primaryAction, checkoutClassName(context, 'primaryButton'))}
-          >
+          <a href={request} className={cn(primaryAction, checkoutClassName(context, 'primaryButton'))}>
             {labels.qr.openInWallet}
           </a>
         )}

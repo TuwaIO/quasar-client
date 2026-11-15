@@ -257,6 +257,12 @@ export const esLabels: NovaPaymentsLabels = {
     exchangeWarning:
       'Envía desde tu propia billetera, no desde un exchange: el exchange elimina la referencia del pago, y el pago quedaría pendiente de una revisión manual.',
     openInWallet: 'Abrir en la app de la billetera',
+    evmTitle: 'Escanea con tu app de billetera',
+    evmHint: 'MetaMask, Trust Wallet, Rainbow u otra billetera en tu teléfono',
+    evmScanStep: 'Escanea el código con tu app de billetera',
+    evmCode: 'Código QR de una solicitud de pago de {amount}',
+    exchangeAllowed:
+      'Esta factura tiene una dirección propia: también puedes enviar desde un exchange, exactamente el importe de abajo, en este token y en esta red.',
     handoffTitle: 'Paga en tu móvil',
     handoffHint: 'Escanea con la cámara del móvil: este pago se abre allí y pagas con tu billetera móvil.',
     handoffCode: 'Código QR que abre este pago en tu móvil',

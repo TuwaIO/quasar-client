@@ -238,7 +238,8 @@ export function CheckoutFrame({
   // The pay and QR steps show their heading only once the payee of the price is checked (`PayeeScreen` meanwhile, with
   // no heading): the step counts as shown from then, so the focus goes to the heading it shows
   const settling =
-    (screen === 'pay' || (screen === 'qr' && state.quote?.instructions.family === 'solana')) &&
+    (screen === 'pay' ||
+      (screen === 'qr' && (state.quote?.instructions.family === 'solana' || Boolean(state.quote?.invoiceAddress)))) &&
     state.phase !== 'submitting' &&
     Boolean(state.quote) &&
     payeeStatus(state).status === 'checking';
