@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.4.0...nova-payments-v0.5.0) (2026-11-15)
+
+
+### Features
+
+* **payments:** check the payee of every quote before the checkout shows or pays it, and pin payout addresses ([#21](https://github.com/TuwaIO/quasar-client/issues/21)) ([c5bfa00](https://github.com/TuwaIO/quasar-client/commit/c5bfa009d8e7e5c7257ae9dad9b01f6e28cf112b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @tuwaio/quasar-sdk bumped to 0.13.0
+
 ## [0.4.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.3.0...nova-payments-v0.4.0) (2026-11-15)
 
 
