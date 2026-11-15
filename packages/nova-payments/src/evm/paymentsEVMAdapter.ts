@@ -1,6 +1,6 @@
 import { delay, OrbitAdapter, toEvmChainId } from '@tuwaio/orbit-core';
 import { type EvmTransaction, TransactionTracker } from '@tuwaio/pulsar-core';
-import { type PaymentInstructions, payoutRecordText } from '@tuwaio/quasar-sdk/checkout';
+import { metaAddressRecordText, type PaymentInstructions, payoutRecordText } from '@tuwaio/quasar-sdk/checkout';
 import {
   type Config,
   estimateFeesPerGas,
@@ -26,6 +26,7 @@ import {
   type Hex,
   hexToBigInt,
   http,
+  isAddress,
   isAddressEqual,
   isHex,
   recoverMessageAddress,
@@ -34,6 +35,7 @@ import { createBundlerClient, createPaymasterClient, toSimple7702SmartAccount } 
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
 import type { PaymentsAdapter } from '../adapters/types';
+import { invoiceAddressFrom } from '../utils/invoiceAddress';
 import { PaymentWalletError, walletErrorKind } from '../utils/walletErrors';
 
 /** How long a sponsored payment may take to be included, in milliseconds. */
@@ -329,6 +331,20 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       const id = toEvmChainId(chainId);
       if (id === undefined) return false;
       return verifyMessage(config, { address, message, signature, chainId: id });
+    },
+
+    verifyInvoiceAddress: async ({ invoiceAddress, address }) => {
+      const { record, signature, ephemeralPrivateKey } = invoiceAddress;
+      if (!isHex(signature) || !isAddress(address) || !isAddress(record.address)) return false;
+      // Only an ordinary wallet makes the keys: its signature recovers in the page, without a request
+      try {
+        const signer = await recoverMessageAddress({ message: metaAddressRecordText(record), signature });
+        if (!isAddressEqual(signer, record.address)) return false;
+      } catch {
+        return false;
+      }
+      const derived = invoiceAddressFrom(record.metaAddress, ephemeralPrivateKey);
+      return derived !== null && isAddressEqual(derived, address);
     },
 
     followSponsoredCalls: ({ batchId, until, onLate }) => {

@@ -326,6 +326,12 @@ export interface Invoice {
   checkoutToken: string | null;
   /** The payment page while the invoice can be paid: the link its emails carry. */
   payUrl: string | null;
+  /**
+   * The address of its own the invoice is paid to (ERC-5564), on the networks your meta-address record names: given at
+   * its first quote there and kept for good; only your keys open it. `null` while it has none: it is paid to its
+   * methods' wallets. Quasar versions before invoice addresses leave it out.
+   */
+  receivingAddress?: string | null;
   /** The locked quote, once there is one. */
   quote: InvoiceQuote | null;
   /** The payment, once there is one. */

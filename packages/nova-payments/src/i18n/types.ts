@@ -508,6 +508,16 @@ export type NovaPaymentsLabels = {
     waiting: string;
     /** Why not to pay from an exchange */
     exchangeWarning: string;
+    /** Heading of the EIP-681 code of an invoice's own address (default: `Scan with your wallet app`) */
+    evmTitle: string;
+    /** Under it (default: `MetaMask, Trust Wallet, Rainbow or another wallet on your phone`) */
+    evmHint: string;
+    /** First step there (default: `Scan the code with your wallet app`) */
+    evmScanStep: string;
+    /** Text alternative of the EIP-681 code: `{amount}` (default: `QR code of a payment request for {amount}`) */
+    evmCode: string;
+    /** That an exchange may pay an invoice's own address, exactly as shown */
+    exchangeAllowed: string;
     /** Link that opens the request in a wallet app (default: `Open in wallet app`) */
     openInWallet: string;
     /** Heading of the phone hand-off (default: `Pay on your phone`) */

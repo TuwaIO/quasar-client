@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PayoutRecord
 
-Defined in: [checkout/payee.ts:16](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L16)
+Defined in: [checkout/payee.ts:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L20)
 
 A receiving wallet's signed word that it takes the payments of a Quasar app on the networks it names. Every field is
 in one canonical form: the signature covers the text made of them ([payoutRecordText](?path=/docs/packages-quasar-sdk-checkout-functions-payoutrecordtext--docs)).
@@ -15,7 +15,7 @@ in one canonical form: the signature covers the text made of them ([payoutRecord
 
 > **address**: `string`
 
-Defined in: [checkout/payee.ts:26](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L26)
+Defined in: [checkout/payee.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L30)
 
 The wallet: an EVM address in its checksum form (EIP-55), or a Solana address.
 
@@ -25,7 +25,7 @@ The wallet: an EVM address in its checksum form (EIP-55), or a Solana address.
 
 > **app**: `string`
 
-Defined in: [checkout/payee.ts:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L22)
+Defined in: [checkout/payee.ts:26](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L26)
 
 The Quasar app whose payments it receives.
 
@@ -35,7 +35,7 @@ The Quasar app whose payments it receives.
 
 > **chains**: `string`[]
 
-Defined in: [checkout/payee.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L24)
+Defined in: [checkout/payee.ts:28](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L28)
 
 The networks it receives on: CAIP-2, of one family, sorted and without repeats.
 
@@ -45,7 +45,7 @@ The networks it receives on: CAIP-2, of one family, sorted and without repeats.
 
 > **issuedAt**: `string`
 
-Defined in: [checkout/payee.ts:28](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L28)
+Defined in: [checkout/payee.ts:32](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L32)
 
 When the record was made: ISO 8601 in UTC with milliseconds.
 
@@ -55,7 +55,7 @@ When the record was made: ISO 8601 in UTC with milliseconds.
 
 > **type**: `"address"`
 
-Defined in: [checkout/payee.ts:20](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L20)
+Defined in: [checkout/payee.ts:24](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L24)
 
 What the record names: `address`, the one wallet that receives the payments.
 
@@ -65,6 +65,6 @@ What the record names: `address`, the one wallet that receives the payments.
 
 > **version**: `1`
 
-Defined in: [checkout/payee.ts:18](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L18)
+Defined in: [checkout/payee.ts:22](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L22)
 
 Format version: 1.

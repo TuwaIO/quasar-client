@@ -1,0 +1,101 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/MetaAddressRecord" />
+
+# MetaAddressRecord
+
+Defined in: [checkout/payee.ts:40](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L40)
+
+A payout wallet's meta-address record (version 2): the keys of the wallet receive the payments of a Quasar app at an
+address of their own for each invoice (ERC-5564). Every field is in one canonical form: the signature covers the text
+made of them ([metaAddressRecordText](?path=/docs/packages-quasar-sdk-checkout-functions-metaaddressrecordtext--docs)).
+
+## Properties
+
+### address
+
+> **address**: `string`
+
+Defined in: [checkout/payee.ts:50](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L50)
+
+The payout wallet that made the keys and signed the record: an ordinary wallet (EOA), in its checksum form.
+
+***
+
+### app
+
+> **app**: `string`
+
+Defined in: [checkout/payee.ts:46](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L46)
+
+The Quasar app whose invoices get the addresses.
+
+***
+
+### chains
+
+> **chains**: `string`[]
+
+Defined in: [checkout/payee.ts:48](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L48)
+
+The EVM networks the addresses take payments on: CAIP-2, sorted and without repeats.
+
+***
+
+### issuedAt
+
+> **issuedAt**: `string`
+
+Defined in: [checkout/payee.ts:58](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L58)
+
+When the record was made: ISO 8601 in UTC with milliseconds.
+
+***
+
+### keyAppId
+
+> **keyAppId**: `string`
+
+Defined in: [checkout/payee.ts:56](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L56)
+
+The app the keys were made for.
+
+***
+
+### keyDomain
+
+> **keyDomain**: `string`
+
+Defined in: [checkout/payee.ts:54](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L54)
+
+The host the keys were made on.
+
+***
+
+### metaAddress
+
+> **metaAddress**: `string`
+
+Defined in: [checkout/payee.ts:52](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L52)
+
+The ERC-5564 meta-address: `st:eth:0x`, then the spending and the viewing public key, compressed.
+
+***
+
+### type
+
+> **type**: `"meta-address"`
+
+Defined in: [checkout/payee.ts:44](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L44)
+
+What the record names: `meta-address`, the keys of the addresses of the invoices.
+
+***
+
+### version
+
+> **version**: `2`
+
+Defined in: [checkout/payee.ts:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L42)
+
+Format version: 2.

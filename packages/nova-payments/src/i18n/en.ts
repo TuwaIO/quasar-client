@@ -254,6 +254,12 @@ export const defaultLabels: NovaPaymentsLabels = {
     exchangeWarning:
       'Send from your own wallet, not from an exchange: an exchange drops the payment reference, and the payment would wait for a manual check.',
     openInWallet: 'Open in wallet app',
+    evmTitle: 'Scan with your wallet app',
+    evmHint: 'MetaMask, Trust Wallet, Rainbow or another wallet on your phone',
+    evmScanStep: 'Scan the code with your wallet app',
+    evmCode: 'QR code of a payment request for {amount}',
+    exchangeAllowed:
+      'This invoice has an address of its own: you can also send from an exchange, exactly the amount below, in this token, on this network.',
     handoffTitle: 'Pay on your phone',
     handoffHint: 'Scan with the phone camera: this checkout opens there, and you pay with your mobile wallet.',
     handoffCode: 'QR code that opens this checkout on your phone',

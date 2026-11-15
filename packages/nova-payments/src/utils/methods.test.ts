@@ -201,6 +201,9 @@ describe('methods', () => {
     // A node without a dashboard URL issues invoices with `payUrl: null`
     expect(canPayWithQr(method(BASE), null)).toBe(false);
     expect(canPayWithQr(method(SOLANA_DEVNET), null)).toBe(true);
+    // An invoice's own address takes an EIP-681 request from a phone with no payment page
+    expect(canPayWithQr(method(BASE, { ownAddress: true }), null)).toBe(true);
+    expect(canPayWithQr(method(BASE, { ownAddress: false }), null)).toBe(false);
   });
 
   it('shows a discount or a markup as a percent', () => {

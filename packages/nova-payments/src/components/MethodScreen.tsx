@@ -104,8 +104,9 @@ function AgreeLine({
  * wallet in this browser or with a QR code on a phone. The connected wallet's network comes first and is marked, the
  * merchant's Popular methods next; a discount or markup of a method shows on it. Paying from a wallet needs the chain
  * adapter of the method's family (`adapters` of `NovaPaymentsProvider`). "Continue" locks the price for the connected
- * wallet (or connects one first), locks it without a payer for a Solana Pay QR code, or shows the QR code of the
- * payment page for an EVM method paid on a phone; a wallet that must confirm the invoice first (an EVM payment it sends
+ * wallet (or connects one first), locks it without a payer for a Solana Pay QR code or the EIP-681 QR code of an
+ * invoice's own address (`ownAddress`), or shows the QR code of the payment page for another EVM method paid on a
+ * phone; a wallet that must confirm the invoice first (an EVM payment it sends
  * itself) goes to the step that confirms it before the price. A consent the seller asks (`checkout.consent`) is a box the buyer
  * ticks under the ways to pay; a required one keeps "Continue" off until it is ticked, and the quote carries it.
  *
@@ -178,8 +179,9 @@ export function MethodScreen() {
     setCannotConnect(false);
     if (way === 'qr') {
       if (payWith !== 'qr') setPayWith('qr');
-      // Solana Pay locks a price without a payer; an EVM method continues on the phone, on the payment page
-      if (family !== 'solana') return setHandoff(true);
+      // Solana Pay and an invoice's own address lock a price without a payer; another EVM method continues on the
+      // phone, on the payment page
+      if (family !== 'solana' && !selected.ownAddress) return setHandoff(true);
       store.getState().setPayer(null);
       await store.getState().requestQuote();
       return;

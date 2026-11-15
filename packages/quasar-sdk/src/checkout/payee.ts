@@ -5,6 +5,10 @@
  * pinned addresses, when given, must include it; and the payout record Quasar sends (`payee`) must be signed by that
  * address's own wallet. A signature alone does not stop a swap made in Quasar's database (an attacker's wallet signs
  * its own record): the pinned addresses do.
+ *
+ * An invoice may have an address of its own (ERC-5564, `quote.invoiceAddress`): the page derives it from the payout
+ * wallet's signed meta-address record and the address's one-time key, and shows it only when the two agree; the pinned
+ * addresses then name the payout wallet that signed the record, since the address itself is new for every invoice.
  */
 
 import type { CheckoutQuote } from './types';
@@ -26,6 +30,50 @@ export interface PayoutRecord {
   address: string;
   /** When the record was made: ISO 8601 in UTC with milliseconds. */
   issuedAt: string;
+}
+
+/**
+ * A payout wallet's meta-address record (version 2): the keys of the wallet receive the payments of a Quasar app at an
+ * address of their own for each invoice (ERC-5564). Every field is in one canonical form: the signature covers the text
+ * made of them ({@link metaAddressRecordText}).
+ */
+export interface MetaAddressRecord {
+  /** Format version: 2. */
+  version: 2;
+  /** What the record names: `meta-address`, the keys of the addresses of the invoices. */
+  type: 'meta-address';
+  /** The Quasar app whose invoices get the addresses. */
+  app: string;
+  /** The EVM networks the addresses take payments on: CAIP-2, sorted and without repeats. */
+  chains: string[];
+  /** The payout wallet that made the keys and signed the record: an ordinary wallet (EOA), in its checksum form. */
+  address: string;
+  /** The ERC-5564 meta-address: `st:eth:0x`, then the spending and the viewing public key, compressed. */
+  metaAddress: string;
+  /** The host the keys were made on. */
+  keyDomain: string;
+  /** The app the keys were made for. */
+  keyAppId: string;
+  /** When the record was made: ISO 8601 in UTC with milliseconds. */
+  issuedAt: string;
+}
+
+/**
+ * An invoice's own address in a quote (`quote.invoiceAddress`): the payout wallet's signed meta-address record and the
+ * one-time key the address comes from, with which the page derives the address before it shows it.
+ */
+export interface CheckoutInvoiceAddress {
+  /** The record. */
+  record: MetaAddressRecord;
+  /** Of {@link metaAddressRecordText}: EIP-191 `personal_sign` by `record.address`, an ordinary wallet. */
+  signature: string;
+  /** The invoice's index under its keys, in decimal. */
+  index: string;
+  /**
+   * The one-time private key `r` of the address (`0x` hex): with the meta-address it gives the address. It shows only
+   * that the address comes from the meta-address; it opens nothing.
+   */
+  ephemeralPrivateKey: string;
 }
 
 /** The payout record of a quote's receiving address with its wallet's signature, as Quasar sends it (`quote.payee`). */
@@ -51,13 +99,33 @@ export type PayeeVerifier = (params: {
   chainId: string;
 }) => Promise<boolean | null>;
 
+/**
+ * Checks an invoice's own address: that `address` comes from the record's meta-address and the one-time key, and that
+ * the record's signature is its payout wallet's, an ordinary wallet's. The EVM adapter of `@tuwaio/nova-payments` does it.
+ *
+ * @param params - The invoice's address of the quote, the address of its instructions and the network (CAIP-2).
+ * @returns Whether both hold, or `null` when this page cannot check them (no EVM adapter): the record is matched, the
+ *   rest not checked (`signed: false`).
+ */
+export type InvoiceAddressVerifier = (params: {
+  invoiceAddress: CheckoutInvoiceAddress;
+  address: string;
+  chainId: string;
+}) => Promise<boolean | null>;
+
 /** How a checkout store checks the payee of each quote (`payee` of `createCheckoutStore`). */
 export interface PayeeOptions {
   /** Checks the signature of the payout record. Without it the signature is not checked (`signed: false`). */
   verify?: PayeeVerifier;
   /**
+   * Checks an invoice's own address against its meta-address record. Without it the address is not checked
+   * (`signed: false`).
+   */
+  verifyInvoiceAddress?: InvoiceAddressVerifier;
+  /**
    * The merchant's own receiving addresses, from their integration rather than from Quasar: a quote paid to any other
-   * address is refused, whatever Quasar's database says. EVM addresses in any letter case.
+   * address is refused, whatever Quasar's database says. For an invoice's own address, the payout wallet that signed
+   * its meta-address record must be among them. EVM addresses in any letter case.
    */
   addresses?: readonly string[];
 }
@@ -148,6 +216,32 @@ export function payoutRecordText(record: PayoutRecord): string {
   ].join('\n');
 }
 
+/** The first line of the text a payout wallet signs for a meta-address record. */
+const META_ADDRESS_RECORD_TITLE = 'Quasar invoice addresses';
+
+/**
+ * The text a payout wallet signs for a meta-address record (EIP-191 `personal_sign`), made of the record's fields line
+ * by line: the same text Quasar builds (`metaAddressRecordText` of `@tuwaio/shared/payments`).
+ *
+ * @param record - The record.
+ * @returns The text.
+ */
+export function metaAddressRecordText(record: MetaAddressRecord): string {
+  return [
+    META_ADDRESS_RECORD_TITLE,
+    '',
+    'The keys of this wallet receive the payments of a Quasar app, at an address of their own for each invoice. Signing is free: it moves no funds and approves no transfer.',
+    '',
+    `Wallet: ${record.address}`,
+    `Meta-address: ${record.metaAddress}`,
+    `Networks: ${record.chains.join(', ')}`,
+    `App: ${record.app}`,
+    `Keys made on: ${record.keyDomain}, app ${record.keyAppId}`,
+    `Issued At: ${record.issuedAt}`,
+    `Record: ${record.type}, version ${record.version}`,
+  ].join('\n');
+}
+
 /** Whether two addresses of a family are one: EVM addresses without regard to case, Solana addresses exactly. */
 const sameAddress = (evm: boolean, a: string, b: string) => (evm ? a.toLowerCase() === b.toLowerCase() : a === b);
 
@@ -192,6 +286,11 @@ function otherPlaces(quote: CheckoutQuote): (string | null)[] {
  * `payee_unverified`). A quote with `payee: null` has no record (`payee_unsigned`). A quote without the field comes
  * from an engine older than payout records: its places and the pinned addresses are still checked (`signed: false`).
  *
+ * A quote to an invoice's own address (`invoiceAddress`) is checked against its meta-address record instead: an EVM
+ * record of version 2 that names the quote's network (`payee_mismatch`), signed by a payout wallet among the pinned
+ * addresses (`payee_not_pinned`), and an address that comes from the record's meta-address and the one-time key, with
+ * the record's signature its wallet's (`verifyInvoiceAddress`; `payee_unverified`).
+ *
  * @param quote - The quote.
  * @param options - The verifier of the signature and the pinned addresses.
  * @returns What the check found. A verifier that throws counts as `payee_unverified`; one that answers `null` (it
@@ -206,6 +305,26 @@ export async function checkQuotePayee(quote: CheckoutQuote, options: PayeeOption
     return { status: 'refused', reason: 'payee_mismatch' };
   }
   const pinned = options.addresses ?? [];
+  const own = quote.invoiceAddress;
+  if (own) {
+    const { record } = own;
+    if (!evm || record.type !== 'meta-address' || record.version !== 2 || !record.chains.includes(chainId)) {
+      return { status: 'refused', reason: 'payee_mismatch' };
+    }
+    // The address is new for every invoice: the pins name the payout wallet whose keys it comes from
+    if (pinned.length > 0 && !pinned.some((pin) => sameAddress(true, pin, record.address))) {
+      return { status: 'refused', reason: 'payee_not_pinned' };
+    }
+    if (!options.verifyInvoiceAddress) return { status: 'verified', signed: false };
+    let holds: boolean | null;
+    try {
+      holds = await options.verifyInvoiceAddress({ invoiceAddress: own, address, chainId });
+    } catch {
+      return { status: 'refused', reason: 'payee_unverified' };
+    }
+    if (holds === null) return { status: 'verified', signed: false };
+    return holds ? { status: 'verified', signed: true } : { status: 'refused', reason: 'payee_unverified' };
+  }
   if (pinned.length > 0 && !pinned.some((pin) => sameAddress(evm, pin, address))) {
     return { status: 'refused', reason: 'payee_not_pinned' };
   }

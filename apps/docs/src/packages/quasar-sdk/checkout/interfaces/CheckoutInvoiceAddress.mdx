@@ -1,0 +1,51 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Interfaces/CheckoutInvoiceAddress" />
+
+# CheckoutInvoiceAddress
+
+Defined in: [checkout/payee.ts:65](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L65)
+
+An invoice's own address in a quote (`quote.invoiceAddress`): the payout wallet's signed meta-address record and the
+one-time key the address comes from, with which the page derives the address before it shows it.
+
+## Properties
+
+### ephemeralPrivateKey
+
+> **ephemeralPrivateKey**: `string`
+
+Defined in: [checkout/payee.ts:76](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L76)
+
+The one-time private key `r` of the address (`0x` hex): with the meta-address it gives the address. It shows only
+that the address comes from the meta-address; it opens nothing.
+
+***
+
+### index
+
+> **index**: `string`
+
+Defined in: [checkout/payee.ts:71](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L71)
+
+The invoice's index under its keys, in decimal.
+
+***
+
+### record
+
+> **record**: [`MetaAddressRecord`](?path=/docs/packages-quasar-sdk-checkout-interfaces-metaaddressrecord--docs)
+
+Defined in: [checkout/payee.ts:67](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L67)
+
+The record.
+
+***
+
+### signature
+
+> **signature**: `string`
+
+Defined in: [checkout/payee.ts:69](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L69)
+
+Of [metaAddressRecordText](?path=/docs/packages-quasar-sdk-checkout-functions-metaaddressrecordtext--docs): EIP-191 `personal_sign` by `record.address`, an ordinary wallet.

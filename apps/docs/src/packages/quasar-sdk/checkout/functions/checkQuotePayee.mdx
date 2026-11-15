@@ -6,13 +6,18 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **checkQuotePayee**(`quote`, `options?`): `Promise`\<[`PayeeCheckResult`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeecheckresult--docs)\>
 
-Defined in: [checkout/payee.ts:200](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L200)
+Defined in: [checkout/payee.ts:299](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L299)
 
 Checks the payee of a quote before the page shows its address or asks a wallet for anything: every place of the
 address names the address of the instructions (`payee_mismatch`), the merchant's pinned addresses include it
 (`payee_not_pinned`), and the payout record covers its network and address and is signed by it (`verify`;
 `payee_unverified`). A quote with `payee: null` has no record (`payee_unsigned`). A quote without the field comes
 from an engine older than payout records: its places and the pinned addresses are still checked (`signed: false`).
+
+A quote to an invoice's own address (`invoiceAddress`) is checked against its meta-address record instead: an EVM
+record of version 2 that names the quote's network (`payee_mismatch`), signed by a payout wallet among the pinned
+addresses (`payee_not_pinned`), and an address that comes from the record's meta-address and the one-time key, with
+the record's signature its wallet's (`verifyInvoiceAddress`; `payee_unverified`).
 
 ## Parameters
 

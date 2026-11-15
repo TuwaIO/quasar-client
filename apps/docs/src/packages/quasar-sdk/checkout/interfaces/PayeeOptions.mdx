@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PayeeOptions
 
-Defined in: [checkout/payee.ts:55](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L55)
+Defined in: [checkout/payee.ts:117](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L117)
 
 How a checkout store checks the payee of each quote (`payee` of `createCheckoutStore`).
 
@@ -14,10 +14,11 @@ How a checkout store checks the payee of each quote (`payee` of `createCheckoutS
 
 > `optional` **addresses?**: readonly `string`[]
 
-Defined in: [checkout/payee.ts:62](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L62)
+Defined in: [checkout/payee.ts:130](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L130)
 
 The merchant's own receiving addresses, from their integration rather than from Quasar: a quote paid to any other
-address is refused, whatever Quasar's database says. EVM addresses in any letter case.
+address is refused, whatever Quasar's database says. For an invoice's own address, the payout wallet that signed
+its meta-address record must be among them. EVM addresses in any letter case.
 
 ***
 
@@ -25,6 +26,17 @@ address is refused, whatever Quasar's database says. EVM addresses in any letter
 
 > `optional` **verify?**: [`PayeeVerifier`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeeverifier--docs)
 
-Defined in: [checkout/payee.ts:57](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L57)
+Defined in: [checkout/payee.ts:119](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L119)
 
 Checks the signature of the payout record. Without it the signature is not checked (`signed: false`).
+
+***
+
+### verifyInvoiceAddress?
+
+> `optional` **verifyInvoiceAddress?**: [`InvoiceAddressVerifier`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-invoiceaddressverifier--docs)
+
+Defined in: [checkout/payee.ts:124](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L124)
+
+Checks an invoice's own address against its meta-address record. Without it the address is not checked
+(`signed: false`).

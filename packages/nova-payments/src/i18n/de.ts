@@ -267,6 +267,12 @@ export const deLabels: NovaPaymentsLabels = {
     exchangeWarning:
       'Senden Sie von Ihrem eigenen Wallet, nicht von einer Börse: Eine Börse entfernt die Zahlungsreferenz, und die Zahlung würde auf eine manuelle Prüfung warten.',
     openInWallet: 'In der Wallet-App öffnen',
+    evmTitle: 'Mit der Wallet-App scannen',
+    evmHint: 'MetaMask, Trust Wallet, Rainbow oder ein anderes Wallet auf Ihrem Telefon',
+    evmScanStep: 'Scannen Sie den Code mit Ihrer Wallet-App',
+    evmCode: 'QR-Code einer Zahlungsanforderung über {amount}',
+    exchangeAllowed:
+      'Diese Rechnung hat eine eigene Adresse: Sie können auch von einer Börse senden, genau den Betrag unten, in diesem Token, in diesem Netzwerk.',
     handoffTitle: 'Auf dem Smartphone zahlen',
     handoffHint:
       'Scannen Sie mit der Smartphone-Kamera: Dieser Checkout öffnet sich dort, und Sie zahlen mit Ihrem mobilen Wallet.',

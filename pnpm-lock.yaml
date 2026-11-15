@@ -464,6 +464,9 @@ importers:
 
   packages/nova-payments:
     dependencies:
+      '@noble/curves':
+        specifier: ^1.9.1
+        version: 1.9.1
       '@tuwaio/nova-icons':
         specifier: ^0.1.0
         version: 0.1.0(react@19.3.1)
@@ -567,6 +570,9 @@ importers:
 
   packages/payments-sdk:
     dependencies:
+      '@noble/curves':
+        specifier: ^1.9.1
+        version: 1.9.1
       framer-motion:
         specifier: 14.9.1
         version: 14.9.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)

@@ -1,0 +1,42 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/verifyInvoiceAddressWith" />
+
+# verifyInvoiceAddressWith()
+
+> **verifyInvoiceAddressWith**(`adapters`, `params`): `Promise`\<`boolean` \| `null`\>
+
+Defined in: [nova-payments/src/utils/payee.ts:78](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payee.ts#L78)
+
+Checks an invoice's own address with the adapter of its chain family (`verifyInvoiceAddress`, EVM): the
+[InvoiceAddressVerifier](?path=/docs/packages-quasar-sdk-checkout-type-aliases-invoiceaddressverifier--docs) of a checkout over its adapters. Reads nothing from the network.
+
+## Parameters
+
+### adapters
+
+readonly [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)[] \| `undefined`
+
+The checkout's payment adapters.
+
+### params
+
+The invoice's address, the address of the quote's instructions and the network (CAIP-2).
+
+#### address
+
+`string`
+
+#### chainId
+
+`string`
+
+#### invoiceAddress
+
+[`CheckoutInvoiceAddress`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoiceaddress--docs)
+
+## Returns
+
+`Promise`\<`boolean` \| `null`\>
+
+Whether the address comes from the signed meta-address, or `null` when no adapter of the family checks it.

@@ -100,6 +100,18 @@ Its name.
 
 ***
 
+### ownAddress?
+
+> `optional` **ownAddress?**: `boolean`
+
+Defined in: [checkout/types.ts:319](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L319)
+
+Whether a quote of the method goes to an address of the invoice's own (ERC-5564): it needs no paying wallet, so the
+page locks its price with none for a QR code that a phone wallet, or an exchange, pays (`quote.invoiceAddress`).
+Quasar versions before invoice addresses leave it out.
+
+***
+
 ### payerProof?
 
 > `optional` **payerProof?**: [`PayerProofNeed`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payerproofneed--docs)
