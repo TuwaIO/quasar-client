@@ -147,12 +147,27 @@ export interface SimulationOptions {
   payerProofError?: string;
 }
 
+/** The merchant's EVM wallet of the stories. */
+const MERCHANT_EVM = '0x2222222222222222222222222222222222222222';
 /** The merchant's Solana wallet and the devnet USDC mint of the stories. */
 const MERCHANT_SOLANA = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
 const USDC_DEVNET = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
 const REFERENCE = '9yYb9dhzyFZGnJgUqt9uZaCvYEJcVwd8xTbgaiVtVb8Y';
 /** What the invoice costs in each token: 89.54 USD, SOL at 150 USD with the 2 % discount. */
 const EXPECTED: Record<string, string> = { USDC: '89540000', SOL: '584994667', ETH: '37308333333333334' };
+
+/**
+ * The sponsored call of a gasless quote, as Quasar writes it: an ERC-20 `transfer` of the amount to the merchant's
+ * wallet, or a plain transfer of the coin. The checkout shows no price whose call pays another address.
+ */
+const sponsoredCall = (token: string, amount: bigint) =>
+  token === 'native'
+    ? { to: MERCHANT_EVM, value: `0x${amount.toString(16)}`, data: '0x' }
+    : {
+        to: token,
+        value: '0x0',
+        data: `0xa9059cbb${MERCHANT_EVM.slice(2).toLowerCase().padStart(64, '0')}${amount.toString(16).padStart(64, '0')}`,
+      };
 
 /**
  * A checkout API without a network, for the stories (`api` of `PaymentCheckout`): it answers from memory, keeps the
@@ -237,7 +252,7 @@ export function simulatedCheckoutApi({
         : {
             family: 'eip155' as const,
             chainId: Number(method.chainId.split(':')[1]),
-            to: '0x2222222222222222222222222222222222222222',
+            to: MERCHANT_EVM,
             token: method.symbol === 'ETH' ? 'native' : '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
             amount,
             decimals: method.decimals,
@@ -268,9 +283,22 @@ export function simulatedCheckoutApi({
           !solana && gasless && method.gasless === 'auto' && !underpaid
             ? {
                 relay: {
-                  typedData: { domain: {}, types: {}, primaryType: 'TransferWithAuthorization', message: {} },
+                  typedData: {
+                    domain: {},
+                    types: {},
+                    primaryType: 'TransferWithAuthorization',
+                    // The authorization pays the merchant's wallet, as the instructions do
+                    message: {
+                      from: payer?.split(':')[2] ?? '',
+                      to: MERCHANT_EVM,
+                      value: amount,
+                      validAfter: '0',
+                      validBefore: String(Math.floor(Date.now() / 1000) + current.quoteTtlSeconds),
+                      nonce: `0x${'00'.repeat(32)}`,
+                    },
+                  },
                 },
-                paymaster: { calls: [{ to: instructions.token, value: '0', data: '0xa9059cbb' }] },
+                paymaster: { calls: [sponsoredCall(instructions.token, send)] },
               }
             : null,
       };

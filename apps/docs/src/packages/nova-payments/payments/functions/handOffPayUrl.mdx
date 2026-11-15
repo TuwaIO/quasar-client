@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/handOffPayUrl" />
+
+# handOffPayUrl()
+
+> **handOffPayUrl**(`payUrl`, `payoutAddresses`): `string` \| `null` \| `undefined`
+
+Defined in: [nova-payments/src/utils/payee.ts:78](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payee.ts#L78)
+
+The payment page a phone opens (the QR code of an EVM method), with the merchant's pinned payout addresses: a link
+that carries none gets those of the checkout, so the checkout on the phone refuses the same addresses as this one. A
+link with pins of its own (from the server SDK) stays as it is.
+
+## Parameters
+
+### payUrl
+
+`string` \| `null` \| `undefined`
+
+The payment page of the invoice, if the app has it.
+
+### payoutAddresses
+
+readonly `string`[] \| `undefined`
+
+The merchant's pinned payout addresses of the checkout (`payoutAddresses`).
+
+## Returns
+
+`string` \| `null` \| `undefined`
+
+The link to hand over.

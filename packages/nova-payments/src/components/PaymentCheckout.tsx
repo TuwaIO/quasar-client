@@ -36,7 +36,7 @@ import {
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm, needsTheClock } from '../utils/outcome';
-import { verifyPayeeWith } from '../utils/payee';
+import { handOffPayUrl, payeeStatus, verifyPayeeWith } from '../utils/payee';
 import { lockPrice } from '../utils/payerProof';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
@@ -102,7 +102,8 @@ export interface PaymentCheckoutProps {
    * part of a `payUrl` the server SDK made with `payoutAddresses`): the checkout refuses to show or pay a quote whose
    * address is not among them, whatever Quasar's database says. Without them the checkout still requires the address's
    * own signature of its payout record, which a swap in Quasar's database could carry for its own wallet. EVM addresses
-   * in any letter case. A change makes the checkout read the invoice again.
+   * in any letter case. A change makes the checkout read the invoice again. A `payUrl` without pins of its own gets
+   * them for the phone it is handed to (the QR code of an EVM method).
    */
   payoutAddresses?: readonly string[];
   /**
@@ -231,13 +232,21 @@ export function CheckoutFrame({
     CompactSummary: Compact = CompactSummary,
   } = customization.components ?? {};
   const announcements = customization.config?.deadlineAnnouncements;
-  const { screen } = context;
+  const { screen, state } = context;
   const frame = useRef<HTMLDivElement>(null);
+  // The pay and QR steps show their heading only once the payee of the price is checked (`PayeeScreen` meanwhile, with
+  // no heading): the step counts as shown from then, so the focus goes to the heading it shows
+  const settling =
+    (screen === 'pay' || (screen === 'qr' && state.quote?.instructions.family === 'solana')) &&
+    state.phase !== 'submitting' &&
+    Boolean(state.quote) &&
+    payeeStatus(state).status === 'checking';
   // A new step takes the focus on its heading, so a keyboard user does not lose it with the button that led there and a
   // screen reader reads the step (WCAG 2.4.3). Not for the first screen after loading, and never when the focus is in
   // another part of the page.
   const shownScreen = useRef(screen);
   useEffect(() => {
+    if (settling) return;
     const previous = shownScreen.current;
     shownScreen.current = screen;
     const block = frame.current;
@@ -249,7 +258,7 @@ export function CheckoutFrame({
     // The page itself scrolls: a new step starts from the top of the sheet, and the focus moves nothing more
     if (block.getBoundingClientRect().top < 0) block.scrollIntoView({ block: 'start' });
     heading?.focus({ preventScroll: true });
-  }, [screen, display]);
+  }, [screen, display, settling]);
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
@@ -619,7 +628,8 @@ export function PaymentCheckout({
     wallet,
     payWith,
     setPayWith,
-    payUrl,
+    // A phone opens the payment page with this checkout's pinned payout addresses
+    payUrl: handOffPayUrl(payUrl, payoutAddresses),
     connectWallet: (method) => {
       const family = methodFamily(method);
       connectingFor.current = method.id;

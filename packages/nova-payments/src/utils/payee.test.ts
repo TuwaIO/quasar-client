@@ -2,7 +2,7 @@ import type { CheckoutQuote, PayoutRecord } from '@tuwaio/quasar-sdk/checkout';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PaymentsAdapter } from '../adapters/types';
-import { payeeStatus, payeeVerified, verifyPayeeWith } from './payee';
+import { handOffPayUrl, payeeStatus, payeeVerified, verifyPayeeWith } from './payee';
 
 const quote = { methodId: 'usdc-base' } as unknown as CheckoutQuote;
 const record = { app: 'app_7Kq2' } as unknown as PayoutRecord;
@@ -68,5 +68,24 @@ describe('verifyPayeeWith', () => {
       ),
     ).resolves.toBeNull();
     await expect(verifyPayeeWith([adapter('solana')], params)).resolves.toBeNull();
+  });
+});
+
+// The phone's checkout must refuse the same addresses as this one: a hand-off link without pins would drop them
+describe('handOffPayUrl', () => {
+  const EVM = '0x52908400098527886E0F7030069857D2E4169EE7';
+  const PAY_URL = 'https://pay.example/pay/tok';
+
+  it('adds the pinned payout addresses to a link that has none', () => {
+    expect(handOffPayUrl(PAY_URL, [EVM])).toBe(`${PAY_URL}#payout=${EVM}`);
+  });
+
+  it('keeps a link with pins of its own, a checkout without pins and a missing link as they are', () => {
+    const pinned = `${PAY_URL}#payout=0x0000000000000000000000000000000000000001`;
+    expect(handOffPayUrl(pinned, [EVM])).toBe(pinned);
+    expect(handOffPayUrl(PAY_URL, undefined)).toBe(PAY_URL);
+    expect(handOffPayUrl(PAY_URL, [])).toBe(PAY_URL);
+    expect(handOffPayUrl(null, [EVM])).toBeNull();
+    expect(handOffPayUrl(undefined, [EVM])).toBeUndefined();
   });
 });

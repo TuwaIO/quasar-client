@@ -4,7 +4,14 @@
  * the store verified this very quote (`payee` of `createCheckoutStore` from `@tuwaio/quasar-sdk/checkout`).
  */
 
-import type { CheckoutQuote, PayeeCheck, PayeeRefusal, PayeeVerifier } from '@tuwaio/quasar-sdk/checkout';
+import {
+  type CheckoutQuote,
+  type PayeeCheck,
+  type PayeeRefusal,
+  type PayeeVerifier,
+  payoutAddressesOf,
+  withPayoutAddresses,
+} from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import { familyOf } from './methods';
@@ -57,4 +64,21 @@ export function verifyPayeeWith(
   const family = familyOf(params.chainId);
   const verify = family ? adapters?.find((adapter) => adapter.family === family)?.verifyPayoutRecord : undefined;
   return verify ? verify(params) : Promise.resolve(null);
+}
+
+/**
+ * The payment page a phone opens (the QR code of an EVM method), with the merchant's pinned payout addresses: a link
+ * that carries none gets those of the checkout, so the checkout on the phone refuses the same addresses as this one. A
+ * link with pins of its own (from the server SDK) stays as it is.
+ *
+ * @param payUrl - The payment page of the invoice, if the app has it.
+ * @param payoutAddresses - The merchant's pinned payout addresses of the checkout (`payoutAddresses`).
+ * @returns The link to hand over.
+ */
+export function handOffPayUrl(
+  payUrl: string | null | undefined,
+  payoutAddresses: readonly string[] | undefined,
+): string | null | undefined {
+  if (!payUrl || !payoutAddresses?.length || payoutAddressesOf(payUrl)) return payUrl;
+  return withPayoutAddresses(payUrl, payoutAddresses);
 }
