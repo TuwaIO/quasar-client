@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.3.0...nova-payments-v0.4.0) (2026-11-15)
+
+
+### Features
+
+* **payments:** names that never read as escrow: needs review, accept payment, unmatched transfers ([#19](https://github.com/TuwaIO/quasar-client/issues/19)) ([a0897fd](https://github.com/TuwaIO/quasar-client/commit/a0897fd77f0289dbf3835d811b73f642371121db))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @tuwaio/quasar-sdk bumped to 0.12.0
+  * peerDependencies
+    * @tuwaio/quasar-sdk bumped from >=0.8.0 to >=0.12.0
+
 ## [0.3.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.2.0...nova-payments-v0.3.0) (2026-11-14)
 
 

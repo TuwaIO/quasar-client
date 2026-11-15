@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.11.0...quasar-sdk-v0.12.0) (2026-11-15)
+
+
+### Features
+
+* **payments:** names that never read as escrow: needs review, accept payment, unmatched transfers ([#19](https://github.com/TuwaIO/quasar-client/issues/19)) ([a0897fd](https://github.com/TuwaIO/quasar-client/commit/a0897fd77f0289dbf3835d811b73f642371121db))
+
 ## [0.11.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.10.0...quasar-sdk-v0.11.0) (2026-11-14)
 
 
