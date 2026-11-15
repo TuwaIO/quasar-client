@@ -36,7 +36,7 @@ import {
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm, needsTheClock } from '../utils/outcome';
-import { payeeStatus, verifyPayeeWith } from '../utils/payee';
+import { handOffPayUrl, payeeStatus, verifyPayeeWith } from '../utils/payee';
 import { lockPrice } from '../utils/payerProof';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
@@ -102,7 +102,8 @@ export interface PaymentCheckoutProps {
    * part of a `payUrl` the server SDK made with `payoutAddresses`): the checkout refuses to show or pay a quote whose
    * address is not among them, whatever Quasar's database says. Without them the checkout still requires the address's
    * own signature of its payout record, which a swap in Quasar's database could carry for its own wallet. EVM addresses
-   * in any letter case. A change makes the checkout read the invoice again.
+   * in any letter case. A change makes the checkout read the invoice again. A `payUrl` without pins of its own gets
+   * them for the phone it is handed to (the QR code of an EVM method).
    */
   payoutAddresses?: readonly string[];
   /**
@@ -627,7 +628,8 @@ export function PaymentCheckout({
     wallet,
     payWith,
     setPayWith,
-    payUrl,
+    // A phone opens the payment page with this checkout's pinned payout addresses
+    payUrl: handOffPayUrl(payUrl, payoutAddresses),
     connectWallet: (method) => {
       const family = methodFamily(method);
       connectingFor.current = method.id;
