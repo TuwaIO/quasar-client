@@ -47,6 +47,8 @@ type StoryProps = SimulationOptions & {
    * the app's store with the app's own connect button, or Nova's own (a real Nova Connect modal).
    */
   connection?: Exclude<PaymentsConnectionMode, 'none'>;
+  /** The merchant's own receiving addresses (`payoutAddresses` of `PaymentCheckout`). */
+  payoutAddresses?: string[];
 };
 
 /** The wallet connection of a story: the simulated app's, or Nova's own. */
@@ -83,6 +85,7 @@ function SimulatedCheckout({
   customization,
   connection,
   locale,
+  payoutAddresses,
   ...simulation
 }: StoryProps) {
   const api = useMemo(() => simulatedCheckoutApi(simulation), [simulation]);
@@ -117,6 +120,7 @@ function SimulatedCheckout({
         onPaid={action('onPaid')}
         locale={pageLocale}
         customization={customization}
+        payoutAddresses={payoutAddresses}
       />
     </StoryConnection>
   );
@@ -315,6 +319,26 @@ export const HandOverAfterClose: Story = {
 
 /** The buyer declines in the wallet: the reason and "Try again". */
 export const Declined: Story = { args: { wallet: METAMASK_ON_BASE_SEPOLIA, walletOptions: { decline: true } } };
+
+/**
+ * The merchant pinned its own receiving addresses (`payoutAddresses`, which the server SDK puts in the `#payout=` part
+ * of a payment link) and the price pays another address, as a swap in Quasar's database would: the checkout shows
+ * neither the address nor a pay button, asks the wallet nothing and says that nothing was sent.
+ */
+export const PaymentStopped: Story = {
+  args: { wallet: METAMASK_ON_BASE_SEPOLIA, payoutAddresses: ['0x52908400098527886E0F7030069857D2E4169EE7'] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: 'Continue' }));
+    const heading = await canvas.findByRole('heading', { name: 'Payment stopped' }, { timeout: 5000 });
+    await expect(heading).toBeVisible();
+    await waitFor(() => expect(heading).toHaveFocus());
+    await expect(canvasElement.querySelector('[data-payee-refusal="payee_not_pinned"]')).not.toBeNull();
+    await expect(canvasElement.textContent).not.toMatch(/0x2222/i);
+    await expect(canvas.queryByRole('button', { name: /^Sign to pay/ })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Back to methods' })).toBeVisible();
+  },
+};
 
 /**
  * No wallet yet: "Continue" opens the connect modal of Nova Connect on the wallets of the method's family (simulated:

@@ -36,7 +36,7 @@ import {
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm, needsTheClock } from '../utils/outcome';
-import { verifyPayeeWith } from '../utils/payee';
+import { payeeStatus, verifyPayeeWith } from '../utils/payee';
 import { lockPrice } from '../utils/payerProof';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
@@ -231,13 +231,21 @@ export function CheckoutFrame({
     CompactSummary: Compact = CompactSummary,
   } = customization.components ?? {};
   const announcements = customization.config?.deadlineAnnouncements;
-  const { screen } = context;
+  const { screen, state } = context;
   const frame = useRef<HTMLDivElement>(null);
+  // The pay and QR steps show their heading only once the payee of the price is checked (`PayeeScreen` meanwhile, with
+  // no heading): the step counts as shown from then, so the focus goes to the heading it shows
+  const settling =
+    (screen === 'pay' || (screen === 'qr' && state.quote?.instructions.family === 'solana')) &&
+    state.phase !== 'submitting' &&
+    Boolean(state.quote) &&
+    payeeStatus(state).status === 'checking';
   // A new step takes the focus on its heading, so a keyboard user does not lose it with the button that led there and a
   // screen reader reads the step (WCAG 2.4.3). Not for the first screen after loading, and never when the focus is in
   // another part of the page.
   const shownScreen = useRef(screen);
   useEffect(() => {
+    if (settling) return;
     const previous = shownScreen.current;
     shownScreen.current = screen;
     const block = frame.current;
@@ -249,7 +257,7 @@ export function CheckoutFrame({
     // The page itself scrolls: a new step starts from the top of the sheet, and the focus moves nothing more
     if (block.getBoundingClientRect().top < 0) block.scrollIntoView({ block: 'start' });
     heading?.focus({ preventScroll: true });
-  }, [screen, display]);
+  }, [screen, display, settling]);
   const [announcement, setAnnouncement] = useState('');
   const previous = useRef<number | null>(null);
   const dueAt = checkout?.invoice.dueAt ? Date.parse(checkout.invoice.dueAt) : null;
