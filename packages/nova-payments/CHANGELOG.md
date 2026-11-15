@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.5.1...nova-payments-v0.6.0) (2026-11-15)
+
+
+### Features
+
+* **nova-payments:** an invoice's own address, checked in the buyer's browser ([#25](https://github.com/TuwaIO/quasar-client/issues/25)) ([cfe0d16](https://github.com/TuwaIO/quasar-client/commit/cfe0d162f30ebd3ee261851c835b163b8a6ea853))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @tuwaio/quasar-sdk bumped to 0.14.0
+  * peerDependencies
+    * @tuwaio/quasar-sdk bumped from >=0.13.0 to >=0.14.0
+
 ## [0.5.1](https://github.com/TuwaIO/quasar-client/compare/nova-payments-v0.5.0...nova-payments-v0.5.1) (2026-11-15)
 
 
