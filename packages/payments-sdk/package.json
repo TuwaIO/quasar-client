@@ -106,6 +106,7 @@
     }
   },
   "dependencies": {
+    "@noble/curves": "^1.9.1",
     "framer-motion": "14.9.1",
     "ofetch": "^1.5.1",
     "uqr": "^0.1.3",

@@ -148,6 +148,7 @@
     "zustand": "^5.0.16"
   },
   "dependencies": {
+    "@noble/curves": "^1.9.1",
     "@tuwaio/nova-icons": "^0.1.0",
     "uqr": "^0.1.3"
   }

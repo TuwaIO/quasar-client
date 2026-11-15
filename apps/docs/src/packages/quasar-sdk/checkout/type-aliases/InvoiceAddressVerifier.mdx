@@ -1,0 +1,37 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Type Aliases/InvoiceAddressVerifier" />
+
+# InvoiceAddressVerifier
+
+> **InvoiceAddressVerifier** = (`params`) => `Promise`\<`boolean` \| `null`\>
+
+Defined in: [checkout/payee.ts:110](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L110)
+
+Checks an invoice's own address: that `address` comes from the record's meta-address and the one-time key, and that
+the record's signature is its payout wallet's, an ordinary wallet's. The EVM adapter of `@tuwaio/nova-payments` does it.
+
+## Parameters
+
+### params
+
+The invoice's address of the quote, the address of its instructions and the network (CAIP-2).
+
+#### address
+
+`string`
+
+#### chainId
+
+`string`
+
+#### invoiceAddress
+
+[`CheckoutInvoiceAddress`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoiceaddress--docs)
+
+## Returns
+
+`Promise`\<`boolean` \| `null`\>
+
+Whether both hold, or `null` when this page cannot check them (no EVM adapter): the record is matched, the
+  rest not checked (`signed: false`).

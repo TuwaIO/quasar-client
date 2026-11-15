@@ -1,0 +1,26 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Functions/metaAddressRecordText" />
+
+# metaAddressRecordText()
+
+> **metaAddressRecordText**(`record`): `string`
+
+Defined in: [checkout/payee.ts:229](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L229)
+
+The text a payout wallet signs for a meta-address record (EIP-191 `personal_sign`), made of the record's fields line
+by line: the same text Quasar builds (`metaAddressRecordText` of `@tuwaio/shared/payments`).
+
+## Parameters
+
+### record
+
+[`MetaAddressRecord`](?path=/docs/packages-quasar-sdk-checkout-interfaces-metaaddressrecord--docs)
+
+The record.
+
+## Returns
+
+`string`
+
+The text.

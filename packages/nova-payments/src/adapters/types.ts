@@ -1,5 +1,10 @@
 import type { Transaction } from '@tuwaio/pulsar-core';
-import type { PaymentInstructions, PayoutRecord, TransferAuthorizationTypedData } from '@tuwaio/quasar-sdk/checkout';
+import type {
+  CheckoutInvoiceAddress,
+  PaymentInstructions,
+  PayoutRecord,
+  TransferAuthorizationTypedData,
+} from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentFamily } from '../utils/methods';
 
@@ -114,6 +119,21 @@ export interface PaymentsAdapter {
    * @returns Whether the signature is the record's address's.
    */
   verifyPayoutRecord?: (params: { record: PayoutRecord; signature: string; chainId: string }) => Promise<boolean>;
+  /**
+   * Checks an invoice's own address (`quote.invoiceAddress`, ERC-5564), without the wallet: the address of the quote's
+   * instructions must come from the meta-address of the payout wallet's signed record and the address's one-time key,
+   * and the record must be signed by its wallet, an ordinary wallet whose signature is recovered in the page. The
+   * checkout shows the address and asks the wallet to pay only then. EVM only.
+   *
+   * @param params - The invoice's address as Quasar sent it, the address of the quote's instructions and the network
+   *   (CAIP-2) of the quote.
+   * @returns Whether the address comes from the signed meta-address.
+   */
+  verifyInvoiceAddress?: (params: {
+    invoiceAddress: CheckoutInvoiceAddress;
+    address: string;
+    chainId: string;
+  }) => Promise<boolean>;
   /**
    * Sends the sponsored calls of a gasless quote with `wallet_sendCalls` and the paymaster, with the wallet's prompt,
    * and waits for the transaction that carries them.

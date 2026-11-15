@@ -2,7 +2,7 @@ import type { CheckoutQuote, PayoutRecord } from '@tuwaio/quasar-sdk/checkout';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PaymentsAdapter } from '../adapters/types';
-import { handOffPayUrl, payeeStatus, payeeVerified, verifyPayeeWith } from './payee';
+import { handOffPayUrl, payeeStatus, payeeVerified, verifyInvoiceAddressWith, verifyPayeeWith } from './payee';
 
 const quote = { methodId: 'usdc-base' } as unknown as CheckoutQuote;
 const record = { app: 'app_7Kq2' } as unknown as PayoutRecord;
@@ -87,5 +87,22 @@ describe('handOffPayUrl', () => {
     expect(handOffPayUrl(PAY_URL, [])).toBe(PAY_URL);
     expect(handOffPayUrl(null, [EVM])).toBeNull();
     expect(handOffPayUrl(undefined, [EVM])).toBeUndefined();
+  });
+});
+
+describe('verifyInvoiceAddressWith', () => {
+  const invoiceAddress = { index: '0' } as unknown as Parameters<typeof verifyInvoiceAddressWith>[1]['invoiceAddress'];
+
+  it('asks the EVM adapter, and answers null where none checks the address', async () => {
+    const verifyInvoiceAddress = vi.fn(async () => true);
+    const adapters = [{ family: 'eip155', verifyInvoiceAddress } as unknown as PaymentsAdapter];
+    const params = { invoiceAddress, address: '0x1', chainId: 'eip155:8453' };
+    await expect(verifyInvoiceAddressWith(adapters, params)).resolves.toBe(true);
+    expect(verifyInvoiceAddress).toHaveBeenCalledWith(params);
+    await expect(verifyInvoiceAddressWith([], params)).resolves.toBeNull();
+    await expect(verifyInvoiceAddressWith(undefined, params)).resolves.toBeNull();
+    await expect(
+      verifyInvoiceAddressWith([{ family: 'eip155' } as unknown as PaymentsAdapter], params),
+    ).resolves.toBeNull();
   });
 });

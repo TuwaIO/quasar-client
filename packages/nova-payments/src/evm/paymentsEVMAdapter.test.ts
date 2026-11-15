@@ -1,6 +1,8 @@
 import { OrbitAdapter } from '@tuwaio/orbit-core';
 import { TransactionTracker } from '@tuwaio/pulsar-core';
 import {
+  type MetaAddressRecord,
+  metaAddressRecordText,
   type PaymentInstructions,
   type PayoutRecord,
   payoutRecordText,
@@ -501,6 +503,64 @@ describe('paymentsEVMAdapter: the payout record of a quote', () => {
     await expect(
       paymentsEVMAdapter(config).verifyPayoutRecord!({ record, signature: 'signed', chainId: BASE }),
     ).resolves.toBe(false);
+    expect(wagmi.verifyMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe("paymentsEVMAdapter: an invoice's own address", () => {
+  const BASE = 'eip155:8453';
+  /** Quasar's frozen vector: the meta-address of its test wallet, the one-time key of index 0 and its address. */
+  const META =
+    'st:eth:0x03730b233d71c2cacf3eafde565dcc253ecd7c9f8f0eb71b1537eba38b740f81bd039add8463fd9ad9411f6ff0457f599adb680dc701f6dd69a99e81d122457ddec9';
+  const R0 = '0xda798b43f121542887649d6397efa7663f2f6c124efd4684d799773ae1c5e928';
+  const ADDRESS0 = '0x91e3d440bAD234d893C7eBbB7f0cd8DEE584E1Ae';
+  const recordOf = (address: string): MetaAddressRecord => ({
+    version: 2,
+    type: 'meta-address',
+    app: 'app_7Kq2',
+    chains: [BASE],
+    address,
+    metaAddress: META,
+    keyDomain: 'dashboard.example.com',
+    keyAppId: 'app_7Kq2',
+    issuedAt: '2026-11-15T12:00:00.000Z',
+  });
+  const signed = async (signer = privateKeyToAccount(generatePrivateKey()), wallet?: string) => {
+    const record = recordOf(wallet ?? signer.address);
+    return { record, signature: await signer.signMessage({ message: metaAddressRecordText(record) }) };
+  };
+
+  // Shown only when the payout wallet signed the meta-address and the one-time key gives this very address from it
+  it('takes an address that comes from the meta-address its payout wallet signed, without a request', async () => {
+    const { record, signature } = await signed();
+    const verify = paymentsEVMAdapter(config).verifyInvoiceAddress!;
+    const invoiceAddress = { record, signature, index: '0', ephemeralPrivateKey: R0 };
+    await expect(verify({ invoiceAddress, address: ADDRESS0, chainId: BASE })).resolves.toBe(true);
+    await expect(verify({ invoiceAddress, address: ADDRESS0.toLowerCase(), chainId: BASE })).resolves.toBe(true);
+    expect(wagmi.verifyMessage).not.toHaveBeenCalled();
+  });
+
+  // A swap in Quasar's database: another address, another key, or a record another wallet signed for the payout wallet
+  it('refuses another address, another one-time key, and a record its wallet did not sign', async () => {
+    const verify = paymentsEVMAdapter(config).verifyInvoiceAddress!;
+    const { record, signature } = await signed();
+    const own = { record, signature, index: '0', ephemeralPrivateKey: R0 };
+    await expect(
+      verify({ invoiceAddress: own, address: '0x52908400098527886E0F7030069857D2E4169EE7', chainId: BASE }),
+    ).resolves.toBe(false);
+    const otherKey = { ...own, ephemeralPrivateKey: `${R0.slice(0, -1)}9` };
+    await expect(verify({ invoiceAddress: otherKey, address: ADDRESS0, chainId: BASE })).resolves.toBe(false);
+    const forged = await signed(
+      privateKeyToAccount(generatePrivateKey()),
+      '0x52908400098527886E0F7030069857D2E4169EE7',
+    );
+    await expect(
+      verify({ invoiceAddress: { ...forged, index: '0', ephemeralPrivateKey: R0 }, address: ADDRESS0, chainId: BASE }),
+    ).resolves.toBe(false);
+    await expect(
+      verify({ invoiceAddress: { ...own, signature: 'signed' }, address: ADDRESS0, chainId: BASE }),
+    ).resolves.toBe(false);
+    // A smart wallet's contract is never asked: only an ordinary wallet makes the keys
     expect(wagmi.verifyMessage).not.toHaveBeenCalled();
   });
 });

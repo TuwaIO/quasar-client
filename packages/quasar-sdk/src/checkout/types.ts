@@ -10,7 +10,7 @@ import type {
   PaymentsEnvironment,
   TaxCategory,
 } from '../modules/payments/types';
-import type { CheckoutPayee } from './payee';
+import type { CheckoutInvoiceAddress, CheckoutPayee } from './payee';
 
 /** A line of the invoice as the checkout shows it; amounts are decimal strings, `netMinor` in cents. */
 export interface CheckoutLine {
@@ -496,6 +496,12 @@ export interface CheckoutQuote {
    * older than payout records leave it out.
    */
   payee?: CheckoutPayee | null;
+  /**
+   * An invoice's own address (ERC-5564): the payout wallet's signed meta-address record and the one-time key the address
+   * of the instructions comes from, which the checkout store checks before the address is shown (`payeeCheck`); `payee`
+   * is `null` then. `null` for a quote to the method's wallet; engines older than invoice addresses leave it out.
+   */
+  invoiceAddress?: CheckoutInvoiceAddress | null;
   /**
    * Whether the quoted wallet confirmed the invoice ({@link CheckoutState.confirmPayer}): `required` on an EVM method,
    * `proven` once it did (`kind` says how). An EVM quote without the confirmation exists only for a method the gasless

@@ -6,6 +6,7 @@
 
 import {
   type CheckoutQuote,
+  type InvoiceAddressVerifier,
   type PayeeCheck,
   type PayeeRefusal,
   type PayeeVerifier,
@@ -63,6 +64,23 @@ export function verifyPayeeWith(
 ): Promise<boolean | null> {
   const family = familyOf(params.chainId);
   const verify = family ? adapters?.find((adapter) => adapter.family === family)?.verifyPayoutRecord : undefined;
+  return verify ? verify(params) : Promise.resolve(null);
+}
+
+/**
+ * Checks an invoice's own address with the adapter of its chain family (`verifyInvoiceAddress`, EVM): the
+ * {@link InvoiceAddressVerifier} of a checkout over its adapters. Reads nothing from the network.
+ *
+ * @param adapters - The checkout's payment adapters.
+ * @param params - The invoice's address, the address of the quote's instructions and the network (CAIP-2).
+ * @returns Whether the address comes from the signed meta-address, or `null` when no adapter of the family checks it.
+ */
+export function verifyInvoiceAddressWith(
+  adapters: readonly PaymentsAdapter[] | undefined,
+  params: Parameters<InvoiceAddressVerifier>[0],
+): Promise<boolean | null> {
+  const family = familyOf(params.chainId);
+  const verify = family ? adapters?.find((adapter) => adapter.family === family)?.verifyInvoiceAddress : undefined;
   return verify ? verify(params) : Promise.resolve(null);
 }
 

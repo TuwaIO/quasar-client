@@ -5,6 +5,7 @@ import type {
   CheckoutStore,
   CheckoutView,
   EventSourceConstructor,
+  InvoiceAddressVerifier,
   PayeeVerifier,
 } from '@tuwaio/quasar-sdk/checkout';
 import { MotionConfig } from 'framer-motion';
@@ -36,7 +37,7 @@ import {
 import type { SentPayment } from '../utils/handOver';
 import { methodFamily, payerFor, type PaymentFamily } from '../utils/methods';
 import { isSameWallet, needsLeaveConfirm, needsTheClock } from '../utils/outcome';
-import { handOffPayUrl, payeeStatus, verifyPayeeWith } from '../utils/payee';
+import { handOffPayUrl, payeeStatus, verifyInvoiceAddressWith, verifyPayeeWith } from '../utils/payee';
 import { lockPrice } from '../utils/payerProof';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
@@ -395,6 +396,11 @@ export function PaymentCheckout({
     adaptersRef.current = settings.adapters;
   }, [settings.adapters]);
   const verifyPayee = useCallback<PayeeVerifier>((params) => verifyPayeeWith(adaptersRef.current, params), []);
+  // An invoice's own address is derived from its signed meta-address in the page before it shows
+  const verifyInvoiceAddress = useCallback<InvoiceAddressVerifier>(
+    (params) => verifyInvoiceAddressWith(adaptersRef.current, params),
+    [],
+  );
   const store = useCheckoutStore({
     token: activeToken,
     baseUrl: baseUrl ?? settings.baseUrl,
@@ -402,7 +408,7 @@ export function PaymentCheckout({
     EventSource,
     pollMs,
     enabled: everOpened,
-    payee: { verify: verifyPayee, addresses: payoutAddresses },
+    payee: { verify: verifyPayee, verifyInvoiceAddress, addresses: payoutAddresses },
   });
   const state = useCheckoutState(store, (value) => value);
   const checkout = state.checkout;

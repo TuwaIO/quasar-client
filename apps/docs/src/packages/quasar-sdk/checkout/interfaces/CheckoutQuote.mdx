@@ -91,6 +91,18 @@ What the wallet sends.
 
 ***
 
+### invoiceAddress?
+
+> `optional` **invoiceAddress?**: [`CheckoutInvoiceAddress`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoiceaddress--docs) \| `null`
+
+Defined in: [checkout/types.ts:504](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L504)
+
+An invoice's own address (ERC-5564): the payout wallet's signed meta-address record and the one-time key the address
+of the instructions comes from, which the checkout store checks before the address is shown (`payeeCheck`); `payee`
+is `null` then. `null` for a quote to the method's wallet; engines older than invoice addresses leave it out.
+
+***
+
 ### lockedAt
 
 > **lockedAt**: `string` \| `null`
@@ -157,7 +169,7 @@ CAIP-10 account the quote was locked to; `null` for a Solana Pay QR quote.
 
 > `optional` **payerProof?**: `object`
 
-Defined in: [checkout/types.ts:505](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L505)
+Defined in: [checkout/types.ts:511](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L511)
 
 Whether the quoted wallet confirmed the invoice ([CheckoutState.confirmPayer](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#confirmpayer)): `required` on an EVM method,
 `proven` once it did (`kind` says how). An EVM quote without the confirmation exists only for a method the gasless
