@@ -119,6 +119,12 @@
   .novapay-label-fade {
     animation: novapay-page-fade 120ms ease-out;
   }
+  /* Every display: the wait while the payee of a price is checked shows only when the check takes more than a moment
+     (an ordinary wallet's signature is checked at once), so a quick check flashes nothing. Opacity only, so it stays
+     with reduced motion (`PayeeScreen`) */
+  .novapay-payee-wait {
+    animation: novapay-page-fade 200ms ease-out 300ms both;
+  }
   /* Every display: what a status screen adds under the head it took over (the receipt, the reason of a failure) comes
      in a moment after the head began to change (`StatusReveal`) */
   .novapay-status-reveal {

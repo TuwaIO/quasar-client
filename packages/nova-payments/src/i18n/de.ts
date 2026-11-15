@@ -116,6 +116,10 @@ export const deLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Rechnungsbetrag',
     invoiceRest: 'Restbetrag der Rechnung',
     backFromRest: 'Zurück',
+    payeeChecking: 'Empfangsadresse wird geprüft…',
+    payeeRefusedTitle: 'Zahlung gestoppt',
+    payeeRefused:
+      'Die Empfangsadresse konnte nicht als Adresse von {merchant} bestätigt werden. Diese Seite zeigt sie deshalb nicht an und fordert Ihr Wallet nicht zur Zahlung auf. Es wurde nichts gesendet. Wählen Sie eine andere Methode oder wenden Sie sich an {merchant}.',
     restRateUntil: 'Dieser Kurs gilt bis {time}. Eine spätere Zahlung wartet darauf, dass {merchant} sie annimmt.',
     restRateEnded:
       'Dieser Kurs wurde früher festgelegt, daher wartet diese Zahlung darauf, dass {merchant} sie annimmt.',

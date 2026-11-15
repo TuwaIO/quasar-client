@@ -20,6 +20,13 @@ export interface QuasarConfig {
   baseUrl?: string;
   /** Request timeout in milliseconds. Defaults to `10000`. */
   timeout?: number;
+  /**
+   * Your own receiving addresses, pinned in every payment link the SDK returns (`payUrl`, in the `#payout=` fragment):
+   * the payment page refuses a payment to any other address, whatever Quasar's database says. Set them from your own
+   * configuration, never from Quasar's answers. An EVM address (`0x…`, any letter case) or a Solana address each; a
+   * link Quasar sends by itself (the invoice email) carries none.
+   */
+  payoutAddresses?: readonly string[];
 }
 
 /**

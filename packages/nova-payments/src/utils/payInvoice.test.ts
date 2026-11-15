@@ -33,8 +33,13 @@ const quote = {
   gasless: { relay: { typedData }, paymaster: { calls } },
 } as unknown as CheckoutQuote;
 
+/** The store's check of a quote's payee: verified, as a payment requires. */
+const verified = (checked: CheckoutQuote = quote) => ({
+  payeeCheck: { quote: checked, status: 'verified' as const, signed: true },
+});
+
 const fakes = () => {
-  const actions = { submit: vi.fn(async () => true), relay: vi.fn(async () => true) };
+  const actions = { submit: vi.fn(async () => true), relay: vi.fn(async () => true), ...verified() };
   const store = { getState: () => actions };
   const adapter: PaymentsAdapter = {
     family: 'eip155',
@@ -178,10 +183,14 @@ describe('payInvoice', () => {
       }),
     } as never;
     const submit = vi.fn(async () => true);
+    const sponsored = {
+      instructions: { family: 'eip155', chainId: 8453 },
+      gasless: { paymaster: { calls: [] } },
+    } as unknown as CheckoutQuote;
     const paying = payInvoice({
       adapter,
-      store: { getState: () => ({ submit, relay: vi.fn() }) } as never,
-      quote: { instructions: { family: 'eip155', chainId: 8453 }, gasless: { paymaster: { calls: [] } } } as never,
+      store: { getState: () => ({ submit, relay: vi.fn(), ...verified(sponsored) }) } as never,
+      quote: sponsored,
       wallet: { address: ACCOUNT, connectorType: 'evm:metamask' } as never,
       path: 'paymaster',
       paymasterUrl: 'https://quasar/paymaster',
@@ -242,8 +251,46 @@ describe('payInvoice', () => {
     await expect(
       payInvoice({ adapter, store, quote, wallet, path: 'paymaster', paymasterUrl: null }),
     ).rejects.toBeInstanceOf(PaymentWalletError);
+    const noGasless = { ...quote, gasless: null };
     await expect(
-      payInvoice({ adapter, store, quote: { ...quote, gasless: null }, wallet, path: 'relay', paymasterUrl: null }),
+      payInvoice({
+        adapter,
+        store: { getState: () => ({ ...store.getState(), ...verified(noGasless) }) },
+        quote: noGasless,
+        wallet,
+        path: 'relay',
+        paymasterUrl: null,
+      }),
     ).rejects.toEqual(expect.objectContaining({ kind: 'unsupported' }));
+  });
+
+  // A step that showed a price before the store verified its payee must still send nothing: the wallet is never asked
+  it('sends nothing for a quote whose payee the store has not verified', async () => {
+    const { actions, adapter } = fakes();
+    const checks = [
+      null,
+      { quote, status: 'checking' as const },
+      { quote, status: 'refused' as const, reason: 'payee_not_pinned' as const },
+      // The check of another quote, even a verified one
+      { quote: { ...quote }, status: 'verified' as const, signed: true },
+    ];
+    for (const payeeCheck of checks) {
+      for (const path of ['transfer', 'relay', 'paymaster'] as const) {
+        await expect(
+          payInvoice({
+            adapter,
+            store: { getState: () => ({ ...actions, payeeCheck }) },
+            quote,
+            wallet,
+            path,
+            paymasterUrl: 'https://quasar/pm',
+          }),
+        ).rejects.toEqual(expect.objectContaining({ kind: 'unsupported' }));
+      }
+    }
+    expect(adapter.sendTransfer).not.toHaveBeenCalled();
+    expect(adapter.signTransferAuthorization).not.toHaveBeenCalled();
+    expect(adapter.sendSponsoredCalls).not.toHaveBeenCalled();
+    expect(actions.submit).not.toHaveBeenCalled();
   });
 });

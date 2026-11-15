@@ -6,9 +6,11 @@ import { baseUnitsToDecimal, formatCountdown, formatTokenAmount, shortAddress } 
 import { networkName } from '../utils/methods';
 import { addressOfWallet, restRateText } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
+import { payeeStatus } from '../utils/payee';
 import { mono, pendingNote, primaryAction } from './classes';
 import { checkoutClassName } from './customization';
 import { ExclamationTriangleIcon } from './icons';
+import { PayeeScreen } from './PayeeScreen';
 import { QrCode } from './QrCode';
 import {
   ChainLink,
@@ -61,6 +63,9 @@ export function QrScreen() {
   const quote = state.quote;
   if (!checkout) return null;
   if (!quote || quote.instructions.family !== 'solana') return payUrl ? <HandoffQr payUrl={payUrl} /> : null;
+  // Neither the code nor the address of a price whose payee is not verified shows
+  const payee = payeeStatus(state);
+  if (payee.status !== 'verified' && state.phase !== 'submitting') return <PayeeScreen payee={payee} />;
 
   const { instructions } = quote;
   const network = networkName(instructionsChainId(instructions));

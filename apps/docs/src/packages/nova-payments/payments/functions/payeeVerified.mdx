@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/payeeVerified" />
+
+# payeeVerified()
+
+> **payeeVerified**(`state`, `quote`): `boolean`
+
+Defined in: [nova-payments/src/utils/payee.ts:39](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payee.ts#L39)
+
+Whether the store verified the payee of this very quote: the only state in which the checkout sends a payment.
+
+## Parameters
+
+### state
+
+`quote` and `payeeCheck` of the checkout store.
+
+#### payeeCheck?
+
+[`PayeeCheck`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeecheck--docs) \| `null`
+
+### quote
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+
+The quote about to be paid.
+
+## Returns
+
+`boolean`
+
+`true` once the store's check of this quote found its payee verified.

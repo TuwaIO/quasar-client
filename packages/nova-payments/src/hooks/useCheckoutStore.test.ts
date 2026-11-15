@@ -83,6 +83,29 @@ describe('useCheckoutStore', () => {
     expect(second.view).toHaveBeenCalledTimes(1);
   });
 
+  // Pins a page reads after its first render (from its URL) must reach the store that checks the quotes: a store made
+  // before them would check every price without them
+  it('makes the store again when the pinned payout addresses change, and not for a new verifier', () => {
+    const api = apiFor('t1');
+    const Pinned = (props: { addresses?: string[]; verify: () => Promise<boolean> }) =>
+      useCheckoutStore({
+        token: 't1',
+        api,
+        EventSource: null,
+        pollMs: 60_000,
+        payee: { verify: props.verify, addresses: props.addresses },
+      }) as CheckoutStore;
+    render(Pinned, { verify: async () => true });
+    const unpinned = render(Pinned, { verify: async () => true }) as CheckoutStore;
+    const destroy = vi.spyOn(unpinned.getState(), 'destroy');
+    render(Pinned, { addresses: ['0xA'], verify: async () => true });
+    const pinned = render(Pinned, { addresses: ['0xA'], verify: async () => true }) as CheckoutStore;
+    expect(destroy).toHaveBeenCalled();
+    expect(pinned).not.toBe(unpinned);
+    // The same pins in a new array, with a new verifier: the same store
+    expect(render(Pinned, { addresses: ['0xA'], verify: async () => false })).toBe(pinned);
+  });
+
   it('destroys the store on unmount', () => {
     const api = apiFor('t1');
     render(Probe, { token: 't1', api });

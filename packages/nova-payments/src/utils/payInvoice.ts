@@ -8,15 +8,17 @@ import type { CheckoutQuote, CheckoutState } from '@tuwaio/quasar-sdk/checkout';
 import type { PaymentsAdapter } from '../adapters/types';
 import type { CheckoutWallet } from './methods';
 import { instructionsChainId, type PayPath } from './pay';
+import { payeeVerified } from './payee';
 import { PaymentWalletError } from './walletErrors';
 
 /** What {@link payInvoice} needs. */
 export interface PayInvoiceParams {
   /** The adapter of the quote's chain family. */
   adapter: PaymentsAdapter;
-  /** The checkout store (only `submit`, `relay` and `relayFromPage` are used). */
+  /** The checkout store (only `submit`, `relay`, `relayFromPage` and `payeeCheck` are used). */
   store: {
-    getState: () => Pick<CheckoutState, 'submit' | 'relay'> & Partial<Pick<CheckoutState, 'relayFromPage'>>;
+    getState: () => Pick<CheckoutState, 'submit' | 'relay' | 'payeeCheck'> &
+      Partial<Pick<CheckoutState, 'relayFromPage'>>;
   };
   /** The locked quote. */
   quote: CheckoutQuote;
@@ -59,8 +61,8 @@ const unsupported = (what: string) => new PaymentWalletError('unsupported', `${w
  *
  * @param params - See {@link PayInvoiceParams}.
  * @returns Whether Quasar took the payment (the store's `error` says why not).
- * @throws {@link PaymentWalletError} `unsupported` when the adapter or the quote cannot take the path; the wallet's
- *   error when it refuses or fails.
+ * @throws {@link PaymentWalletError} `unsupported` when the store has not verified the payee of this quote
+ *   (`payeeCheck`), or the adapter or the quote cannot take the path; the wallet's error when it refuses or fails.
  */
 export async function payInvoice({
   adapter,
@@ -73,6 +75,10 @@ export async function payInvoice({
   onBatchAccepted,
   onSent,
 }: PayInvoiceParams): Promise<boolean> {
+  // The steps show a price only once its payee is verified; nothing is sent for one that is not, whatever shows it
+  if (!payeeVerified(store.getState(), quote)) {
+    throw new PaymentWalletError('unsupported', 'The payee of the quote is not verified');
+  }
   const account = wallet.address;
   if (path === 'relay') {
     const typedData = quote.gasless?.relay?.typedData;

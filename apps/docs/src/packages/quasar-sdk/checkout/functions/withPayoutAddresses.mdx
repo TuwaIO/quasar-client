@@ -1,0 +1,34 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Functions/withPayoutAddresses" />
+
+# withPayoutAddresses()
+
+> **withPayoutAddresses**(`payUrl`, `addresses`): `string`
+
+Defined in: [checkout/payee.ts:104](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L104)
+
+A payment link with the merchant's pinned payout addresses in its fragment (`#payout=`). Browsers send no fragment to
+a server, so the addresses go from the merchant's integration to the payment page without passing through Quasar;
+the page passes them to the checkout (`payoutAddresses` of `PaymentCheckout` in `@tuwaio/nova-payments`), which
+refuses a payment to any other address.
+
+## Parameters
+
+### payUrl
+
+`string`
+
+The payment link, as Quasar returned it.
+
+### addresses
+
+readonly `string`[]
+
+The merchant's own receiving addresses; none leaves the link as it is.
+
+## Returns
+
+`string`
+
+The link with the addresses in its fragment.

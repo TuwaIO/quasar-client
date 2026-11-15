@@ -1,8 +1,14 @@
 import { OrbitAdapter } from '@tuwaio/orbit-core';
 import { TransactionTracker } from '@tuwaio/pulsar-core';
-import type { PaymentInstructions, TransferAuthorizationTypedData } from '@tuwaio/quasar-sdk/checkout';
+import {
+  type PaymentInstructions,
+  type PayoutRecord,
+  payoutRecordText,
+  type TransferAuthorizationTypedData,
+} from '@tuwaio/quasar-sdk/checkout';
 import type { Config } from '@wagmi/core';
 import { encodeFunctionData, erc20Abi } from 'viem';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -20,6 +26,7 @@ const wagmi = vi.hoisted(() => ({
   sendCalls: vi.fn(),
   waitForCallsStatus: vi.fn(),
   signMessage: vi.fn(),
+  verifyMessage: vi.fn(),
 }));
 vi.mock('@wagmi/core', () => wagmi);
 
@@ -446,5 +453,54 @@ describe('paymentsEVMAdapter', () => {
       paymentsEVMAdapter(config).signMessage!({ message: 'm', account: ACCOUNT, chainId: BASE_SEPOLIA }),
     ).rejects.toMatchObject({ kind: 'unsupported' });
     expect(wagmi.signMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('paymentsEVMAdapter: the payout record of a quote', () => {
+  const BASE = 'eip155:8453';
+  const recordOf = (address: string): PayoutRecord => ({
+    version: 1,
+    type: 'address',
+    app: 'app_7Kq2',
+    chains: ['eip155:1', BASE],
+    address,
+    issuedAt: '2026-11-15T01:30:00.000Z',
+  });
+
+  it("takes an ordinary wallet's own signature in the page, without a request", async () => {
+    const owner = privateKeyToAccount(generatePrivateKey());
+    const record = recordOf(owner.address);
+    const signature = await owner.signMessage({ message: payoutRecordText(record) });
+    await expect(paymentsEVMAdapter(config).verifyPayoutRecord!({ record, signature, chainId: BASE })).resolves.toBe(
+      true,
+    );
+    expect(wagmi.verifyMessage).not.toHaveBeenCalled();
+  });
+
+  // A smart wallet's signature recovers to no key of its own: its contract on the quote's network answers for it
+  it("puts any other signature to the wallet's contract on the quote's network", async () => {
+    const record = recordOf('0x52908400098527886E0F7030069857D2E4169EE7');
+    const signature = await privateKeyToAccount(generatePrivateKey()).signMessage({
+      message: payoutRecordText(record),
+    });
+    const verify = paymentsEVMAdapter(config).verifyPayoutRecord!;
+    wagmi.verifyMessage.mockResolvedValueOnce(false);
+    await expect(verify({ record, signature, chainId: BASE })).resolves.toBe(false);
+    expect(wagmi.verifyMessage).toHaveBeenCalledWith(config, {
+      address: record.address,
+      message: payoutRecordText(record),
+      signature,
+      chainId: 8453,
+    });
+    wagmi.verifyMessage.mockResolvedValueOnce(true);
+    await expect(verify({ record, signature, chainId: BASE })).resolves.toBe(true);
+  });
+
+  it('refuses a signature that is not hex, without a request', async () => {
+    const record = recordOf('0x52908400098527886E0F7030069857D2E4169EE7');
+    await expect(
+      paymentsEVMAdapter(config).verifyPayoutRecord!({ record, signature: 'signed', chainId: BASE }),
+    ).resolves.toBe(false);
+    expect(wagmi.verifyMessage).not.toHaveBeenCalled();
   });
 });

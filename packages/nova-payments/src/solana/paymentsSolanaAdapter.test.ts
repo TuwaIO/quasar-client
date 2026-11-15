@@ -1,7 +1,12 @@
 import {
   AccountRole,
   address,
+  generateKeyPair,
+  getAddressFromPublicKey,
+  getBase58Decoder,
   getBase58Encoder,
+  getUtf8Encoder,
+  signBytes,
   SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE,
   SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND,
   SolanaError,
@@ -9,7 +14,7 @@ import {
 import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS, findAssociatedTokenPda, TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
 import { OrbitAdapter } from '@tuwaio/orbit-core';
 import { TransactionTracker } from '@tuwaio/pulsar-core';
-import type { PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
+import { type PaymentInstructions, type PayoutRecord, payoutRecordText } from '@tuwaio/quasar-sdk/checkout';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const solana = vi.hoisted(() => ({
@@ -303,5 +308,33 @@ describe('paymentsSolanaAdapter', () => {
     await expect(
       paymentsSolanaAdapter().getBalance({ chainId: 'eip155:1', account: PAYER, token: 'native' }),
     ).rejects.toThrow('not a Solana chain');
+  });
+});
+
+describe('paymentsSolanaAdapter: the payout record of a quote', () => {
+  const MAINNET = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
+
+  it('takes the Ed25519 signature of the record by its own address, in the page, and nothing else', async () => {
+    const keys = await generateKeyPair();
+    const record: PayoutRecord = {
+      version: 1,
+      type: 'address',
+      app: 'app_7Kq2',
+      chains: [MAINNET],
+      address: await getAddressFromPublicKey(keys.publicKey),
+      issuedAt: '2026-11-15T01:30:00.000Z',
+    };
+    const signature = getBase58Decoder().decode(
+      await signBytes(keys.privateKey, getUtf8Encoder().encode(payoutRecordText(record))),
+    );
+    const verify = paymentsSolanaAdapter().verifyPayoutRecord!;
+    await expect(verify({ record, signature, chainId: MAINNET })).resolves.toBe(true);
+    // The same signature of another record, or for another address
+    await expect(verify({ record: { ...record, app: 'app_other' }, signature, chainId: MAINNET })).resolves.toBe(false);
+    const other = await getAddressFromPublicKey((await generateKeyPair()).publicKey);
+    await expect(verify({ record: { ...record, address: other }, signature, chainId: MAINNET })).resolves.toBe(false);
+    // Not base58, or not 64 bytes
+    await expect(verify({ record, signature: '0OIl', chainId: MAINNET })).resolves.toBe(false);
+    await expect(verify({ record, signature: signature.slice(0, 20), chainId: MAINNET })).resolves.toBe(false);
   });
 });

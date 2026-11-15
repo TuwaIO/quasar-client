@@ -22,6 +22,7 @@ import {
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
 import { leftTheWalletText, paymentFailedText, restRateText } from '../utils/outcome';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
+import { payeeStatus } from '../utils/payee';
 import {
   isConfirmationError,
   isPayerProofError,
@@ -34,6 +35,7 @@ import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { CapsLabel } from './CapsLabel';
 import { focusRing, label, mono, pendingNote, screenHeading, smallAction, smallPrimaryAction } from './classes';
 import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from './icons';
+import { PayeeScreen } from './PayeeScreen';
 import {
   ChainLink,
   CheckoutWalletIcon,
@@ -227,6 +229,12 @@ export function PayScreen() {
     );
   }
   if (!checkout || !quote || !method) return null;
+  // Nothing of a price whose payee is not verified shows, and the wallet is not asked; a payment already under way keeps
+  // its step
+  const payee = payeeStatus(state);
+  if (payee.status !== 'verified' && state.phase !== 'submitting' && payment.status === 'idle') {
+    return <PayeeScreen payee={payee} />;
+  }
 
   const merchant = checkout.merchant.name;
   const network = networkName(chainId);

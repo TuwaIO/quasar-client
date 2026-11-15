@@ -289,7 +289,11 @@ export interface PaymentCheckoutComponents {
   StatusIcon?: ComponentType<CheckoutStatusIconProps>;
   /** The strip and the wash of the status color along the top of the checkout (`StatusEdge` of `@tuwaio/nova-core`). */
   StatusEdge?: ComponentType<StatusEdgeProps>;
-  /** Whole screens, by the screen they replace (for example `paid` or `loading`). */
+  /**
+   * Whole screens, by the screen they replace (for example `paid` or `loading`). A replacement of `pay` or `qr` shows
+   * nothing of the price (its address, its QR code) until `payeeStatus` of the checkout state is `verified`, as
+   * {@link PayeeScreen} does in its place; the checkout sends no payment before that anyway (`payInvoice`).
+   */
   screens?: Partial<Record<CheckoutScreen, ComponentType<CheckoutScreenProps>>>;
 }
 

@@ -1,0 +1,14 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Type Aliases/PayeeRefusal" />
+
+# PayeeRefusal
+
+> **PayeeRefusal** = `"payee_unsigned"` \| `"payee_mismatch"` \| `"payee_not_pinned"` \| `"payee_unverified"`
+
+Defined in: [checkout/payee.ts:71](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L71)
+
+Why a quote's payee was refused: `payee_unsigned` (Quasar has no payout record of the address), `payee_mismatch`
+(the places of the address disagree, or the record names another address or network), `payee_not_pinned` (the
+address is not among the merchant's pinned addresses) or `payee_unverified` (the record's signature is not its
+address's, or could not be checked).

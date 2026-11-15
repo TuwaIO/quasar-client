@@ -1,0 +1,44 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/verifyPayeeWith" />
+
+# verifyPayeeWith()
+
+> **verifyPayeeWith**(`adapters`, `params`): `Promise`\<`boolean` \| `null`\>
+
+Defined in: [nova-payments/src/utils/payee.ts:53](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/payee.ts#L53)
+
+Checks the signature of a quote's payout record with the adapter of its chain family (`verifyPayoutRecord`): the
+[PayeeVerifier](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeeverifier--docs) of a checkout over its adapters.
+
+Side effects: on EVM, a smart wallet's signature is put to its contract through the app's RPC.
+
+## Parameters
+
+### adapters
+
+readonly [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)[] \| `undefined`
+
+The checkout's payment adapters.
+
+### params
+
+The record, its signature and the network (CAIP-2) of the quote.
+
+#### chainId
+
+`string`
+
+#### record
+
+[`PayoutRecord`](?path=/docs/packages-quasar-sdk-checkout-interfaces-payoutrecord--docs)
+
+#### signature
+
+`string`
+
+## Returns
+
+`Promise`\<`boolean` \| `null`\>
+
+Whether the signature holds, or `null` when no adapter of the family checks signatures.

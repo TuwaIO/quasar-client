@@ -114,6 +114,10 @@ export const itLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Totale fattura',
     invoiceRest: 'Resto della fattura',
     backFromRest: 'Indietro',
+    payeeChecking: "Verifica dell'indirizzo di destinazione…",
+    payeeRefusedTitle: 'Pagamento interrotto',
+    payeeRefused:
+      "Non è stato possibile confermare che l'indirizzo di destinazione appartenga a {merchant}, quindi questa pagina non lo mostra e non chiede al tuo wallet di pagare. Non è stato inviato nulla. Scegli un altro metodo o contatta {merchant}.",
     restRateUntil: 'Questo tasso vale fino a {time}. Un pagamento successivo attende che {merchant} lo accetti.',
     restRateEnded:
       'Questo tasso è stato bloccato in precedenza, quindi questo pagamento attende che {merchant} lo accetti.',

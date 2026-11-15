@@ -108,6 +108,17 @@ export async function checkout(orderId: string, email: string) {
 }
 ```
 
+The wallet of each receiving address signs its payout record once, in the dashboard: until it does, Quasar neither offers nor quotes the methods paid to it. The signature shows that the receiving wallet agreed to receive the app's payments, not that it is yours: a swap in Quasar's database could carry a record its own wallet signed. Pin your own receiving addresses, from your own configuration, to stop that: the client puts them in every payment link it returns, in the `#payout=` fragment, which browsers send to no server, and the payment page refuses a payment to any other address.
+
+```ts
+const pinned = new Quasar({
+  secretKey: process.env.QUASAR_SECRET_KEY ?? '',
+  payoutAddresses: ['0x52908400098527886E0F7030069857D2E4169EE7', '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'],
+});
+```
+
+A link Quasar sends by itself (the invoice email) carries no pins. The payment page is Quasar's code: against a compromise of Quasar's servers themselves, not only of its database, only a checkout in your own page with the pins holds (`payoutAddresses` of `PaymentCheckout` in `@tuwaio/nova-payments`).
+
 Verify every webhook before acting on it, with the raw body as received:
 
 ```ts
@@ -158,6 +169,8 @@ checkout.subscribe(({ phase }) => console.log(phase)); // confirming, then paid
 ```
 
 The page's origin must be one of the domains of your Quasar app, when the app lists any.
+
+The store checks the payee of each quote before a page shows its address or asks the wallet for anything (`payeeCheck`: `checking`, then `verified` or `refused` with a `reason`): every place of the address (the instructions, the EIP-3009 authorization, the paymaster calls, the Solana Pay link) names one address, the payout record Quasar sends with the quote (`quote.payee`) covers its network and address and is signed by it, and the address is among your pinned addresses when you pass them. Pass `payee: { verify, addresses }` to `createCheckoutStore`: `verify` checks the record's signature (the chain adapters of `@tuwaio/nova-payments` do), `addresses` are your own receiving addresses (`payoutAddressesOf(location.hash)` reads those of a payment link). Show the address, and pay, only while `payeeCheck.quote` is the current quote and its `status` is `verified`; `checkQuotePayee` runs the same check on one quote.
 
 Quasar credits a transfer only to an invoice it is tied to by proof. On Solana the quote's reference is the proof; a gasless payment (`relayFromPage` or `relay`) is proven by the EIP-3009 authorization the wallet signs. For an EVM payment the buyer's wallet sends (paying the gas, or a smart wallet with or without the merchant's paymaster), the wallet confirms the invoice first, right after the wallet and the method are chosen and before the price: `payerProof` is `required`, `requestQuote()` refuses with `payer_proof_required` until then, and `confirmPayer(sign)` asks Quasar for the exact Sign-In with Ethereum message (it names the page's site, the invoice number, the seller and the total), has `sign` sign it with the wallet (`personal_sign`: free, it moves no funds) and sends the signature, which Quasar checks (a smart wallet's through its contract) and records. `payerProof` is then `confirmed`. One confirmation per invoice and wallet: a new quote, another token or network needs none (a smart wallet's counts on its network only), also on a reopened page. For a method the gasless relay may pay, `payerProof` is `unless_relayed`: the price comes first, and only a transfer or a paymaster payment needs `confirmPayer` before the wallet sends it. A transfer from a wallet that did not confirm the invoice, or from another wallet than the quoted one, pays no invoice: Quasar records it as an unmatched transfer, which the merchant returns to the wallet that sent it, and the invoice stays payable (the rejected payment carries `unmatched`, and so does the store's `payment_mismatch` error): say that the merchant returns it to that wallet and that the invoice can still be paid from the confirmed wallet, never that the merchant checks the payment.
 

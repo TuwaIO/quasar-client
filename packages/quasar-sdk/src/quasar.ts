@@ -37,11 +37,12 @@ export class Quasar {
    * Creates the client. Sends no request.
    *
    * @param config - The secret key of the Quasar app and optional overrides.
-   * @throws {Error} If `config.secretKey` is empty.
+   * @throws {Error} If `config.secretKey` is empty, or `config.payoutAddresses` holds something that is not an EVM or a
+   *   Solana address.
    */
   constructor(config: QuasarConfig) {
     this.client = new QuasarClient(config);
     this.pulsar = new PulsarModule(this.client);
-    this.payments = new PaymentsModule(this.client);
+    this.payments = new PaymentsModule(this.client, { payoutAddresses: config.payoutAddresses });
   }
 }

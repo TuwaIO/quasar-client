@@ -47,7 +47,14 @@ const setup = () => {
     sendTransfer: vi.fn(() => transfer.promise),
     switchChain: vi.fn(async () => undefined),
   };
-  const store = { getState: () => ({ submit, relay: vi.fn(async () => true) }) };
+  // The store verified the payee of the quote the step pays, also of one a test puts in its place: it pays only then
+  const store = {
+    getState: () => ({
+      submit,
+      relay: vi.fn(async () => true),
+      payeeCheck: { quote: props.quote ?? quote, status: 'verified' as const, signed: true },
+    }),
+  };
   const props: Parameters<typeof usePayment>[0] = {
     adapter,
     store,

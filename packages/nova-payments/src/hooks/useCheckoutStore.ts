@@ -4,6 +4,7 @@ import {
   type CheckoutStore,
   createCheckoutStore,
   type EventSourceConstructor,
+  type PayeeOptions,
 } from '@tuwaio/quasar-sdk/checkout';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useStore } from 'zustand';
@@ -39,11 +40,17 @@ export interface UseCheckoutStoreOptions {
   pollMs?: number;
   /** Whether to load and follow the invoice; `false` keeps the idle store, which makes no requests. Defaults to `true`. */
   enabled?: boolean;
+  /**
+   * How the store checks the payee of each quote (`payee` of `createCheckoutStore`): the signature verifier, read when
+   * the store is created, and the merchant's pinned addresses, whose change makes the store again, so that no quote is
+   * checked against pins the page has since replaced.
+   */
+  payee?: PayeeOptions;
 }
 
 /**
  * The checkout store of an invoice (`createCheckoutStore` from `@tuwaio/quasar-sdk/checkout`): created and loaded
- * after mount, destroyed on unmount or when `token` or `baseUrl` change. Until then it is a store in the `loading`
+ * after mount, destroyed on unmount or when `token`, `baseUrl` or the pinned payout addresses change. Until then it is a store in the `loading`
  * phase that makes no requests.
  *
  * Side effects: the store reads the checkout and follows the invoice (an `EventSource` on its `events` route, or a
@@ -53,10 +60,12 @@ export interface UseCheckoutStoreOptions {
  * @returns The store.
  */
 export function useCheckoutStore(options: UseCheckoutStoreOptions): CheckoutStore {
-  const { token, baseUrl, api, EventSource, pollMs, enabled = true } = options;
+  const { token, baseUrl, api, EventSource, pollMs, enabled = true, payee } = options;
   const [store, setStore] = useState<CheckoutStore>(IDLE_STORE);
   // The other options are read when the store is created, so a new object in every render recreates nothing
-  const create = useEffectEvent(() => createCheckoutStore({ token, baseUrl, api, EventSource, pollMs }));
+  const create = useEffectEvent(() => createCheckoutStore({ token, baseUrl, api, EventSource, pollMs, payee }));
+  // Pins read after the first render (a page that takes them from its URL) must reach the store that checks the quotes
+  const pins = payee?.addresses?.join('\n') ?? '';
 
   useEffect(() => {
     if (!enabled) return;
@@ -66,7 +75,7 @@ export function useCheckoutStore(options: UseCheckoutStoreOptions): CheckoutStor
     setStore(created);
     void created.getState().load();
     return () => created.getState().destroy();
-  }, [token, baseUrl, enabled]);
+  }, [token, baseUrl, enabled, pins]);
 
   return store;
 }

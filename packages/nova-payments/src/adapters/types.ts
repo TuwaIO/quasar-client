@@ -1,5 +1,5 @@
 import type { Transaction } from '@tuwaio/pulsar-core';
-import type { PaymentInstructions, TransferAuthorizationTypedData } from '@tuwaio/quasar-sdk/checkout';
+import type { PaymentInstructions, PayoutRecord, TransferAuthorizationTypedData } from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentFamily } from '../utils/methods';
 
@@ -102,6 +102,18 @@ export interface PaymentsAdapter {
    * @returns The signature, as hex.
    */
   signMessage?: (params: { message: string; account: string; chainId: string }) => Promise<string>;
+  /**
+   * Checks the signature of the payout record of a quote's receiving address (`quote.payee`), without the wallet: the
+   * checkout shows the address and asks the wallet to pay only once the record is signed by the address it names
+   * (`payee` of `createCheckoutStore` from `@tuwaio/quasar-sdk/checkout`). On EVM an ordinary wallet's signature is
+   * recovered in the page; a smart wallet's is put to its contract on the quote's network (ERC-1271, ERC-6492) through
+   * the app's RPC. On Solana the Ed25519 signature is checked in the page. Without it the checkout matches the record
+   * with the quote but leaves its signature unchecked.
+   *
+   * @param params - The record, its signature as Quasar sent it, and the network (CAIP-2) of the quote.
+   * @returns Whether the signature is the record's address's.
+   */
+  verifyPayoutRecord?: (params: { record: PayoutRecord; signature: string; chainId: string }) => Promise<boolean>;
   /**
    * Sends the sponsored calls of a gasless quote with `wallet_sendCalls` and the paymaster, with the wallet's prompt,
    * and waits for the transaction that carries them.

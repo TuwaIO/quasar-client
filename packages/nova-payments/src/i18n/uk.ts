@@ -113,6 +113,10 @@ export const ukLabels: NovaPaymentsLabels = {
     invoiceTotal: 'Сума рахунку',
     invoiceRest: 'Решта рахунку',
     backFromRest: 'Назад',
+    payeeChecking: 'Перевіряємо адресу отримувача…',
+    payeeRefusedTitle: 'Оплату зупинено',
+    payeeRefused:
+      'Не вдалося підтвердити, що адреса отримувача належить {merchant}, тому сторінка не показує її і не просить гаманець заплатити. Нічого не надіслано. Виберіть інший спосіб або зверніться до {merchant}.',
     restRateUntil: 'Цей курс діє до {time}. Платіж після цього чекатиме, поки {merchant} його прийме.',
     restRateEnded: 'Цей курс зафіксовано раніше, тому цей платіж чекатиме, поки {merchant} його прийме.',
     restTimeLeft: 'Залишилося часу на відправлення: {time}',

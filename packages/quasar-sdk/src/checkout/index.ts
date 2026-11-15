@@ -7,6 +7,7 @@
  * @module checkout
  */
 
+export * from './payee';
 export * from './refundStore';
 export * from './store';
 export type * from './types';

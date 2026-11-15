@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Functions/payoutAddressesOf" />
+
+# payoutAddressesOf()
+
+> **payoutAddressesOf**(`hashOrUrl`): `string`[] \| `undefined`
+
+Defined in: [checkout/payee.ts:116](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L116)
+
+The merchant's pinned payout addresses in the fragment of a payment link ([withPayoutAddresses](?path=/docs/packages-quasar-sdk-checkout-functions-withpayoutaddresses--docs)).
+
+## Parameters
+
+### hashOrUrl
+
+`string`
+
+The fragment (`location.hash`, with or without `#`) or the whole link.
+
+## Returns
+
+`string`[] \| `undefined`
+
+The addresses, or `undefined` when the link pins none.

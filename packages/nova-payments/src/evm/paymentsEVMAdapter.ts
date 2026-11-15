@@ -1,6 +1,6 @@
 import { delay, OrbitAdapter, toEvmChainId } from '@tuwaio/orbit-core';
 import { type EvmTransaction, TransactionTracker } from '@tuwaio/pulsar-core';
-import type { PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
+import { type PaymentInstructions, payoutRecordText } from '@tuwaio/quasar-sdk/checkout';
 import {
   type Config,
   estimateFeesPerGas,
@@ -15,10 +15,21 @@ import {
   sendTransaction,
   signMessage,
   switchChain,
+  verifyMessage,
   waitForCallsStatus,
   writeContract,
 } from '@wagmi/core';
-import { type Address, encodeFunctionData, erc20Abi, type Hex, hexToBigInt, http } from 'viem';
+import {
+  type Address,
+  encodeFunctionData,
+  erc20Abi,
+  type Hex,
+  hexToBigInt,
+  http,
+  isAddressEqual,
+  isHex,
+  recoverMessageAddress,
+} from 'viem';
 import { createBundlerClient, createPaymasterClient, toSimple7702SmartAccount } from 'viem/account-abstraction';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
@@ -302,6 +313,22 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       const id = toEvmChainId(chainId);
       if (id !== undefined) await onChain(id);
       return signMessage(config, { account: account as Address, message });
+    },
+
+    verifyPayoutRecord: async ({ record, signature, chainId }) => {
+      if (!isHex(signature)) return false;
+      const address = record.address as Address;
+      const message = payoutRecordText(record);
+      // An ordinary wallet's signature recovers to its address in the page, without a request
+      try {
+        if (isAddressEqual(await recoverMessageAddress({ message, signature }), address)) return true;
+      } catch {
+        // Not a plain 65-byte signature: a smart wallet's
+      }
+      // A smart wallet's is put to its contract on the quote's network: its owners and code are its own on each network
+      const id = toEvmChainId(chainId);
+      if (id === undefined) return false;
+      return verifyMessage(config, { address, message, signature, chainId: id });
     },
 
     followSponsoredCalls: ({ batchId, until, onLate }) => {

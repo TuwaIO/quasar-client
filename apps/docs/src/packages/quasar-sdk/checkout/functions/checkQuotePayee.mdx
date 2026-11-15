@@ -1,0 +1,36 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/checkout/Functions/checkQuotePayee" />
+
+# checkQuotePayee()
+
+> **checkQuotePayee**(`quote`, `options?`): `Promise`\<[`PayeeCheckResult`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeecheckresult--docs)\>
+
+Defined in: [checkout/payee.ts:200](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/payee.ts#L200)
+
+Checks the payee of a quote before the page shows its address or asks a wallet for anything: every place of the
+address names the address of the instructions (`payee_mismatch`), the merchant's pinned addresses include it
+(`payee_not_pinned`), and the payout record covers its network and address and is signed by it (`verify`;
+`payee_unverified`). A quote with `payee: null` has no record (`payee_unsigned`). A quote without the field comes
+from an engine older than payout records: its places and the pinned addresses are still checked (`signed: false`).
+
+## Parameters
+
+### quote
+
+[`CheckoutQuote`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutquote--docs)
+
+The quote.
+
+### options?
+
+[`PayeeOptions`](?path=/docs/packages-quasar-sdk-checkout-interfaces-payeeoptions--docs) = `{}`
+
+The verifier of the signature and the pinned addresses.
+
+## Returns
+
+`Promise`\<[`PayeeCheckResult`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-payeecheckresult--docs)\>
+
+What the check found. A verifier that throws counts as `payee_unverified`; one that answers `null` (it
+  cannot check the network's family) leaves the signature unchecked (`signed: false`).
