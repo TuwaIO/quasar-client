@@ -1,4 +1,13 @@
-import { cn, DrawnCross, pixelFlight, QuasarLoader, useNovaIcons } from '@tuwaio/nova-core';
+import {
+  cn,
+  DrawnCross,
+  flyFrom,
+  pixelFlight,
+  pixelsOf,
+  type Point,
+  QuasarLoader,
+  useNovaIcons,
+} from '@tuwaio/nova-core';
 import { TxStatusVisual } from '@tuwaio/nova-transactions';
 import { type ComponentType, type SVGProps, useLayoutEffect, useRef } from 'react';
 
@@ -13,7 +22,7 @@ import {
   NoSymbolIcon,
 } from './icons';
 import type { OutcomeKind } from './OutcomeScreen';
-import { cellsOfShapes, flightOrigins, MARK_CELLS, MARK_GRID, type PixelShape, type Point } from './statusMarkPixels';
+import { MARK_CELLS, MARK_GRID } from './statusMarkPixels';
 import { rememberShown, shownLast } from './statusMemory';
 
 /** What the mark of a status screen stands for: a payment on its way, a paid one, a failed one, or another outcome. */
@@ -44,55 +53,6 @@ const ICONS: Partial<Record<StatusMarkKind, { Icon: ComponentType<SVGProps<SVGSV
 
 /** The states of `TxStatusVisual` of Nova Transactions, whose class names of `childCustomizations` the mark keeps. */
 const VISUAL_STATE = { waiting: 'processing', paid: 'succeed', failed: 'failed' } as const;
-
-/** The centers of the pixels an SVG drawing is made of, in pixels of the screen from the corner of `box`. */
-function pixelsOf(svg: SVGSVGElement, box: DOMRect): Point[] {
-  const grid = svg.viewBox.baseVal;
-  const frame = svg.getBoundingClientRect();
-  if (!grid || grid.width === 0 || frame.width === 0) return [];
-  const number = (element: Element, name: string) => Number(element.getAttribute(name) ?? 0);
-  // Not the shapes a drawing only clips with
-  const drawn = (element: Element) => !element.closest('defs, clipPath, mask');
-  const shapes: PixelShape[] = [
-    ...[...svg.querySelectorAll('rect')].filter(drawn).map((rect) => ({
-      x: number(rect, 'x'),
-      y: number(rect, 'y'),
-      width: number(rect, 'width'),
-      height: number(rect, 'height'),
-    })),
-    ...[...svg.querySelectorAll('path')].filter(drawn).map((path) => ({ d: path.getAttribute('d') ?? '' })),
-  ];
-  const scale = frame.width / grid.width;
-  return cellsOfShapes(shapes).map(({ x, y }) => ({
-    x: frame.left - box.left + (x + 0.5) * scale,
-    y: frame.top - box.top + (y + 0.5) * scale,
-  }));
-}
-
-/**
- * Makes the pixels of a mark that assembles (`data-px`, the motion of `@tuwaio/nova-icons`) start from the pixels of
- * the mark before it instead of from spots of their own nearby.
- */
-function flyFrom(svg: SVGSVGElement, box: DOMRect, sources: Point[]): void {
-  const squares = [...svg.querySelectorAll<SVGElement>('[data-px]')];
-  const grid = svg.viewBox.baseVal;
-  const frame = svg.getBoundingClientRect();
-  if (squares.length === 0 || !grid || grid.width === 0 || frame.width === 0) return;
-  const scale = frame.width / grid.width;
-  const centers = squares.map((square) => ({
-    x: frame.left - box.left + (Number(square.getAttribute('x') ?? 0) + 0.5) * scale,
-    y: frame.top - box.top + (Number(square.getAttribute('y') ?? 0) + 0.5) * scale,
-  }));
-  const origins = flightOrigins(centers, sources, { x: box.width / 2, y: box.height / 2 });
-  // A mark before that was not made of pixels: the new one assembles from its own spots nearby
-  if (origins.length === 0) return;
-  const units = (pixels: number) => `${Math.round((pixels / scale) * 100) / 100}px`;
-  squares.forEach((square, index) => {
-    // In units of the drawing, as `pixelFlight` gives them
-    square.style.setProperty('--nova-px-x', units(origins[index].x - centers[index].x));
-    square.style.setProperty('--nova-px-y', units(origins[index].y - centers[index].y));
-  });
-}
 
 /** The mark of a result in pixels: every pixel of the disc is a square of its own, so the whole mark can assemble. */
 function PixelDisc({ mark, moves, className }: { mark: 'check' | 'cross'; moves: boolean; className?: string }) {
