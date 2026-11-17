@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.1](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.14.0...quasar-sdk-v0.14.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **deps:** update Next.js to 16.4.6, @tuwaio/nova-* to 0.16.0, @tuwaio/sdk to 0.9.5, and share pixel flight helpers ([#27](https://github.com/TuwaIO/quasar-client/issues/27)) ([9e5e2e5](https://github.com/TuwaIO/quasar-client/commit/9e5e2e5da643e24dfc685189717d7a9e5145a45a))
+
 ## [0.14.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.13.0...quasar-sdk-v0.14.0) (2026-11-15)
 
 
