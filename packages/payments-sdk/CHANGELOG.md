@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.1](https://github.com/TuwaIO/quasar-client/compare/payments-sdk-v0.2.0...payments-sdk-v0.2.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **deps:** update Next.js to 16.4.6, @tuwaio/nova-* to 0.16.0, @tuwaio/sdk to 0.9.5, and share pixel flight helpers ([#27](https://github.com/TuwaIO/quasar-client/issues/27)) ([9e5e2e5](https://github.com/TuwaIO/quasar-client/commit/9e5e2e5da643e24dfc685189717d7a9e5145a45a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @tuwaio/nova-payments bumped to 0.6.1
+    * @tuwaio/quasar-sdk bumped to 0.14.1
+
 ## [0.2.0](https://github.com/TuwaIO/quasar-client/compare/payments-sdk-v0.1.5...payments-sdk-v0.2.0) (2026-11-15)
 
 
