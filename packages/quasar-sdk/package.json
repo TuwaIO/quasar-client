@@ -101,10 +101,10 @@
     }
   },
   "devDependencies": {
-    "@tuwaio/pulsar-core": "^0.12.4",
-    "@tuwaio/siwx-react": "^0.6.6",
+    "@tuwaio/pulsar-core": "^0.12.5",
+    "@tuwaio/siwx-react": "^0.6.7",
     "tsup": "^9.0.0",
     "typescript": "6.0.3",
-    "zustand": "^5.0.15"
+    "zustand": "^5.1.0"
   }
 }
