@@ -246,6 +246,10 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         .string()
         .nullable()
         .openapi({ description: 'The payment page while it can be paid: the link its emails carry.' }),
+      receivingAddress: z.string().nullable().optional().openapi({
+        description:
+          "The address of its own the invoice is paid to (ERC-5564), on the networks the payout wallet's meta-address record names: given at its first quote on one of them and kept for good; only the merchant's keys (from the payout wallet's signature and a password) open it. `null` while it has none: it is paid to the wallets of its methods. Left out by Quasar versions before invoice addresses.",
+      }),
       quote: z
         .object({
           methodId: z.string().nullable(),
@@ -1166,6 +1170,31 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         "A receiving wallet's signed word that it takes the payments of a Quasar app on the networks it names. The wallet signs the text the record makes, line by line (`payoutRecordText` of `@tuwaio/quasar-sdk/checkout`): EIP-191 `personal_sign` on EVM (an ordinary wallet once for every EVM network, a smart wallet for one network, through its contract: ERC-1271 or ERC-6492), Ed25519 on Solana.",
     });
 
+  const MetaAddressRecord = z
+    .object({
+      version: z.literal(2),
+      type: z.literal('meta-address'),
+      app: z.string().openapi({ description: 'The Quasar app whose invoices get the addresses.' }),
+      chains: z.array(z.string()).openapi({
+        description: 'The EVM networks the addresses take payments on: CAIP-2, sorted and without repeats.',
+      }),
+      address: z.string().openapi({
+        description:
+          'The payout wallet that made the keys and signed the record: an ordinary wallet (EOA), in its checksum form.',
+      }),
+      metaAddress: z.string().openapi({
+        description:
+          'The ERC-5564 meta-address: `st:eth:0x`, then the spending and the viewing public key, compressed.',
+      }),
+      keyDomain: z.string().openapi({ description: 'The host the keys were made on.' }),
+      keyAppId: z.string().openapi({ description: 'The app the keys were made for.' }),
+      issuedAt: z.string().openapi({ description: 'When the record was made: ISO 8601 in UTC with milliseconds.' }),
+    })
+    .openapi('MetaAddressRecord', {
+      description:
+        "A payout wallet's signed word that its keys receive the payments of a Quasar app at an address of their own for each invoice (ERC-5564). The wallet signs the text the record makes (`metaAddressRecordText` of `@tuwaio/quasar-sdk/checkout`) with EIP-191 `personal_sign`: an ordinary wallet only, as the keys come from its signature.",
+    });
+
   const CheckoutQuote = z
     .object({
       object: z.literal('checkout_quote'),
@@ -1233,6 +1262,22 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         .openapi({
           description:
             "The payout record of the receiving address (`instructions.to`) with its wallet's signature. A checkout shows the address and asks the wallet to pay only once every place of the address (the instructions, the EIP-3009 authorization, the paymaster calls, the Solana Pay link) names it, the record covers the quote's network and address, the signature is the address's own, and the merchant's pinned addresses (`#payout=` of the payment link), when given, include it. `null`: no record covers the address (Quasar no longer offers or quotes such a method). Left out by Quasar versions before payout records.",
+        }),
+      invoiceAddress: z
+        .object({
+          record: MetaAddressRecord,
+          signature: z.string().openapi({ description: 'Of the text of the record: hex (EIP-191 `personal_sign`).' }),
+          index: z.string().openapi({ description: "The invoice's index under its keys, in decimal." }),
+          ephemeralPrivateKey: z.string().openapi({
+            description:
+              'The one-time private key `r` of the address (`0x` hex): with the meta-address it gives the address. It shows only that the address comes from the meta-address; it opens nothing.',
+          }),
+        })
+        .nullable()
+        .optional()
+        .openapi({
+          description:
+            "When the quote is paid to the invoice's own address (`instructions.to`): the payout wallet's signed meta-address record and the one-time key the address comes from. A checkout derives the address from them and checks the record's signature before it shows the address (`checkQuotePayee` of `@tuwaio/quasar-sdk/checkout`); the merchant's pinned addresses name the payout wallet, as the address of each invoice is new. Left out, or `null`, when the quote is paid to the method's wallet.",
         }),
     })
     .openapi('CheckoutQuote', { description: 'A quote locked to the payer until `expiresAt`.' });
@@ -1418,6 +1463,10 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
             description:
               'When the paying wallet confirms the invoice (`payer-proof`): `before_quote` (EVM: before the price, else the quote answers `409 payer_proof_required`), `unless_relayed` (an EVM method the gasless relay may pay: the price first; the relay confirms the wallet itself, a transfer or a paymaster payment needs the proof first), `none` (Solana: the quote reference ties the transfer).',
           }),
+          ownAddress: z.boolean().optional().openapi({
+            description:
+              "Whether a quote of the method goes to an address of the invoice's own (ERC-5564): a payment there is tied to the invoice by its address, so it needs no confirmed wallet, and the page may lock the price with no payer for a QR code that a phone wallet, or an exchange, pays (`quote.invoiceAddress`). Left out by Quasar versions before invoice addresses.",
+          }),
         }),
       ),
       payerProofs: z
@@ -1495,7 +1544,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         200: { description: 'The quote and its payment instructions.', ...json(CheckoutQuote) },
         400: invalid('`payer_required`, `payer_chain_mismatch`'),
         409: refused(
-          '`payer_mismatch` (the rest of an underpaid invoice is paid from the wallet that paid first; `originWallet` names it), `rest_method_mismatch` (and with the method that paid first; `methodId` names it), `buyer_required`, `consent_required` (a required consent without `consentGiven: true`), `payer_proof_required` (the EVM wallet has not confirmed the invoice: `payer-proof` first; `payer` names it), `invoice_expired`, `invoice_processing`, `invoice_not_payable`, `amount_out_of_range`, `method_not_priced`, `payment_on_its_way` (a payment of the invoice is being followed: wait for it, the quote it pays stays), `native_from_contract` (a smart wallet cannot pay in this coin: choose a token), `payer_is_recipient` (the payer is the wallet the method is paid to: its transfer would pay nothing), `too_many_payments` (the invoice was handed 50 transactions already: the buyer contacts the seller, before any money moves), `payee_unsigned` (the wallet of the receiving address has not signed its payout record yet: the merchant signs it in the dashboard).',
+          '`payer_mismatch` (the rest of an underpaid invoice is paid from the wallet that paid first; `originWallet` names it), `rest_method_mismatch` (and with the method that paid first; `methodId` names it), `buyer_required`, `consent_required` (a required consent without `consentGiven: true`), `payer_proof_required` (the EVM wallet has not confirmed the invoice: `payer-proof` first; `payer` names it), `invoice_expired`, `invoice_processing`, `invoice_not_payable`, `amount_out_of_range`, `method_not_priced`, `payment_on_its_way` (a payment of the invoice is being followed: wait for it, the quote it pays stays), `native_from_contract` (a smart wallet cannot pay in this coin: choose a token), `payer_is_recipient` (the payer is the wallet the method is paid to: its transfer would pay nothing), `too_many_payments` (the invoice was handed 50 transactions already: the buyer contacts the seller, before any money moves), `payee_unsigned` (the wallet of the receiving address has not signed its payout record yet: the merchant signs it in the dashboard, or in the admin panel of a self-hosted node).',
         ),
         503: refused('`screening_unavailable` (AML in `block` mode while a source is down), `price_unavailable`.'),
         ...checkoutErrors,
