@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.15.0...quasar-sdk-v0.16.0) (2026-11-18)
+
+
+### Features
+
+* **quasar-sdk:** a credited transfer the network took back carries revertedAt ([#32](https://github.com/TuwaIO/quasar-client/issues/32)) ([58fee75](https://github.com/TuwaIO/quasar-client/commit/58fee7563799da518e5c4e46b65fae93cc4015cf))
+
 ## [0.15.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.14.1...quasar-sdk-v0.15.0) (2026-11-18)
 
 
