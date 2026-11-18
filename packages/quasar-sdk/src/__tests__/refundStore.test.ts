@@ -308,6 +308,18 @@ describe('createRefundStore', () => {
       expect(store.getState()).toMatchObject({ phase: 'failed', refund: { failureReason: 'withdrawn' } });
     });
 
+    // An engine with a status of its own for it sends `withdrawn` and no failure reason. The phase stays one a window knows:
+    // a phase of its own showed an empty window, with the wallet's button gone and nothing said
+    it('says no to a refund with the status withdrawn the same way, and the refund says that it was taken back', async () => {
+      const store = await started(async () => refund('withdrawn', { failureReason: null }));
+      expect(await store.getState().recheck()).toBe(false);
+      expect(store.getState()).toMatchObject({
+        phase: 'failed',
+        refund: { status: 'withdrawn', failureReason: null },
+        sentTransaction: null,
+      });
+    });
+
     it('says no to a refund another window already sent, and follows it', async () => {
       vi.useFakeTimers();
       const get = vi.fn().mockResolvedValue(refund('submitted', { txHash: '0xfeed' }));
@@ -377,6 +389,24 @@ describe('createRefundStore', () => {
     await store.getState().submit({ txHash: '0xfeed', from: '0x9' });
     await vi.advanceTimersByTimeAsync(1_000);
     expect(store.getState()).toMatchObject({ phase: 'failed', refund: { failureReason: 'wrong_amount' } });
+  });
+
+  // `withdrawn` ends a refund like `failed` does: read as "not final yet", it would be asked for every few seconds for good
+  it('stops reading a refund that reads as withdrawn', async () => {
+    vi.useFakeTimers();
+    const get = vi.fn().mockResolvedValue(refund('withdrawn'));
+    const store = createRefundStore({
+      request: vi.fn(),
+      submit: vi.fn().mockResolvedValue(refund('submitted')),
+      get,
+      pollMs: 1_000,
+    });
+    store.getState().resume(refund('requested'), START.instructions);
+    await store.getState().submit({ txHash: '0xfeed', from: '0x9' });
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(store.getState()).toMatchObject({ phase: 'failed', refund: { status: 'withdrawn' } });
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(get).toHaveBeenCalledTimes(1);
   });
 
   it('passes on the other invoice a refusal names', async () => {

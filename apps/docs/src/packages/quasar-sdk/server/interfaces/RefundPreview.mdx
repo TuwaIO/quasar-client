@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # RefundPreview
 
-Defined in: [modules/payments/types.ts:735](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L735)
+Defined in: [modules/payments/types.ts:739](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L739)
 
 What a refund would send, as [PaymentsModule.previewRefund](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#previewrefund) returns it. A requested refund keeps its token
 amount until it is sent, so look before asking: the same amount in the invoice currency sends a different number of tokens once a
@@ -16,7 +16,7 @@ volatile asset has moved.
 
 > **amount**: `string`
 
-Defined in: [modules/payments/types.ts:737](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L737)
+Defined in: [modules/payments/types.ts:741](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L741)
 
 The amount in the invoice currency.
 
@@ -26,7 +26,7 @@ The amount in the invoice currency.
 
 > **atPaymentRate**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:749](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L749)
+Defined in: [modules/payments/types.ts:753](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L753)
 
 What this amount was worth in tokens at the rate of the payment, in base units; `null` for `exact_received`.
 
@@ -36,7 +36,7 @@ What this amount was worth in tokens at the rate of the payment, in base units; 
 
 > **cryptoAmount**: `string`
 
-Defined in: [modules/payments/types.ts:741](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L741)
+Defined in: [modules/payments/types.ts:745](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L745)
 
 What the refund would send now, in base units.
 
@@ -46,7 +46,7 @@ What the refund would send now, in base units.
 
 > **currency**: `string`
 
-Defined in: [modules/payments/types.ts:739](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L739)
+Defined in: [modules/payments/types.ts:743](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L743)
 
 The invoice currency.
 
@@ -56,7 +56,7 @@ The invoice currency.
 
 > **decimals**: `number`
 
-Defined in: [modules/payments/types.ts:745](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L745)
+Defined in: [modules/payments/types.ts:749](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L749)
 
 Decimals of the token.
 
@@ -66,7 +66,7 @@ Decimals of the token.
 
 > **exactPossible**: `boolean`
 
-Defined in: [modules/payments/types.ts:751](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L751)
+Defined in: [modules/payments/types.ts:755](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L755)
 
 Whether `exact_received` would be taken now: it returns the whole invoice, so nothing may be refunded yet.
 
@@ -76,7 +76,7 @@ Whether `exact_received` would be taken now: it returns the whole invoice, so no
 
 > **received**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:747](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L747)
+Defined in: [modules/payments/types.ts:751](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L751)
 
 What the payment brought, in base units.
 
@@ -86,6 +86,6 @@ What the payment brought, in base units.
 
 > **symbol**: `string`
 
-Defined in: [modules/payments/types.ts:743](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L743)
+Defined in: [modules/payments/types.ts:747](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L747)
 
 Symbol of the token.

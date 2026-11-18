@@ -332,6 +332,12 @@ const FAILURE_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']
   resend_confirmed: 'failedResendConfirmed',
 };
 
+// Why a refund ended, as the two tables here name it. One taken back has the status `withdrawn` and no failure reason; an
+// engine without that status says `failed` with the reason `withdrawn`. Both read the same: by the reason alone the first
+// read as a failed transaction that cost a network fee
+const endReason = (refund: Refund | null | undefined) =>
+  refund?.status === 'withdrawn' ? 'withdrawn' : refund?.failureReason;
+
 // Why it failed, in words for what the merchant can act on: part of it arrived, so asking again sends only the rest. A
 // reason this package does not know reads as a failed transaction, never as its code
 const failureText = (
@@ -339,7 +345,8 @@ const failureText = (
   text: NovaPaymentsLabels['refund'],
   values: Record<string, string>,
 ) => {
-  const label = refund?.failureReason ? FAILURE_LABELS[refund.failureReason] : undefined;
+  const reason = endReason(refund);
+  const label = reason ? FAILURE_LABELS[reason] : undefined;
   return label ? text[label] : formatLabel(text.failedText, values);
 };
 
@@ -350,8 +357,10 @@ const FAILURE_TITLES: Readonly<Record<string, keyof NovaPaymentsLabels['refund']
   cancelled_final: 'failedCancelledTitle',
 };
 
-const failureTitle = (refund: Refund | null | undefined, text: NovaPaymentsLabels['refund']) =>
-  text[(refund?.failureReason && FAILURE_TITLES[refund.failureReason]) || 'failedTitle'];
+const failureTitle = (refund: Refund | null | undefined, text: NovaPaymentsLabels['refund']) => {
+  const reason = endReason(refund);
+  return text[(reason && FAILURE_TITLES[reason]) || 'failedTitle'];
+};
 
 // What Quasar answers in English goes to the logs of an app: a merchant reads a refusal in the language of the window, in words
 // for what can be done. A code this package does not know says that Quasar refused, never the code itself.
