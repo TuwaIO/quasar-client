@@ -219,6 +219,22 @@ describe('useRefund', () => {
     expect(store.getState().phase).toBe('failed');
   });
 
+  // The same from an engine with a status of its own for it: the step must be one the window draws
+  it('asks the wallet nothing about a refund with the status withdrawn, and shows the step of a refund that ended', async () => {
+    wallet = merchantWallet();
+    const { adapter, store, flow, get } = setup();
+    await store.getState().start('inv_1', {});
+    flow();
+    await tick();
+    get.mockResolvedValue({ ...(refund as object), status: 'withdrawn', failureReason: null } as never);
+
+    await flow().send();
+
+    expect(adapter.sendTransfer).not.toHaveBeenCalled();
+    expect(store.getState().phase).toBe('failed');
+    expect(flow().step).toBe('failed');
+  });
+
   it('asks the wallet nothing while Quasar does not answer, and says so', async () => {
     wallet = merchantWallet();
     const { adapter, store, flow, get, submit } = setup();

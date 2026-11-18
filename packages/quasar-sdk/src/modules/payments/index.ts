@@ -365,7 +365,7 @@ export class PaymentsModule {
    * refuse to record what was sent.
    *
    * @param refundId - The refund.
-   * @returns The refund, `failed` as `withdrawn`.
+   * @returns The refund, `withdrawn` (`failed` with `failureReason` `withdrawn` from an engine without that status).
    * @throws {QuasarSDKError} `refund_not_found` (404), `refund_not_waiting` (409), a timeout or a network error.
    */
   async withdrawRefund(refundId: string): Promise<Refund> {

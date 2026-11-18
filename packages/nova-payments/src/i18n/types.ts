@@ -1064,7 +1064,7 @@ export type NovaPaymentsLabels = {
     failedTooEarly: string;
     /** Why it failed: `no_matching_transfer` (it sent nothing to the recipient). */
     failedNoTransfer: string;
-    /** Why it failed: `withdrawn` (taken back before it was sent). */
+    /** Under the heading of a refund taken back before it was sent: the status `withdrawn`, or the failure reason `withdrawn` of an engine without that status. */
     failedWithdrawn: string;
     /** Why it failed: `cancelled` (cancelled in the wallet, in a block not final yet: a reorganization may bring it back). */
     failedCancelling: string;

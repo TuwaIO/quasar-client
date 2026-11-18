@@ -12,7 +12,8 @@ import type { CheckoutError, CheckoutHandOverStorage } from './store';
 /**
  * Where a refund stands: `idle`; `requesting` (Quasar prices it); `awaitingTransfer` (send `instructions` from the
  * merchant's wallet, then {@link RefundState.submit}); `submitting`; `confirming` (Quasar follows the transaction);
- * `confirmed` (the credit note is issued) or `failed`.
+ * `confirmed` (the credit note is issued) or `failed` (it ended with nothing refunded: `refund.status` is `failed`, or
+ * `withdrawn` for a refund taken back).
  */
 export type RefundPhase =
   'idle' | 'requesting' | 'awaitingTransfer' | 'submitting' | 'confirming' | 'confirmed' | 'failed';
@@ -176,6 +177,13 @@ const NOT_ABOUT_THE_TRANSACTION = new Set([401, 403, 408, 425, 429]);
 const refusedForGood = ({ status }: CheckoutError) =>
   status !== undefined && status >= 400 && status < 500 && !NOT_ABOUT_THE_TRANSACTION.has(status);
 
+/**
+ * The phase of a refund that ended. One taken back (`withdrawn`) has the phase of a failed one, and `refund.status` tells
+ * them apart: a phase of its own would be one that the windows built on this store do not draw.
+ */
+const phaseOfEnded = (status: 'confirmed' | 'failed' | 'withdrawn'): RefundPhase =>
+  status === 'confirmed' ? 'confirmed' : 'failed';
+
 /** The answer of a call, or the refusal {@link refundAction} returned, thrown as the store takes refusals. */
 function answerOf<Result>(answer: Result | RefusedRefundCall): Result {
   if (answer && typeof answer === 'object' && 'refused' in answer) {
@@ -272,9 +280,9 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
             .then(
               (refund) => {
                 if (poll !== timer || get().refund?.id !== refundId) return;
-                if (refund.status === 'confirmed' || refund.status === 'failed') {
+                if (refund.status === 'confirmed' || refund.status === 'failed' || refund.status === 'withdrawn') {
                   stop();
-                  set({ refund, phase: refund.status });
+                  set({ refund, phase: phaseOfEnded(refund.status) });
                 } else {
                   set({ refund });
                   readNext();
@@ -395,7 +403,7 @@ export function createRefundStore(options: RefundStoreOptions): RefundStore {
             set({ phase: 'confirming', refund, error: null, sentTransaction: null });
             follow(asked.id);
           } else {
-            set({ phase: refund.status, refund, error: null, sentTransaction: null });
+            set({ phase: phaseOfEnded(refund.status), refund, error: null, sentTransaction: null });
           }
           return false;
         } catch (error) {

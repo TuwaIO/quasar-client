@@ -319,7 +319,10 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       id: z.string(),
       object: z.literal('refund'),
       invoiceId: z.string(),
-      status: z.enum(['requested', 'submitted', 'confirmed', 'failed']),
+      status: z.enum(['requested', 'submitted', 'confirmed', 'failed', 'withdrawn']).openapi({
+        description:
+          '`requested` waits for its transaction; `withdrawn` was taken back before anything was sent for it.',
+      }),
       amount: z.string(),
       currency: z.string(),
       mode: z.enum(['fiat_value', 'exact_received']),
@@ -1014,11 +1017,11 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
     '/refunds/{id}/withdraw',
     'Refunds',
     'Take back a refund that waits',
-    'A refund nothing has been sent for yet ends as `failed` with `failureReason` `withdrawn`, and an unmatched transfer it was for waits for its refund again (`awaiting_refund`). Used by `quasar.payments.withdrawRefund`.',
+    'A refund nothing has been sent for yet ends as `withdrawn`, and an unmatched transfer it was for waits for its refund again (`awaiting_refund`). Used by `quasar.payments.withdrawRefund`.',
     {
       request: { params: idParam('id', 'Refund ID.') },
       responses: {
-        200: { description: 'The refund, `failed`.', ...json(Refund) },
+        200: { description: 'The refund, `withdrawn`.', ...json(Refund) },
         404: refused('`refund_not_found`.'),
         409: refused('`refund_not_waiting`: a transaction was submitted for it already, or it ended.'),
         ...common,

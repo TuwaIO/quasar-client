@@ -604,8 +604,12 @@ export interface Refund {
   object: 'refund';
   /** The invoice. */
   invoiceId: string;
-  /** `requested` (waits for its transaction), `submitted`, `confirmed` or `failed`. */
-  status: 'requested' | 'submitted' | 'confirmed' | 'failed';
+  /**
+   * `requested` (waits for its transaction), `submitted`, `confirmed`, `failed`, or `withdrawn` (taken back before
+   * anything was sent for it). An engine without the status `withdrawn` says `failed` with `failureReason` `withdrawn`
+   * for a refund taken back.
+   */
+  status: 'requested' | 'submitted' | 'confirmed' | 'failed' | 'withdrawn';
   /** Amount in the invoice currency. */
   amount: string;
   /** Invoice currency. */

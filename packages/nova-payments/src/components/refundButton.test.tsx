@@ -518,6 +518,30 @@ describe('RefundButton', () => {
       expect(button(failed(flow), ScreenContent).props.title).toBe(defaultLabels.refund.failedWithdrawnTitle);
     });
 
+    // An engine with a status of its own for a refund taken back sends `withdrawn` and no failure reason: read by the reason
+    // alone, the window said "The refund failed" and that only the network fee was spent
+    it.each([
+      ['of an invoice', {}],
+      ['of an unmatched transfer', { unmatchedTransfer: 'ut_1' }],
+    ] as const)('reads the status withdrawn of a refund %s like the reason of an engine before it', (_name, extra) => {
+      const flow = flowOf({
+        step: 'failed',
+        phase: 'failed',
+        refund: {
+          id: 'rf_8',
+          mode: 'exact_received',
+          status: 'withdrawn',
+          failureReason: null,
+          creditNoteNumber: null,
+          ...extra,
+        } as never,
+      });
+      const tree = failed(flow);
+      expect(button(tree, ScreenContent).props.title).toBe(defaultLabels.refund.failedWithdrawnTitle);
+      expect(textOf(tree)).toContain(defaultLabels.refund.failedWithdrawn);
+      expect(textOf(tree)).not.toContain(defaultLabels.refund.failedText.split('{network}')[0]);
+    });
+
     it('reads a reason it does not know as a failed transaction, not as a code', () => {
       const flow = flowOf({
         step: 'failed',
