@@ -397,6 +397,13 @@ export interface InvoicePayment {
   blockRef: string | null;
   /** When it was mined, or when it was verified if the network named no time. */
   at: string;
+  /**
+   * When the network dropped or reverted the transfer after it was credited (for example in a reorg). Such a transfer
+   * no longer pays the invoice: show it as taken back, never as paid. The `payment.reverted` webhook announces it, and
+   * the merchant decides what happens to the invoice. Absent while the transfer stands, and from nodes that do not
+   * report it.
+   */
+  revertedAt?: string;
 }
 
 /** A transaction that was tied to an invoice and did not pay it. */
