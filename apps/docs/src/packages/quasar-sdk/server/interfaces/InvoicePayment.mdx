@@ -60,6 +60,19 @@ ID of the payment method paid with (see `listMethods`).
 
 ***
 
+### revertedAt?
+
+> `optional` **revertedAt?**: `string`
+
+Defined in: [modules/payments/types.ts:406](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L406)
+
+When the network dropped or reverted the transfer after it was credited (for example in a reorg). Such a transfer
+no longer pays the invoice: show it as taken back, never as paid. The `payment.reverted` webhook announces it, and
+the merchant decides what happens to the invoice. Absent while the transfer stands, and from nodes that do not
+report it.
+
+***
+
 ### senders
 
 > **senders**: `string`[]

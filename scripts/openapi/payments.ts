@@ -357,6 +357,10 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
       at: z
         .string()
         .openapi({ description: 'When it was mined, or when it was verified if the network named no time.' }),
+      revertedAt: z.string().optional().openapi({
+        description:
+          'When the network dropped or reverted the transfer after it was credited. Such a transfer no longer pays the invoice; absent while it stands.',
+      }),
     })
     .openapi('InvoicePayment', { description: 'A transfer credited to an invoice.' });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
