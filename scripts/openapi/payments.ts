@@ -788,7 +788,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
           description: 'For a payment that is less than the invoice asks: you accept the shortfall.',
         }),
       }),
-      '`invoice_not_in_review`, `invoice_partly_refunded` (refund the rest).',
+      "`invoice_not_in_review`, `invoice_partly_refunded` (refund the rest), `payment_short`: the payment is less than the invoice asks, past the app's underpayment tolerance, and `acceptShortfall` is not set (`details.amountPaid`, `amountExpected`, `shortfall` in base units; the invoice stays under review), `refund_may_have_landed`: an earlier refund's transaction may have reached the payer, check it (`details.refundId`).",
     ],
   ] as const) {
     route('post', `/invoices/{id}/${action}`, 'Invoices', summary, description, {
@@ -1969,7 +1969,7 @@ export function registerPayments(registry: OpenAPIRegistry, secretKey: string): 
         }),
         transaction: z.object({ txHash: z.string().nullable(), chainId: z.string().nullable() }).optional().openapi({
           description:
-            'The transaction to check: `payment.reverted` (a payment Quasar credited is gone from the chain, the invoice waits for you with `reviewReason` `payment_reverted`), `refund.reverted` (a confirmed refund the network dropped after its confirmations: the refund and its credit note stay, the invoice of the payment waits for you with `reviewReason` `refund_reverted`; Quasar takes no second refund for it, send the money again outside it) and `payment.unverified` (a native coin sent through a contract no receipt shows: check it and record it by hand).',
+            "The transaction to check: `payment.reverted` (a payment Quasar credited is gone from the chain, the invoice waits for you with `reviewReason` `payment_reverted`), `refund.reverted` (a confirmed refund the network dropped after its confirmations: the refund stays and Quasar takes no second refund for it, send the money again outside it; a refund of the invoice's payment keeps its credit note and the invoice waits for you with `reviewReason` `refund_reverted`, a refund of an unmatched transfer, named in `refund.unmatchedTransfer`, has no credit note and marks no invoice) and `payment.unverified` (a native coin sent through a contract no receipt shows: check it and record it by hand).",
         }),
         mightHaveLanded: z.literal(true).optional().openapi({
           description:

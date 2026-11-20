@@ -256,8 +256,11 @@ export class PaymentsModule {
    * @param params - `reason`, required, recorded in the ledger; `acceptShortfall: true` for a payment that is less
    *   than the invoice asks, whose shortfall you accept.
    * @returns The invoice.
-   * @throws {QuasarSDKError} `invoice_not_found` (404); `invoice_not_in_review` or `invoice_partly_refunded` (refund
-   *   the rest) (409); a timeout or a network error.
+   * @throws {QuasarSDKError} `invoice_not_found` (404); `invoice_not_in_review`, `invoice_partly_refunded` (refund
+   *   the rest), `payment_short` (the payment is less than the invoice asks, past the app's underpayment tolerance, and
+   *   `acceptShortfall` is not set: `details.amountPaid`, `amountExpected` and `shortfall` in base units; the invoice
+   *   stays under review) or `refund_may_have_landed` (an earlier refund's transaction may have reached the payer; check
+   *   it) (409); a timeout or a network error.
    */
   async acceptPayment(invoiceId: string, params: { reason: string; acceptShortfall?: boolean }): Promise<Invoice> {
     return this.pinned(
@@ -351,12 +354,13 @@ export class PaymentsModule {
    *   the refund in `details.refund`), so nothing is sent twice: a new refund needs a new key. `idempotency_key_reused`
    *   (409): the key was used for another invoice, mode or amount.
    * @returns The refund and what to send where.
-   * @throws {QuasarSDKError} `invalid_request` (an amount with `exact_received` or `excess`, among others) or
-   *   `review_refund_must_be_whole` (a payment that needs review is refunded whole) (400), `invoice_not_found` (404), an
-   *   invoice that cannot be refunded or an amount above what is left (409), `refund_destination_required` (409: the
-   *   payment came from a contract; give `to`), `nothing_overpaid`, `excess_refunded` or `excess_refund_under_way` (409,
-   *   `details.refundId`) for the excess, `refund_may_have_landed` (409: an earlier refund's transaction may have reached
-   *   the buyer; check it), a timeout or a network error.
+   * @throws {QuasarSDKError} `invalid_request` (an amount with `exact_received` or `excess`, among others),
+   *   `amount_exceeds_refundable` (an amount above what is left: `details.refundable`) or `review_refund_must_be_whole`
+   *   (a payment that needs review is refunded whole) (400), `invoice_not_found` (404), an invoice that cannot be
+   *   refunded (`invoice_not_refundable`, `exact_refund_needs_whole_invoice`, `payment_unknown`) (409),
+   *   `refund_destination_required` (409: the payment came from a contract; give `to`), `nothing_overpaid`,
+   *   `excess_refunded` or `excess_refund_under_way` (409, `details.refundId`) for the excess, `refund_may_have_landed`
+   *   (409: an earlier refund's transaction may have reached the buyer; check it), a timeout or a network error.
    */
   async refund(invoiceId: string, params: RefundParams = {}, options?: CreateOptions): Promise<RefundStart> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/refunds`, {
