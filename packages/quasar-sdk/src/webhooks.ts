@@ -157,8 +157,9 @@ export interface PaymentWebhookEvent {
     unmatchedTransfer?: PaymentWebhookUnmatchedTransfer | PaymentWebhookUnmatchedTransferVoided;
     /**
      * The transaction to check, in `payment.reverted`, `refund.reverted` (a confirmed refund the network dropped: the
-     * refund and its credit note stay, the invoice waits for review with `reviewReason` `refund_reverted`, and Quasar
-     * takes no second refund for it) and `payment.unverified`.
+     * refund stays, and Quasar takes no second refund for it; a refund of the invoice's payment keeps its credit note and
+     * the invoice waits for review with `reviewReason` `refund_reverted`, while a refund of an unmatched transfer, named
+     * in `refund.unmatchedTransfer`, has no credit note and marks no invoice) and `payment.unverified`.
      */
     transaction?: { txHash: string | null; chainId: string | null };
     /**
