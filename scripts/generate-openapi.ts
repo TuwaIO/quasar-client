@@ -187,7 +187,7 @@ const StarknetTransactionSchema = BaseTransactionSchema.extend({
   contractAddress: z.string().optional().openapi({ description: 'Contract address interacted with.' }),
 }).openapi('StarknetTransaction', {
   description:
-    'Reserved by the Pulsar types for a Starknet adapter. Neither Pulsar nor Quasar tracks Starknet transactions.',
+    'Reserved by the Pulsar types for a Starknet adapter. Neither Pulsar nor Quasar tracks Starknet transactions: a sync of one is refused (`400`).',
 });
 
 // PHANTOM TYPE CHECK: Enforces 1:1 alignment with pulsar-core StarknetTransaction
@@ -266,8 +266,13 @@ const PaginatedHistoryResponseSchema = z
   .object({
     success: z.boolean().openapi({ description: 'Always `true` in a 200 answer.' }),
     docs: z.array(TransactionSchema).openapi({ description: 'Array of transaction documents for the current page.' }),
-    totalDocs: z.number().openapi({ description: 'Total matching documents across all pages.' }),
-    totalPages: z.number().openapi({ description: 'Total number of pages.' }),
+    totalDocs: z.number().openapi({
+      description:
+        'Matching documents, counted up to 10,001: the pages reach back 10,000 transactions, and more than that reads as 10,001.',
+    }),
+    totalPages: z.number().openapi({
+      description: 'Pages within the 10,000 transactions the history reaches back; the last one may be shorter.',
+    }),
     page: z.number().openapi({ description: 'Current page number (1-indexed).' }),
     hasNextPage: z.boolean().openapi({ description: 'Whether a next page exists.' }),
     hasPrevPage: z.boolean().openapi({ description: 'Whether a previous page exists.' }),
@@ -322,11 +327,17 @@ registry.registerPath({
       content: { 'application/json': { schema: SuccessCreateResponseSchema } },
     },
     400: {
-      description: 'The body is not a valid transaction or exceeds the safety limits.',
+      description:
+        'The body is not a valid transaction, exceeds the safety limits, or names `adapter: starknet` (Quasar has no Starknet tracker).',
       content: { 'application/json': { schema: ErrorResponseSchema } },
     },
     401: {
       description: 'Missing or invalid key.',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
+    402: {
+      description:
+        '`quota_exhausted`: the quota of the organization is used up past the small allowance a sync has (work under way finishes; `mode: lazy` within it).',
       content: { 'application/json': { schema: ErrorResponseSchema } },
     },
     403: {
@@ -396,7 +407,7 @@ registry.registerPath({
   path: PULSAR_HISTORY_ENDPOINT,
   summary: 'Read the transaction history',
   description:
-    'Returns the transactions of the app, newest first, filtered by every given filter. Used by `quasar.pulsar.getHistory`.',
+    'Returns the transactions of the app, newest first, filtered by every given filter. The pages reach back 10,000 transactions: filter by `status`, `chainId`, `walletAddress` or `txKey` to reach older ones. Used by `quasar.pulsar.getHistory`.',
   tags: ['Pulsar'],
   security: [{ [secretKeyAuth.name]: [] }],
   request: {
@@ -431,6 +442,11 @@ registry.registerPath({
     200: {
       description: 'Paginated transaction history.',
       content: { 'application/json': { schema: PaginatedHistoryResponseSchema } },
+    },
+    400: {
+      description:
+        '`invalid_status` (not one of the final statuses), `page_too_deep` (a page past the 10,000 transactions the history reaches back).',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
     },
     401: {
       description: 'Missing or invalid key.',

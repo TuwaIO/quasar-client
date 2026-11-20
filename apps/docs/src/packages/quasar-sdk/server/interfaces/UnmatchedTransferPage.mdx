@@ -1,0 +1,29 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/UnmatchedTransferPage" />
+
+# UnmatchedTransferPage
+
+Defined in: [modules/payments/types.ts:756](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L756)
+
+A page of [UnmatchedTransfer](?path=/docs/packages-quasar-sdk-server-interfaces-unmatchedtransfer--docs)s, newest first, as [PaymentsModule.listUnmatchedTransfersPage](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#listunmatchedtransferspage) returns it.
+
+## Properties
+
+### nextCursor
+
+> **nextCursor**: `string` \| `null`
+
+Defined in: [modules/payments/types.ts:760](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L760)
+
+Pass it as `cursor` for the next page; `null` on the last one.
+
+***
+
+### unmatchedTransfers
+
+> **unmatchedTransfers**: [`UnmatchedTransfer`](?path=/docs/packages-quasar-sdk-server-interfaces-unmatchedtransfer--docs)[]
+
+Defined in: [modules/payments/types.ts:758](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L758)
+
+The unmatched transfers of the page.

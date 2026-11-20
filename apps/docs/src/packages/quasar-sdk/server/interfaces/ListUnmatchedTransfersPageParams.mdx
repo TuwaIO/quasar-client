@@ -1,0 +1,39 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Interfaces/ListUnmatchedTransfersPageParams" />
+
+# ListUnmatchedTransfersPageParams
+
+Defined in: [modules/payments/types.ts:746](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L746)
+
+What [PaymentsModule.listUnmatchedTransfersPage](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#listunmatchedtransferspage) takes.
+
+## Properties
+
+### cursor?
+
+> `optional` **cursor?**: `string`
+
+Defined in: [modules/payments/types.ts:752](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L752)
+
+`nextCursor` of the previous page.
+
+***
+
+### limit?
+
+> `optional` **limit?**: `number`
+
+Defined in: [modules/payments/types.ts:750](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L750)
+
+Page size, 1 to 100 (default 100).
+
+***
+
+### status?
+
+> `optional` **status?**: [`UnmatchedTransferStatus`](?path=/docs/packages-quasar-sdk-server-type-aliases-unmatchedtransferstatus--docs)
+
+Defined in: [modules/payments/types.ts:748](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L748)
+
+Only those in one state; `awaiting_refund` for those still to refund.

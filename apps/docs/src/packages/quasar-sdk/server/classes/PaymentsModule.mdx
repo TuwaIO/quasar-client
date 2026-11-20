@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentsModule
 
-Defined in: [modules/payments/index.ts:92](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L92)
+Defined in: [modules/payments/index.ts:94](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L94)
 
 The Payments API (`/v1/payments`) of a Payments app, available as `quasar.payments` on a [Quasar](?path=/docs/packages-quasar-sdk-server-classes-quasar--docs) client.
 Quasar issues numbered invoices with PDF (and, when on, e-invoice) documents, checks the on-chain payment, records
@@ -35,7 +35,7 @@ const { invoice, payUrl } = await quasar.payments.createInvoice(
 
 > **acceptPayment**(`invoiceId`, `params`): `Promise`\<[`Invoice`](?path=/docs/packages-quasar-sdk-server-interfaces-invoice--docs)\>
 
-Defined in: [modules/payments/index.ts:259](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L259)
+Defined in: [modules/payments/index.ts:262](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L262)
 
 Accepts the payment of an invoice that needs review (`POST /v1/payments/invoices/:id/accept`): the invoice becomes
 paid and the buyer gets a receipt. The money is already in your wallet: accepting moves none. A transfer Quasar
@@ -52,7 +52,12 @@ The invoice.
 
 ##### params
 
-`reason`, required, recorded in the ledger.
+`reason`, required, recorded in the ledger; `acceptShortfall: true` for a payment that is less
+  than the invoice asks, whose shortfall you accept.
+
+###### acceptShortfall?
+
+`boolean`
 
 ###### reason
 
@@ -75,7 +80,7 @@ The invoice.
 
 > **cancelInvoice**(`invoiceId`, `params?`): `Promise`\<[`Invoice`](?path=/docs/packages-quasar-sdk-server-interfaces-invoice--docs)\>
 
-Defined in: [modules/payments/index.ts:238](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L238)
+Defined in: [modules/payments/index.ts:240](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L240)
 
 Cancels an open invoice (`POST /v1/payments/invoices/:id/cancel`): it stops being payable; its number stays
 taken. A payment that arrives later needs your review. An underpaid invoice is closed as expired: refund what
@@ -114,7 +119,7 @@ The invoice.
 
 > **correctInvoice**(`invoiceId`, `params`): `Promise`\<[`InvoiceCorrection`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicecorrection--docs)\>
 
-Defined in: [modules/payments/index.ts:278](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L278)
+Defined in: [modules/payments/index.ts:282](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L282)
 
 Corrects the buyer details of an open or paid invoice (`POST /v1/payments/invoices/:id/correct`): a credit note
 for it and a new invoice with the corrected details. A paid invoice's payment carries over to the new one.
@@ -142,7 +147,8 @@ The new invoice (with its checkout while it is open) and the one it replaces.
 #### Throws
 
 `invalid_request` (400), `invoice_not_found` (404), an invoice that cannot be corrected
-  (409), a timeout or a network error.
+  (409), `document_pending` (503: its document is still being issued) or `documents_busy` (503: another document of
+  the series is being numbered), a timeout or a network error.
 
 ***
 
@@ -150,10 +156,10 @@ The new invoice (with its checkout while it is open) and the one it replaces.
 
 > **createInvoice**(`params`, `options?`): `Promise`\<[`InvoiceWithCheckout`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicewithcheckout--docs)\>
 
-Defined in: [modules/payments/index.ts:139](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L139)
+Defined in: [modules/payments/index.ts:141](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L141)
 
 Issues an invoice (`POST /v1/payments/invoices`): numbered, with its PDF and, when the app has e-invoices on and
-the buyer details allow, its UBL; the `invoice.issued` webhook follows.
+the buyer details allow, its UBL, which follow within a second or two; the `invoice.issued` webhook follows.
 
 #### Parameters
 
@@ -179,8 +185,8 @@ The invoice, its checkout token and its payment page (also in the invoice view w
 #### Throws
 
 `invalid_request` with `issues` (400), `seller_details_missing` and other issuer
-  refusals (400), an app that is not a Payments app or a node without Payments (403), a timeout or a network
-  error.
+  refusals (400), an app that is not a Payments app or a node without Payments (403), `documents_busy` (503: another
+  document of the series is being numbered; retry with the same `idempotencyKey`), a timeout or a network error.
 
 ***
 
@@ -188,7 +194,7 @@ The invoice, its checkout token and its payment page (also in the invoice view w
 
 > **getCreditNote**(`invoiceId`, `ref`, `format?`): `Promise`\<[`PaymentDocument`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentdocument--docs)\>
 
-Defined in: [modules/payments/index.ts:469](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L469)
+Defined in: [modules/payments/index.ts:499](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L499)
 
 Downloads a credit note of an invoice (`GET /v1/payments/invoices/:id/documents/credit-note/:ref`).
 
@@ -228,7 +234,7 @@ The bytes, media type and file name.
 
 > **getDocument**(`invoiceId`, `kind`): `Promise`\<[`PaymentDocument`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentdocument--docs)\>
 
-Defined in: [modules/payments/index.ts:456](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L456)
+Defined in: [modules/payments/index.ts:486](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L486)
 
 Downloads a stored document of an invoice byte for byte as issued
 (`GET /v1/payments/invoices/:id/documents/:kind`).
@@ -255,7 +261,8 @@ The bytes, media type and file name.
 
 #### Throws
 
-`invoice_not_found` or `document_not_found` (404), a timeout or a network error.
+`invoice_not_found` or `document_not_found` (404), `document_pending` (503: the document
+  is still being issued; ask again in a few seconds), a timeout or a network error.
 
 ***
 
@@ -263,7 +270,7 @@ The bytes, media type and file name.
 
 > **getEvents**(`invoiceId`, `params?`): `Promise`\<[`InvoiceLedger`](?path=/docs/packages-quasar-sdk-server-interfaces-invoiceledger--docs)\>
 
-Defined in: [modules/payments/index.ts:316](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L316)
+Defined in: [modules/payments/index.ts:320](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L320)
 
 Reads a page of an invoice ledger, oldest first (`GET /v1/payments/invoices/:id/events`): up to 100 steps, with
 how many the ledger has, who created the invoice and when its quote was locked and its receipt issued. Every
@@ -300,7 +307,7 @@ One page; pass `nextCursor` as `cursor` for the next.
 
 > **getInvoice**(`invoiceId`): `Promise`\<[`InvoiceDetails`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicedetails--docs)\>
 
-Defined in: [modules/payments/index.ts:159](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L159)
+Defined in: [modules/payments/index.ts:161](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L161)
 
 Reads an invoice with its five newest refunds, every refund still under way, and how many refunds and credit
 notes it has (`GET /v1/payments/invoices/:id`). The full lists are [PaymentsModule.listInvoiceRefunds](#listinvoicerefunds) and
@@ -332,7 +339,7 @@ The invoice.
 
 > **getRefund**(`refundId`): `Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>
 
-Defined in: [modules/payments/index.ts:385](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L385)
+Defined in: [modules/payments/index.ts:394](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L394)
 
 Reads a refund (`GET /v1/payments/refunds/:id`).
 
@@ -360,7 +367,7 @@ The refund.
 
 > **listInvoiceDocuments**(`invoiceId`, `params?`): `Promise`\<[`PaymentsList`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentslist--docs)\<[`InvoiceDocumentRef`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicedocumentref--docs)\>\>
 
-Defined in: [modules/payments/index.ts:194](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L194)
+Defined in: [modules/payments/index.ts:196](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L196)
 
 Lists the documents issued for an invoice, newest first (`GET /v1/payments/invoices/:id/documents`): the invoice,
 its receipt and its credit notes, as PDF and UBL. Download them with [PaymentsModule.getDocument](#getdocument) and
@@ -397,7 +404,7 @@ One page; pass `nextCursor` as `cursor` for the next.
 
 > **listInvoiceRefunds**(`invoiceId`, `params?`): `Promise`\<[`PaymentsList`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentslist--docs)\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>\>
 
-Defined in: [modules/payments/index.ts:176](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L176)
+Defined in: [modules/payments/index.ts:178](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L178)
 
 Lists the refunds of an invoice, newest first (`GET /v1/payments/invoices/:id/refunds`).
 
@@ -432,7 +439,7 @@ One page; pass `nextCursor` as `cursor` for the next.
 
 > **listInvoices**(`params?`): `Promise`\<[`PaymentsList`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentslist--docs)\<[`Invoice`](?path=/docs/packages-quasar-sdk-server-interfaces-invoice--docs)\>\>
 
-Defined in: [modules/payments/index.ts:211](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L211)
+Defined in: [modules/payments/index.ts:213](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L213)
 
 Lists invoices, newest first (`GET /v1/payments/invoices`).
 
@@ -460,7 +467,7 @@ One page; pass `nextCursor` as `cursor` for the next.
 
 > **listMethods**(): `Promise`\<\{ `data`: [`PaymentMethod`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentmethod--docs)[]; `object`: `"list"`; \}\>
 
-Defined in: [modules/payments/index.ts:492](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L492)
+Defined in: [modules/payments/index.ts:522](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L522)
 
 Lists the app's active payment methods, in their order (`GET /v1/payments/methods`).
 
@@ -480,7 +487,7 @@ A timeout or a network error.
 
 > **listUnmatchedTransfers**(`params?`): `Promise`\<[`UnmatchedTransfer`](?path=/docs/packages-quasar-sdk-server-interfaces-unmatchedtransfer--docs)[]\>
 
-Defined in: [modules/payments/index.ts:416](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L416)
+Defined in: [modules/payments/index.ts:427](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L427)
 
 Lists unmatched transfers, newest first (`GET /v1/payments/unmatched-transfers`, or
 `GET /v1/payments/invoices/:id/unmatched-transfers` with `invoice`): transfers that reached your invoices without
@@ -506,11 +513,40 @@ a timeout or a network error.
 
 ***
 
+### listUnmatchedTransfersPage()
+
+> **listUnmatchedTransfersPage**(`params?`): `Promise`\<[`UnmatchedTransferPage`](?path=/docs/packages-quasar-sdk-server-interfaces-unmatchedtransferpage--docs)\>
+
+Defined in: [modules/payments/index.ts:448](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L448)
+
+Lists the app's unmatched transfers a page at a time, newest first (`GET /v1/payments/unmatched-transfers`).
+
+#### Parameters
+
+##### params?
+
+[`ListUnmatchedTransfersPageParams`](?path=/docs/packages-quasar-sdk-server-interfaces-listunmatchedtransferspageparams--docs) = `{}`
+
+One state (`awaiting_refund` for those still to refund), the page size (1 to 100, default 100) and
+  the `nextCursor` of the previous page.
+
+#### Returns
+
+`Promise`\<[`UnmatchedTransferPage`](?path=/docs/packages-quasar-sdk-server-interfaces-unmatchedtransferpage--docs)\>
+
+The page and the cursor of the next one (`null` on the last).
+
+#### Throws
+
+`invalid_request` or `invalid_cursor` (400), a timeout or a network error.
+
+***
+
 ### previewRefund()
 
 > **previewRefund**(`invoiceId`, `params?`): `Promise`\<[`RefundPreview`](?path=/docs/packages-quasar-sdk-server-interfaces-refundpreview--docs)\>
 
-Defined in: [modules/payments/index.ts:331](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L331)
+Defined in: [modules/payments/index.ts:335](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L335)
 
 Shows what a refund would send, without asking for it (`POST /v1/payments/invoices/:id/refunds/preview`).
 
@@ -544,7 +580,7 @@ What [PaymentsModule.refund](#refund) would be refused with, a timeout or a netw
 
 > **quote**(`params`): `Promise`\<[`PaymentQuote`](?path=/docs/packages-quasar-sdk-server-interfaces-paymentquote--docs)\>
 
-Defined in: [modules/payments/index.ts:482](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L482)
+Defined in: [modules/payments/index.ts:512](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L512)
 
 Prices an amount in a payment method now (`POST /v1/payments/quotes`); nothing is locked.
 
@@ -573,7 +609,7 @@ The price.
 
 > **refund**(`invoiceId`, `params?`, `options?`): `Promise`\<[`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\>
 
-Defined in: [modules/payments/index.ts:353](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L353)
+Defined in: [modules/payments/index.ts:361](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L361)
 
 Asks for a refund of a paid invoice or one that needs review (`POST /v1/payments/invoices/:id/refunds`). Send the
 returned amount from your wallet to the payer, then pass the transaction to [PaymentsModule.submitRefund](#submitrefund).
@@ -590,7 +626,8 @@ The invoice.
 
 [`RefundParams`](?path=/docs/packages-quasar-sdk-server-interfaces-refundparams--docs) = `{}`
 
-Amount (everything left when omitted), mode and reason.
+Amount (everything left when omitted), mode (`excess`: the overpaid excess alone), reason, and `to`
+  when the payment came from a contract.
 
 ##### options?
 
@@ -609,17 +646,20 @@ The refund and what to send where.
 
 #### Throws
 
-`invalid_request` or `review_refund_must_be_whole` (a payment that needs review is
-  refunded whole) (400), `invoice_not_found` (404), an invoice that cannot be refunded or an amount above what is
-  left (409), a timeout or a network error.
+`invalid_request` (an amount with `exact_received` or `excess`, among others) or
+  `review_refund_must_be_whole` (a payment that needs review is refunded whole) (400), `invoice_not_found` (404), an
+  invoice that cannot be refunded or an amount above what is left (409), `refund_destination_required` (409: the
+  payment came from a contract; give `to`), `nothing_overpaid`, `excess_refunded` or `excess_refund_under_way` (409,
+  `details.refundId`) for the excess, `refund_may_have_landed` (409: an earlier refund's transaction may have reached
+  the buyer; check it), a timeout or a network error.
 
 ***
 
 ### refundUnmatchedTransfer()
 
-> **refundUnmatchedTransfer**(`unmatchedTransferId`): `Promise`\<[`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\>
+> **refundUnmatchedTransfer**(`unmatchedTransferId`, `params?`): `Promise`\<[`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\>
 
-Defined in: [modules/payments/index.ts:440](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L440)
+Defined in: [modules/payments/index.ts:469](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L469)
 
 Asks for the refund of an unmatched transfer, the whole of it to the wallet that sent it
 (`POST /v1/payments/unmatched-transfers/:id/refund`): send it from your wallet, then hand the transaction over with
@@ -634,6 +674,14 @@ Asks for the refund of an unmatched transfer, the whole of it to the wallet that
 
 The unmatched transfer.
 
+##### params?
+
+`to`: where it goes instead of its sender, needed when a contract sent it.
+
+###### to?
+
+`string`
+
 #### Returns
 
 `Promise`\<[`RefundStart`](?path=/docs/packages-quasar-sdk-server-interfaces-refundstart--docs)\>
@@ -643,7 +691,8 @@ The refund and what to send where.
 #### Throws
 
 `unmatched_transfer_not_found` (404); `unmatched_transfer_not_refundable` (it is not
-  `awaiting_refund`) or `sender_blocked` (AML blocked the wallet that sent it) (409); a timeout or a network error.
+  `awaiting_refund`), `sender_blocked` (AML blocked the wallet that sent it) or `refund_destination_required` (a
+  contract sent it; give `to`) (409); a timeout or a network error.
 
 ***
 
@@ -651,7 +700,7 @@ The refund and what to send where.
 
 > **replacePayLink**(`invoiceId`): `Promise`\<[`InvoiceWithCheckout`](?path=/docs/packages-quasar-sdk-server-interfaces-invoicewithcheckout--docs)\>
 
-Defined in: [modules/payments/index.ts:296](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L296)
+Defined in: [modules/payments/index.ts:300](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L300)
 
 Gives an invoice, in any status, a new checkout token and payment page (`POST /v1/payments/invoices/:id/checkout`),
 for example when its link leaked. The earlier link stops working, also in the emails already sent, and so does the
@@ -682,7 +731,7 @@ The invoice with its new token and page.
 
 > **submitRefund**(`refundId`, `params`): `Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>
 
-Defined in: [modules/payments/index.ts:400](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L400)
+Defined in: [modules/payments/index.ts:411](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L411)
 
 Hands Quasar the refund transaction (`POST /v1/payments/refunds/:id/submit`); once it is final, the refund is
 confirmed, a credit note issued and `refund.confirmed` sent.
@@ -709,9 +758,11 @@ The refund, `submitted`.
 
 #### Throws
 
-`invalid_request` (400), `refund_not_found` (404), `refund_not_submittable` or
-  `transaction_already_used` (409: a transaction an invoice credited as a payment; one handed over as a payment
-  that paid nothing becomes the refund's), a timeout or a network error.
+`invalid_request`, `invalid_transaction` or `invalid_sender` (400), `refund_not_found`
+  (404), `refund_not_submittable`, `refund_from_buyer` (a wallet that paid the invoice cannot send its refund),
+  `refund_operation_open` or `transaction_already_used` (409: a transaction an invoice credited as a payment, or
+  another refund's; one handed over as a payment that paid nothing becomes the refund's), a timeout or a network
+  error.
 
 ***
 
@@ -719,7 +770,7 @@ The refund, `submitted`.
 
 > **withdrawRefund**(`refundId`): `Promise`\<[`Refund`](?path=/docs/packages-quasar-sdk-server-interfaces-refund--docs)\>
 
-Defined in: [modules/payments/index.ts:371](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L371)
+Defined in: [modules/payments/index.ts:380](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/index.ts#L380)
 
 Takes back a refund still waiting for its transaction (`POST /v1/payments/refunds/:id/withdraw`): it keeps its
 amount until it goes out, and nothing else ends it. A refund continued later is priced again at the rate of then. Call
@@ -742,4 +793,5 @@ The refund, `withdrawn` (`failed` with `failureReason` `withdrawn` from an engin
 
 #### Throws
 
-`refund_not_found` (404), `refund_not_waiting` (409), a timeout or a network error.
+`refund_not_found` (404), `refund_not_waiting` or `refund_operation_open` (a refund sent
+  from the invoice's own address is under way) (409), a timeout or a network error.
