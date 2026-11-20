@@ -1,5 +1,5 @@
 {
-  "packages/nova-payments": "0.7.2",
-  "packages/payments-sdk": "0.2.4",
-  "packages/quasar-sdk": "0.17.0"
+  "packages/nova-payments": "0.7.3",
+  "packages/payments-sdk": "0.2.5",
+  "packages/quasar-sdk": "0.17.1"
 }

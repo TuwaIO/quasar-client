@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.1](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.17.0...quasar-sdk-v0.17.1) (2026-11-20)
+
+
+### Bug Fixes
+
+* **quasar-sdk:** the refusals of refund() and acceptPayment(), and what refund.reverted keeps ([#36](https://github.com/TuwaIO/quasar-client/issues/36)) ([689b21e](https://github.com/TuwaIO/quasar-client/commit/689b21eaffdb40d4efdb26a3053127dc5a65d5f3))
+
 ## [0.17.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.16.0...quasar-sdk-v0.17.0) (2026-11-20)
 
 
