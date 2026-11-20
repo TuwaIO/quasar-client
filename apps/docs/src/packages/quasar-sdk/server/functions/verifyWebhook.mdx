@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **verifyWebhook**(`params`): `Promise`\<[`QuasarWebhook`](?path=/docs/packages-quasar-sdk-server-type-aliases-quasarwebhook--docs)\>
 
-Defined in: [webhooks.ts:326](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L326)
+Defined in: [webhooks.ts:374](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L374)
 
 Verifies a Quasar webhook and returns its body. Checks the signature (`x-quasar-signature`, the hex HMAC-SHA256 of
 the raw body keyed with the endpoint's signing secret) in constant time, parses the body and refuses a delivery
@@ -26,7 +26,8 @@ The raw body, the signature header, the secret and the tolerance.
 
 `Promise`\<[`QuasarWebhook`](?path=/docs/packages-quasar-sdk-server-type-aliases-quasarwebhook--docs)\>
 
-The body: a [PaymentWebhookEvent](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookevent--docs) or a [TransactionWebhookEvent](?path=/docs/packages-quasar-sdk-server-interfaces-transactionwebhookevent--docs).
+The body: a [PaymentWebhookEvent](?path=/docs/packages-quasar-sdk-server-interfaces-paymentwebhookevent--docs) or a [TransactionWebhookEvent](?path=/docs/packages-quasar-sdk-server-interfaces-transactionwebhookevent--docs), or the test event of the
+  endpoint, a [WebhookTestEvent](?path=/docs/packages-quasar-sdk-server-interfaces-webhooktestevent--docs) (tell it with [isWebhookTestEvent](?path=/docs/packages-quasar-sdk-server-functions-iswebhooktestevent--docs)).
 
 ## Throws
 
@@ -37,7 +38,7 @@ The body: a [PaymentWebhookEvent](?path=/docs/packages-quasar-sdk-server-interfa
 ## Example
 
 ```ts
-import { isPaymentWebhookEvent, verifyWebhook } from '@tuwaio/quasar-sdk';
+import { isPaymentWebhookEvent, isWebhookTestEvent, verifyWebhook } from '@tuwaio/quasar-sdk';
 
 export async function POST(request: Request) {
   try {
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
       signature: request.headers.get('x-quasar-signature'),
       secret: process.env.QUASAR_WEBHOOK_SECRET ?? '',
     });
+    // Send test event of the dashboard: answered, and nothing else
+    if (isWebhookTestEvent(event)) return new Response(null, { status: 204 });
     if (isPaymentWebhookEvent(event) && event.type === 'invoice.paid') {
       await fulfil(event.data.invoice?.metadata?.orderId);
     }

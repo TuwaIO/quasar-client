@@ -199,6 +199,34 @@ export interface TransactionWebhookEvent {
 /** A verified webhook body: a payment event or a transaction webhook. Tell them apart with {@link isPaymentWebhookEvent}. */
 export type QuasarWebhook = PaymentWebhookEvent | TransactionWebhookEvent;
 
+/** The `type` (and the `x-quasar-event` header) of the test event of an endpoint. */
+export const WEBHOOK_TEST_EVENT = 'webhook.test';
+
+/**
+ * The test event an owner or admin of the organization sends to an endpoint from its page in the Quasar dashboard (Send
+ * test event). It is signed and sent like a real event, with its own `sentAt`, so {@link verifyWebhook} checks it like
+ * any delivery; it is free, tried once and never sent again. Answer it with 2xx and act on nothing: tell it apart with
+ * {@link isWebhookTestEvent} before reading a body as a payment event or a transaction webhook.
+ */
+export interface WebhookTestEvent {
+  /** The ID of the test event (`evt_test_…`). */
+  id: string;
+  object: 'event';
+  type: typeof WEBHOOK_TEST_EVENT;
+  /** When the test was sent from the dashboard (ISO 8601). */
+  createdAt: string;
+  /** When this delivery was sent (ISO 8601), signed with the body. */
+  sentAt: string;
+  /** The environment of the endpoint's app. */
+  environment: 'live' | 'test';
+  data: {
+    /** The endpoint the test went to. */
+    endpointId: string;
+    /** Its app. */
+    appId: string;
+  };
+}
+
 /** Why {@link verifyWebhook} refused a delivery. */
 export type QuasarWebhookErrorCode =
   'missing_secret' | 'missing_signature' | 'invalid_signature' | 'invalid_body' | 'invalid_options' | 'stale';
@@ -290,6 +318,23 @@ export function isPaymentWebhookEvent(event: QuasarWebhook): event is PaymentWeb
 }
 
 /**
+ * Whether a verified webhook is the test event of the endpoint (Send test event in the Quasar dashboard), which a
+ * receiver answers with 2xx and acts on nothing. Check it first: a test event is neither a payment event nor a
+ * transaction webhook.
+ *
+ * @param event - A body returned by {@link verifyWebhook}.
+ * @returns `true` for a test event.
+ */
+export function isWebhookTestEvent(event: unknown): event is WebhookTestEvent {
+  return (
+    typeof event === 'object' &&
+    event !== null &&
+    (event as { type?: unknown }).type === WEBHOOK_TEST_EVENT &&
+    (event as { apiVersion?: unknown }).apiVersion === undefined
+  );
+}
+
+/**
  * Verifies a Quasar webhook and returns its body. Checks the signature (`x-quasar-signature`, the hex HMAC-SHA256 of
  * the raw body keyed with the endpoint's signing secret) in constant time, parses the body and refuses a delivery
  * whose send time (`sentAt`, falling back to `timestamp` for older transaction webhooks) is further from now than
@@ -297,14 +342,15 @@ export function isPaymentWebhookEvent(event: QuasarWebhook): event is PaymentWeb
  * Workers. Payment events are delivered at least once: deduplicate them by `id`.
  *
  * @param params - The raw body, the signature header, the secret and the tolerance.
- * @returns The body: a {@link PaymentWebhookEvent} or a {@link TransactionWebhookEvent}.
+ * @returns The body: a {@link PaymentWebhookEvent} or a {@link TransactionWebhookEvent}, or the test event of the
+ *   endpoint, a {@link WebhookTestEvent} (tell it with {@link isWebhookTestEvent}).
  * @throws {QuasarWebhookError} `missing_secret`, `missing_signature`, `invalid_signature`, `invalid_body` (not a
  *   JSON object), `invalid_options` (an invalid `toleranceSeconds`) or `stale` (an event outside the tolerance or
  *   missing its send time).
  *
  * @example
  * ```ts
- * import { isPaymentWebhookEvent, verifyWebhook } from '@tuwaio/quasar-sdk';
+ * import { isPaymentWebhookEvent, isWebhookTestEvent, verifyWebhook } from '@tuwaio/quasar-sdk';
  *
  * export async function POST(request: Request) {
  *   try {
@@ -313,6 +359,8 @@ export function isPaymentWebhookEvent(event: QuasarWebhook): event is PaymentWeb
  *       signature: request.headers.get('x-quasar-signature'),
  *       secret: process.env.QUASAR_WEBHOOK_SECRET ?? '',
  *     });
+ *     // Send test event of the dashboard: answered, and nothing else
+ *     if (isWebhookTestEvent(event)) return new Response(null, { status: 204 });
  *     if (isPaymentWebhookEvent(event) && event.type === 'invoice.paid') {
  *       await fulfil(event.data.invoice?.metadata?.orderId);
  *     }

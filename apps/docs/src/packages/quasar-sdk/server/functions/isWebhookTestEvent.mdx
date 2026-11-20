@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/quasar-sdk/server/Functions/isWebhookTestEvent" />
+
+# isWebhookTestEvent()
+
+> **isWebhookTestEvent**(`event`): `event is WebhookTestEvent`
+
+Defined in: [webhooks.ts:328](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L328)
+
+Whether a verified webhook is the test event of the endpoint (Send test event in the Quasar dashboard), which a
+receiver answers with 2xx and acts on nothing. Check it first: a test event is neither a payment event nor a
+transaction webhook.
+
+## Parameters
+
+### event
+
+`unknown`
+
+A body returned by [verifyWebhook](?path=/docs/packages-quasar-sdk-server-functions-verifywebhook--docs).
+
+## Returns
+
+`event is WebhookTestEvent`
+
+`true` for a test event.
