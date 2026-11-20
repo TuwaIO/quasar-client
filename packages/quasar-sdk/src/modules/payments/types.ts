@@ -206,7 +206,10 @@ export interface InvoiceSettlement {
   methodId: string | null;
   /** CAIP-2 chain ID of the payment. */
   chainId: string | null;
-  /** Transaction hash or Solana signature of the last transfer. */
+  /**
+   * Transaction hash or Solana signature of the last transfer. One transaction may pay several invoices (an exchange's
+   * batch withdrawal to several invoice addresses): it is then the `txHash` of each.
+   */
   txHash: string;
   /** Block (EVM) or slot (Solana) of the last transfer. */
   blockRef: string | null;
@@ -339,8 +342,10 @@ export interface Invoice {
   /**
    * Why the payment waits for you: `overpaid` when the app flags overpayments, `quote_expired` when it arrived after
    * its locked quote expired, `payment_reverted` when a payment Quasar credited is gone from the chain (check the
-   * transaction `payment.reverted` names; the invoice keeps its status). A transfer Quasar could tie to no invoice
-   * never puts the invoice under review: it is an unmatched transfer of its own.
+   * transaction `payment.reverted` names; the invoice keeps its status), `refund_reverted` when a confirmed refund of its
+   * payment is gone from the chain (`refund.reverted` names it; the refund and its credit note stay, and Quasar takes no
+   * second refund for it: send the money again outside it). A transfer Quasar could tie to no invoice never puts the
+   * invoice under review: it is an unmatched transfer of its own.
    */
   reviewReason: string | null;
   /** The payer's AML screening, once there was one. */
@@ -351,6 +356,12 @@ export interface Invoice {
   eInvoiceSkipped: string[] | null;
   /** Refunded so far, in the invoice currency. */
   refundedTotal: string;
+  /**
+   * The most all refunds may return together: the total, or for an underpaid invoice that expired the value of what
+   * arrived at the quoted rate; once refunded, what all its refunds returned. Absent from an engine that does not send
+   * it yet.
+   */
+  refundLimit?: string;
   /** What refunds that arrived short delivered, of those nothing completes yet: a new refund has that much less to return. Read with one invoice only. */
   refundShort?: string;
   /** The invoice this one corrects. */
@@ -470,6 +481,17 @@ export interface InvoiceDetails extends Invoice {
   attemptsTotal: number;
   /** What the wallets that confirmed it signed, oldest first. */
   walletConfirmations: InvoiceWalletConfirmation[];
+  /**
+   * Payments handed over (to the checkout, through the gasless relay or a sponsored smart wallet) and still on their
+   * way. `invoice.processing` comes in the same step as `invoice.paid`, `invoice.underpaid` or `invoice.needs_review`:
+   * there is no earlier webhook, read this. Absent from an engine that does not send it yet.
+   */
+  pendingPayments?: number;
+  /**
+   * The overpaid excess left to send back alone with a refund of mode `excess`, in base units; `0` when there is none.
+   * Absent from an engine that does not send it yet.
+   */
+  refundExcess?: string;
 }
 
 /** An invoice with its checkout token and payment page. */
@@ -590,17 +612,28 @@ export interface GetEventsParams {
   cursor?: string;
 }
 
-/** How a refund is priced: at today's price of the invoice amount, or the whole payment as received. */
-export type RefundMode = 'fiat_value' | 'exact_received';
+/**
+ * How a refund is priced: at today's price of the invoice amount (`fiat_value`), the whole payment as received
+ * (`exact_received`), or the overpaid excess alone, as received (`excess`: no credit note, no refunded total, the invoice
+ * keeps its status).
+ */
+export type RefundMode = 'fiat_value' | 'exact_received' | 'excess';
 
 /** What {@link PaymentsModule.refund} takes. */
 export interface RefundParams {
-  /** Amount in the invoice currency; everything left when omitted. Leave it out with `exact_received`. */
+  /** Amount in the invoice currency; everything left when omitted. Leave it out with `exact_received` and `excess`. */
   amount?: string;
-  /** `fiat_value` (default) or `exact_received`. */
+  /**
+   * `fiat_value` (default), `exact_received` (the whole payment as received, less the overpaid excess already sent
+   * back) or `excess` (all of the overpaid excess left, {@link InvoiceDetails.refundExcess}).
+   */
   mode?: RefundMode;
   /** Why; printed on the credit note. */
   reason?: string;
+  /**
+   * Where it goes instead of the wallet that paid: needed when that sender is a contract (`refund_destination_required`).
+   */
+  to?: string;
 }
 
 /** A refund. You send it from your wallet; Quasar verifies the transaction and issues the credit note. */
@@ -707,6 +740,24 @@ export interface UnmatchedTransfer {
   createdAt: string;
   /** When it last changed. */
   updatedAt: string;
+}
+
+/** What {@link PaymentsModule.listUnmatchedTransfersPage} takes. */
+export interface ListUnmatchedTransfersPageParams {
+  /** Only those in one state; `awaiting_refund` for those still to refund. */
+  status?: UnmatchedTransferStatus;
+  /** Page size, 1 to 100 (default 100). */
+  limit?: number;
+  /** `nextCursor` of the previous page. */
+  cursor?: string;
+}
+
+/** A page of {@link UnmatchedTransfer}s, newest first, as {@link PaymentsModule.listUnmatchedTransfersPage} returns it. */
+export interface UnmatchedTransferPage {
+  /** The unmatched transfers of the page. */
+  unmatchedTransfers: UnmatchedTransfer[];
+  /** Pass it as `cursor` for the next page; `null` on the last one. */
+  nextCursor: string | null;
 }
 
 /** What {@link PaymentsModule.listUnmatchedTransfers} takes. */

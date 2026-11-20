@@ -144,6 +144,54 @@ describe('quasar.payments', () => {
     ]);
   });
 
+  // The app's unmatched transfers come a page at a time; a transfer a contract sent goes back to an address given
+  it('pages through the unmatched transfers, and refunds one to an address of your choice', async () => {
+    const transfer = { id: 'ut_1', invoice: 'inv_1', status: 'awaiting_refund' };
+    fetchMock
+      .mockResolvedValueOnce(json({ unmatchedTransfers: [transfer], nextCursor: 'cur_2' }))
+      .mockResolvedValueOnce(json({ unmatchedTransfers: [] }))
+      .mockResolvedValueOnce(json({ refund: { id: 'ref_1', unmatchedTransfer: 'ut_1' }, instructions: {} }));
+
+    expect(await quasar.payments.listUnmatchedTransfersPage({ status: 'awaiting_refund', limit: 1 })).toEqual({
+      unmatchedTransfers: [transfer],
+      nextCursor: 'cur_2',
+    });
+    // An engine that sends no cursor has no next page
+    expect(await quasar.payments.listUnmatchedTransfersPage({ cursor: 'cur_2' })).toEqual({
+      unmatchedTransfers: [],
+      nextCursor: null,
+    });
+    await quasar.payments.refundUnmatchedTransfer('ut_1', { to: '0x1111111111111111111111111111111111111111' });
+
+    const paths = [0, 1, 2].map((n) => {
+      const url = new URL(sent(n).url);
+      return `${sent(n).method} ${url.pathname}${url.search}`;
+    });
+    expect(paths).toEqual([
+      'GET /v1/payments/unmatched-transfers?status=awaiting_refund&limit=1',
+      'GET /v1/payments/unmatched-transfers?cursor=cur_2',
+      'POST /v1/payments/unmatched-transfers/ut_1/refund',
+    ]);
+    expect(await sent(2).body()).toEqual({ to: '0x1111111111111111111111111111111111111111' });
+  });
+
+  // A payment that is less than the invoice asks is accepted with its shortfall, said in so many words
+  it('accepts a payment with its shortfall', async () => {
+    fetchMock.mockResolvedValueOnce(json(INVOICE));
+    await quasar.payments.acceptPayment('inv_1', {
+      reason: 'The buyer paid by card for the rest',
+      acceptShortfall: true,
+    });
+    expect(await sent().body()).toEqual({ reason: 'The buyer paid by card for the rest', acceptShortfall: true });
+  });
+
+  // A refund of the overpaid excess sends it back alone and takes no amount
+  it('asks for a refund of the overpaid excess', async () => {
+    fetchMock.mockResolvedValueOnce(json({ refund: { id: 'ref_1', mode: 'excess' }, instructions: {} }, 201));
+    await quasar.payments.refund('inv_1', { mode: 'excess', to: '0x1111111111111111111111111111111111111111' });
+    expect(await sent().body()).toEqual({ mode: 'excess', to: '0x1111111111111111111111111111111111111111' });
+  });
+
   it('acts on an invoice: cancel, accept the payment, correct, a new payment link and its ledger with the chain check', async () => {
     fetchMock.mockImplementation(async () => json(INVOICE));
     await quasar.payments.cancelInvoice('inv_1', { reason: 'Duplicate order' });

@@ -28,6 +28,7 @@ export type PaymentWebhookEventType =
   | 'invoice.replaced'
   | 'refund.confirmed'
   | 'refund.failed'
+  | 'refund.reverted'
   | 'payment.reverted'
   | 'payment.unverified';
 
@@ -107,6 +108,7 @@ export interface PaymentWebhookUnmatchedTransferVoided {
 /**
  * The body of a payment webhook (`payments.v1`). `id`, `type` and `createdAt` are those of the ledger event, so
  * deduplicate by `id`; `data.invoice` is the invoice when the delivery was sent, so a retry carries its current state.
+ * Deliveries keep no order of their own: order the events of an invoice by `seq`.
  */
 export interface PaymentWebhookEvent {
   /** Event ID: the same for every delivery and retry of the event. */
@@ -119,6 +121,11 @@ export interface PaymentWebhookEvent {
   type: PaymentWebhookEventType;
   /** When it happened (ISO 8601). */
   createdAt: string;
+  /**
+   * Its number in the ledger of its invoice: order the events of an invoice by it. Left out by Quasar versions before
+   * November 2026.
+   */
+  seq?: number;
   /** When this delivery was sent; signed with the body, it lets {@link verifyWebhook} refuse old replays. */
   sentAt: string;
   /** Live or test. */
@@ -134,7 +141,10 @@ export interface PaymentWebhookEvent {
      * and `invoice.payment_accepted`: an invoice paid in parts has several.
      */
     payments?: InvoicePayment[];
-    /** The refund of a refund event. */
+    /**
+     * The refund of a refund event. One of mode `excess` sends back the overpaid excess alone: no
+     * `invoice.refunded`, `invoice.partially_refunded` or credit note follows it.
+     */
     refund?: Refund;
     /** Why AML flagged the payment, on a review by AML. */
     aml?: { decision: 'block'; reasons: unknown[] };
@@ -145,8 +155,18 @@ export interface PaymentWebhookEvent {
      * transfer names it in `refund.unmatchedTransfer`.
      */
     unmatchedTransfer?: PaymentWebhookUnmatchedTransfer | PaymentWebhookUnmatchedTransferVoided;
-    /** The transaction to check, in `payment.reverted` and `payment.unverified`. */
+    /**
+     * The transaction to check, in `payment.reverted`, `refund.reverted` (a confirmed refund the network dropped: the
+     * refund and its credit note stay, the invoice waits for review with `reviewReason` `refund_reverted`, and Quasar
+     * takes no second refund for it) and `payment.unverified`.
+     */
     transaction?: { txHash: string | null; chainId: string | null };
+    /**
+     * Nothing proves that the money stayed: `invoice.expired` of an invoice whose gasless or sponsored payment was still
+     * on its way, `refund.failed` of a refund whose transaction may still land. Check before selling the goods on or
+     * paying again.
+     */
+    mightHaveLanded?: true;
   };
 }
 

@@ -19,6 +19,7 @@ import type {
   InvoiceWithCheckout,
   ListInvoiceItemsParams,
   ListInvoicesParams,
+  ListUnmatchedTransfersPageParams,
   ListUnmatchedTransfersParams,
   PaymentDocument,
   PaymentDocumentKind,
@@ -32,6 +33,7 @@ import type {
   RefundStart,
   SubmitRefundParams,
   UnmatchedTransfer,
+  UnmatchedTransferPage,
 } from './types';
 
 /** A path segment: IDs are encoded, so one never names another path. */
@@ -126,15 +128,15 @@ export class PaymentsModule {
 
   /**
    * Issues an invoice (`POST /v1/payments/invoices`): numbered, with its PDF and, when the app has e-invoices on and
-   * the buyer details allow, its UBL; the `invoice.issued` webhook follows.
+   * the buyer details allow, its UBL, which follow within a second or two; the `invoice.issued` webhook follows.
    *
    * @param params - The lines (or a bare `amount`), the buyer and the terms. Dates go as ISO 8601.
    * @param options - `idempotencyKey`: a retry with the same key returns the invoice issued first, with the same link.
    * @returns The invoice, its checkout token and its payment page (also in the invoice view while it can be paid), with
    *   your pinned payout addresses in its fragment when the client has them (`payoutAddresses`).
    * @throws {QuasarSDKError} `invalid_request` with `issues` (400), `seller_details_missing` and other issuer
-   *   refusals (400), an app that is not a Payments app or a node without Payments (403), a timeout or a network
-   *   error.
+   *   refusals (400), an app that is not a Payments app or a node without Payments (403), `documents_busy` (503: another
+   *   document of the series is being numbered; retry with the same `idempotencyKey`), a timeout or a network error.
    */
   async createInvoice(params: CreateInvoiceParams, options?: CreateOptions): Promise<InvoiceWithCheckout> {
     const created = await this.client.request<InvoiceWithCheckout>(`${PAYMENTS_ENDPOINT}/invoices`, {
@@ -251,12 +253,13 @@ export class PaymentsModule {
    * with {@link PaymentsModule.refundUnmatchedTransfer}.
    *
    * @param invoiceId - The invoice.
-   * @param params - `reason`, required, recorded in the ledger.
+   * @param params - `reason`, required, recorded in the ledger; `acceptShortfall: true` for a payment that is less
+   *   than the invoice asks, whose shortfall you accept.
    * @returns The invoice.
    * @throws {QuasarSDKError} `invoice_not_found` (404); `invoice_not_in_review` or `invoice_partly_refunded` (refund
    *   the rest) (409); a timeout or a network error.
    */
-  async acceptPayment(invoiceId: string, params: { reason: string }): Promise<Invoice> {
+  async acceptPayment(invoiceId: string, params: { reason: string; acceptShortfall?: boolean }): Promise<Invoice> {
     return this.pinned(
       await this.client.request<Invoice>(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/accept`, {
         method: 'POST',
@@ -273,7 +276,8 @@ export class PaymentsModule {
    * @param params - The corrected buyer and the reason the credit note gives.
    * @returns The new invoice (with its checkout while it is open) and the one it replaces.
    * @throws {QuasarSDKError} `invalid_request` (400), `invoice_not_found` (404), an invoice that cannot be corrected
-   *   (409), a timeout or a network error.
+   *   (409), `document_pending` (503: its document is still being issued) or `documents_busy` (503: another document of
+   *   the series is being numbered), a timeout or a network error.
    */
   async correctInvoice(invoiceId: string, params: CorrectInvoiceParams): Promise<InvoiceCorrection> {
     const correction = await this.client.request<InvoiceCorrection>(
@@ -340,15 +344,19 @@ export class PaymentsModule {
    * returned amount from your wallet to the payer, then pass the transaction to {@link PaymentsModule.submitRefund}.
    *
    * @param invoiceId - The invoice.
-   * @param params - Amount (everything left when omitted), mode and reason.
+   * @param params - Amount (everything left when omitted), mode (`excess`: the overpaid excess alone), reason, and `to`
+   *   when the payment came from a contract.
    * @param options - `idempotencyKey`: a retry with the same key answers the refund asked for first while it waits for
    *   its transaction. Once it was sent, finished, failed or taken back the same key answers `refund_not_waiting` (409,
    *   the refund in `details.refund`), so nothing is sent twice: a new refund needs a new key. `idempotency_key_reused`
    *   (409): the key was used for another invoice, mode or amount.
    * @returns The refund and what to send where.
-   * @throws {QuasarSDKError} `invalid_request` or `review_refund_must_be_whole` (a payment that needs review is
-   *   refunded whole) (400), `invoice_not_found` (404), an invoice that cannot be refunded or an amount above what is
-   *   left (409), a timeout or a network error.
+   * @throws {QuasarSDKError} `invalid_request` (an amount with `exact_received` or `excess`, among others) or
+   *   `review_refund_must_be_whole` (a payment that needs review is refunded whole) (400), `invoice_not_found` (404), an
+   *   invoice that cannot be refunded or an amount above what is left (409), `refund_destination_required` (409: the
+   *   payment came from a contract; give `to`), `nothing_overpaid`, `excess_refunded` or `excess_refund_under_way` (409,
+   *   `details.refundId`) for the excess, `refund_may_have_landed` (409: an earlier refund's transaction may have reached
+   *   the buyer; check it), a timeout or a network error.
    */
   async refund(invoiceId: string, params: RefundParams = {}, options?: CreateOptions): Promise<RefundStart> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/refunds`, {
@@ -366,7 +374,8 @@ export class PaymentsModule {
    *
    * @param refundId - The refund.
    * @returns The refund, `withdrawn` (`failed` with `failureReason` `withdrawn` from an engine without that status).
-   * @throws {QuasarSDKError} `refund_not_found` (404), `refund_not_waiting` (409), a timeout or a network error.
+   * @throws {QuasarSDKError} `refund_not_found` (404), `refund_not_waiting` or `refund_operation_open` (a refund sent
+   *   from the invoice's own address is under way) (409), a timeout or a network error.
    */
   async withdrawRefund(refundId: string): Promise<Refund> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/refunds/${segment(refundId)}/withdraw`, {
@@ -393,9 +402,11 @@ export class PaymentsModule {
    * @param refundId - The refund.
    * @param params - The transaction and your wallet it was sent from.
    * @returns The refund, `submitted`.
-   * @throws {QuasarSDKError} `invalid_request` (400), `refund_not_found` (404), `refund_not_submittable` or
-   *   `transaction_already_used` (409: a transaction an invoice credited as a payment; one handed over as a payment
-   *   that paid nothing becomes the refund's), a timeout or a network error.
+   * @throws {QuasarSDKError} `invalid_request`, `invalid_transaction` or `invalid_sender` (400), `refund_not_found`
+   *   (404), `refund_not_submittable`, `refund_from_buyer` (a wallet that paid the invoice cannot send its refund),
+   *   `refund_operation_open` or `transaction_already_used` (409: a transaction an invoice credited as a payment, or
+   *   another refund's; one handed over as a payment that paid nothing becomes the refund's), a timeout or a network
+   *   error.
    */
   async submitRefund(refundId: string, params: SubmitRefundParams): Promise<Refund> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/refunds/${segment(refundId)}/submit`, {
@@ -427,20 +438,38 @@ export class PaymentsModule {
   }
 
   /**
+   * Lists the app's unmatched transfers a page at a time, newest first (`GET /v1/payments/unmatched-transfers`).
+   *
+   * @param params - One state (`awaiting_refund` for those still to refund), the page size (1 to 100, default 100) and
+   *   the `nextCursor` of the previous page.
+   * @returns The page and the cursor of the next one (`null` on the last).
+   * @throws {QuasarSDKError} `invalid_request` or `invalid_cursor` (400), a timeout or a network error.
+   */
+  async listUnmatchedTransfersPage(params: ListUnmatchedTransfersPageParams = {}): Promise<UnmatchedTransferPage> {
+    const answer = await this.client.request<{ unmatchedTransfers: UnmatchedTransfer[]; nextCursor?: string | null }>(
+      `${PAYMENTS_ENDPOINT}/unmatched-transfers`,
+      { method: 'GET', query: query({ status: params.status, limit: params.limit, cursor: params.cursor }) },
+    );
+    return { unmatchedTransfers: answer.unmatchedTransfers, nextCursor: answer.nextCursor ?? null };
+  }
+
+  /**
    * Asks for the refund of an unmatched transfer, the whole of it to the wallet that sent it
    * (`POST /v1/payments/unmatched-transfers/:id/refund`): send it from your wallet, then hand the transaction over with
    * {@link PaymentsModule.submitRefund}. The refund's `unmatchedTransfer` names the transfer, which becomes
    * `refunding`, then `refunded` once the refund is confirmed.
    *
    * @param unmatchedTransferId - The unmatched transfer.
+   * @param params - `to`: where it goes instead of its sender, needed when a contract sent it.
    * @returns The refund and what to send where.
    * @throws {QuasarSDKError} `unmatched_transfer_not_found` (404); `unmatched_transfer_not_refundable` (it is not
-   *   `awaiting_refund`) or `sender_blocked` (AML blocked the wallet that sent it) (409); a timeout or a network error.
+   *   `awaiting_refund`), `sender_blocked` (AML blocked the wallet that sent it) or `refund_destination_required` (a
+   *   contract sent it; give `to`) (409); a timeout or a network error.
    */
-  async refundUnmatchedTransfer(unmatchedTransferId: string): Promise<RefundStart> {
+  async refundUnmatchedTransfer(unmatchedTransferId: string, params: { to?: string } = {}): Promise<RefundStart> {
     return this.client.request(`${PAYMENTS_ENDPOINT}/unmatched-transfers/${segment(unmatchedTransferId)}/refund`, {
       method: 'POST',
-      body: {},
+      body: params.to === undefined ? {} : { to: params.to },
     });
   }
 
@@ -451,7 +480,8 @@ export class PaymentsModule {
    * @param invoiceId - The invoice.
    * @param kind - `invoice` or `receipt` (PDF), or `invoice.xml` (UBL).
    * @returns The bytes, media type and file name.
-   * @throws {QuasarSDKError} `invoice_not_found` or `document_not_found` (404), a timeout or a network error.
+   * @throws {QuasarSDKError} `invoice_not_found` or `document_not_found` (404), `document_pending` (503: the document
+   *   is still being issued; ask again in a few seconds), a timeout or a network error.
    */
   async getDocument(invoiceId: string, kind: PaymentDocumentKind): Promise<PaymentDocument> {
     return this.client.requestFile(`${PAYMENTS_ENDPOINT}/invoices/${segment(invoiceId)}/documents/${kind}`);

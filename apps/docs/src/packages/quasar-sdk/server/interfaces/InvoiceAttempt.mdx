@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # InvoiceAttempt
 
-Defined in: [modules/payments/types.ts:410](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L410)
+Defined in: [modules/payments/types.ts:421](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L421)
 
 A transaction that was tied to an invoice and did not pay it.
 
@@ -14,7 +14,7 @@ A transaction that was tied to an invoice and did not pay it.
 
 > **amount**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:418](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L418)
+Defined in: [modules/payments/types.ts:429](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L429)
 
 What it carried to you without paying anything, when it did: base units of the invoice's token.
 
@@ -24,7 +24,7 @@ What it carried to you without paying anything, when it did: base units of the i
 
 > **at**: `string`
 
-Defined in: [modules/payments/types.ts:427](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L427)
+Defined in: [modules/payments/types.ts:438](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L438)
 
 When it was recorded.
 
@@ -34,7 +34,7 @@ When it was recorded.
 
 > **chainId**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:414](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L414)
+Defined in: [modules/payments/types.ts:425](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L425)
 
 CAIP-2 chain ID of the transaction.
 
@@ -44,7 +44,7 @@ CAIP-2 chain ID of the transaction.
 
 > **reason**: `string`
 
-Defined in: [modules/payments/types.ts:416](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L416)
+Defined in: [modules/payments/types.ts:427](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L427)
 
 Why it did not pay the invoice, such as `reverted`, `no_matching_transfer` or `payer_mismatch`.
 
@@ -54,7 +54,7 @@ Why it did not pay the invoice, such as `reverted`, `no_matching_transfer` or `p
 
 > **senders**: `string`[]
 
-Defined in: [modules/payments/types.ts:420](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L420)
+Defined in: [modules/payments/types.ts:431](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L431)
 
 The addresses that sent what it carried.
 
@@ -64,7 +64,7 @@ The addresses that sent what it carried.
 
 > **txHash**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:412](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L412)
+Defined in: [modules/payments/types.ts:423](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L423)
 
 Transaction hash or Solana signature.
 
@@ -74,7 +74,7 @@ Transaction hash or Solana signature.
 
 > **unmatchedTransfer**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:425](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L425)
+Defined in: [modules/payments/types.ts:436](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L436)
 
 The unmatched transfer it became, for a refund to its sender (see `listUnmatchedTransfers`, which keeps its
 state).

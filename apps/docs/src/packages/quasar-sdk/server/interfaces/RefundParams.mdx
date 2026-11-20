@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # RefundParams
 
-Defined in: [modules/payments/types.ts:597](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L597)
+Defined in: [modules/payments/types.ts:623](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L623)
 
 What [PaymentsModule.refund](?path=/docs/packages-quasar-sdk-server-classes-paymentsmodule--docs#refund) takes.
 
@@ -14,9 +14,9 @@ What [PaymentsModule.refund](?path=/docs/packages-quasar-sdk-server-classes-paym
 
 > `optional` **amount?**: `string`
 
-Defined in: [modules/payments/types.ts:599](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L599)
+Defined in: [modules/payments/types.ts:625](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L625)
 
-Amount in the invoice currency; everything left when omitted. Leave it out with `exact_received`.
+Amount in the invoice currency; everything left when omitted. Leave it out with `exact_received` and `excess`.
 
 ***
 
@@ -24,9 +24,10 @@ Amount in the invoice currency; everything left when omitted. Leave it out with 
 
 > `optional` **mode?**: [`RefundMode`](?path=/docs/packages-quasar-sdk-server-type-aliases-refundmode--docs)
 
-Defined in: [modules/payments/types.ts:601](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L601)
+Defined in: [modules/payments/types.ts:630](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L630)
 
-`fiat_value` (default) or `exact_received`.
+`fiat_value` (default), `exact_received` (the whole payment as received, less the overpaid excess already sent
+back) or `excess` (all of the overpaid excess left, [InvoiceDetails.refundExcess](?path=/docs/packages-quasar-sdk-server-interfaces-invoicedetails--docs#refundexcess)).
 
 ***
 
@@ -34,6 +35,16 @@ Defined in: [modules/payments/types.ts:601](https://github.com/TuwaIO/quasar-cli
 
 > `optional` **reason?**: `string`
 
-Defined in: [modules/payments/types.ts:603](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L603)
+Defined in: [modules/payments/types.ts:632](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L632)
 
 Why; printed on the credit note.
+
+***
+
+### to?
+
+> `optional` **to?**: `string`
+
+Defined in: [modules/payments/types.ts:636](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L636)
+
+Where it goes instead of the wallet that paid: needed when that sender is a contract (`refund_destination_required`).

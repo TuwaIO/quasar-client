@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # LedgerEvent
 
-Defined in: [modules/payments/types.ts:532](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L532)
+Defined in: [modules/payments/types.ts:554](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L554)
 
 One step of an invoice ledger. Each step's `hash` covers the step and `prevHash`.
 
@@ -14,7 +14,7 @@ One step of an invoice ledger. Each step's `hash` covers the step and `prevHash`
 
 > **actor**: `string`
 
-Defined in: [modules/payments/types.ts:542](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L542)
+Defined in: [modules/payments/types.ts:564](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L564)
 
 Who acted: `merchant_api`, `system`, `checkout`, `dashboard:<userId>`, `admin:<userId>`…
 
@@ -24,7 +24,7 @@ Who acted: `merchant_api`, `system`, `checkout`, `dashboard:<userId>`, `admin:<u
 
 > **chainId**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:544](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L544)
+Defined in: [modules/payments/types.ts:566](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L566)
 
 Chain of an on-chain step.
 
@@ -34,7 +34,7 @@ Chain of an on-chain step.
 
 > **createdAt**: `string`
 
-Defined in: [modules/payments/types.ts:548](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L548)
+Defined in: [modules/payments/types.ts:570](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L570)
 
 When.
 
@@ -44,7 +44,7 @@ When.
 
 > **data**: `unknown`
 
-Defined in: [modules/payments/types.ts:540](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L540)
+Defined in: [modules/payments/types.ts:562](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L562)
 
 Details of the step.
 
@@ -54,7 +54,7 @@ Details of the step.
 
 > **hash**: `string`
 
-Defined in: [modules/payments/types.ts:552](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L552)
+Defined in: [modules/payments/types.ts:574](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L574)
 
 Hash of this step.
 
@@ -64,7 +64,7 @@ Hash of this step.
 
 > **id**: `string`
 
-Defined in: [modules/payments/types.ts:534](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L534)
+Defined in: [modules/payments/types.ts:556](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L556)
 
 Event ID; webhooks of this step carry it as their `id`.
 
@@ -74,7 +74,7 @@ Event ID; webhooks of this step carry it as their `id`.
 
 > **prevHash**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:550](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L550)
+Defined in: [modules/payments/types.ts:572](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L572)
 
 Hash of the previous step.
 
@@ -84,7 +84,7 @@ Hash of the previous step.
 
 > **seq**: `number`
 
-Defined in: [modules/payments/types.ts:536](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L536)
+Defined in: [modules/payments/types.ts:558](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L558)
 
 Position in the ledger, from 1.
 
@@ -94,7 +94,7 @@ Position in the ledger, from 1.
 
 > **txHash**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:546](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L546)
+Defined in: [modules/payments/types.ts:568](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L568)
 
 Transaction of an on-chain step.
 
@@ -104,6 +104,6 @@ Transaction of an on-chain step.
 
 > **type**: `string`
 
-Defined in: [modules/payments/types.ts:538](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L538)
+Defined in: [modules/payments/types.ts:560](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L560)
 
 What happened, for example `invoice.issued`, `quote.locked`, `invoice.paid`.

@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentWebhookUnmatchedTransfer
 
-Defined in: [webhooks.ts:62](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L62)
+Defined in: [webhooks.ts:63](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L63)
 
 A transfer that reached the invoice's address without being tied to it by proof (`data.unmatchedTransfer` of
 `invoice.transfer_unmatched`): it paid nothing and the invoice stays as it was. It is a record of its own, which you
@@ -19,7 +19,7 @@ not tie it to the invoice either), `already_paid`, `quote_changed` or `too_many_
 
 > **amount**: `string` \| `null`
 
-Defined in: [webhooks.ts:72](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L72)
+Defined in: [webhooks.ts:73](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L73)
 
 What it carried, in base units of its token.
 
@@ -29,7 +29,7 @@ What it carried, in base units of its token.
 
 > `optional` **chainId?**: `string` \| `null`
 
-Defined in: [webhooks.ts:70](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L70)
+Defined in: [webhooks.ts:71](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L71)
 
 CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out.
 
@@ -39,7 +39,7 @@ CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave 
 
 > **id**: `string` \| `null`
 
-Defined in: [webhooks.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L66)
+Defined in: [webhooks.ts:67](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L67)
 
 The unmatched transfer ([UnmatchedTransfer](?path=/docs/packages-quasar-sdk-server-interfaces-unmatchedtransfer--docs)).
 
@@ -49,7 +49,7 @@ The unmatched transfer ([UnmatchedTransfer](?path=/docs/packages-quasar-sdk-serv
 
 > `optional` **late?**: `true`
 
-Defined in: [webhooks.ts:85](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L85)
+Defined in: [webhooks.ts:86](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L86)
 
 It arrived after the invoice expired or was cancelled.
 
@@ -59,7 +59,7 @@ It arrived after the invoice expired or was cancelled.
 
 > **reason**: `"payer_mismatch"` \| `"payer_unconfirmed"` \| `"reference_missing"` \| `"already_paid"` \| `"quote_changed"` \| `"too_many_parts"` \| `null`
 
-Defined in: [webhooks.ts:76](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L76)
+Defined in: [webhooks.ts:77](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L77)
 
 Why it is tied to no invoice.
 
@@ -69,7 +69,7 @@ Why it is tied to no invoice.
 
 > `optional` **screening?**: `object`
 
-Defined in: [webhooks.ts:87](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L87)
+Defined in: [webhooks.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L88)
 
 Set when AML blocked its sender: Quasar refunds it to no one.
 
@@ -87,7 +87,7 @@ Set when AML blocked its sender: Quasar refunds it to no one.
 
 > **senders**: `string`[]
 
-Defined in: [webhooks.ts:74](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L74)
+Defined in: [webhooks.ts:75](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L75)
 
 The wallets that sent it.
 
@@ -97,7 +97,7 @@ The wallets that sent it.
 
 > **txHash**: `string` \| `null`
 
-Defined in: [webhooks.ts:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L68)
+Defined in: [webhooks.ts:69](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L69)
 
 Its transaction.
 
@@ -107,6 +107,6 @@ Its transaction.
 
 > `optional` **voided?**: `undefined`
 
-Defined in: [webhooks.ts:64](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L64)
+Defined in: [webhooks.ts:65](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/webhooks.ts#L65)
 
 Not set: the transfer waits for its refund.
