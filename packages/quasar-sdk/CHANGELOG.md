@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.16.0...quasar-sdk-v0.17.0) (2026-11-20)
+
+
+### Features
+
+* **quasar-sdk:** the Payments API answers of 3.1a in the SDK and the OpenAPI description ([387a282](https://github.com/TuwaIO/quasar-client/commit/387a28282d085d85352827ab2ccdc4fb030d706e))
+
 ## [0.16.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.15.0...quasar-sdk-v0.16.0) (2026-11-18)
 
 
