@@ -8,7 +8,7 @@ import { BASE_API_URL } from '../constants';
 import { type QuasarRequestIssue, QuasarSDKError } from '../core/errors';
 import type { Buyer, InvoiceLocale, InvoiceStatus } from '../modules/payments/types';
 import { checkoutApi } from './api';
-import { browserSessionStorage } from './browserStorage';
+import { browserLocalStorage } from './browserStorage';
 import { checkQuotePayee, type PayeeCheck, type PayeeOptions } from './payee';
 import type {
   CheckoutApi,
@@ -455,9 +455,9 @@ export interface CheckoutState {
    * ({@link CheckoutState.payAgain} does nothing) until Quasar decides. It is not handed over again. Any other refusal
    * (4xx) is not retried either.
    *
-   * Until Quasar takes or refuses it, the hand-over is kept in the tab's `sessionStorage`
+   * Until Quasar takes or refuses it, the hand-over is kept in the browser's `localStorage`
    * ({@link CheckoutStoreOptions.handOverStorage}), so a page closed or reloaded meanwhile hands it over again on the
-   * next {@link CheckoutState.load} of the same checkout.
+   * next {@link CheckoutState.load} of the same checkout, in any tab of the browser, for 30 days.
    *
    * @param params - `txKey`: transaction hash or Solana signature; `from`: the sender, for a Solana Pay quote without
    *   a payer; `connectorType`: the wallet connector, for the record.
@@ -538,11 +538,12 @@ export interface CheckoutStoreOptions {
   /**
    * Where the store keeps the hand-overs of transactions the wallet sent that Quasar has not taken yet
    * ({@link CheckoutState.submit}), so that the next {@link CheckoutState.load} of the same checkout hands them over
-   * again. Defaults to the browser's `sessionStorage` (the tab, until it closes), or none with your own `api`; `null`
-   * keeps nothing. The entry is `quasar-sdk:checkoutHandOvers:<token>`: a JSON array of
-   * `{ txKey, from?, connectorType?, at }` (the transaction, the sending wallet and the wallet connector as passed to
-   * `submit`, and when the store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it.
-   * Failures of the storage are ignored.
+   * again. Defaults to the browser's `localStorage` (every tab of the browser: the link opened again in a new tab still
+   * hands over a transaction the closed one sent), or none with your own `api`; `null` keeps nothing. The entry is
+   * `quasar-sdk:checkoutHandOvers:<token>`: a JSON array of `{ txKey, from?, connectorType?, methodId?, at }` (the
+   * transaction, the sending wallet, the wallet connector and the payment method as passed to `submit`, and when the
+   * store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it. A hand-over kept for 30
+   * days is dropped on the next `load` without being handed over. Failures of the storage are ignored.
    */
   handOverStorage?: CheckoutHandOverStorage | null;
   /**
@@ -553,7 +554,10 @@ export interface CheckoutStoreOptions {
   payee?: PayeeOptions;
 }
 
-/** The part of the browser's `Storage` (`sessionStorage`) the checkout store keeps its hand-overs in. */
+/**
+ * The part of the browser's `Storage` the checkout and refund stores keep their hand-overs in (by default `localStorage`
+ * and `sessionStorage`).
+ */
 export interface CheckoutHandOverStorage {
   /** Reads an entry; `null` when there is none. */
   getItem: (key: string) => string | null;
@@ -695,10 +699,16 @@ const REFUSED_OFFERED_AGAIN_MS = [60_000, 5 * 60_000, 15 * 60_000];
  */
 const RE_READ_REASONS: ReadonlySet<string> = new Set(['timeout', 'not_found', 'replaced', 'nonce_spent']);
 
-/** The `sessionStorage` entry of the hand-overs Quasar has not taken yet, by checkout token. */
+/** The `localStorage` entry of the hand-overs Quasar has not taken yet, by checkout token. */
 const HAND_OVERS_KEY = 'quasar-sdk:checkoutHandOvers:';
 
-/** A hand-over kept in the tab until Quasar takes or refuses it ({@link CheckoutStoreOptions.handOverStorage}). */
+/**
+ * How long a hand-over stays kept for the next {@link CheckoutState.load}: Quasar takes a transaction whenever it comes,
+ * but the browser keeps nothing for good of a checkout never opened again.
+ */
+const HAND_OVER_KEPT_MS = 30 * 24 * 60 * 60_000;
+
+/** A hand-over kept in the browser until Quasar takes or refuses it ({@link CheckoutStoreOptions.handOverStorage}). */
 interface KeptHandOver {
   txKey: string;
   from?: string;
@@ -1171,9 +1181,9 @@ function errorOf(error: unknown): CheckoutError {
  * message through the `sign` passed to {@link CheckoutState.confirmPayer}, never by itself; after `load`, an `EventSource` on its `events` route (or a `GET` every `pollMs`) until
  * the invoice reaches a final state or `destroy` is called (an invoice that expired or was cancelled while a payment
  * confirms is followed on, for a limited time, until that payment ends it as `paid` or `needs_review`), and a `GET` of the
- * checkout when an event brings an outcome. A hand-over Quasar has not taken yet is kept in the tab's `sessionStorage` under
- * `quasar-sdk:checkoutHandOvers:<token>` ({@link CheckoutStoreOptions.handOverStorage}) until Quasar takes or refuses
- * it; nothing else is stored in the browser.
+ * checkout when an event brings an outcome. A hand-over Quasar has not taken yet is kept in the browser's `localStorage`
+ * under `quasar-sdk:checkoutHandOvers:<token>` ({@link CheckoutStoreOptions.handOverStorage}) until Quasar takes or
+ * refuses it, for 30 days at most; nothing else is stored in the browser.
  *
  * @param options - The checkout token and optional overrides.
  * @returns The store; call `load()` first.
@@ -1253,21 +1263,28 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
   const confirmedHere: KnownProof[] = [];
   /** The wallets Quasar refused a quote for until they confirm the invoice (`409 payer_proof_required`). */
   const proofDemanded = new Set<string>();
+  // The browser's, not the tab's: a tab closed before Quasar answered took its `sessionStorage` along, and the link opened
+  // again in a new tab offered to pay once more while Quasar never learned of the transfer
   const handOverStorage =
-    options.handOverStorage !== undefined ? options.handOverStorage : options.api ? null : browserSessionStorage();
+    options.handOverStorage !== undefined ? options.handOverStorage : options.api ? null : browserLocalStorage();
   const handOversKey = `${HAND_OVERS_KEY}${options.token}`;
 
-  /** The hand-overs this tab kept for the checkout; none when the entry is missing, unreadable or malformed. */
+  /**
+   * The hand-overs kept for the checkout, younger than {@link HAND_OVER_KEPT_MS}; none when the entry is missing,
+   * unreadable or malformed.
+   */
   const keptHandOvers = (): KeptHandOver[] => {
     try {
       const kept: unknown = JSON.parse(handOverStorage?.getItem(handOversKey) ?? '[]');
       if (!Array.isArray(kept)) return [];
+      const now = Date.now();
       return kept.filter(
         (entry): entry is KeptHandOver =>
           typeof entry === 'object' &&
           entry !== null &&
           typeof (entry as KeptHandOver).txKey === 'string' &&
-          typeof (entry as KeptHandOver).at === 'number',
+          typeof (entry as KeptHandOver).at === 'number' &&
+          now - (entry as KeptHandOver).at < HAND_OVER_KEPT_MS,
       );
     } catch {
       return [];
@@ -2033,12 +2050,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
     };
 
     /**
-     * Hands over again, oldest first, the transactions this tab kept that Quasar has not taken (the page closed or
-     * reloaded before it answered); the ones Quasar lists already (rejected, or among the payments sent in time) are
-     * forgotten.
+     * Hands over again, oldest first, the transactions kept for the checkout that Quasar has not taken (the page closed
+     * or reloaded before it answered, in this tab or another); the ones Quasar lists already (rejected, or among the
+     * payments sent in time) are forgotten, and so are the ones kept too long ({@link HAND_OVER_KEPT_MS}).
      */
     const resendKept = (view: CheckoutView) => {
       const kept = keptHandOvers();
+      // Rewritten without what was kept too long or cannot be read
+      keepHandOvers(kept);
       if (kept.length === 0) return;
       const listed = new Set([...(view.invoice.rejectedTxKeys ?? []), ...(view.invoice.onTimeTxKeys ?? [])].map(keyOf));
       const unsent = kept.filter(({ txKey }) => !listed.has(keyOf(txKey))).sort((a, b) => a.at - b.at);

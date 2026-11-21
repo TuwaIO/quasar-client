@@ -46,15 +46,16 @@ instead.
 
 > `optional` **handOverStorage?**: [`CheckoutHandOverStorage`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouthandoverstorage--docs) \| `null`
 
-Defined in: [checkout/store.ts:547](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L547)
+Defined in: [checkout/store.ts:548](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L548)
 
 Where the store keeps the hand-overs of transactions the wallet sent that Quasar has not taken yet
 ([CheckoutState.submit](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#submit)), so that the next [CheckoutState.load](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#load) of the same checkout hands them over
-again. Defaults to the browser's `sessionStorage` (the tab, until it closes), or none with your own `api`; `null`
-keeps nothing. The entry is `quasar-sdk:checkoutHandOvers:<token>`: a JSON array of
-`{ txKey, from?, connectorType?, at }` (the transaction, the sending wallet and the wallet connector as passed to
-`submit`, and when the store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it.
-Failures of the storage are ignored.
+again. Defaults to the browser's `localStorage` (every tab of the browser: the link opened again in a new tab still
+hands over a transaction the closed one sent), or none with your own `api`; `null` keeps nothing. The entry is
+`quasar-sdk:checkoutHandOvers:<token>`: a JSON array of `{ txKey, from?, connectorType?, methodId?, at }` (the
+transaction, the sending wallet, the wallet connector and the payment method as passed to `submit`, and when the
+store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it. A hand-over kept for 30
+days is dropped on the next `load` without being handed over. Failures of the storage are ignored.
 
 ***
 
@@ -62,7 +63,7 @@ Failures of the storage are ignored.
 
 > `optional` **payee?**: [`PayeeOptions`](?path=/docs/packages-quasar-sdk-checkout-interfaces-payeeoptions--docs)
 
-Defined in: [checkout/store.ts:553](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L553)
+Defined in: [checkout/store.ts:554](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L554)
 
 How the payee of each quote is checked before the page shows its address ([CheckoutState.payeeCheck](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#payeecheck)): the
 verifier of the payout record's signature (the chain adapters of `@tuwaio/nova-payments` give one) and the

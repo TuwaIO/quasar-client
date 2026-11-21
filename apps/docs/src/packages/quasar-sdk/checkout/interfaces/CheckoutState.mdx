@@ -671,9 +671,9 @@ cancelled invoice) and `error` `payment_unconfirmed` with `reason` `tx_already_u
 ([CheckoutState.payAgain](#payagain) does nothing) until Quasar decides. It is not handed over again. Any other refusal
 (4xx) is not retried either.
 
-Until Quasar takes or refuses it, the hand-over is kept in the tab's `sessionStorage`
+Until Quasar takes or refuses it, the hand-over is kept in the browser's `localStorage`
 ([CheckoutStoreOptions.handOverStorage](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstoreoptions--docs#handoverstorage)), so a page closed or reloaded meanwhile hands it over again on the
-next [CheckoutState.load](#load) of the same checkout.
+next [CheckoutState.load](#load) of the same checkout, in any tab of the browser, for 30 days.
 
 #### Parameters
 

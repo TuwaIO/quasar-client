@@ -3,8 +3,16 @@ import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'v
 import { type CheckoutApi, createCheckoutStore } from '../checkout';
 import type { CheckoutInvoice, CheckoutRejectedPayment, CheckoutStatusEvent, CheckoutView } from '../checkout/types';
 
-// Node 26 has a `sessionStorage` of its own, which would carry the hand-overs of one test into the next
-beforeEach(() => globalThis.sessionStorage?.clear?.());
+// Node 26 has Web Storage of its own, which would carry the hand-overs of one test into the next
+beforeEach(() => {
+  for (const name of ['sessionStorage', 'localStorage'] as const) {
+    try {
+      globalThis[name]?.clear?.();
+    } catch {
+      // A Node without storage of its own
+    }
+  }
+});
 
 const BASE = 'https://quasar.example';
 const fetchMock = vi.fn();
@@ -1711,7 +1719,7 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
   // Quasar does not say so on the next load: without the kept hand-over the page would offer to pay again
   it('stays on the refused transaction after a reload', async () => {
     const items = new Map<string, string>();
-    vi.stubGlobal('sessionStorage', {
+    vi.stubGlobal('localStorage', {
       getItem: (key: string) => items.get(key) ?? null,
       setItem: (key: string, value: string) => void items.set(key, value),
       removeItem: (key: string) => void items.delete(key),
@@ -2194,18 +2202,46 @@ describe('createCheckoutStore: honest re-check states, moved money, hand-overs k
     blocked.getState().destroy();
   });
 
-  it("uses the tab's sessionStorage by default, and none with the app's own calls", async () => {
-    const storage = new MemoryStorage();
-    vi.stubGlobal('sessionStorage', storage);
-    answer({ pendingPayments: 0, rejectedPayments: [] }, { submit: () => Promise.reject(new TypeError('Failed')) });
-    const checkout = store();
-    await checkout.getState().load();
-    await checkout.getState().submit({ txKey: '0xfeed' });
-    expect(storage.getItem(KEY)).not.toBeNull();
-    checkout.getState().destroy();
+  // A tab closed before Quasar answered took its `sessionStorage` along: the link opened again in a new tab offered to pay
+  // once more while the money had left the wallet, and Quasar never learned of the transfer (it learns of EVM transfers
+  // to the merchant's shared address only from the page)
+  it("keeps the hand-overs in the browser's localStorage by default, for the checkout opened again in another tab, and none with the app's own calls", async () => {
+    vi.useFakeTimers({ now: Date.parse('2026-11-21T12:00:00.000Z') });
+    const browser = new MemoryStorage();
+    vi.stubGlobal('localStorage', browser);
+    vi.stubGlobal('sessionStorage', new MemoryStorage());
+    let down = true;
+    answer(
+      { pendingPayments: 0, rejectedPayments: [] },
+      {
+        submit: () =>
+          down ? Promise.reject(new TypeError('Failed')) : Promise.resolve(json({ txKey: '0xfeed', status: 'open' })),
+      },
+    );
+    const closedTab = store();
+    await closedTab.getState().load();
+    expect(await closedTab.getState().submit({ txKey: '0xfeed', connectorType: 'evm:metamask' })).toBe(false);
+    closedTab.getState().destroy();
+    expect(browser.getItem(KEY)).not.toBeNull();
+
+    // The link opened in a new tab, whose `sessionStorage` is empty: the transfer reaches Quasar all the same
+    vi.stubGlobal('sessionStorage', new MemoryStorage());
+    down = false;
+    fetchMock.mockClear();
+    const newTab = store();
+    await newTab.getState().load();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(await sent(1)).toMatchObject({
+      path: '/v1/payments/checkout/tok_1/submit',
+      body: { txKey: '0xfeed', connectorType: 'evm:metamask' },
+    });
+    expect(newTab.getState()).toMatchObject({ phase: 'confirming', paymentOnTheWay: true, txKey: '0xfeed' });
+    expect(browser.getItem(KEY)).toBeNull();
+    newTab.getState().destroy();
+    vi.useRealTimers();
 
     const simulated = new MemoryStorage();
-    vi.stubGlobal('sessionStorage', simulated);
+    vi.stubGlobal('localStorage', simulated);
     const api: CheckoutApi = {
       view: async () => view({ quote: QUOTE as never }),
       quote: async () => QUOTE as never,
@@ -2223,6 +2259,37 @@ describe('createCheckoutStore: honest re-check states, moved money, hand-overs k
     await playground.getState().submit({ txKey: '0xfeed' });
     expect(simulated.items.size).toBe(0);
     playground.getState().destroy();
+  });
+
+  // Kept in the browser, not in the tab: a checkout never opened again must not leave its hand-overs there for good
+  it('drops, without handing it over, a hand-over kept for 30 days', async () => {
+    vi.useFakeTimers({ now: Date.parse('2026-11-21T12:00:00.000Z') });
+    const day = 24 * 60 * 60_000;
+    const storage = new MemoryStorage();
+    storage.setItem(
+      KEY,
+      JSON.stringify([
+        { txKey: '0xold', at: Date.now() - 30 * day },
+        { txKey: '0xfeed', at: Date.now() - 29 * day },
+      ]),
+    );
+    answer({ pendingPayments: 0, rejectedPayments: [] }, { submit: () => Promise.reject(new TypeError('Failed')) });
+    const checkout = storeWith(storage);
+    await checkout.getState().load();
+    await vi.advanceTimersByTimeAsync(0);
+    const handedOver = await Promise.all(fetchMock.mock.calls.map((_, index) => sent(index))).then((requests) =>
+      requests.filter(({ path }) => path.endsWith('/submit')).map(({ body }) => body.txKey),
+    );
+    expect(handedOver).toEqual(['0xfeed']);
+    expect(JSON.parse(storage.getItem(KEY) ?? 'null')).toEqual([{ txKey: '0xfeed', at: Date.now() - 29 * day }]);
+    checkout.getState().destroy();
+
+    // None left young enough: the entry goes
+    storage.setItem(KEY, JSON.stringify([{ txKey: '0xold', at: Date.now() - 31 * day }]));
+    const later = storeWith(storage);
+    await later.getState().load();
+    expect(storage.getItem(KEY)).toBeNull();
+    later.getState().destroy();
   });
 
   it('never turns a settled invoice back into a confirming payment when a late hand-over is taken', async () => {
