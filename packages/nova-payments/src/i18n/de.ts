@@ -193,7 +193,10 @@ export const deLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'Die Wallet-Prüfung ist derzeit nicht verfügbar.',
     retryLater: 'In einer Minute erneut versuchen',
     noAnswer: 'Der Zahlungsserver hat nicht geantwortet. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
-    txTitle: 'Zahlung an {merchant}',
+    txTitle: 'Überweisung an {merchant} gesendet',
+    txTitlePending: 'Überweisung an {merchant} wird gesendet',
+    txTitleFailed: 'Überweisung an {merchant} fehlgeschlagen',
+    txTitleReplaced: 'Überweisung an {merchant} ersetzt',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {

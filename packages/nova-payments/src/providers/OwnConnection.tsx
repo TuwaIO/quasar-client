@@ -1,4 +1,5 @@
 import { NovaConnectProvider } from '@tuwaio/nova-connect';
+import { labelsForLocale } from '@tuwaio/nova-connect/i18n';
 import { createSatelliteConnectStore } from '@tuwaio/satellite-core';
 import { type Connection, type Connector, SatelliteStoreContext } from '@tuwaio/satellite-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
@@ -79,6 +80,9 @@ function withRememberWalletHidden(props: NovaConnectProps): NovaConnectProps {
  * Without `autoConnect`, the connect modal hides "Remember this wallet", since nothing would reconnect the wallet after
  * a load (unless `novaConnect` sets `hidden` of that checkbox).
  *
+ * The connect modal speaks the language of the checkout shown (`labelsForLocale` of `@tuwaio/nova-connect/i18n`:
+ * English for a language Nova Connect does not have), under the texts the app gives in `novaConnect.labels`.
+ *
  * Side effects: those of the store (`orbit-core:lastConnectedConnector` and
  * `orbit-core:recentlyConnectedConnectorsListHelpers` in `sessionStorage` until the tab closes, or in `localStorage`
  * with `rememberWallet`), of the watchers and of Nova Connect; the store is kept in memory until the page unloads.
@@ -86,10 +90,19 @@ function withRememberWalletHidden(props: NovaConnectProps): NovaConnectProps {
  * @param props - The connection and the checkouts.
  * @param props.own - The connection (`ownConnection` of `NovaPaymentsProvider`).
  * @param props.children - The checkouts.
+ * @param props.locale - The language of the checkout shown; `null` before one tells it.
  * @returns The provider tree.
  * @internal
  */
-export function OwnConnection({ own, children }: { own: NovaPaymentsOwnConnection; children: ReactNode }) {
+export function OwnConnection({
+  own,
+  children,
+  locale = null,
+}: {
+  own: NovaPaymentsOwnConnection;
+  children: ReactNode;
+  locale?: string | null;
+}) {
   // `rememberWallet` and `autoConnect` are read on the first render, as `SatelliteConnectProvider` does
   const [store] = useState(() => ownStore(own));
   const [autoConnect] = useState(own.autoConnect ?? false);
@@ -115,10 +128,11 @@ export function OwnConnection({ own, children }: { own: NovaPaymentsOwnConnectio
     store.setState({ isAutoConnectFinished: true });
   }, [store, autoConnect]);
 
-  const modalProps = useMemo(
-    () => (autoConnect ? novaConnect : withRememberWalletHidden(novaConnect)),
-    [autoConnect, novaConnect],
-  );
+  const modalProps = useMemo(() => {
+    const props = autoConnect ? novaConnect : withRememberWalletHidden(novaConnect);
+    // On a Ukrainian checkout the modal spoke English ("Connect Wallet", "BACK"): the app's texts stay on top
+    return locale ? { ...props, labels: { ...labelsForLocale(locale), ...props.labels } } : props;
+  }, [autoConnect, novaConnect, locale]);
 
   return (
     <SatelliteStoreContext.Provider value={store}>

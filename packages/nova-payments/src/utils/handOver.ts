@@ -83,12 +83,26 @@ export async function handOverPayment({
   const description = invoice.number
     ? formatLabel(labels.pay.txDescription, { amount, invoice: invoice.number })
     : amount;
+  const title = (label: string) => clip(formatLabel(label, { merchant }), TITLE_MAX);
   const transaction = adapter.pulsarTransaction({
     ...payment,
-    title: clip(formatLabel(labels.pay.txTitle, { merchant }), TITLE_MAX),
+    title: title(labels.pay.txTitle),
     description: clip(description, DESCRIPTION_MAX),
     payload: { quasarInvoice: invoice.id },
   });
-  await pulsar.injectExternalPendingTxs([transaction]);
+  // The toast and the history name the transfer in each of its states (`[pending, success, error, replaced]`): it may
+  // go through and pay nothing, which the page tells. "Success · Payment to TUWA" stood beside "Your payment could not
+  // be confirmed" for a transfer from a wallet that had not confirmed the invoice
+  await pulsar.injectExternalPendingTxs([
+    {
+      ...transaction,
+      title: [
+        title(labels.pay.txTitlePending),
+        title(labels.pay.txTitle),
+        title(labels.pay.txTitleFailed),
+        title(labels.pay.txTitleReplaced),
+      ],
+    },
+  ]);
   return true;
 }

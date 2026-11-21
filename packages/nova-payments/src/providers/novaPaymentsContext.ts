@@ -42,6 +42,13 @@ export interface NovaPaymentsSettings {
    * @param family - The chain family of the payment.
    */
   onConnectWallet?: (family: PaymentFamily) => void;
+  /**
+   * Tells Nova's own connection the language of the checkout shown, for the texts of its connect modal; unset on the
+   * app's connection, whose Nova Connect speaks the app's language.
+   *
+   * @param locale - The language of the checkout.
+   */
+  setCheckoutLocale?: (locale: string) => void;
 }
 
 // The context is stored on `globalThis` under a global symbol, so several copies of this package share one context

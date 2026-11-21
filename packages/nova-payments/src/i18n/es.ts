@@ -186,7 +186,10 @@ export const esLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'La comprobación de la billetera no está disponible ahora mismo.',
     retryLater: 'Reintentar en un minuto',
     noAnswer: 'El servidor de pagos no respondió. Comprueba tu conexión y vuelve a intentarlo.',
-    txTitle: 'Pago a {merchant}',
+    txTitle: 'Transferencia a {merchant} enviada',
+    txTitlePending: 'Enviando una transferencia a {merchant}',
+    txTitleFailed: 'La transferencia a {merchant} falló',
+    txTitleReplaced: 'Transferencia a {merchant} reemplazada',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {

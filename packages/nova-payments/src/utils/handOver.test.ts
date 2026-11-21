@@ -44,12 +44,38 @@ describe('handOverPayment', () => {
     await expect(handOverPayment({ adapter, pulsar, payment, ...context })).resolves.toBe(true);
     const params = {
       ...payment,
-      title: 'Payment to Acme Labs',
+      title: 'Transfer to Acme Labs sent',
       description: '89.54 USDC · INV-2026-42',
       payload: { quasarInvoice: 'inv_1' },
     };
     expect(adapter.pulsarTransaction).toHaveBeenCalledWith(params);
-    expect(pulsar.injectExternalPendingTxs).toHaveBeenCalledWith([params]);
+    expect(pulsar.injectExternalPendingTxs).toHaveBeenCalledWith([
+      {
+        ...params,
+        title: [
+          'Sending a transfer to Acme Labs',
+          'Transfer to Acme Labs sent',
+          'Transfer to Acme Labs failed',
+          'Transfer to Acme Labs replaced',
+        ],
+      },
+    ]);
+  });
+
+  // The owner's pass of the stand: a transfer from a wallet that had not confirmed the invoice went through and paid
+  // nothing, and its toast read "Success · Payment to TUWA" beside the page's "Your payment could not be confirmed". The
+  // toast names the transfer in each of its states; the page tells what it did to the invoice
+  it('names the transfer, not the payment, in each state of its toast, in the language of the checkout', async () => {
+    const { ukLabels } = await import('../i18n/uk');
+    const { adapter, pulsar } = setup();
+    await handOverPayment({ adapter, pulsar, payment, ...context, labels: ukLabels, merchant: 'TUWA' });
+    const [[[transaction]]] = vi.mocked(pulsar.injectExternalPendingTxs).mock.calls as unknown as [[[Transaction]]];
+    expect(transaction.title).toEqual([
+      'Надсилаємо переказ для TUWA',
+      'Переказ для TUWA надіслано',
+      'Переказ для TUWA не пройшов',
+      'Переказ для TUWA замінено',
+    ]);
   });
 
   it("keeps the title and description within Pulsar's limits", async () => {

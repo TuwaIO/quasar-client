@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 export const ENTRIES = {
   '@tuwaio/nova-connect/hooks': '@tuwaio/sdk/nova-connect/hooks',
+  '@tuwaio/nova-connect/i18n': '@tuwaio/sdk/nova-connect/i18n',
   '@tuwaio/nova-connect': '@tuwaio/sdk/nova-connect',
   '@tuwaio/nova-core/utils': '@tuwaio/sdk/nova-core/utils',
   '@tuwaio/nova-core': '@tuwaio/sdk/nova-core',

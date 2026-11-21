@@ -107,13 +107,17 @@ export function PaidScreen() {
                       </>
                     }
                   >
-                    {transfer.amount && <span className="novapay:block">{transfer.amount}</span>}
-                    <HashLink
-                      hash={transfer.txKey}
-                      explorerUrl={transfer.explorerUrl}
-                      variant="compact"
-                      {...child?.hashLink}
-                    />
+                    {/* The amount and the link of its transaction both at the right edge, as the sender's: the link is
+                        a block of its own, which started at the left under the amount */}
+                    <span className="novapay:flex novapay:flex-col novapay:items-end">
+                      {transfer.amount && <span className="novapay:block">{transfer.amount}</span>}
+                      <HashLink
+                        hash={transfer.txKey}
+                        explorerUrl={transfer.explorerUrl}
+                        variant="compact"
+                        {...child?.hashLink}
+                      />
+                    </span>
                   </DetailRow>
                 ))
               : txKey && (

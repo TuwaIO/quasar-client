@@ -3,6 +3,7 @@ import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type { RefundState, RefundStore } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useEffect, useEffectEvent, useId, useRef, useState } from 'react';
 
+import { useConnectionLocale } from '../hooks/useConnectionLocale';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { type RefundFlow, type RefundRequest, useRefund } from '../hooks/useRefund';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
@@ -137,6 +138,8 @@ export function RefundButton({ label, className, disabled, ...props }: RefundBut
  */
 export function RefundDialog({ open, onOpenChange, locale = 'en', onRefunded, ...props }: RefundDialogProps) {
   const labels = usePaymentsLabels(locale);
+  // Nova's own connect modal speaks the language of the window while it shows
+  useConnectionLocale(open ? locale : null);
   const flow = useRefund({
     store: props.store,
     invoiceId: props.invoiceId,

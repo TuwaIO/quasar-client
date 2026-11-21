@@ -188,7 +188,10 @@ export const itLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'Il controllo del wallet non è disponibile al momento.',
     retryLater: 'Riprova tra un minuto',
     noAnswer: 'Il server dei pagamenti non ha risposto. Controlla la connessione e riprova.',
-    txTitle: 'Pagamento a {merchant}',
+    txTitle: 'Trasferimento a {merchant} inviato',
+    txTitlePending: 'Invio di un trasferimento a {merchant}',
+    txTitleFailed: 'Trasferimento a {merchant} non riuscito',
+    txTitleReplaced: 'Trasferimento a {merchant} sostituito',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {

@@ -217,11 +217,50 @@ describe('NovaPaymentsProvider', () => {
     contextValues.set(NovaPaymentsContext, { connection: 'none', adapters: appAdapters });
     expect(settingsOf(provider({})).adapters).toBeUndefined();
   });
+
+  // Nova's own connect modal spoke English on a Ukrainian checkout: "Connect Wallet", "BACK", "I don't have a wallet"
+  it('gives its own connection the language of the checkout shown, and asks for none on the app connection', () => {
+    const connection = own();
+    const first = provider({ ownConnection: connection });
+    expect(ownOf(first)?.props.locale).toBeNull();
+    (settingsOf(first).setCheckoutLocale as (locale: string) => void)('uk');
+    expect(ownOf(provider({ ownConnection: connection }))?.props.locale).toBe('uk');
+    unmount();
+
+    // The app's Nova Connect speaks the app's language
+    parents({ store: true, novaConnect: true });
+    expect(settingsOf(provider({ adapters: appAdapters })).setCheckoutLocale).toBeUndefined();
+    unmount();
+
+    // A provider on the own connection of another one tells that one
+    const setCheckoutLocale = vi.fn();
+    contextValues.set(NovaPaymentsContext, { connection: 'own', adapters: ownAdapters, setCheckoutLocale });
+    expect(settingsOf(provider({})).setCheckoutLocale).toBe(setCheckoutLocale);
+  });
 });
 
 describe('OwnConnection', () => {
-  const layer = (connection: unknown, children: ReactNode = 'checkout') =>
-    render(OwnConnection, { own: connection, children } as never);
+  const layer = (connection: unknown, children: ReactNode = 'checkout', locale: string | null = null) =>
+    render(OwnConnection, { own: connection, children, locale } as never);
+  const labelsOf = (tree: unknown) => (fixture.ofType(tree, NovaConnectProvider)[0] as Element).props.labels;
+
+  // Nova's own connect modal spoke English on a Ukrainian checkout: "Connect Wallet", "BACK", "I don't have a wallet"
+  it("speaks the language of the checkout shown in its connect modal, under the app's own texts", async () => {
+    const { chineseLabels, defaultLabels, ukrainianLabels } = await import('@tuwaio/nova-connect/i18n');
+    const connection = own({ novaConnect: { appChains: [{ id: 84532 }], labels: { connectWallet: 'Pay by wallet' } } });
+    expect(labelsOf(layer(connection))).toEqual({ connectWallet: 'Pay by wallet' });
+    expect(labelsOf(layer(connection, 'checkout', 'uk'))).toEqual({
+      ...ukrainianLabels,
+      connectWallet: 'Pay by wallet',
+    });
+    expect(labelsOf(layer(connection, 'checkout', 'zh-CN'))).toEqual({
+      ...chineseLabels,
+      connectWallet: 'Pay by wallet',
+    });
+    // A language Nova Connect does not have yet: English
+    expect(labelsOf(layer(connection, 'checkout', 'de'))).toEqual({ ...defaultLabels, connectWallet: 'Pay by wallet' });
+    expect(labelsOf(layer(own(), 'checkout', 'uk'))).toEqual(ukrainianLabels);
+  });
 
   const storeOf = (tree: unknown) => (fixture.ofType(tree, SatelliteStoreContext)[0] as Element).props.value;
   const connectModalOf = (tree: unknown) => {

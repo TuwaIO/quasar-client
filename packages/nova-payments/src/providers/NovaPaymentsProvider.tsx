@@ -192,10 +192,23 @@ export function NovaPaymentsProvider({
     outer.connection !== undefined &&
     outer.connection !== 'none';
   const walletAdapters = own ? own.adapters : (adapters ?? (onOuterConnection ? outer.adapters : undefined));
+  // The language of the checkout shown, for the connect modal of Nova's own connection: on a Ukrainian checkout it
+  // spoke English. A provider on the connection of one above tells that one
+  const [checkoutLocale, setCheckoutLocale] = useState<string | null>(null);
+  const tellsLocale = own ? setCheckoutLocale : onOuterConnection ? outer.setCheckoutLocale : undefined;
 
   const value = useMemo(
-    () => ({ baseUrl, labels, customization, adapters: walletAdapters, pulsar, connection, onConnectWallet }),
-    [baseUrl, labels, customization, walletAdapters, pulsar, connection, onConnectWallet],
+    () => ({
+      baseUrl,
+      labels,
+      customization,
+      adapters: walletAdapters,
+      pulsar,
+      connection,
+      onConnectWallet,
+      setCheckoutLocale: tellsLocale,
+    }),
+    [baseUrl, labels, customization, walletAdapters, pulsar, connection, onConnectWallet, tellsLocale],
   );
 
   const warned = useRef<Set<string> | null>(null);
@@ -239,7 +252,9 @@ export function NovaPaymentsProvider({
     <NovaPaymentsContext.Provider value={value}>
       {own ? (
         <Suspense fallback={null}>
-          <LazyOwnConnection own={own}>{children}</LazyOwnConnection>
+          <LazyOwnConnection own={own} locale={checkoutLocale}>
+            {children}
+          </LazyOwnConnection>
         </Suspense>
       ) : (
         children

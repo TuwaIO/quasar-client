@@ -296,4 +296,23 @@ describe('the minutes left announced to screen readers', () => {
   it('are not heard once the payment is on its way', () => {
     expect(heardAt('confirm')).toBe('');
   });
+
+  // The owner's pass of the stand: the live region still said "1 minute left to pay" minutes after the invoice expired,
+  // where a screen reader reading the page would find it
+  it('are left behind once the deadline passed', () => {
+    const liveRegion = () =>
+      fixture
+        .elements(render(CheckoutFrame, { leave: null }))
+        .find((element) => element.props['aria-live'] === 'polite')?.props.children;
+    confirmingAt('2026-10-29T08:26:30Z');
+    ctx = { ...ctx, screen: 'method' };
+    render(CheckoutFrame, { leave: null });
+    ctx = { ...ctx, now: Date.parse('2026-10-29T08:27:30Z') };
+    render(CheckoutFrame, { leave: null });
+    expect(liveRegion()).toBe(defaultLabels.summary.oneMinuteLeft);
+    // Past the deadline, still on the same screen: nothing is left to pay
+    ctx = { ...ctx, now: Date.parse('2026-10-29T08:29:30Z') };
+    render(CheckoutFrame, { leave: null });
+    expect(liveRegion()).toBe('');
+  });
 });

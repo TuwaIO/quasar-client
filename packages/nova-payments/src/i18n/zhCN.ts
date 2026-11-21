@@ -178,7 +178,10 @@ export const zhCNLabels: NovaPaymentsLabels = {
     screeningUnavailable: '钱包检查暂时不可用。',
     retryLater: '请一分钟后重试',
     noAnswer: '付款服务器没有响应。请检查网络连接后重试。',
-    txTitle: '向 {merchant} 付款',
+    txTitle: '已向 {merchant} 转账',
+    txTitlePending: '正在向 {merchant} 转账',
+    txTitleFailed: '向 {merchant} 的转账失败',
+    txTitleReplaced: '向 {merchant} 的转账已被替换',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {

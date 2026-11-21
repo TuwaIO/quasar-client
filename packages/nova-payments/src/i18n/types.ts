@@ -364,8 +364,18 @@ export type NovaPaymentsLabels = {
     retryLater: string;
     /** No answer from Quasar */
     noAnswer: string;
-    /** Title of the payment in the app's transaction history and toasts: `{merchant}` (default: `Payment to {merchant}`) */
+    /**
+     * Title of the payment's transfer in the app's transaction history and toasts once it went through: `{merchant}`
+     * (default: `Transfer to {merchant} sent`). They tell the transfer, the page tells what it did to the invoice: a
+     * transfer may go through and pay nothing (a wallet that did not confirm the invoice, a payment after its deadline).
+     */
     txTitle: string;
+    /** The same while the transfer is on its way: `{merchant}` (default: `Sending a transfer to {merchant}`) */
+    txTitlePending: string;
+    /** The same when the transfer failed: `{merchant}` (default: `Transfer to {merchant} failed`) */
+    txTitleFailed: string;
+    /** The same when the wallet replaced the transfer: `{merchant}` (default: `Transfer to {merchant} replaced`) */
+    txTitleReplaced: string;
     /** Its description: `{amount}` with its symbol, `{invoice}` the invoice number (default: `{amount} · {invoice}`) */
     txDescription: string;
   };

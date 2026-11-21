@@ -16,6 +16,10 @@ vi.mock('../hooks/usePaymentsLabels', async () => {
   const { defaultLabels } = await import('../i18n');
   return { usePaymentsLabels: () => defaultLabels };
 });
+const connectionLocale = vi.hoisted(() => ({ calls: [] as Array<string | null> }));
+vi.mock('../hooks/useConnectionLocale', () => ({
+  useConnectionLocale: (locale: string | null) => void connectionLocale.calls.push(locale),
+}));
 const refundHook = vi.hoisted(() => ({ params: [] as unknown[] }));
 vi.mock('../hooks/useRefund', () => ({
   useRefund: (params: unknown) => {
@@ -312,6 +316,16 @@ describe('RefundButton', () => {
 
     render(RefundDialog, { ...dialog.props, open: true, onOpenChange: vi.fn() } as never);
     expect(refundHook.params.at(-1)).toMatchObject({ store, invoiceId: 'inv_1', onConnectWallet });
+  });
+
+  // Nova's own connect modal spoke English on a Ukrainian page
+  it("has Nova's own connect modal speak the language of the window while it shows", () => {
+    const props = { store: {} as never, invoiceId: 'inv_1', locale: 'uk', onOpenChange: vi.fn() };
+    render(RefundDialog, { ...props, open: true } as never);
+    expect(connectionLocale.calls.at(-1)).toBe('uk');
+    unmount();
+    render(RefundDialog, { ...props, open: false } as never);
+    expect(connectionLocale.calls.at(-1)).toBeNull();
   });
 
   it('has the merchant connect a wallet of the network of the payment', () => {

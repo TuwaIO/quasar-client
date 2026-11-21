@@ -90,7 +90,13 @@ describe('usePaymentHandOver', () => {
       expect.objectContaining({
         txKey: '0xhash',
         account: payment.account,
-        title: 'Payment to Acme Labs',
+        // The transfer in each state of its toast, not "Payment to": it may go through and pay nothing
+        title: [
+          'Sending a transfer to Acme Labs',
+          'Transfer to Acme Labs sent',
+          'Transfer to Acme Labs failed',
+          'Transfer to Acme Labs replaced',
+        ],
         description: '89.54 USDC · INV-2026-42',
       }),
     ]);
