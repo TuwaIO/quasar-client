@@ -120,7 +120,7 @@
     "@solana-program/token": "^0.18.0",
     "@solana/kit": "^8.6.0",
     "@tailwindcss/postcss": "^4.3.5",
-    "@tuwaio/nova-connect": "^0.16.0",
+    "@tuwaio/nova-connect": "1.0.0-feat-payments-alpha.1.693843d8",
     "@tuwaio/nova-core": "^0.16.0",
     "@tuwaio/nova-transactions": "^0.16.0",
     "@tuwaio/orbit-core": "^0.6.2",

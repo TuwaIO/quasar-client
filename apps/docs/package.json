@@ -20,7 +20,7 @@
     "@safe-global/safe-apps-sdk": "^9.1.0",
     "@solana/react": "^8.6.0",
     "@solana/webcrypto-ed25519-polyfill": "^8.6.0",
-    "@tuwaio/nova-connect": "^0.16.0",
+    "@tuwaio/nova-connect": "1.0.0-feat-payments-alpha.1.693843d8",
     "@tuwaio/nova-core": "^0.16.0",
     "@tuwaio/nova-icons": "^0.1.3",
     "@tuwaio/nova-payments": "workspace:^",
