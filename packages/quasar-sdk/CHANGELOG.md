@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.17.1...quasar-sdk-v0.18.0) (2026-11-21)
+
+
+### Features
+
+* **quasar-sdk:** the test event of an endpoint (webhook.test) ([#38](https://github.com/TuwaIO/quasar-client/issues/38)) ([7d5654a](https://github.com/TuwaIO/quasar-client/commit/7d5654a016cde46c650d8e996b41161609152973))
+
 ## [0.17.1](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.17.0...quasar-sdk-v0.17.1) (2026-11-20)
 
 
