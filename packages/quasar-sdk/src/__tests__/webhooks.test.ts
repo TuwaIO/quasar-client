@@ -4,12 +4,14 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import {
   isPaymentWebhookEvent,
+  isWebhookTestEvent,
   type PaymentWebhookEvent,
   type PaymentWebhookEventType,
   type PaymentWebhookUnmatchedTransfer,
   QuasarWebhookError,
   verifyWebhook,
   WEBHOOK_SIGNATURE_HEADER,
+  WEBHOOK_TEST_EVENT,
 } from '../index';
 
 const SECRET = 'whsec_test_1';
@@ -292,5 +294,51 @@ describe('verifyWebhook', () => {
     }>();
     // The network of the transaction, so that an unmatched transfer opens in the explorer
     expectTypeOf<PaymentWebhookUnmatchedTransfer['chainId']>().toEqualTypeOf<string | null | undefined>();
+  });
+});
+
+// The test event an owner or admin sends from the endpoint's page in the Quasar dashboard (Send test event): signed and
+// sent like a real event, so a receiver being set up checks its signature and answers it with 2xx
+describe('the test event of an endpoint', () => {
+  const testEvent = (sentAt: string) =>
+    JSON.stringify({
+      id: 'evt_test_1',
+      object: 'event',
+      type: 'webhook.test',
+      createdAt: '2026-10-10T11:59:58.000Z',
+      sentAt,
+      environment: 'test',
+      data: { endpointId: 'ep_1', appId: 'app_1' },
+    });
+
+  it('is verified like any delivery and told apart from payment events and transaction webhooks', async () => {
+    const body = testEvent('2026-10-10T11:59:59.000Z');
+    const event = await verifyWebhook({ body, signature: sign(body), secret: SECRET, now: NOW });
+
+    expect(WEBHOOK_TEST_EVENT).toBe('webhook.test');
+    expect(isWebhookTestEvent(event)).toBe(true);
+    expect(isPaymentWebhookEvent(event)).toBe(false);
+    if (!isWebhookTestEvent(event)) return;
+    expect(event.data.endpointId).toBe('ep_1');
+    expect(event.environment).toBe('test');
+  });
+
+  it('is refused when its signature or its send time is wrong, as any delivery', async () => {
+    const body = testEvent('2026-10-10T11:00:00.000Z');
+    await expect(verifyWebhook({ body, signature: sign(body), secret: SECRET, now: NOW })).rejects.toMatchObject({
+      code: 'stale',
+    });
+    const fresh = testEvent('2026-10-10T11:59:59.000Z');
+    await expect(
+      verifyWebhook({ body: fresh, signature: sign(fresh, 'whsec_other'), secret: SECRET, now: NOW }),
+    ).rejects.toMatchObject({ code: 'invalid_signature' });
+  });
+
+  it('is no test event for a payment event or a transaction webhook', () => {
+    expect(isWebhookTestEvent(JSON.parse(paymentEvent('2026-10-10T11:59:59.000Z')))).toBe(false);
+    expect(
+      isWebhookTestEvent({ txKey: 'tx_1', status: 'Success', action: 'Success', chainId: '1', timestamp: 1 }),
+    ).toBe(false);
+    expect(isWebhookTestEvent(null)).toBe(false);
   });
 });

@@ -124,7 +124,7 @@ An app can also give each invoice an EVM address of its own (ERC-5564), from key
 Verify every webhook before acting on it, with the raw body as received:
 
 ```ts
-import { isPaymentWebhookEvent, verifyWebhook } from '@tuwaio/quasar-sdk';
+import { isPaymentWebhookEvent, isWebhookTestEvent, verifyWebhook } from '@tuwaio/quasar-sdk';
 
 export async function POST(request: Request) {
   try {
@@ -133,6 +133,7 @@ export async function POST(request: Request) {
       signature: request.headers.get('x-quasar-signature'),
       secret: process.env.QUASAR_WEBHOOK_SECRET ?? '',
     });
+    if (isWebhookTestEvent(event)) return new Response(null, { status: 204 }); // Send test event of the dashboard
     if (isPaymentWebhookEvent(event) && event.type === 'invoice.paid') {
       console.log('Paid', event.data.invoice?.number); // fulfil the order; deduplicate by event.id
     }
@@ -142,6 +143,8 @@ export async function POST(request: Request) {
   }
 }
 ```
+
+Send test event on an endpoint's page in the Quasar dashboard delivers a `webhook.test` event (`WebhookTestEvent`), signed and sent like a real one, so a receiver being set up can be checked at once. It costs no quota and is not sent again: answer it with 2xx and act on nothing, and tell it apart with `isWebhookTestEvent` before reading a body as a payment event or a transaction webhook.
 
 `verifyWebhook` refuses a delivery sent further from now than `toleranceSeconds` (default 300) as `stale`, so a captured webhook cannot be replayed later. It reads `sentAt`, set on every delivery attempt; a transaction webhook from an engine that does not send `sentAt` yet is checked by its `timestamp`, the time it was created, which its retries reuse: raise `toleranceSeconds` (1200 covers the retries) until the engine is updated. `toleranceSeconds: false` turns the check off.
 
