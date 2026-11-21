@@ -42,10 +42,18 @@ const storage = () => {
 
 const counts = (entry: KeptBatch) => Date.now() - entry.at < BATCH_HELD_MS;
 
+/** A batch as written: anything else in the entry is skipped, since the browser keeps it across tabs and sessions. */
+const isBatch = (entry: unknown): entry is KeptBatch =>
+  typeof entry === 'object' &&
+  entry !== null &&
+  typeof (entry as KeptBatch).invoiceId === 'string' &&
+  typeof (entry as KeptBatch).batchId === 'string' &&
+  typeof (entry as KeptBatch).at === 'number';
+
 const read = (): KeptBatch[] => {
   try {
     const kept: unknown = JSON.parse(storage()?.getItem(KEY) ?? '[]');
-    return Array.isArray(kept) ? (kept as KeptBatch[]) : [];
+    return Array.isArray(kept) ? kept.filter(isBatch) : [];
   } catch {
     return [];
   }
