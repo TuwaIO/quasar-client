@@ -792,6 +792,8 @@ export type NovaPaymentsLabels = {
      * `{merchant}` (default: `The network confirmed your payment, but Quasar has not recorded it. Do not pay again;
      * contact {merchant} with the transaction hash.`)
      */
+    /** Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the money arrived, the seller checks it and credits it, and the buyer does not pay again. */
+    unconfirmedArrivedUnverified: string;
     unconfirmedSettlementFailed: string;
     /**
      * Instead of `unconfirmedText` and `unconfirmedNote`, when the wallet used the number of the transaction for another one

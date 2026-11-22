@@ -371,6 +371,8 @@ export const defaultLabels: NovaPaymentsLabels = {
       'Quasar reads this payment for a week after it learned of it, and records it if it goes through. Check your wallet; if it left and you need help, contact {merchant} with this transaction hash.',
     unconfirmedNonceSpent:
       'Your wallet used the number of this transaction for another one, which Quasar could not find, so money may have left your wallet. Do not pay again yet. If you sped it up, name its hash below; otherwise contact {merchant} with this transaction hash.',
+    unconfirmedArrivedUnverified:
+      'The money reached the address of this invoice, but it cannot be confirmed automatically. The seller checks it and credits it. Do not pay again.',
     unconfirmedSettlementFailed:
       'The network confirmed your payment, but Quasar has not recorded it. Do not pay again; contact {merchant} with the transaction hash.',
     unconfirmedSettlementRetrying:

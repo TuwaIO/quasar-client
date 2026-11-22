@@ -1446,6 +1446,43 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
     expect(checkout.getState()).toMatchObject({ phase: 'paid', invoicePaymentUnresolved: false });
   });
 
+  // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the page waited for a
+  // payment and would have said that nothing was charged (owner test 2026-11-22)
+  it('says the money arrived and offers no payment when coin reached the invoice address unverified', async () => {
+    const arrival = {
+      chainId: 'eip155:84532',
+      amount: '603408156521420',
+      blockNumber: '100',
+      at: '2026-11-22T06:35:00.000Z',
+    };
+    for (const status of ['open', 'expired'] as const) {
+      fetchMock.mockReset();
+      answer({ status, pendingPayments: 0, unresolvedPayments: 0, unverifiedArrivals: [arrival] } as never);
+      const checkout = store();
+      await checkout.getState().load();
+      expect(checkout.getState()).toMatchObject({
+        phase: 'unconfirmed',
+        error: { code: 'payment_unconfirmed', reason: 'payment_unverified' },
+      });
+    }
+    // Told by the stream of an open page as well
+    fetchMock.mockReset();
+    answer({ pendingPayments: 0, unresolvedPayments: 0 });
+    const checkout = store();
+    await checkout.getState().load();
+    expect(checkout.getState().phase).not.toBe('unconfirmed');
+    FakeEventSource.instances
+      .at(-1)!
+      .emit(
+        'status',
+        signal('open', 7, { pendingPayments: 0, unresolvedPayments: 0, unverifiedArrivals: [arrival] } as never),
+      );
+    expect(checkout.getState()).toMatchObject({
+      phase: 'unconfirmed',
+      error: { code: 'payment_unconfirmed', reason: 'payment_unverified' },
+    });
+  });
+
   it('reopens on the wallet check when a stuck payment stopped counting without a rejection', async () => {
     answer({ pendingPayments: 0, unresolvedPayments: 1, rejectedPayments: [rejection('0xold', 'reverted', true)] });
     const checkout = store();

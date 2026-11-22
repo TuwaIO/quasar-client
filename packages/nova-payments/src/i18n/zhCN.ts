@@ -350,6 +350,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
       '自得知这笔付款起，Quasar 会读取一周，如果它成功就会记录。请检查您的钱包；如果款项已转出且需要帮助，请提供此交易哈希联系 {merchant}。',
     unconfirmedNonceSpent:
       '您的钱包把这笔交易的编号用于了另一笔交易，Quasar 无法找到它，因此款项可能已离开您的钱包。暂时不要再次付款。如果您加速了它，请在下方填写其哈希；否则请携带此交易哈希联系 {merchant}。',
+    unconfirmedArrivedUnverified: '款项已到达此账单的地址，但无法自动确认。卖家会核实并入账。请勿再次付款。',
     unconfirmedSettlementFailed: '网络已确认您的付款，但 Quasar 未记录。请勿再次付款；请提供交易哈希联系 {merchant}。',
     unconfirmedSettlementRetrying:
       '网络已确认您的付款，但 Quasar 尚未记录。Quasar 会在得知这笔付款后的 30 天内每天重试。请勿再次付款；请提供交易哈希联系 {merchant}。',

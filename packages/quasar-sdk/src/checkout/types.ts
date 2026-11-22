@@ -120,6 +120,13 @@ export interface CheckoutInvoice {
    */
   unresolvedPayments?: number;
   /**
+   * Coin that reached the invoice's own address inside a contract's call, which Quasar cannot confirm (an exchange's
+   * batch withdrawal, a Safe), the latest first: the money arrived and the merchant checks it. The store says so with
+   * `payment_unconfirmed` and `reason` `payment_unverified`, offers no payment and never says that nothing was charged.
+   * Quasar before November 22, 2026 leaves it out.
+   */
+  unverifiedArrivals?: CheckoutUnverifiedArrival[];
+  /**
    * Every key (`txKey`, hash, the hash a sped-up transaction replaced, a relay's `userOpHash`) of the payments that
    * count as sent in time: Quasar learned of them before `dueAt` (all of them when the invoice has none); at most the
    * latest 20 transactions and 10 relays. Match the page's own keys against it instead of the browser clock. Left out
@@ -631,6 +638,20 @@ export interface CheckoutStatusEvent {
   paymentCountsUntil?: string | null;
   /** Payments that may still arrive, with no time limit, as {@link CheckoutInvoice.unresolvedPayments}. */
   unresolvedPayments?: number;
+  /** As {@link CheckoutInvoice.unverifiedArrivals}. */
+  unverifiedArrivals?: CheckoutUnverifiedArrival[];
   /** The keys of the payments that count as sent in time, as {@link CheckoutInvoice.onTimeTxKeys}. */
   onTimeTxKeys?: string[];
+}
+
+/** Coin that reached an invoice's own address inside a contract's call, which Quasar cannot confirm. */
+export interface CheckoutUnverifiedArrival {
+  /** The network, CAIP-2. */
+  chainId: string;
+  /** What arrived, in base units of the coin, when Quasar could tell. */
+  amount: string | null;
+  /** The block it arrived in. */
+  blockNumber: string;
+  /** When Quasar recorded it (ISO 8601). */
+  at: string;
 }

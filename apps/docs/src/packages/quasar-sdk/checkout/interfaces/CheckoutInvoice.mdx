@@ -114,7 +114,7 @@ Series number; `null` while its document waits for the buyer details.
 
 > `optional` **onTimeTxKeys?**: `string`[]
 
-Defined in: [checkout/types.ts:128](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L128)
+Defined in: [checkout/types.ts:135](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L135)
 
 Every key (`txKey`, hash, the hash a sped-up transaction replaced, a relay's `userOpHash`) of the payments that
 count as sent in time: Quasar learned of them before `dueAt` (all of them when the invoice has none); at most the
@@ -220,7 +220,7 @@ checkout handed over when a sped-up transaction replaced it, and the `userOpHash
 
 > **replacedBy**: \{ `checkoutToken`: `string` \| `null`; `number`: `string` \| `null`; \} \| `null`
 
-Defined in: [checkout/types.ts:133](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L133)
+Defined in: [checkout/types.ts:140](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L140)
 
 The invoice that replaced this one after the seller corrected it: its number and, while it can be paid, its
 checkout token.
@@ -300,3 +300,16 @@ it, `not_found`, `timeout` or `replaced`, which Quasar reads again for 24 hours)
 claims of this invoice on a transaction another invoice handed over first that Quasar has not decided yet. While it
 is above `0` the page offers no plain second payment and never says that nothing was charged. Quasar versions
 before October 29, 2026 leave it out.
+
+***
+
+### unverifiedArrivals?
+
+> `optional` **unverifiedArrivals?**: [`CheckoutUnverifiedArrival`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutunverifiedarrival--docs)[]
+
+Defined in: [checkout/types.ts:128](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L128)
+
+Coin that reached the invoice's own address inside a contract's call, which Quasar cannot confirm (an exchange's
+batch withdrawal, a Safe), the latest first: the money arrived and the merchant checks it. The store says so with
+`payment_unconfirmed` and `reason` `payment_unverified`, offers no payment and never says that nothing was charged.
+Quasar before November 22, 2026 leaves it out.

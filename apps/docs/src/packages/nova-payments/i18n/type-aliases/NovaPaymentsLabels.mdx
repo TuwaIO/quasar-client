@@ -390,7 +390,7 @@ Title of the menu (default: `Language`)
 
 > **leave**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:874](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L874)
+Defined in: [nova-payments/src/i18n/types.ts:876](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L876)
 
 The question when the buyer closes the checkout before a transaction is sent.
 
@@ -880,6 +880,12 @@ Reason `screening`, also while the reason is unknown or not read yet: `{merchant
 
 Heading of a payment under review: `{merchant}` (default: `Payment received, {merchant} is checking it`)
 
+#### unconfirmedArrivedUnverified
+
+> **unconfirmedArrivedUnverified**: `string`
+
+Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the money arrived, the seller checks it and credits it, and the buyer does not pay again.
+
 #### unconfirmedClosed
 
 > **unconfirmedClosed**: `string`
@@ -946,12 +952,6 @@ payment shows here.`)
 #### unconfirmedSettlementFailed
 
 > **unconfirmedSettlementFailed**: `string`
-
-Instead of `unconfirmedText` and `unconfirmedNote`, and on the expired and cancelled outcomes, next to its
-transaction, when the network confirmed the payment but Quasar could not record it (`settlement_failed`) and
-does not say that it still tries: the money reached the seller's address, so the checkout offers no payment:
-`{merchant}` (default: `The network confirmed your payment, but Quasar has not recorded it. Do not pay again;
-contact {merchant} with the transaction hash.`)
 
 #### unconfirmedSettlementRetrying
 
@@ -2004,7 +2004,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:955](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L955)
+Defined in: [nova-payments/src/i18n/types.ts:957](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L957)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2687,7 +2687,7 @@ Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: 
 
 > **summary**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:889](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L889)
+Defined in: [nova-payments/src/i18n/types.ts:891](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L891)
 
 The order panel: the seller, the deadline, the lines and the total.
 

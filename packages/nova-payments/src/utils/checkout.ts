@@ -584,7 +584,9 @@ export function isInvoicePaymentUnresolved(
  * that the wallet that sent it confirmed, and the page shows the result while it follows the payment),
  * `settlementRetrying` (the network confirmed it, but Quasar has not recorded it yet and settles it again daily, for 30
  * days after it learned of it: `rechecked`), `settlementFailed` (the same, without Quasar saying that it still
- * tries) and `invoiceFull` (the invoice takes no more payments: Quasar keeps the hash for the seller and follows nothing). For all but `rechecked` and `retrying` the buyer contacts the seller with the transaction hash; after
+ * tries), `invoiceFull` (the invoice takes no more payments: Quasar keeps the hash for the seller and follows nothing) and
+ * `arrivedUnverified` (coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the
+ * money arrived, the seller checks it and credits it; the buyer never pays again). For all but `rechecked` and `retrying` the buyer contacts the seller with the transaction hash; after
  * `takenElsewhere`, `settlementRetrying` and `settlementFailed` the payment left the wallet, so the checkout offers no
  * payment.
  */
@@ -599,7 +601,8 @@ export type UnconfirmedFollowUp =
   | 'takenElsewhere'
   | 'settlementRetrying'
   | 'settlementFailed'
-  | 'invoiceFull';
+  | 'invoiceFull'
+  | 'arrivedUnverified';
 
 /**
  * What to tell the buyer about a payment Quasar did not confirm, from the store's error: `payment_unconfirmed` with
@@ -633,6 +636,7 @@ export function unconfirmedFollowUp(error: CheckoutError | null | undefined): Un
   if (reason === 'submit_retrying') return 'retrying';
   if (reason === 'submit_failed') return 'notReceived';
   if (reason === INVOICE_FULL) return 'invoiceFull';
+  if (reason === 'payment_unverified') return 'arrivedUnverified';
   return rechecked === true ? 'rechecked' : 'contact';
 }
 

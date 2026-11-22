@@ -1077,6 +1077,23 @@ const settlementFailedError = (rechecked = false): CheckoutError => ({
   ...(rechecked ? { rechecked: true as const } : {}),
 });
 
+/** The reason of coin that reached the invoice's own address inside a contract's call ({@link unverifiedArrivalError}). */
+const PAYMENT_UNVERIFIED = 'payment_unverified';
+
+/**
+ * The error of coin that reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the
+ * merchant checks it and credits it. The page offers no payment and never says that nothing was charged.
+ */
+const unverifiedArrivalError = (): CheckoutError => ({
+  code: 'payment_unconfirmed',
+  message:
+    'Money reached the address of this invoice, but Quasar cannot confirm it automatically: the merchant checks it and credits it. Do not pay again.',
+  reason: PAYMENT_UNVERIFIED,
+});
+
+/** Whether coin reached the invoice's own address unverified ({@link CheckoutInvoice.unverifiedArrivals}). */
+const unverifiedOf = (invoice: { unverifiedArrivals?: unknown[] }) => (invoice.unverifiedArrivals?.length ?? 0) > 0;
+
 /** The error of a payment whose nonce went to a transaction Quasar could not find. */
 const nonceSpentError = (txKey?: string): CheckoutError => ({
   code: 'payment_unconfirmed',
@@ -1106,7 +1123,8 @@ const keepsPaymentShut = (error: CheckoutError | null) =>
   (error.reason === TAKEN_ELSEWHERE ||
     error.reason === SETTLEMENT_FAILED ||
     error.reason === NONCE_SPENT ||
-    error.reason === INVOICE_FULL);
+    error.reason === INVOICE_FULL ||
+    error.reason === PAYMENT_UNVERIFIED);
 
 /**
  * The rejection of a payment whose nonce went to a transaction nothing found, when Quasar still lists it: it lists none once
@@ -1729,6 +1747,16 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         // What spent it is on record: the page goes back to what the invoice takes
         Object.assign(partial, { error: null }, PAYABLE.has(event.status) ? retryPhase(event.status) : {});
       }
+      // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the merchant checks
+      // it. The page offers no payment and never says that nothing was charged
+      if (
+        current &&
+        unverifiedOf(event) &&
+        (PAYABLE.has(event.status) || CLOSED.has(event.status)) &&
+        !(partial.paymentOnTheWay ?? paymentOnTheWay)
+      ) {
+        Object.assign(partial, { error: unverifiedArrivalError(), phase: 'unconfirmed' });
+      }
       update(partial);
 
       if (!following()) {
@@ -2117,7 +2145,13 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           if (!onItsWay && !get().paymentOnTheWay && reopenable) {
             // No plain payment while the latest one may still arrive or moved money without a final word
             let check = false;
-            if (nonceStillOpen) {
+            if (unverifiedOf(invoice)) {
+              // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the merchant
+              // checks it. No payment, and never "nothing was charged", also on an expired invoice
+              error = unverifiedArrivalError();
+              check = true;
+              if (CLOSED.has(invoice.status)) phase = 'unconfirmed';
+            } else if (nonceStillOpen) {
               error = endedError(nonceStillOpen);
               check = true;
             } else if (latest && !latest.final && !resolvedSince(latest, invoice)) {

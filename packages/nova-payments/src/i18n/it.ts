@@ -383,6 +383,8 @@ export const itLabels: NovaPaymentsLabels = {
       'Quasar legge questo pagamento per una settimana da quando ne è venuto a conoscenza e lo registra se va a buon fine. Controlla il tuo wallet; se è uscito e hai bisogno di aiuto, contatta {merchant} indicando l’hash di questa transazione.',
     unconfirmedNonceSpent:
       'Il tuo wallet ha usato il numero di questa transazione per un’altra che Quasar non è riuscito a trovare, quindi potrebbe essere uscito denaro dal wallet. Per ora non pagare di nuovo. Se l’hai accelerata, indica il suo hash qui sotto; altrimenti contatta {merchant} con questo hash di transazione.',
+    unconfirmedArrivedUnverified:
+      "Il denaro è arrivato all'indirizzo di questa fattura, ma non si può confermare automaticamente. Il venditore lo verificherà e lo accrediterà. Non pagare di nuovo.",
     unconfirmedSettlementFailed:
       "La rete ha confermato il tuo pagamento, ma Quasar non l'ha registrato. Non pagare di nuovo; contatta {merchant} indicando l'hash della transazione.",
     unconfirmedSettlementRetrying:
