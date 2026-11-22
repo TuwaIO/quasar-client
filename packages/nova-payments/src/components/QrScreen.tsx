@@ -115,7 +115,7 @@ export function QrScreen() {
             </ol>
             {rest && <span className="novapay:text-[var(--tuwa-text-secondary)]">{labels.pay.youSendRest}</span>}
             {/* An amount of ETH to 18 decimals pushed its copy button out of the card: the row wraps, the amount breaks
-                anywhere when even alone it is too wide, and the button keeps its size (owner test 2026-11-22) */}
+                anywhere when even alone it is too wide, and the button keeps its size */}
             <div
               data-amount-row
               className="novapay:flex novapay:flex-wrap novapay:items-baseline novapay:gap-x-2 novapay:gap-y-1"

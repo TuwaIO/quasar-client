@@ -1447,7 +1447,7 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
   });
 
   // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the page waited for a
-  // payment and would have said that nothing was charged (owner test 2026-11-22)
+  // payment and would have said that nothing was charged
   it('says the money arrived and offers no payment when coin reached the invoice address unverified', async () => {
     const arrival = {
       chainId: 'eip155:84532',

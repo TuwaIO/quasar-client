@@ -566,7 +566,7 @@ describe('unconfirmedFollowUp', () => {
   });
 
   // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the money arrived, the
-  // seller checks it, and the buyer must not pay again (owner test 2026-11-22)
+  // seller checks it, and the buyer must not pay again
   it('says the money arrived and the seller checks it, for coin that reached the invoice address unverified', () => {
     expect(unconfirmedFollowUp(unconfirmed({ reason: 'payment_unverified' }))).toBe('arrivedUnverified');
   });

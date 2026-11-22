@@ -172,7 +172,7 @@ describe('the line under the amount of the QR code', () => {
   });
 });
 
-// Owner test 2026-11-22: an amount of ETH to 18 decimals pushed its copy button out of the card on the QR step. The row
+// An amount of ETH to 18 decimals pushed its copy button out of the card on the QR step. The row
 // of an amount wraps, the amount breaks anywhere when even alone it is too wide, and the button keeps its size
 describe('the amount and its copy button', () => {
   it('stay inside the card on the QR step, however long the amount', () => {
