@@ -246,20 +246,29 @@ describe('OwnConnection', () => {
 
   // Nova's own connect modal spoke English on a Ukrainian checkout: "Connect Wallet", "BACK", "I don't have a wallet"
   it("speaks the language of the checkout shown in its connect modal, under the app's own texts", async () => {
-    const { chineseLabels, defaultLabels, ukrainianLabels } = await import('@tuwaio/nova-connect/i18n');
+    const i18n = await import('@tuwaio/nova-connect/i18n');
     const connection = own({ novaConnect: { appChains: [{ id: 84532 }], labels: { connectWallet: 'Pay by wallet' } } });
     expect(labelsOf(layer(connection))).toEqual({ connectWallet: 'Pay by wallet' });
-    expect(labelsOf(layer(connection, 'checkout', 'uk'))).toEqual({
-      ...ukrainianLabels,
+    // Every language of the checkout: on a German, Spanish or Italian one the modal spoke English too
+    for (const [locale, labels] of [
+      ['uk', i18n.ukrainianLabels],
+      ['zh-CN', i18n.chineseLabels],
+      ['de', i18n.germanLabels],
+      ['es', i18n.spanishLabels],
+      ['it', i18n.italianLabels],
+    ] as const) {
+      expect(labels, locale).toBeDefined();
+      expect(labelsOf(layer(connection, 'checkout', locale)), locale).toEqual({
+        ...labels,
+        connectWallet: 'Pay by wallet',
+      });
+    }
+    // A language Nova Connect does not have: English
+    expect(labelsOf(layer(connection, 'checkout', 'fr'))).toEqual({
+      ...i18n.defaultLabels,
       connectWallet: 'Pay by wallet',
     });
-    expect(labelsOf(layer(connection, 'checkout', 'zh-CN'))).toEqual({
-      ...chineseLabels,
-      connectWallet: 'Pay by wallet',
-    });
-    // A language Nova Connect does not have yet: English
-    expect(labelsOf(layer(connection, 'checkout', 'de'))).toEqual({ ...defaultLabels, connectWallet: 'Pay by wallet' });
-    expect(labelsOf(layer(own(), 'checkout', 'uk'))).toEqual(ukrainianLabels);
+    expect(labelsOf(layer(own(), 'checkout', 'uk'))).toEqual(i18n.ukrainianLabels);
   });
 
   const storeOf = (tree: unknown) => (fixture.ofType(tree, SatelliteStoreContext)[0] as Element).props.value;
