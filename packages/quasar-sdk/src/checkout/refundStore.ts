@@ -6,7 +6,7 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 
 import { QuasarSDKError } from '../core/errors';
 import type { Refund, RefundParams, RefundPreview, RefundStart, SubmitRefundParams } from '../modules/payments/types';
-import { browserSessionStorage } from './browserStorage';
+import { browserLocalStorage } from './browserStorage';
 import type { CheckoutError, CheckoutHandOverStorage } from './store';
 
 /**
@@ -112,8 +112,9 @@ export interface RefundStoreOptions {
   pollMs?: number;
   /**
    * Where a transaction the wallet sent is kept until Quasar takes or refuses it, so that a page closed or reloaded meanwhile
-   * hands it over instead of having the wallet send the refund again. Defaults to the browser's `sessionStorage` (the tab,
-   * until it closes); `null` keeps it in memory only.
+   * hands it over instead of having the wallet send the refund again. Defaults to the browser's `localStorage` (every tab of
+   * the browser: the refund window opened again in a new tab hands over a transaction the closed one sent); `null` keeps it
+   * in memory only. Entries that are not such transactions are skipped.
    */
   handOverStorage?: CheckoutHandOverStorage | null;
 }
@@ -155,7 +156,7 @@ export function refundAction<Args extends unknown[], Result>(
 /** The store {@link createRefundStore} returns: a vanilla Zustand store. */
 export type RefundStore = StoreApi<RefundState>;
 
-/** The `sessionStorage` entry of the refund transactions Quasar has not taken yet. */
+/** The `localStorage` entry of the refund transactions Quasar has not taken yet. */
 const HAND_OVERS_KEY = 'quasar-sdk:refundHandOvers';
 
 /** How long a submitted refund is read every `pollMs`. */
@@ -220,7 +221,7 @@ function errorOf(error: unknown): CheckoutError {
  * Actions or its own routes calling `quasar.payments`).
  *
  * Side effects: the calls the app supplies; while `confirming`, `get` every `pollMs` for five minutes and every 30 seconds
- * after that, until the refund is final, `reset` or `stopFollowing` is called, or a read answers 401, 403 or 404; `sessionStorage` under `quasar-sdk:refundHandOvers` for a sent transaction Quasar has not taken
+ * after that, until the refund is final, `reset` or `stopFollowing` is called, or a read answers 401, 403 or 404; `localStorage` under `quasar-sdk:refundHandOvers` for a sent transaction Quasar has not taken
  * ({@link RefundStoreOptions.handOverStorage}).
  *
  * @param options - The three calls and the poll interval.
@@ -240,17 +241,31 @@ function errorOf(error: unknown): CheckoutError {
 export function createRefundStore(options: RefundStoreOptions): RefundStore {
   const pollMs = options.pollMs ?? 5_000;
   let poll: ReturnType<typeof setTimeout> | null = null;
-  const storage = options.handOverStorage !== undefined ? options.handOverStorage : browserSessionStorage();
+  // The browser's, not the tab's: a tab closed before Quasar answered took its `sessionStorage` along, and the refund window
+  // opened again in a new tab asked the wallet to send the refund a second time
+  const storage = options.handOverStorage !== undefined ? options.handOverStorage : browserLocalStorage();
 
   const stop = () => {
     if (poll) clearTimeout(poll);
     poll = null;
   };
 
+  /** The kept transactions; entries that are not one (the browser keeps them across tabs and sessions) are skipped. */
   const keptTransactions = (): KeptRefundTransaction[] => {
     try {
       const kept: unknown = JSON.parse(storage?.getItem(HAND_OVERS_KEY) ?? '[]');
-      return Array.isArray(kept) ? (kept as KeptRefundTransaction[]) : [];
+      if (!Array.isArray(kept)) return [];
+      return kept.filter(
+        (entry): entry is KeptRefundTransaction =>
+          typeof entry === 'object' &&
+          entry !== null &&
+          typeof (entry as KeptRefundTransaction).refundId === 'string' &&
+          typeof (entry as KeptRefundTransaction).invoiceId === 'string' &&
+          typeof (entry as KeptRefundTransaction).txHash === 'string' &&
+          typeof (entry as KeptRefundTransaction).from === 'string' &&
+          typeof (entry as KeptRefundTransaction).instructions === 'object' &&
+          (entry as KeptRefundTransaction).instructions !== null,
+      );
     } catch {
       return [];
     }

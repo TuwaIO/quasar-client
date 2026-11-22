@@ -555,8 +555,8 @@ export interface CheckoutStoreOptions {
 }
 
 /**
- * The part of the browser's `Storage` the checkout and refund stores keep their hand-overs in (by default `localStorage`
- * and `sessionStorage`).
+ * The part of the browser's `Storage` the checkout and refund stores keep their hand-overs in (by default
+ * `localStorage`).
  */
 export interface CheckoutHandOverStorage {
   /** Reads an entry; `null` when there is none. */
