@@ -114,15 +114,27 @@ export function QrScreen() {
               <li>{labels.qr.approveStep}</li>
             </ol>
             {rest && <span className="novapay:text-[var(--tuwa-text-secondary)]">{labels.pay.youSendRest}</span>}
-            <div className="novapay:flex novapay:items-baseline novapay:gap-2">
-              <span className={cn(mono, 'novapay:text-2xl novapay:font-bold')}>
+            {/* An amount of ETH to 18 decimals pushed its copy button out of the card: the row wraps, the amount breaks
+                anywhere when even alone it is too wide, and the button keeps its size (owner test 2026-11-22) */}
+            <div
+              data-amount-row
+              className="novapay:flex novapay:flex-wrap novapay:items-baseline novapay:gap-x-2 novapay:gap-y-1"
+            >
+              <span
+                className={cn(
+                  mono,
+                  'novapay:min-w-0 novapay:text-2xl novapay:font-bold novapay:[overflow-wrap:anywhere]',
+                )}
+              >
                 {formatTokenAmount(quote.amountToSend, quote.decimals, locale)}
               </span>
-              <CopyButton
-                text={baseUnitsToDecimal(quote.amountToSend, quote.decimals)}
-                label={labels.pay.copyAmount}
-                copiedLabel={labels.pay.copied}
-              />
+              <span className="novapay:inline-flex novapay:shrink-0">
+                <CopyButton
+                  text={baseUnitsToDecimal(quote.amountToSend, quote.decimals)}
+                  label={labels.pay.copyAmount}
+                  copiedLabel={labels.pay.copied}
+                />
+              </span>
             </div>
             {/* Each part in one piece with its "·", wrapping only between them: the address broke over two lines with a
                 "·" at the start of the second (owner test 2026-11-09, finding 2) */}

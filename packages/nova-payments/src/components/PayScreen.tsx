@@ -411,22 +411,31 @@ export function PayScreen() {
 
           <div>
             <span className={cn(label, 'novapay:block')}>{rest ? labels.pay.youSendRest : labels.pay.youSend}</span>
-            <div className={cn('novapay:flex novapay:items-baseline novapay:gap-2', page && 'novapay-page-amount-row')}>
+            {/* As on the QR step: a long amount wraps inside the card, its copy button keeps its size */}
+            <div
+              data-amount-row
+              className={cn(
+                'novapay:flex novapay:flex-wrap novapay:items-baseline novapay:gap-x-2 novapay:gap-y-1',
+                page && 'novapay-page-amount-row',
+              )}
+            >
               <span
                 className={cn(
                   mono,
-                  'novapay:text-[28px] novapay:font-bold novapay:leading-tight',
+                  'novapay:min-w-0 novapay:text-[28px] novapay:font-bold novapay:leading-tight novapay:[overflow-wrap:anywhere]',
                   page && 'novapay-page-amount',
                 )}
               >
                 {formatTokenAmount(amounts.send, quote.decimals, locale)}
               </span>
               <span className={cn(mono, 'novapay:text-sm novapay:font-semibold')}>{quote.instructions.symbol}</span>
-              <CopyButton
-                text={baseUnitsToDecimal(amounts.send, quote.decimals)}
-                label={labels.pay.copyAmount}
-                copiedLabel={labels.pay.copied}
-              />
+              <span className="novapay:inline-flex novapay:shrink-0">
+                <CopyButton
+                  text={baseUnitsToDecimal(amounts.send, quote.decimals)}
+                  label={labels.pay.copyAmount}
+                  copiedLabel={labels.pay.copied}
+                />
+              </span>
             </div>
             <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
               {formatLabel(labels.pay.onNetwork, { network })}
