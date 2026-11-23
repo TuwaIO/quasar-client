@@ -319,6 +319,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     reviewLate: '付款在发票关闭后才到账。{merchant} 会接受或退回这笔款项。',
     reviewOverpaid: '您发送的金额超过了发票金额。{merchant} 会确认订单，或将差额退回您的钱包。',
     reviewQuoteExpired: '付款在价格锁定到期后才到账。{merchant} 会接受或退回这笔款项。',
+    reviewUnverifiedArrival: '款项已到达此账单的地址，但无法自动确认。{merchant} 会核实并入账。',
     reviewNote: '如有需要，卖方会与您联系。',
     refundedTitle: '已退款',
     refundedText: '{merchant} 已退还此发票的款项：{amount} {currency}。',

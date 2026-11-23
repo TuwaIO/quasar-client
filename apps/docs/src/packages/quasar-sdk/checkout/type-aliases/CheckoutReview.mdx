@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **CheckoutReview** = `object`
 
-Defined in: [checkout/types.ts:156](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L156)
+Defined in: [checkout/types.ts:158](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L158)
 
 Why a payment of a `needs_review` (or flagged) invoice waits for the seller, as [CheckoutInvoice.review](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutinvoice--docs#review) says
 it. The money is already in the seller's wallet: the status does not mean that TUWA has it.
@@ -16,6 +16,8 @@ it. The money is already in the seller's wallet: the status does not mean that T
 - `overpaid`: more arrived than the invoice asks for, and the seller looks at it.
 - `quote_expired`: it arrived after its locked quote expired, in an asset whose price moved; the seller accepts or
   returns it.
+- `unverified_arrival`: a contract sent the coin to the invoice's own address inside its own call (an exchange
+  withdrawal, a Safe, a smart account), which Quasar cannot confirm by itself; the seller checks it and credits it.
 
 A transfer Quasar could tie to no invoice never puts the invoice under review: it is a rejected payment with
 `unmatched` ([CheckoutRejectedPayment.unmatched](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutrejectedpayment--docs#unmatched)), which the seller returns to the wallet that sent it.
@@ -24,6 +26,6 @@ A transfer Quasar could tie to no invoice never puts the invoice under review: i
 
 ### reason
 
-> **reason**: `"screening"` \| `"late"` \| `"overpaid"` \| `"quote_expired"`
+> **reason**: `"screening"` \| `"late"` \| `"overpaid"` \| `"quote_expired"` \| `"unverified_arrival"`
 
-Defined in: [checkout/types.ts:156](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L156)
+Defined in: [checkout/types.ts:158](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L158)

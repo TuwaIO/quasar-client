@@ -344,8 +344,11 @@ export interface Invoice {
    * its locked quote expired, `payment_reverted` when a payment Quasar credited is gone from the chain (check the
    * transaction `payment.reverted` names; the invoice keeps its status), `refund_reverted` when a confirmed refund of its
    * payment is gone from the chain (`refund.reverted` names it; the refund and its credit note stay, and Quasar takes no
-   * second refund for it: send the money again outside it). A transfer Quasar could tie to no invoice never puts the
-   * invoice under review: it is an unmatched transfer of its own.
+   * second refund for it: send the money again outside it), `unverified_arrival` when a contract sent coin to the
+   * invoice's own address inside its own call (an exchange withdrawal, a Safe, a smart account), which Quasar cannot
+   * confirm and which names no sender: check the address in a block explorer and accept it; no refund goes back through
+   * Quasar without a sender. A transfer Quasar could tie to no invoice never puts the invoice under review: it is an
+   * unmatched transfer of its own.
    */
   reviewReason: string | null;
   /** The payer's AML screening, once there was one. */

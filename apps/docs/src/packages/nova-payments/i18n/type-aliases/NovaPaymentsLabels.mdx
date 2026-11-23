@@ -390,7 +390,7 @@ Title of the menu (default: `Language`)
 
 > **leave**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:876](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L876)
+Defined in: [nova-payments/src/i18n/types.ts:882](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L882)
 
 The question when the buyer closes the checkout before a transaction is sent.
 
@@ -879,6 +879,14 @@ Reason `screening`, also while the reason is unknown or not read yet: `{merchant
 > **reviewTitle**: `string`
 
 Heading of a payment under review: `{merchant}` (default: `Payment received, {merchant} is checking it`)
+
+#### reviewUnverifiedArrival
+
+> **reviewUnverifiedArrival**: `string`
+
+Reason `unverified_arrival`, coin a contract sent to the invoice's own address inside its own call: `{merchant}`
+(default: `The money reached the address of this invoice, but it cannot be confirmed automatically. {merchant}
+checks it and credits it.`)
 
 #### unconfirmedArrivedUnverified
 
@@ -2004,7 +2012,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:957](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L957)
+Defined in: [nova-payments/src/i18n/types.ts:963](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L963)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2687,7 +2695,7 @@ Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: 
 
 > **summary**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:891](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L891)
+Defined in: [nova-payments/src/i18n/types.ts:897](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L897)
 
 The order panel: the seller, the deadline, the lines and the total.
 

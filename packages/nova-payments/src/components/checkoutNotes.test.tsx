@@ -174,6 +174,21 @@ describe('a payment the seller reviews', () => {
       'The payment arrived after the price lock ran out. Cosmos accepts it or returns it.',
     );
   });
+
+  // Coin a contract moved to the invoice's own address waits for the seller: the page said "after the invoice closed"
+  // of an invoice that was open
+  it('says that the money reached the invoice address, which cannot be confirmed automatically, and the seller checks it', () => {
+    show('needs_review', {
+      status: 'needs_review',
+      amountPaid: '89540000',
+      review: { reason: 'unverified_arrival' } as never,
+    });
+    const text = textOf(OutcomeScreen({ kind: 'needs_review' }));
+    expect(text).toContain(
+      'The money reached the address of this invoice, but it cannot be confirmed automatically. Cosmos checks it and credits it.',
+    );
+    expect(text).not.toContain('after the invoice closed');
+  });
 });
 
 describe('an expired invoice', () => {

@@ -228,7 +228,7 @@ describe('createCheckoutStore', () => {
     });
     expectTypeOf<CheckoutView['amlScreening']>().toEqualTypeOf<boolean>();
     expectTypeOf<NonNullable<CheckoutInvoice['review']>['reason']>().toExtend<
-      'screening' | 'late' | 'overpaid' | 'quote_expired'
+      'screening' | 'late' | 'overpaid' | 'quote_expired' | 'unverified_arrival'
     >();
     checkout.getState().destroy();
   });
@@ -3175,7 +3175,7 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, unmatched
     expect(reopened.getState().error?.message).toMatch(/returns it to the wallet that sent it/);
     expect(reopened.getState().error?.message).toMatch(/can still be paid/);
     expectTypeOf<NonNullable<CheckoutInvoice['review']>['reason']>().toEqualTypeOf<
-      'screening' | 'late' | 'overpaid' | 'quote_expired'
+      'screening' | 'late' | 'overpaid' | 'quote_expired' | 'unverified_arrival'
     >();
     reopened.getState().destroy();
   });

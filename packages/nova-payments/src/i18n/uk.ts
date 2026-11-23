@@ -340,6 +340,8 @@ export const ukLabels: NovaPaymentsLabels = {
     reviewOverpaid:
       'Ви надіслали більше за суму рахунку. {merchant} підтвердить замовлення або поверне різницю на ваш гаманець.',
     reviewQuoteExpired: 'Платіж надійшов після того, як минув строк фіксації ціни. {merchant} прийме його або поверне.',
+    reviewUnverifiedArrival:
+      'Платіж надійшов на адресу рахунку, але підтвердити його автоматично не можна. {merchant} перевірить і зарахує його.',
     reviewNote: 'Якщо щось знадобиться, продавець зв’яжеться з вами.',
     refundedTitle: 'Кошти повернено',
     refundedText: 'Продавець {merchant} повернув кошти за цим рахунком: {amount} {currency}.',

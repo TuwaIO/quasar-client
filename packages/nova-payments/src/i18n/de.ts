@@ -356,6 +356,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Sie haben mehr als den Rechnungsbetrag gesendet. {merchant} bestätigt die Bestellung oder erstattet die Differenz an Ihr Wallet.',
     reviewQuoteExpired:
       'Die Zahlung ging nach Ablauf der Preisbindung ein. {merchant} nimmt sie an oder erstattet sie.',
+    reviewUnverifiedArrival:
+      'Das Geld ist an der Adresse dieser Rechnung eingegangen, lässt sich aber nicht automatisch bestätigen. {merchant} prüft es und schreibt es gut.',
     reviewNote: 'Der Verkäufer meldet sich, falls etwas benötigt wird.',
     refundedTitle: 'Erstattet',
     refundedText: '{merchant} hat für diese Rechnung {amount} {currency} erstattet.',

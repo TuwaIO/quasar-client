@@ -286,7 +286,7 @@ describe('verifyWebhook', () => {
     >().not.toExtend<PaymentWebhookEventType>();
     expectTypeOf<'invoice.needs_review' | 'invoice.payment_accepted'>().toExtend<PaymentWebhookEventType>();
     expectTypeOf<NonNullable<PaymentWebhookEvent['data']['review']>>().toEqualTypeOf<{
-      reason: 'late' | 'aml' | 'quote_expired' | null;
+      reason: 'late' | 'aml' | 'quote_expired' | 'unverified_arrival' | null;
       txHash: string | null;
       chainId?: string | null;
       senders?: string[];

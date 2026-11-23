@@ -343,6 +343,8 @@ export const esLabels: NovaPaymentsLabels = {
     reviewOverpaid:
       'Enviaste más de lo que indica la factura. {merchant} confirma el pedido o te devuelve la diferencia a tu billetera.',
     reviewQuoteExpired: 'El pago llegó después de que venciera el precio fijado. {merchant} lo acepta o lo devuelve.',
+    reviewUnverifiedArrival:
+      'El dinero llegó a la dirección de esta factura, pero no se puede confirmar automáticamente. {merchant} lo revisará y lo acreditará.',
     reviewNote: 'El vendedor se pondrá en contacto contigo si hace falta algo.',
     refundedTitle: 'Reembolsado',
     refundedText: '{merchant} reembolsó esta factura: {amount} {currency}.',

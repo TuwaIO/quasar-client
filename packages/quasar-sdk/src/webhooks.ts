@@ -35,13 +35,16 @@ export type PaymentWebhookEventType =
 /**
  * What a review is about (`data.review` of `invoice.needs_review`): an invoice paid in a way that waits for your
  * decision. The money is already in your wallet: the status does not mean that TUWA has it. `reason` (`late`, `aml`,
- * `quote_expired`), its transaction (`txHash`) and network (`chainId`), the wallets that sent it (`senders`) and
- * whether it came late (`late`). Accept the payment with {@link PaymentsModule.acceptPayment} or refund it; a refund to
- * a wallet AML blocks now is refused (`sender_blocked`).
+ * `quote_expired`, `unverified_arrival`), its transaction (`txHash`) and network (`chainId`), the wallets that sent it
+ * (`senders`) and whether it came late (`late`). Accept the payment with {@link PaymentsModule.acceptPayment} or refund
+ * it; a refund to a wallet AML blocks now is refused (`sender_blocked`). `unverified_arrival`: a contract sent coin to
+ * the invoice's own address inside its own call, which Quasar cannot confirm, and nothing tells who sent it; check the
+ * address in a block explorer and accept it (its transaction, when one names the address, is `txHash`). No refund goes
+ * back through Quasar without a sender.
  */
 export interface PaymentWebhookReview {
   /** Why the payment needs review; `null` when Quasar did not record why. */
-  reason: 'late' | 'aml' | 'quote_expired' | null;
+  reason: 'late' | 'aml' | 'quote_expired' | 'unverified_arrival' | null;
   /** The transaction of the payment. */
   txHash: string | null;
   /** CAIP-2 chain of the transaction; Quasar versions before November 10, 2026 leave it out. */

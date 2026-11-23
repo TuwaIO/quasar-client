@@ -149,11 +149,13 @@ export interface CheckoutInvoice {
  * - `overpaid`: more arrived than the invoice asks for, and the seller looks at it.
  * - `quote_expired`: it arrived after its locked quote expired, in an asset whose price moved; the seller accepts or
  *   returns it.
+ * - `unverified_arrival`: a contract sent the coin to the invoice's own address inside its own call (an exchange
+ *   withdrawal, a Safe, a smart account), which Quasar cannot confirm by itself; the seller checks it and credits it.
  *
  * A transfer Quasar could tie to no invoice never puts the invoice under review: it is a rejected payment with
  * `unmatched` ({@link CheckoutRejectedPayment.unmatched}), which the seller returns to the wallet that sent it.
  */
-export type CheckoutReview = { reason: 'screening' | 'late' | 'overpaid' | 'quote_expired' };
+export type CheckoutReview = { reason: 'screening' | 'late' | 'overpaid' | 'quote_expired' | 'unverified_arrival' };
 
 /** A transfer credited to the invoice, as the checkout lists it ({@link CheckoutInvoice.payments}). */
 export interface CheckoutPayment {

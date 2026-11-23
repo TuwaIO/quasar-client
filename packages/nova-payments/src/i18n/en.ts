@@ -336,6 +336,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     reviewOverpaid:
       'You sent more than the invoice. {merchant} confirms the order or returns the difference to your wallet.',
     reviewQuoteExpired: 'The payment arrived after the price lock ran out. {merchant} accepts it or returns it.',
+    reviewUnverifiedArrival:
+      'The money reached the address of this invoice, but it cannot be confirmed automatically. {merchant} checks it and credits it.',
     reviewNote: 'The seller contacts you if anything is needed.',
     refundedTitle: 'Refunded',
     refundedText: '{merchant} refunded this invoice: {amount} {currency}.',

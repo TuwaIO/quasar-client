@@ -693,6 +693,12 @@ export type NovaPaymentsLabels = {
     reviewOverpaid: string;
     /** Reason `quote_expired`: `{merchant}` (default: `The payment arrived after the price lock ran out. {merchant} accepts it or returns it.`) */
     reviewQuoteExpired: string;
+    /**
+     * Reason `unverified_arrival`, coin a contract sent to the invoice's own address inside its own call: `{merchant}`
+     * (default: `The money reached the address of this invoice, but it cannot be confirmed automatically. {merchant}
+     * checks it and credits it.`)
+     */
+    reviewUnverifiedArrival: string;
     /** Under it (default: `The seller contacts you if anything is needed.`) */
     reviewNote: string;
     /** Heading of a refunded invoice (default: `Refunded`) */

@@ -415,7 +415,8 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
     }
     case 'needs_review': {
       title = formatLabel(labels.outcome.reviewTitle, { merchant });
-      // `quote_expired` is newer than some `@tuwaio/quasar-sdk` alphas; an unknown reason reads as a check
+      // `quote_expired` and `unverified_arrival` are newer than some `@tuwaio/quasar-sdk` alphas; an unknown reason reads
+      // as a check
       const reason: string | undefined = checkout.invoice.review?.reason;
       const text =
         reason === 'late'
@@ -424,7 +425,9 @@ export function OutcomeScreen({ kind }: { kind: OutcomeKind }) {
             ? labels.outcome.reviewOverpaid
             : reason === 'quote_expired'
               ? labels.outcome.reviewQuoteExpired
-              : labels.outcome.reviewScreening;
+              : reason === 'unverified_arrival'
+                ? labels.outcome.reviewUnverifiedArrival
+                : labels.outcome.reviewScreening;
       body = (
         <>
           <Text>{formatLabel(text, { merchant })}</Text>

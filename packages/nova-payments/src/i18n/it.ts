@@ -348,6 +348,8 @@ export const itLabels: NovaPaymentsLabels = {
       "Hai inviato più dell'importo della fattura. {merchant} conferma l'ordine o restituisce la differenza al tuo wallet.",
     reviewQuoteExpired:
       'Il pagamento è arrivato dopo la scadenza del blocco del prezzo. {merchant} lo accetta o lo restituisce.',
+    reviewUnverifiedArrival:
+      "Il denaro è arrivato all'indirizzo di questa fattura, ma non si può confermare automaticamente. {merchant} lo verificherà e lo accrediterà.",
     reviewNote: 'Il venditore ti contatterà se serve qualcosa.',
     refundedTitle: 'Rimborsato',
     refundedText: '{merchant} ha rimborsato questa fattura: {amount} {currency}.',
