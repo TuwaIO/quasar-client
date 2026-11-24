@@ -44,7 +44,7 @@ describe('handOverPayment', () => {
     await expect(handOverPayment({ adapter, pulsar, payment, ...context })).resolves.toBe(true);
     const params = {
       ...payment,
-      title: 'Transfer to Acme Labs sent',
+      title: 'Transfer to Acme Labs confirmed',
       description: '89.54 USDC · INV-2026-42',
       payload: { quasarInvoice: 'inv_1' },
     };
@@ -54,7 +54,7 @@ describe('handOverPayment', () => {
         ...params,
         title: [
           'Sending a transfer to Acme Labs',
-          'Transfer to Acme Labs sent',
+          'Transfer to Acme Labs confirmed',
           'Transfer to Acme Labs failed',
           'Transfer to Acme Labs replaced',
         ],
@@ -72,7 +72,7 @@ describe('handOverPayment', () => {
     const [[[transaction]]] = vi.mocked(pulsar.injectExternalPendingTxs).mock.calls as unknown as [[[Transaction]]];
     expect(transaction.title).toEqual([
       'Надсилаємо переказ для TUWA',
-      'Переказ для TUWA надіслано',
+      'Переказ для TUWA підтверджено',
       'Переказ для TUWA не пройшов',
       'Переказ для TUWA замінено',
     ]);

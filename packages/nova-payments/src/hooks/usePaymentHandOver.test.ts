@@ -93,7 +93,7 @@ describe('usePaymentHandOver', () => {
         // The transfer in each state of its toast, not "Payment to": it may go through and pay nothing
         title: [
           'Sending a transfer to Acme Labs',
-          'Transfer to Acme Labs sent',
+          'Transfer to Acme Labs confirmed',
           'Transfer to Acme Labs failed',
           'Transfer to Acme Labs replaced',
         ],

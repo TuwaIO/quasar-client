@@ -366,7 +366,7 @@ export type NovaPaymentsLabels = {
     noAnswer: string;
     /**
      * Title of the payment's transfer in the app's transaction history and toasts once it went through: `{merchant}`
-     * (default: `Transfer to {merchant} sent`). They tell the transfer, the page tells what it did to the invoice: a
+     * (default: `Transfer to {merchant} confirmed`). They tell the transfer, the page tells what it did to the invoice: a
      * transfer may go through and pay nothing (a wallet that did not confirm the invoice, a payment after its deadline).
      */
     txTitle: string;

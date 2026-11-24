@@ -185,7 +185,7 @@ export const ukLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'Перевірка гаманця зараз недоступна.',
     retryLater: 'Повторіть за хвилину',
     noAnswer: 'Платіжний сервер не відповів. Перевірте підключення й спробуйте знову.',
-    txTitle: 'Переказ для {merchant} надіслано',
+    txTitle: 'Переказ для {merchant} підтверджено',
     txTitlePending: 'Надсилаємо переказ для {merchant}',
     txTitleFailed: 'Переказ для {merchant} не пройшов',
     txTitleReplaced: 'Переказ для {merchant} замінено',
