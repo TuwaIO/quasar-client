@@ -54,6 +54,11 @@ export interface RefundDialogProps {
   currency?: string;
   /** What is left to refund, with its currency, shown under the amount (`20.00 USD`). */
   refundable?: string;
+  /**
+   * The amount the amount step starts with, in the invoice currency (`4.75`): what the app suggests, such as what the
+   * payment was worth after a discount of its method. The merchant may change it. Empty by default.
+   */
+  defaultAmount?: string;
   /** The language (a BCP 47 tag). Defaults to `en`. */
   locale?: string;
   /** Rows the app adds: to the confirm step (what the refund takes back) and to the refunded step. */
@@ -188,9 +193,10 @@ export function RefundSteps({
   close,
   currency = 'USD',
   refundable,
+  defaultAmount,
   details,
   onRecord,
-}: Pick<RefundDialogProps, 'currency' | 'refundable' | 'details' | 'onRecord'> & {
+}: Pick<RefundDialogProps, 'currency' | 'refundable' | 'defaultAmount' | 'details' | 'onRecord'> & {
   flow: RefundFlow;
   labels: NovaPaymentsLabels;
   locale: string;
@@ -214,7 +220,16 @@ export function RefundSteps({
 
   switch (flow.step) {
     case 'amount':
-      return <AmountStep flow={flow} labels={labels} locale={locale} currency={currency} refundable={refundable} />;
+      return (
+        <AmountStep
+          flow={flow}
+          labels={labels}
+          locale={locale}
+          currency={currency}
+          refundable={refundable}
+          defaultAmount={defaultAmount}
+        />
+      );
     case 'requesting':
     case 'submitting':
       return <Waiting>{flow.step === 'requesting' ? text.requesting : text.submitting}</Waiting>;
@@ -575,18 +590,20 @@ export function AmountStep({
   locale,
   currency,
   refundable,
+  defaultAmount = '',
 }: {
   flow: RefundFlow;
   labels: NovaPaymentsLabels;
   locale: string;
   currency: string;
   refundable?: string;
+  defaultAmount?: string;
 }) {
   const text = labels.refund;
   const amountId = useId();
   const reasonId = useId();
   const [mode, setMode] = useState<'fiat_value' | 'exact_received'>('fiat_value');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(defaultAmount);
   const [reason, setReason] = useState('');
   const ask = useAskRefund(flow);
   const valid = mode === 'exact_received' || amount.trim() === '' || /^\d{1,12}(\.\d{1,2})?$/.test(amount.trim());
@@ -671,10 +688,9 @@ export function AmountStep({
   );
 }
 
-/** What goes where: the confirmation before the wallet asks, or why it was not sent. @internal */
 /**
  * A value with a note under it, both to the right edge of the row. An address link takes the whole width it is given, which left
- * it out of line with the note and with the rows above: the owner saw the step as smeared.
+ * it out of line with the note and with the rows above.
  */
 function stackedValue(value: ReactNode, note?: string | null) {
   return (
@@ -685,6 +701,7 @@ function stackedValue(value: ReactNode, note?: string | null) {
   );
 }
 
+/** What goes where: the confirmation before the wallet asks, or why it was not sent. @internal */
 export function ConfirmStep({
   flow,
   labels,

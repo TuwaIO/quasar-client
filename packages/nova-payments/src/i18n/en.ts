@@ -349,7 +349,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} can refund it to the wallet that paid; contact {merchant}.',
     expiredNote: 'A payment sent after the deadline still reaches the seller, who accepts it or refunds it.',
     expiredWhileConfirming:
-      'The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
+      'The invoice closed before your payment was confirmed. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
     expiredAfterQr: 'If you paid with the QR code, {merchant} accepts the payment when it arrives or returns it.',
     expiredUnconfirmed:
       'Your payment could not be confirmed yet. Check your wallet: if the payment left it, Quasar checks it again for 24 hours. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
@@ -433,7 +433,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     taxRate: 'VAT {rate}%',
     tax: 'VAT',
     total: 'Total',
-    secured: 'Secured by Quasar',
+    poweredBy: 'Powered by Quasar',
     help: 'Help',
     compact: '{count} items · incl. VAT {tax}',
     compactOne: '{count} item · incl. VAT {tax}',

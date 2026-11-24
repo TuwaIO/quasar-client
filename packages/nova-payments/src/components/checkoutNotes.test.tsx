@@ -236,7 +236,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
     // F2: Quasar records a payment that lands late, and the merchant sees it
     expect(text).toContain(
-      'The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
+      'The invoice closed before your payment was confirmed. If it arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
     );
     expect(text).not.toContain('nothing was charged');
     expect(text).not.toContain('Ask Cosmos for a new one');
@@ -246,7 +246,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     expiredAfterSending('80000000');
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
     expect(text).toContain('Part of the payment arrived: 80.00 USDC.');
-    expect(text).toContain('The invoice closed while your payment was confirming.');
+    expect(text).toContain('The invoice closed before your payment was confirmed.');
     expect(text).not.toContain('nothing was charged');
   });
 
@@ -254,7 +254,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     show('expired', { status: 'expired', amountPaid: null });
     ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', txKey: null, paymentOnTheWay: true } as never };
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
-    expect(text).toContain('The invoice closed while your payment was confirming.');
+    expect(text).toContain('The invoice closed before your payment was confirmed.');
     expect(text).not.toContain('nothing was charged');
   });
 
@@ -267,7 +267,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     };
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
     expect(text).toContain('Ask Cosmos for a new one; nothing was charged.');
-    expect(text).not.toContain('The invoice closed while your payment was confirming.');
+    expect(text).not.toContain('The invoice closed before your payment was confirmed.');
   });
 
   // The store stops following an expired invoice 35 minutes past the deadline; Quasar may still settle the payment
@@ -279,7 +279,7 @@ describe('an invoice that expired while the payment of this page was confirming'
       state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false } as never,
     };
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
-    expect(text).toContain('The invoice closed while your payment was confirming.');
+    expect(text).toContain('The invoice closed before your payment was confirmed.');
     expect(text).not.toContain('nothing was charged');
   });
 
@@ -450,13 +450,13 @@ describe('an invoice that expired while the payment of this page was confirming'
     show('expired', { status: 'expired', amountPaid: null });
     ctx = { ...ctx, state: { ...ctx.state, phase: 'expired', invoicePaymentOnTheWay: true } as never };
     expect(textOf(OutcomeScreen({ kind: 'expired' }))).toContain(
-      'The invoice closed while your payment was confirming.',
+      'The invoice closed before your payment was confirmed.',
     );
     // An older store: the pending payments of the checkout it read
     show('expired', { status: 'expired', amountPaid: null, pendingPayments: 1 } as never);
     ctx = { ...ctx, state: { ...ctx.state, phase: 'expired' } as never };
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
-    expect(text).toContain('The invoice closed while your payment was confirming.');
+    expect(text).toContain('The invoice closed before your payment was confirmed.');
     expect(text).not.toContain('nothing was charged');
   });
 

@@ -16,7 +16,6 @@ import {
   ArrowUturnLeftIcon as PixelArrowUturnLeftIcon,
   DevicePhoneMobileIcon as PixelDevicePhoneMobileIcon,
   FingerPrintIcon as PixelFingerPrintIcon,
-  LockClosedIcon as PixelLockClosedIcon,
   MagnifyingGlassIcon as PixelMagnifyingGlassIcon,
   NoSymbolIcon as PixelNoSymbolIcon,
   QrCodeIcon as PixelQrCodeIcon,
@@ -104,13 +103,6 @@ export function DevicePhoneMobileIcon(props: IconProps) {
 export function FingerPrintIcon(props: IconProps) {
   const outline = useSetOutline();
   const Icon = outline.FingerPrintIcon ?? PixelFingerPrintIcon;
-  return <Icon {...props} />;
-}
-
-/** "Secured by Quasar". @internal */
-export function LockClosedIcon(props: IconProps) {
-  const outline = useSetOutline();
-  const Icon = outline.LockClosedIcon ?? PixelLockClosedIcon;
   return <Icon {...props} />;
 }
 

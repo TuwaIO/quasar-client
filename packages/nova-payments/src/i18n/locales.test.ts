@@ -53,6 +53,13 @@ describe('checkout languages', () => {
     },
   );
 
+  // «КРОК 2 З 4» reads "2 3 4": the letter is the digit in the capitals and in the monospace font of the steps
+  it('counts steps and transfers in Ukrainian with a slash, not with the letter that reads as a three', async () => {
+    const counted = texts(await loadLabels('uk')).filter(([, text]) => /\{(?:current|index)\}/.test(text));
+    expect(counted.map(([key]) => key)).toEqual(expect.arrayContaining(['steps.progress', 'confirm.transferOf']));
+    for (const [key, text] of counted) expect(text, key).not.toMatch(/\}\s+з\s+\{/);
+  });
+
   // A payment reaches the seller's wallet directly: words that read as escrow ("held", "on hold") would say that
   // someone else keeps the money, in the keys a page overrides and in the texts a buyer reads
   it('never says that a payment or a transfer is held, in a key or in an English text', () => {

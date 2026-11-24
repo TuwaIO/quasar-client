@@ -83,8 +83,12 @@ const INVOICE_FULL = 'too_many_payments';
  * @param state.payerProof - Whether the connected wallet must confirm the invoice (`payerProof` of the checkout store;
  * left out by older stores).
  * @param state.error - The store's last error: a price refused after the signature shows on the method step.
+ * @param state.paymentOnTheWay - Whether a payment this page handed over is on its way, as a current store says.
+ * @param state.invoicePaymentOnTheWay - Whether Quasar reports a payment of the invoice on its way, as a current store
+ * says.
  * @param choices - What the buyer chose on the page.
- * @returns The screen: `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
+ * @returns The screen: `confirm` also for an expired invoice while a payment of it is on its way (with an error of its
+ * own, it keeps the words of the outcome), `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
  * confirm the invoice or confirms it, and after it until the price is locked (unless it was refused), also on an
  * underpaid invoice whose rest another wallet pays, `qr` instead of `pay` when the buyer pays
  * with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller
@@ -100,6 +104,8 @@ export function checkoutScreen(
     quote?: CheckoutQuote | null;
     readonly payerProof?: string;
     error?: CheckoutError | null;
+    readonly paymentOnTheWay?: boolean;
+    readonly invoicePaymentOnTheWay?: boolean;
   },
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
@@ -140,6 +146,12 @@ export function checkoutScreen(
       return choices.payWith === 'qr' || state.quote?.payer === null ? 'qr' : 'pay';
     case 'confirming':
       return 'confirm';
+    case 'expired':
+      // What becomes of the payment comes before the deadline: a buyer who had just paid read "This invoice has expired"
+      // until Quasar had checked it. Only what the store says of now: `txHash` alone may be of a part paid long ago
+      return !state.error && (state.paymentOnTheWay || isInvoicePaymentOnTheWay(state, state.checkout))
+        ? 'confirm'
+        : 'expired';
     case 'cancelled':
       return state.checkout?.invoice.replacedBy ? 'replaced' : 'cancelled';
     default:

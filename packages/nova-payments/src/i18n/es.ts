@@ -356,7 +356,7 @@ export const esLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} puede reembolsarla a la billetera que pagó; contacta con {merchant}.',
     expiredNote: 'Un pago enviado después del plazo llega igualmente al vendedor, que lo acepta o lo reembolsa.',
     expiredWhileConfirming:
-      'La factura se cerró mientras se confirmaba tu pago. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
+      'La factura se cerró antes de que se confirmara tu pago. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
     expiredAfterQr: 'Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
     expiredUnconfirmed:
       'Aún no se pudo confirmar tu pago. Revisa tu billetera: si el pago salió de ella, Quasar lo vuelve a comprobar durante 24 horas. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
@@ -441,7 +441,7 @@ export const esLabels: NovaPaymentsLabels = {
     taxRate: 'IVA {rate} %',
     tax: 'IVA',
     total: 'Total',
-    secured: 'Protegido por Quasar',
+    poweredBy: 'Con tecnología de Quasar',
     help: 'Ayuda',
     compact: '{count} artículos · IVA incl. {tax}',
     compactOne: '{count} artículo · IVA incl. {tax}',

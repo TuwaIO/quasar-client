@@ -42,6 +42,7 @@ function confirmingAt(
     paymentCountsUntil,
     reportedCountsUntil,
     paymentSentInTime,
+    followingUntil,
   }: {
     status?: string;
     txKey?: string | null;
@@ -56,6 +57,8 @@ function confirmingAt(
     reportedCountsUntil?: string | null;
     /** `paymentSentInTime` of a current store: Quasar's word on this page's payment. */
     paymentSentInTime?: boolean | null;
+    /** Until when a current store follows the payment of an invoice that has closed. */
+    followingUntil?: string | null;
   } = {},
 ) {
   const checkout = {
@@ -79,6 +82,7 @@ function confirmingAt(
     ...(invoicePaymentOnTheWay === undefined ? {} : { invoicePaymentOnTheWay }),
     ...(paymentCountsUntil === undefined ? {} : { paymentCountsUntil }),
     ...(paymentSentInTime === undefined ? {} : { paymentSentInTime }),
+    ...(followingUntil === undefined ? {} : { followingUntil }),
   } as never;
   ctx = fixture.checkoutContextValue(
     {},
@@ -91,6 +95,14 @@ function confirmingAt(
     },
   );
 }
+
+/** The text of a step. */
+const textOf = (tree: unknown) =>
+  fixture
+    .elements(tree)
+    .flatMap((element) => [element.props.children].flat())
+    .filter((child): child is string => typeof child === 'string')
+    .join(' ');
 
 /** The neutral note of a payment not known to be handed over before the deadline, for Cosmos. */
 const NEUTRAL =
@@ -110,6 +122,26 @@ afterEach(() => unmount());
 // of before the deadline while that payment confirms, so the confirm step past the deadline says so instead of leaving
 // the payer to think the payment failed
 describe('the confirm step at the deadline', () => {
+  // Quasar records the payment for the seller; "You can close this window, the seller sends the receipt" is not known yet
+  it('says of an expired invoice that the seller accepts or returns the payment, and until when the page follows it', () => {
+    confirmingAt('2026-10-29T08:52:03Z', DUE, {
+      status: 'expired',
+      paymentOnTheWay: true,
+      handedOverAt: '2026-10-29T08:52:00Z',
+      followingUntil: '2026-10-29T09:27:00.000Z',
+    });
+    const tree = render(ConfirmScreen, {});
+    expect(noteOf(tree)).toBe(
+      'The invoice closed before your payment was confirmed. If it arrives, it is recorded and shown to Cosmos, who accepts it or returns it.',
+    );
+    expect(textOf(tree)).toMatch(/This page follows the payment until .+\. Later, reload it to see the outcome\./);
+  });
+
+  it('promises nothing of how long it follows an invoice that is still open', () => {
+    confirmingAt('2026-10-29T08:29:00Z', DUE, { paymentOnTheWay: true, followingUntil: null });
+    expect(textOf(render(ConfirmScreen, {}))).not.toMatch(/follows the payment until/);
+  });
+
   it('says the window may close while there is time', () => {
     confirmingAt('2026-10-29T08:20:00Z');
     expect(noteOf(render(ConfirmScreen, {}))).toBe(defaultLabels.confirm.canClose);

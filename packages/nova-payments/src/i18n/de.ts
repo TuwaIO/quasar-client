@@ -370,7 +370,7 @@ export const deLabels: NovaPaymentsLabels = {
     expiredNote:
       'Eine nach Fristende gesendete Zahlung erreicht den Verkäufer trotzdem; er nimmt sie an oder erstattet sie.',
     expiredWhileConfirming:
-      'Die Rechnung wurde geschlossen, während Ihre Zahlung bestätigt wurde. Wenn sie eingeht, wird sie erfasst und {merchant} angezeigt, der sie annimmt oder erstattet.',
+      'Die Rechnung wurde geschlossen, bevor Ihre Zahlung bestätigt war. Wenn sie eingeht, wird sie erfasst und {merchant} angezeigt, der sie annimmt oder erstattet.',
     expiredAfterQr:
       'Wenn Sie per QR-Code bezahlt haben, nimmt {merchant} die Zahlung bei Eingang an oder erstattet sie.',
     expiredUnconfirmed:
@@ -456,7 +456,7 @@ export const deLabels: NovaPaymentsLabels = {
     taxRate: 'USt. {rate} %',
     tax: 'USt.',
     total: 'Gesamt',
-    secured: 'Gesichert durch Quasar',
+    poweredBy: 'Powered by Quasar',
     help: 'Hilfe',
     compact: '{count} Positionen · inkl. USt. {tax}',
     compactOne: '{count} Position · inkl. USt. {tax}',

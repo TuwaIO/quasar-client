@@ -720,10 +720,10 @@ export type NovaPaymentsLabels = {
     /** Under it */
     expiredNote: string;
     /**
-     * Instead of `expiredText` and `expiredNote` when the invoice expired while the payment this page sent was still
-     * confirming: `{merchant}`. Quasar records a payment that arrives after the invoice closed for the seller to review
-     * (default: `The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to
-     * {merchant}, who accepts it or returns it.`)
+     * Under a payment on its way to an invoice that has expired (the confirm step), and instead of `expiredText` and
+     * `expiredNote` once this page no longer follows it: `{merchant}`. Quasar records a payment that arrives after the
+     * invoice closed for the seller to review (default: `The invoice closed before your payment was confirmed. If it
+     * arrives, it is recorded and shown to {merchant}, who accepts it or returns it.`)
      */
     expiredWhileConfirming: string;
     /**
@@ -911,7 +911,7 @@ export type NovaPaymentsLabels = {
     refundPolicy: string;
     /** Link to the merchant's privacy notice (default: `Privacy`) */
     privacy: string;
-    /** What Quasar is and is not; `{seller}` is the seller's name */
+    /** Who sells, what Quasar is and is not: under the order, on a phone under each step; `{seller}` is the seller's name */
     sellerRole: string;
     /** Above the countdown, which also shows while the payment confirms (default: `Payment deadline`) */
     payWithin: string;
@@ -938,8 +938,8 @@ export type NovaPaymentsLabels = {
     tax: string;
     /** Total row (default: `Total`) */
     total: string;
-    /** Under the order (default: `Secured by Quasar`) */
-    secured: string;
+    /** Under the order (default: `Powered by Quasar`) */
+    poweredBy: string;
     /** Before the seller's support email (default: `Help`) */
     help: string;
     /**

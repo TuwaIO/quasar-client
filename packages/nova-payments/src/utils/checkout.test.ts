@@ -118,6 +118,34 @@ describe('unconfirmedFollowUp of an invoice that takes no more payments', () => 
   });
 });
 
+// The buyer paid an invoice past its deadline and read "This invoice has expired" until Quasar had checked the payment
+describe('checkoutScreen of an expired invoice with a payment on its way', () => {
+  it('shows the payment being confirmed: one this page handed over, or one Quasar reports', () => {
+    expect(checkoutScreen({ phase: 'expired', checkout: view(), paymentOnTheWay: true })).toBe('confirm');
+    expect(
+      checkoutScreen({
+        phase: 'expired',
+        checkout: view(),
+        paymentOnTheWay: false,
+        invoicePaymentOnTheWay: true,
+      }),
+    ).toBe('confirm');
+    // An older store: the pending payments of the checkout it read
+    expect(checkoutScreen({ phase: 'expired', checkout: view({ pendingPayments: 1 } as never) })).toBe('confirm');
+  });
+
+  it('is the outcome once nothing is on its way, and for a payment with an error of its own', () => {
+    const idle = { phase: 'expired' as const, checkout: view(), paymentOnTheWay: false, invoicePaymentOnTheWay: false };
+    expect(checkoutScreen(idle)).toBe('expired');
+    const unconfirmed = { code: 'payment_unconfirmed', message: 'm', reason: 'tx_already_used' } as never;
+    expect(checkoutScreen({ ...idle, paymentOnTheWay: true, error: unconfirmed })).toBe('expired');
+  });
+
+  it('stays the outcome of a cancelled invoice: the seller gave it up', () => {
+    expect(checkoutScreen({ phase: 'cancelled', checkout: view(), paymentOnTheWay: true })).toBe('cancelled');
+  });
+});
+
 // The buyer is never invited to pay twice. A store of a current `@tuwaio/quasar-sdk` has the phase
 // `unconfirmed` when Quasar could not confirm the payment (not found, no receipt in time…) but it may still arrive
 describe('checkoutScreen of a payment that may still arrive', () => {

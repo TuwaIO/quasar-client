@@ -32,14 +32,15 @@ const WAITING_STATUSES: ReadonlySet<string> = new Set(['open', 'underpaid']);
  * open for a payment it learned of before the deadline while it confirms: for this page's payment Quasar's word on it
  * decides, `paymentSentInTime` of the checkout store, whatever the clock of the page says; else `paymentCountsUntil`;
  * with a Quasar that reports neither, a payment this page handed over before the deadline by its clock); otherwise it
- * says that the seller accepts or returns a payment that arrives after the invoice closes. A payment that failed or settled is no
- * longer on its way, and the usual note comes back. While the store hands the transaction over again, as Quasar is out of
+ * says that the seller accepts or returns a payment that arrives after the invoice closes. On an invoice that expired while the
+ * payment is on its way the note says the same, with the time until which this page follows it. A payment that failed or
+ * settled is no longer on its way, and the usual note comes back. While the store hands the transaction over again, as Quasar is out of
  * reach for a moment, the note asks to keep the page open: closing it is what could lose the hand-over.
  *
  * @returns The confirm step.
  */
 export function ConfirmScreen() {
-  const { checkout, state, labels, close, customization, now, handedOverAt, display } = useCheckoutContext();
+  const { checkout, state, labels, locale, close, customization, now, handedOverAt, display } = useCheckoutContext();
   const page = display === 'page';
   const child = customization.childCustomizations;
   const facts = usePaymentFacts();
@@ -53,6 +54,10 @@ export function ConfirmScreen() {
   const pastDeadline =
     checkout !== null && (own || found) && WAITING_STATUSES.has(status ?? '') && dueAt !== null && now >= dueAt;
   const sentInTime = pastDeadline && sentBeforeDeadline({ state, checkout, handedOverAt, dueAt });
+  // The invoice closed first: Quasar records the payment for the seller, and this page follows it for a while
+  const late = checkout !== null && (own || found) && status === 'expired';
+  // `followingUntil` is newer than some `@tuwaio/quasar-sdk` alphas
+  const followingUntil = (late && (state as { followingUntil?: string | null }).followingUntil) || null;
   const handingOver = unconfirmedFollowUp(state.error) === 'retrying';
   // The action of the result goes on from this one
   const action = useStatusAction(close ? 'secondary' : null, labels.common.close);
@@ -97,15 +102,24 @@ export function ConfirmScreen() {
           <MorphText wrap>
             {handingOver
               ? labels.outcome.unconfirmedRetrying
-              : pastDeadline
-                ? formatLabel(sentInTime ? labels.confirm.afterDeadline : labels.confirm.pastDeadline, {
-                    merchant: checkout.merchant.name,
-                  })
-                : found
-                  ? labels.confirm.invoicePayment
-                  : labels.confirm.canClose}
+              : late
+                ? formatLabel(labels.outcome.expiredWhileConfirming, { merchant: checkout.merchant.name })
+                : pastDeadline
+                  ? formatLabel(sentInTime ? labels.confirm.afterDeadline : labels.confirm.pastDeadline, {
+                      merchant: checkout.merchant.name,
+                    })
+                  : found
+                    ? labels.confirm.invoicePayment
+                    : labels.confirm.canClose}
           </MorphText>
         </p>
+        {followingUntil && (
+          <p className="novapay:m-0 novapay:max-w-sm novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">
+            {formatLabel(labels.outcome.followingUntil, {
+              time: new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(Date.parse(followingUntil)),
+            })}
+          </p>
+        )}
       </section>
       {close && (
         <ScreenFooter>

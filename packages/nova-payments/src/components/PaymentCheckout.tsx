@@ -43,7 +43,7 @@ import { lockPrice } from '../utils/payerProof';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
-import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
+import { CheckoutSummary, CompactSummary, SellerRole } from './CheckoutSummary';
 import { checkoutLayout, checkoutWidthClasses, screenHeading, screenTitle } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
 import { ConfirmWalletScreen } from './ConfirmWalletScreen';
@@ -329,6 +329,10 @@ export function CheckoutFrame({
             ) : (
               <ScreenBody />
             )}
+          </div>
+          {/* A phone has no order panel, whose footer says it */}
+          <div className="novapay:px-4 novapay:pt-2 novapay:pb-3 novapay:sm:hidden">
+            <SellerRole />
           </div>
         </GlideHeight>
       </div>

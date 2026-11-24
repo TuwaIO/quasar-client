@@ -331,7 +331,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} 可以将这笔款项退回付款钱包；请联系 {merchant}。',
     expiredNote: '截止时间之后发送的付款仍会到达卖方，由卖方接受或退款。',
     expiredWhileConfirming:
-      '您的付款确认期间发票已关闭。如果付款到账，将被记录并显示给 {merchant}，由其接受或退回这笔款项。',
+      '发票在您的付款确认之前已关闭。如果付款到账，将被记录并显示给 {merchant}，由其接受或退回这笔款项。',
     expiredAfterQr: '如果您已通过二维码付款，{merchant} 会在款项到账后接受或退回这笔款项。',
     expiredUnconfirmed:
       '暂时无法确认您的付款。请检查您的钱包：如果款项已从钱包转出，Quasar 会在 24 小时内再次核查。如果付款到账，将被记录并显示给 {merchant}，由其接受或退回这笔款项。',
@@ -406,7 +406,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     taxRate: '增值税 {rate}%',
     tax: '增值税',
     total: '合计',
-    secured: '由 Quasar 提供保障',
+    poweredBy: '由 Quasar 提供技术支持',
     help: '帮助',
     compact: '{count} 件商品 · 含增值税 {tax}',
     compactOne: '{count} 件商品 · 含增值税 {tax}',

@@ -172,6 +172,31 @@ describe('RefundButton', () => {
     expect(flow.preview).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '12.5' });
   });
 
+  // An app that knows what the payment was worth (a discount of the method took some off) starts the field with it: the
+  // merchant had to count it, and everything left is more than the buyer sent
+  it('starts with the amount of the app, which the merchant may change', async () => {
+    const flow = flowOf({ step: 'amount' });
+    const dialog = render(RefundSteps, {
+      flow,
+      labels: defaultLabels,
+      locale: 'en',
+      close: () => undefined,
+      defaultAmount: '4.75',
+    });
+    const step = fixture.ofType(dialog, AmountStep)[0];
+    expect(step.props.defaultAmount).toBe('4.75');
+    unmount();
+
+    const props = { flow, labels: defaultLabels, locale: 'en', currency: 'USD', defaultAmount: '4.75' };
+    let tree = render(AmountStep, props);
+    const field = () => fixture.elements(tree).find((element) => element.props.inputMode === 'decimal')!;
+    expect(field().props.value).toBe('4.75');
+    (field().props.onChange as (event: unknown) => void)({ target: { value: '3' } });
+    tree = render(AmountStep, props);
+    (button(tree, PrimaryButton).props.onClick as () => void)();
+    await vi.waitFor(() => expect(flow.start).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '3' }));
+  });
+
   describe('before a refund is asked for, since it then holds its amount', () => {
     const amountStep = (flow: ReturnType<typeof flowOf>) =>
       render(AmountStep, { flow, labels: defaultLabels, locale: 'en', currency: 'USD' });

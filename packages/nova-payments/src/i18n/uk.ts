@@ -21,7 +21,7 @@ export const ukLabels: NovaPaymentsLabels = {
     method: 'Спосіб',
     pay: 'Оплата',
     confirm: 'Підтвердження',
-    progress: 'Крок {current} з {total}: {name}',
+    progress: 'Крок {current}/{total}: {name}',
     label: 'Кроки оплати',
   },
   language: {
@@ -283,7 +283,7 @@ export const ukLabels: NovaPaymentsLabels = {
     network: 'Мережа',
     transaction: 'Транзакція',
     lastTransfer: 'Останній переказ',
-    transferOf: 'Переказ {index} з {count}',
+    transferOf: 'Переказ {index}/{count}',
     from: 'Відправник',
     canClose: 'Це вікно можна закрити: платіж триватиме, а продавець надішле квитанцію.',
     afterDeadline: 'Ваш платіж надіслано до кінця строку оплати, і він підтверджується.',
@@ -353,7 +353,7 @@ export const ukLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} може повернути її на гаманець, з якого платили; зверніться до {merchant}.',
     expiredNote: 'Платіж, надісланий після строку, однаково надходить продавцю, і він приймає його або повертає.',
     expiredWhileConfirming:
-      'Рахунок закрився, поки ваш платіж підтверджувався. Якщо платіж надійде, його буде записано й показано продавцю {merchant}, який прийме його або поверне.',
+      'Рахунок закрився раніше, ніж підтвердився ваш платіж. Якщо платіж надійде, його буде записано й показано продавцю {merchant}, який прийме його або поверне.',
     expiredAfterQr: 'Якщо ви оплатили за QR-кодом, {merchant} прийме платіж, коли він надійде, або поверне його.',
     expiredUnconfirmed:
       'Ваш платіж поки не вдалося підтвердити. Перевірте гаманець: якщо платіж із нього пішов, Quasar перевірятиме його ще 24 години. Якщо він надійде, його буде записано й показано продавцю {merchant}, який прийме його або поверне.',
@@ -438,7 +438,7 @@ export const ukLabels: NovaPaymentsLabels = {
     taxRate: 'ПДВ {rate}%',
     tax: 'ПДВ',
     total: 'Разом',
-    secured: 'Під захистом Quasar',
+    poweredBy: 'Працює на Quasar',
     help: 'Допомога',
     compact: 'Позицій: {count} · з ПДВ {tax}',
     compactOne: '{count} позиція · з ПДВ {tax}',
