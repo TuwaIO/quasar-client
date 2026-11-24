@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **createCheckoutStore**(`options`): [`CheckoutStore`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-checkoutstore--docs)
 
-Defined in: [checkout/store.ts:1226](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L1226)
+Defined in: [checkout/store.ts:1227](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L1227)
 
 Creates the headless checkout of one invoice for the buyer's browser: a vanilla Zustand store with the invoice,
 its methods, the locked quote and where the payment stands, and the actions that move it on. The wallet is the
@@ -19,7 +19,8 @@ domains, when it lists any; its `Origin` is the site the payer proof message nam
 message through the `sign` passed to [CheckoutState.confirmPayer](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#confirmpayer), never by itself; after `load`, an `EventSource` on its `events` route (or a `GET` every `pollMs`) until
 the invoice reaches a final state or `destroy` is called (an invoice that expired or was cancelled while a payment
 confirms is followed on, for a limited time, until that payment ends it as `paid` or `needs_review`), and a `GET` of the
-checkout when an event brings an outcome. A hand-over Quasar has not taken yet is kept in the browser's `localStorage`
+checkout when an event brings an outcome. `needs_review` is not final: the store follows the invoice until the merchant
+accepts or returns the payment. A hand-over Quasar has not taken yet is kept in the browser's `localStorage`
 under `quasar-sdk:checkoutHandOvers:<token>` ([CheckoutStoreOptions.handOverStorage](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstoreoptions--docs#handoverstorage)) until Quasar takes or
 refuses it, for 30 days at most; nothing else is stored in the browser.
 

@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **checkoutScreen**(`state`, `choices?`): [`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
 
-Defined in: [nova-payments/src/utils/checkout.ts:96](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L96)
+Defined in: [nova-payments/src/utils/checkout.ts:100](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/checkout.ts#L100)
 
 The screen for the state of a checkout store.
 
@@ -28,12 +28,25 @@ What the checkout token opens; `null` until loaded.
 
 The store's last error: a price refused after the signature shows on the method step.
 
+#### invoicePaymentOnTheWay?
+
+`boolean`
+
+Whether Quasar reports a payment of the invoice on its way, as a current store
+says.
+
 #### payerProof?
 
 `string`
 
 Whether the connected wallet must confirm the invoice (`payerProof` of the checkout store;
 left out by older stores).
+
+#### paymentOnTheWay?
+
+`boolean`
+
+Whether a payment this page handed over is on its way, as a current store says.
 
 #### phase
 
@@ -59,7 +72,8 @@ What the buyer chose on the page.
 
 [`CheckoutScreen`](?path=/docs/packages-nova-payments-payments-type-aliases-checkoutscreen--docs)
 
-The screen: `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
+The screen: `confirm` also for an expired invoice while a payment of it is on its way (with an error of its
+own, it keeps the words of the outcome), `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
 confirm the invoice or confirms it, and after it until the price is locked (unless it was refused), also on an
 underpaid invoice whose rest another wallet pays, `qr` instead of `pay` when the buyer pays
 with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller

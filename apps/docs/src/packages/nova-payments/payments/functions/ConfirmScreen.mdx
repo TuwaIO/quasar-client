@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **ConfirmScreen**(): `Element`
 
-Defined in: [nova-payments/src/components/ConfirmScreen.tsx:41](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/ConfirmScreen.tsx#L41)
+Defined in: [nova-payments/src/components/ConfirmScreen.tsx:42](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/ConfirmScreen.tsx#L42)
 
 The confirm step: the transaction is on its way and Quasar follows it until it is final. Its head is the one of every
 status screen (the Quasar loader, the chip "Pending", the heading and the amount, which the paid and the failed step
@@ -20,8 +20,9 @@ sent before the deadline, it says that the payment was sent in time and is being
 open for a payment it learned of before the deadline while it confirms: for this page's payment Quasar's word on it
 decides, `paymentSentInTime` of the checkout store, whatever the clock of the page says; else `paymentCountsUntil`;
 with a Quasar that reports neither, a payment this page handed over before the deadline by its clock); otherwise it
-says that the seller accepts or returns a payment that arrives after the invoice closes. A payment that failed or settled is no
-longer on its way, and the usual note comes back. While the store hands the transaction over again, as Quasar is out of
+says that the seller accepts or returns a payment that arrives after the invoice closes. On an invoice that expired while the
+payment is on its way the note says the same, with the time until which this page follows it. A payment that failed or
+settled is no longer on its way, and the usual note comes back. While the store hands the transaction over again, as Quasar is out of
 reach for a moment, the note asks to keep the page open: closing it is what could lose the hand-over.
 
 ## Returns

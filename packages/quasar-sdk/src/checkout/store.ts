@@ -51,7 +51,8 @@ import type {
  *   Quasar reports) is not over: the payment may still arrive, and the invoice then becomes `paid` (Quasar lets a
  *   payment it learned of before `dueAt` confirm for up to 30 minutes) or `needs_review` (a late payment, or one to a
  *   cancelled invoice, that the merchant accepts or returns). The store keeps following it while {@link CheckoutState.paymentOnTheWay} or {@link CheckoutState.invoicePaymentOnTheWay} is
- *   `true`, for a limited time.
+ *   `true`, for a limited time. An invoice in `needs_review` is followed until the merchant accepts the payment (`paid`)
+ *   or returns it (`refunded`).
  * - `blocked`: AML screening refused the payer's wallet.
  * - `error`: the checkout could not be read (a wrong or retired link, the network).
  */
@@ -574,14 +575,13 @@ export type CheckoutStore = StoreApi<CheckoutState>;
 type StateChange = { -readonly [Key in keyof CheckoutState]?: CheckoutState[Key] };
 
 /** Invoice states after which the page has nothing to follow. */
-const FINAL: ReadonlySet<string> = new Set([
-  'paid',
-  'needs_review',
-  'expired',
-  'cancelled',
-  'refunded',
-  'partially_refunded',
-]);
+const FINAL: ReadonlySet<string> = new Set(['paid', 'expired', 'cancelled', 'refunded', 'partially_refunded']);
+
+/**
+ * The state of a payment the merchant has yet to accept (`paid`) or return (`refunded`), in minutes or in days: the page
+ * follows the invoice until then. It ended there, and went on saying that the seller checks a payment accepted long ago.
+ */
+const UNDER_REVIEW = 'needs_review';
 
 /** Invoice states in which a payment has settled: it is no longer on its way. */
 const SETTLED: ReadonlySet<string> = new Set(['paid', 'needs_review', 'refunded', 'partially_refunded']);
@@ -622,7 +622,7 @@ const CANCELLED_FOLLOW_MS = 35 * 60_000;
 /** How long the store follows an expired invoice without a `dueAt` for a payment on its way. */
 const LATE_FOLLOW_WITHOUT_DUE_MS = 60 * 60_000;
 
-/** How often the store reads an expired invoice whose payment is on its way, at least. */
+/** How often the store reads an expired invoice whose payment is on its way, or one under review, at least. */
 const LATE_POLL_MS = 20_000;
 
 /** How long after a stream closed for good the store tries one again. */
@@ -859,7 +859,7 @@ const quoteValid = (quote: CheckoutQuote | null, now: number): quote is Checkout
  * The outcomes whose details an event does not carry: why a payment waits (`review`), the refund, the invoice that
  * replaced a cancelled one. The checkout is read again for them.
  */
-const OUTCOMES: ReadonlySet<string> = new Set([...FINAL, 'underpaid']);
+const OUTCOMES: ReadonlySet<string> = new Set([...FINAL, UNDER_REVIEW, 'underpaid']);
 
 /**
  * Where a page stays while an underpaid invoice stays as it was: paying its rest, whose quote is itself an event, or
@@ -1199,7 +1199,8 @@ function errorOf(error: unknown): CheckoutError {
  * message through the `sign` passed to {@link CheckoutState.confirmPayer}, never by itself; after `load`, an `EventSource` on its `events` route (or a `GET` every `pollMs`) until
  * the invoice reaches a final state or `destroy` is called (an invoice that expired or was cancelled while a payment
  * confirms is followed on, for a limited time, until that payment ends it as `paid` or `needs_review`), and a `GET` of the
- * checkout when an event brings an outcome. A hand-over Quasar has not taken yet is kept in the browser's `localStorage`
+ * checkout when an event brings an outcome. `needs_review` is not final: the store follows the invoice until the merchant
+ * accepts or returns the payment. A hand-over Quasar has not taken yet is kept in the browser's `localStorage`
  * under `quasar-sdk:checkoutHandOvers:<token>` ({@link CheckoutStoreOptions.handOverStorage}) until Quasar takes or
  * refuses it, for 30 days at most; nothing else is stored in the browser.
  *
@@ -1504,9 +1505,13 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
 
     const startPolling = () => {
       if (poll || destroyed) return;
-      // An expired invoice whose payment is on its way changes once at most, and an invoice nothing is on its way to whose
-      // stream ended waits for a stream again: read them calmly. Each read is the whole checkout on the server
-      const calm = lateUntil !== null || (streamLost && !get().paymentOnTheWay && !adopted);
+      // An expired invoice whose payment is on its way changes once at most, one under review waits for the merchant, and
+      // an invoice nothing is on its way to whose stream ended waits for a stream again: read them calmly. Each read is the
+      // whole checkout on the server
+      const calm =
+        lateUntil !== null ||
+        get().invoiceStatus === UNDER_REVIEW ||
+        (streamLost && !get().paymentOnTheWay && !adopted);
       pollEvery = calm ? Math.max(pollMs, LATE_POLL_MS) : pollMs;
       let reading = false;
       const timer = setInterval(() => {
@@ -1536,6 +1541,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           });
       }, pollEvery);
       poll = timer;
+    };
+
+    /** Goes on with calm reads, where the store reads the invoice at its usual rate. */
+    const slowDown = () => {
+      if (!poll || pollEvery >= LATE_POLL_MS) return;
+      clearInterval(poll);
+      poll = null;
+      startPolling();
     };
 
     /**
@@ -1590,11 +1603,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         );
         update({ followingUntil: new Date(lateUntil).toISOString() });
       }
-      if (poll && pollEvery < LATE_POLL_MS) {
-        clearInterval(poll);
-        poll = null;
-        startPolling();
-      }
+      slowDown();
     };
 
     /**
@@ -1761,6 +1770,10 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
 
       if (!following()) {
         stopWatching();
+      } else if (event.status === UNDER_REVIEW) {
+        // The window of an expired or cancelled invoice was for the payment that has now arrived
+        stopLate();
+        slowDown();
       } else if (CLOSED.has(event.status)) {
         // Expired or cancelled while a payment is on its way: it may still end it (paid in the grace, or under review)
         streamFollows = (event.pendingPayments ?? 0) > 0;
@@ -1833,20 +1846,21 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       });
       events.onerror = () => {
         if (source !== events) return;
-        // Closed for good (the browser gave up reconnecting), or ended on an expired or cancelled invoice that Quasar
-        // does not follow (the browser would reconnect every few seconds to a stream that ends at once): read it
+        // Closed for good (the browser gave up reconnecting), or ended on an invoice that Quasar does not follow (the
+        // browser would reconnect every few seconds to a stream that ends at once): read it. An expired or cancelled one
+        // says whether it does; on one under review some versions of Quasar end the stream
         const { invoiceStatus, paymentOnTheWay } = get();
         const onItsWay = paymentOnTheWay || adopted;
-        const closedForGood = events.readyState === 2;
-        if (closedForGood || (CLOSED.has(invoiceStatus ?? '') && onItsWay && !streamFollows)) {
+        const lost = events.readyState === 2 || invoiceStatus === UNDER_REVIEW;
+        if (lost || (CLOSED.has(invoiceStatus ?? '') && onItsWay && !streamFollows)) {
           events.close();
           source = null;
           if (silence) clearTimeout(silence);
           silence = null;
-          streamLost = closedForGood;
+          streamLost = lost;
           startPolling();
           // Streams end every few minutes, and one deploy would move every open page to reads for the rest of its life
-          if (closedForGood && !streamRetry) {
+          if (lost && !streamRetry) {
             streamRetry = setTimeout(() => {
               streamRetry = null;
               if (destroyed || !poll || lateUntil !== null) return;
