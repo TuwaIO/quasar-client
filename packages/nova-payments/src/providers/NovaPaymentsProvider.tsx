@@ -100,10 +100,10 @@ export interface NovaPaymentsProviderProps {
    */
   adapters?: PaymentsAdapter[];
   /**
-   * The app's Pulsar store (`injectExternalPendingTxs` of `createPulsarStore` from `@tuwaio/pulsar-core`). Every payment
-   * of a checkout goes to it, which tracks it and keeps it in the history, and Nova Transactions shows its toast: one the
-   * wallet sends at once, one the page did not send (a QR code, a relayed signature) once Quasar records it, with its
-   * hash.
+   * The app's Pulsar store (`injectExternalPendingTxs` and `updateTxParams` of the state of `createPulsarStore` from
+   * `@tuwaio/pulsar-core`). Every payment of a checkout goes to it, which tracks it and keeps it in the history, and Nova
+   * Transactions shows its toast: one the wallet sends at once, one the page did not send (a QR code, a relayed signature)
+   * once Quasar records it, with its hash. How a payment ended, as Quasar knows it, ends it there.
    */
   pulsar?: PaymentsPulsar;
   /**

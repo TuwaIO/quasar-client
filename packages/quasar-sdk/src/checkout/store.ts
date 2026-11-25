@@ -1630,9 +1630,18 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         const onTime = new Set(event.onTimeTxKeys.map(keyOf));
         partial.paymentSentInTime = ownKeys.some((key) => onTime.has(key));
       }
-      // What arrived is in the event: the underpaid and expired outcomes show it at once
-      if (!view && checkout && event.amountPaid !== undefined && event.amountPaid !== checkout.invoice.amountPaid) {
-        partial.checkout = { ...checkout, invoice: { ...checkout.invoice, amountPaid: event.amountPaid } };
+      // What arrived is in the event: the underpaid and expired outcomes show it at once. So is what failed, for a page that
+      // ends what it shows of a payment by it: the checkout read before knows of none
+      if (!view && checkout) {
+        const { amountPaid, rejectedPayments } = checkout.invoice;
+        const told: Partial<CheckoutView['invoice']> = {
+          ...(event.amountPaid !== undefined && event.amountPaid !== amountPaid && { amountPaid: event.amountPaid }),
+          ...(event.rejectedPayments &&
+            JSON.stringify(event.rejectedPayments) !== JSON.stringify(rejectedPayments ?? []) && {
+              rejectedPayments: event.rejectedPayments,
+            }),
+        };
+        if (Object.keys(told).length > 0) partial.checkout = { ...checkout, invoice: { ...checkout.invoice, ...told } };
       }
       const followed = paymentOnTheWay || adopted;
       const pending = event.pendingPayments ?? 0;

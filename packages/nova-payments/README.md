@@ -60,25 +60,25 @@ export function Checkout({ token }: { token: string }) {
 
 `display="inline"` renders it in the page. `display="page"` is the whole page, as the Quasar payment page shows it: a sheet 880 px wide, centered in the window (`min-height: 100svh`; a page with a header of its own sets `--novapay-page-height` on an ancestor, for example `calc(100svh - 64px)`), that grows downward with its step and scrolls nothing inside, full-bleed under 640 px. `NovaPaymentsProvider` sets the Quasar API for a Community Edition node (`baseUrl`) and replaces labels.
 
-To pay from a wallet in the browser, give the provider the chain adapters of your app (`@tuwaio/nova-payments/evm` needs `@wagmi/core` and `viem`; `@tuwaio/nova-payments/solana` needs `@solana/kit`, `@solana-program/system`, `@solana-program/token` and `@tuwaio/orbit-solana`) and, optionally, your Pulsar store: every payment of a checkout goes to it, and Nova Transactions shows its toast (one the wallet sends at once, one paid with a QR code or a relayed signature once Quasar records it).
+To pay from a wallet in the browser, give the provider the chain adapters of your app (`@tuwaio/nova-payments/evm` needs `@wagmi/core` and `viem`; `@tuwaio/nova-payments/solana` needs `@solana/kit`, `@solana-program/system`, `@solana-program/token` and `@tuwaio/orbit-solana`) and, optionally, your Pulsar store (`injectExternalPendingTxs` and `updateTxParams` of its state): every payment of a checkout goes to it, and Nova Transactions shows its toast (one the wallet sends at once, one paid with a QR code or a relayed signature once Quasar records it). The checkout ends a payment there by what Quasar knows of it, also while the page's own nodes do not answer.
 
 ```tsx
 'use client';
 
-import { NovaPaymentsProvider } from '@tuwaio/nova-payments';
+import { NovaPaymentsProvider, type PaymentsPulsar } from '@tuwaio/nova-payments';
 import { paymentsEVMAdapter } from '@tuwaio/nova-payments/evm';
 import { paymentsSolanaAdapter } from '@tuwaio/nova-payments/solana';
-import type { Transaction } from '@tuwaio/pulsar-core';
 import type { Config } from '@wagmi/core';
 import type { ReactNode } from 'react';
 
 export function Payments({
   wagmiConfig,
-  injectExternalPendingTxs,
+  pulsar,
   children,
 }: {
   wagmiConfig: Config;
-  injectExternalPendingTxs: (transactions: Transaction[]) => Promise<void>;
+  // injectExternalPendingTxs and updateTxParams of your store's state
+  pulsar: PaymentsPulsar;
   children: ReactNode;
 }) {
   return (
@@ -87,7 +87,7 @@ export function Payments({
         paymentsEVMAdapter(wagmiConfig),
         paymentsSolanaAdapter({ rpcUrls: { devnet: 'https://api.devnet.solana.com' } }),
       ]}
-      pulsar={{ injectExternalPendingTxs }}
+      pulsar={pulsar}
     >
       {children}
     </NovaPaymentsProvider>

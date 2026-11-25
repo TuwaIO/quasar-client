@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import type { PaymentsAdapter } from '../adapters/types';
 import type { NovaPaymentsLabels } from '../i18n';
+import { endedPayments } from '../utils/endedPayments';
 import { formatTokenAmount } from '../utils/format';
 import { handOverPayment, type PaymentsPulsar, type SentPayment } from '../utils/handOver';
 import type { PaymentFamily } from '../utils/methods';
@@ -60,9 +61,10 @@ const addressOf = (account: string) => account.split(':').at(-1) ?? account;
  * send (a QR code, a relayed signature, another tab) goes over once Quasar records it, with its hash and the wallet that
  * paid: only while the page watched the invoice take it, never for an invoice paid before the page opened it, and not
  * when this page sent a payment of its own (a new hash is a speed-up, which Pulsar's tracker of that payment follows).
- * Each payment goes over once.
+ * Each payment goes over once. How a payment ended, as Quasar knows it, ends its transaction in the store
+ * (`updateTxParams` of `pulsar`): Pulsar reads it through the page's own nodes, which may not answer.
  *
- * Side effects: on hand-over, a pending transaction in the Pulsar store and its tracker.
+ * Side effects: on hand-over, a pending transaction in the Pulsar store and its tracker; on its end, what became of it.
  *
  * @param params - See {@link UsePaymentHandOverParams}.
  * @returns The function to call with the payment the wallet sent.
@@ -79,6 +81,12 @@ export function usePaymentHandOver({
   useEffect(() => {
     settings.current = { adapterFor, pulsar, labels, locale };
   });
+  const endSettled = useCallback(() => {
+    const { checkout } = store.getState();
+    const { pulsar: target } = settings.current;
+    if (!checkout || !target?.updateTxParams) return;
+    for (const { txKey, fields } of endedPayments(checkout.invoice)) target.updateTxParams(txKey, fields);
+  }, [store]);
   const handOver = useCallback(
     (payment: SentPayment) => {
       const { checkout } = store.getState();
@@ -95,10 +103,21 @@ export function usePaymentHandOver({
         merchant: checkout.merchant.name,
         invoice: { id: checkout.invoice.id, number: checkout.invoice.number },
         amount: `${formatTokenAmount(amount, decimals, language)} ${symbol}`,
-      }).catch(() => undefined);
+      })
+        // Quasar may have said how it ended before it was in the pool, as of a payment it found itself
+        .then(endSettled)
+        .catch(() => undefined);
     },
-    [store],
+    [store, endSettled],
   );
+
+  // What Quasar knows of the payments, of a page opened again too: those it kept pending may have ended meanwhile
+  useEffect(() => {
+    endSettled();
+    return store.subscribe((state, previous) => {
+      if (state.checkout !== previous.checkout) endSettled();
+    });
+  }, [store, endSettled]);
 
   useEffect(
     () =>

@@ -161,6 +161,11 @@ export type CheckoutReview = { reason: 'screening' | 'late' | 'overpaid' | 'quot
 export interface CheckoutPayment {
   /** The transaction: its hash, or its Solana signature. */
   txKey: string;
+  /**
+   * The hash the checkout handed the payment over as, when this one replaced it (sped up in the wallet). Quasar versions
+   * before November 26, 2026 leave it out.
+   */
+  original?: string;
   /** CAIP-2 chain of the transfer; `null` when the record of the payment names none. */
   chainId: string | null;
   /** What it credited to the invoice, in base units of the token. */
@@ -212,6 +217,11 @@ export interface CheckoutRejectedPayment {
   userOpHash?: string;
   /** The transaction the checkout handed over, when this one replaced it (a payment sped up in the wallet). */
   original?: string;
+  /**
+   * What took the place of a `cancelled` payment: the transaction the wallet cancelled it with. Quasar versions before
+   * November 26, 2026 leave it out.
+   */
+  replacedBy?: string;
   /**
    * `true` when the transaction succeeded on chain without paying the invoice (`no_matching_transfer`,
    * `reference_missing`, `too_early`, `tx_already_used`, `payer_mismatch`, `payer_unconfirmed`,

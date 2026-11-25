@@ -3,7 +3,7 @@
  * and Nova Transactions shows its toast.
  */
 
-import type { Transaction } from '@tuwaio/pulsar-core';
+import type { Transaction, UpdatableTransactionFields } from '@tuwaio/pulsar-core';
 import type { PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentsAdapter } from '../adapters/types';
@@ -23,7 +23,7 @@ export interface SentPayment {
 
 /**
  * The part of the app's Pulsar store (`createPulsarStore` of `@tuwaio/pulsar-core`) the checkout uses: pass
- * `injectExternalPendingTxs` of the store, as `pulsar` of `NovaPaymentsProvider`.
+ * `injectExternalPendingTxs` and `updateTxParams` of the store, as `pulsar` of `NovaPaymentsProvider`.
  */
 export interface PaymentsPulsar {
   /**
@@ -33,6 +33,15 @@ export interface PaymentsPulsar {
    * @returns Resolves when their trackers started.
    */
   injectExternalPendingTxs(transactions: Transaction[]): Promise<void>;
+  /**
+   * Writes what became of a transaction of the pool; one it does not hold, or one that ended, it leaves as it is. With it
+   * the checkout ends the transactions of its payments by what Quasar knows of them, which Pulsar may not learn by itself:
+   * while the nodes of the page do not answer, a toast would go on spinning beside "Payment received".
+   *
+   * @param txKey - The transaction.
+   * @param fields - What became of it.
+   */
+  updateTxParams?(txKey: string, fields: UpdatableTransactionFields): unknown;
 }
 
 /** Pulsar's limits for the texts of a transaction. */

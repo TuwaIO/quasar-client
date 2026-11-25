@@ -1,4 +1,4 @@
-import type { Transaction } from '@tuwaio/pulsar-core';
+import type { Transaction, UpdatableTransactionFields } from '@tuwaio/pulsar-core';
 import type { CheckoutState } from '@tuwaio/quasar-sdk/checkout';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createStore } from 'zustand/vanilla';
@@ -41,7 +41,13 @@ interface State {
   quote: { instructions: typeof instructions; payer: string | null } | null;
   checkout: {
     merchant: { name: string };
-    invoice: { id: string; number: string | null; originWallet: string | null };
+    invoice: {
+      id: string;
+      number: string | null;
+      originWallet: string | null;
+      payments?: object[];
+      rejectedPayments?: object[];
+    };
   } | null;
 }
 
@@ -64,6 +70,7 @@ const setup = (initial: Partial<State> = {}) => {
   };
   const pulsar = {
     injectExternalPendingTxs: vi.fn<(transactions: Transaction[]) => Promise<void>>(async () => undefined),
+    updateTxParams: vi.fn<(txKey: string, fields: UpdatableTransactionFields) => void>(),
   };
   const renderHook = (withPulsar = true) =>
     render(usePaymentHandOver, {
@@ -167,5 +174,56 @@ describe('usePaymentHandOver', () => {
     store.setState({ invoiceStatus: 'paid', txHash: '0xother' });
     await flush();
     expect(pulsar.injectExternalPendingTxs).not.toHaveBeenCalled();
+  });
+
+  // The page's nodes may not answer: its toast went on spinning beside "Payment received", with a speed-up to press
+  it('ends the transactions of the payments whose end Quasar knows, when it tells and once they are in the pool', async () => {
+    const { store, pulsar, renderHook } = setup();
+    const onSent = renderHook();
+    expect(pulsar.updateTxParams).not.toHaveBeenCalled();
+    const checkout = store.getState().checkout!;
+    store.setState({
+      checkout: { ...checkout, invoice: { ...checkout.invoice, payments: [{ txKey: '0xhash', at: '' }] } },
+    });
+    expect(pulsar.updateTxParams.mock.calls).toEqual([['0xhash', expect.objectContaining({ status: 'Success' })]]);
+
+    // A payment Quasar settled before it reached the pool, as one it found itself does
+    pulsar.updateTxParams.mockClear();
+    onSent(payment);
+    await flush();
+    expect(pulsar.injectExternalPendingTxs).toHaveBeenCalledTimes(1);
+    expect(pulsar.updateTxParams).toHaveBeenCalledWith('0xhash', expect.objectContaining({ status: 'Success' }));
+    expect(pulsar.updateTxParams.mock.invocationCallOrder[0]).toBeGreaterThan(
+      pulsar.injectExternalPendingTxs.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('ends those of a page opened again, and follows nothing once it is gone', () => {
+    const { store, pulsar, renderHook } = setup();
+    const checkout = store.getState().checkout!;
+    const rejectedPayments = [{ txKey: '0xcancelled', reason: 'cancelled', final: true }];
+    store.setState({ checkout: { ...checkout, invoice: { ...checkout.invoice, rejectedPayments } } });
+    renderHook();
+    expect(pulsar.updateTxParams.mock.calls).toEqual([
+      ['0xcancelled', expect.objectContaining({ status: 'Replaced', replacedReason: 'cancelled' })],
+    ]);
+    unmount();
+    pulsar.updateTxParams.mockClear();
+    store.setState({
+      checkout: { ...checkout, invoice: { ...checkout.invoice, rejectedPayments: [...rejectedPayments] } },
+    });
+    expect(pulsar.updateTxParams).not.toHaveBeenCalled();
+  });
+
+  it('ends nothing with a store that gives only what the checkout needed before', () => {
+    const { store, pulsar, renderHook } = setup();
+    delete (pulsar as { updateTxParams?: unknown }).updateTxParams;
+    renderHook();
+    const checkout = store.getState().checkout!;
+    expect(() =>
+      store.setState({
+        checkout: { ...checkout, invoice: { ...checkout.invoice, payments: [{ txKey: '0xhash', at: '' }] } },
+      }),
+    ).not.toThrow();
   });
 });

@@ -1128,6 +1128,22 @@ describe('createCheckoutStore: payments on their way and why they failed', () =>
     expect(checkout.getState()).toMatchObject({ phase: 'paid' });
   });
 
+  // A page ends the toast of a payment by what Quasar says of it: the checkout it read first knew of no failed one
+  it('keeps the failed payments a status event lists on the checkout', async () => {
+    answer({ rejectedTxKeys: [], rejectedPayments: [] });
+    const checkout = store();
+    await checkout.getState().load();
+    const events = FakeEventSource.instances[0];
+    const failed = [rejection('0xfeed', 'cancelled', true, { replacedBy: '0xcancel' })];
+    events.emit('status', signal('open', 5, { pendingPayments: 0, rejectedPayments: failed }));
+    const { checkout: told } = checkout.getState();
+    expect(told?.invoice.rejectedPayments).toEqual(failed);
+    // The same list again is no change: the page renders nothing anew
+    events.emit('status', signal('open', 6, { pendingPayments: 0, rejectedPayments: [{ ...failed[0] }] }));
+    expect(checkout.getState().checkout).toBe(told);
+    checkout.getState().destroy();
+  });
+
   it('goes back to the payment once the buyer checked the wallet', async () => {
     answer({ rejectedTxKeys: [], rejectedPayments: [] });
     const checkout = store();
