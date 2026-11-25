@@ -148,16 +148,17 @@ export interface PaymentCheckoutProps {
   customization?: PaymentCheckoutCustomization;
 }
 
-/** The checkout while it loads. @internal */
+/** The checkout while it loads, in its own language: no line of English first. @internal */
 function LoadingScreen() {
-  const { labels } = useCheckoutContext();
+  const { labels, locale } = useCheckoutContext();
   return (
     <div
       role="status"
       className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:p-8 novapay:text-sm novapay:text-[var(--tuwa-text-secondary)]"
     >
       <QuasarLoader size={48} />
-      {labels.common.loading}
+      {/* The labels of a language come in a file of their own: a space keeps their line until then */}
+      {hasLabels(locale) ? labels.common.loading : '\u00a0'}
     </div>
   );
 }
