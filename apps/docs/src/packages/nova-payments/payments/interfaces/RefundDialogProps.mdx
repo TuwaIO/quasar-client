@@ -35,7 +35,7 @@ payment was worth after a discount of its method. The merchant may change it. Em
 
 > `optional` **details?**: `object`
 
-Defined in: [nova-payments/src/components/RefundButton.tsx:65](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L65)
+Defined in: [nova-payments/src/components/RefundButton.tsx:71](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L71)
 
 Rows the app adds: to the confirm step (what the refund takes back) and to the refunded step.
 
@@ -46,6 +46,18 @@ Rows the app adds: to the confirm step (what the refund takes back) and to the r
 #### done?
 
 > `optional` **done?**: `ReactNode`
+
+***
+
+### exactPossible?
+
+> `optional` **exactPossible?**: `boolean`
+
+Defined in: [nova-payments/src/components/RefundButton.tsx:67](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L67)
+
+Whether everything received can still go back as it came. Quasar takes such a refund of an accepted payment only while
+nothing of it was refunded (`exactPossible` of a refund preview): with `false` the amount step offers an amount alone.
+Defaults to `true`.
 
 ***
 
@@ -73,7 +85,7 @@ The paid invoice to refund.
 
 > `optional` **locale?**: `string`
 
-Defined in: [nova-payments/src/components/RefundButton.tsx:63](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L63)
+Defined in: [nova-payments/src/components/RefundButton.tsx:69](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L69)
 
 The language (a BCP 47 tag). Defaults to `en`.
 
@@ -83,7 +95,7 @@ The language (a BCP 47 tag). Defaults to `en`.
 
 > `optional` **onConnectWallet?**: (`family`) => `void`
 
-Defined in: [nova-payments/src/components/RefundButton.tsx:75](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L75)
+Defined in: [nova-payments/src/components/RefundButton.tsx:81](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L81)
 
 Connects a wallet of the payment's chain family, for apps without Nova Connect; overrides the `onConnectWallet` of
 `NovaPaymentsProvider`. Inside `NovaConnectProvider` (the app's, or Nova's own connection) the window opens its
@@ -129,7 +141,7 @@ Whether it is open.
 
 > `optional` **onRecord?**: () => `void`
 
-Defined in: [nova-payments/src/components/RefundButton.tsx:67](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L67)
+Defined in: [nova-payments/src/components/RefundButton.tsx:73](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L73)
 
 "Record refund": the app's form for a refund sent another way; offered when the wallet does not send it.
 
@@ -143,7 +155,7 @@ Defined in: [nova-payments/src/components/RefundButton.tsx:67](https://github.co
 
 > `optional` **onRefunded?**: (`refund`) => `void`
 
-Defined in: [nova-payments/src/components/RefundButton.tsx:81](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L81)
+Defined in: [nova-payments/src/components/RefundButton.tsx:87](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/RefundButton.tsx#L87)
 
 Called once Quasar confirmed the refund and issued its credit note.
 

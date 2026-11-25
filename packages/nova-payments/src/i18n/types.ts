@@ -1119,8 +1119,12 @@ export type NovaPaymentsLabels = {
     refusedNotRefundable: string;
     /** Refused: `review_refund_must_be_whole` (default: `A payment under review is refunded whole.`) */
     refusedWhole: string;
+    /** Refused: `exact_refund_needs_whole_invoice` (default: `Part of this payment went back already, so the rest is refunded as an amount.`) */
+    refusedExact: string;
     /** Refused: `sender_blocked` (default: `A compliance check blocks the wallet to refund. Nothing can be sent to it.`) */
     refusedBlocked: string;
+    /** Refused: `screening_unavailable` (default: `The compliance check of the wallet did not answer. Nothing was sent. Try again in a moment.`) */
+    refusedScreening: string;
     /** Refused: `refund_not_waiting` (default: `This refund no longer waits for a transaction. Nothing was sent.`) */
     refusedNotWaiting: string;
     /** Refused: `refund_may_have_landed` (default: `An earlier transaction of this refund may have gone through. Check it before asking again.`) */

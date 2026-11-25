@@ -556,8 +556,11 @@ export const deLabels: NovaPaymentsLabels = {
     refusedAmount: 'Der Betrag ist höher als das, was noch zu erstatten ist.',
     refusedNotRefundable: 'Diese Zahlung kann nicht mehr erstattet werden.',
     refusedWhole: 'Eine Zahlung in Prüfung wird nur vollständig erstattet.',
+    refusedExact: 'Ein Teil dieser Zahlung ging bereits zurück, daher wird der Rest als Betrag erstattet.',
     refusedBlocked:
       'Eine Compliance-Prüfung sperrt das Wallet für die Erstattung. Es kann nichts dorthin gesendet werden.',
+    refusedScreening:
+      'Die Compliance-Prüfung des Wallets hat nicht geantwortet. Es wurde nichts gesendet. Versuchen Sie es gleich noch einmal.',
     refusedNotWaiting: 'Diese Erstattung wartet nicht mehr auf eine Transaktion. Es wurde nichts gesendet.',
     refusedMayHaveLanded:
       'Eine frühere Transaktion dieser Erstattung könnte durchgegangen sein. Prüfen Sie sie, bevor Sie erneut anfragen.',

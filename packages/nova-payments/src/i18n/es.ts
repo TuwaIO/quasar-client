@@ -533,7 +533,10 @@ export const esLabels: NovaPaymentsLabels = {
     refusedAmount: 'El importe supera lo que queda por reembolsar.',
     refusedNotRefundable: 'Este pago ya no se puede reembolsar.',
     refusedWhole: 'Un pago en revisión se reembolsa entero.',
+    refusedExact: 'Ya se devolvió una parte de este pago, así que el resto se reembolsa indicando un importe.',
     refusedBlocked: 'Un control de cumplimiento bloquea la billetera a reembolsar. No se le puede enviar nada.',
+    refusedScreening:
+      'El control de cumplimiento de la billetera no respondió. No se envió nada. Inténtalo de nuevo en un momento.',
     refusedNotWaiting: 'Este reembolso ya no espera una transacción. No se envió nada.',
     refusedMayHaveLanded:
       'Una transacción anterior de este reembolso puede haberse completado. Compruébala antes de volver a pedirlo.',

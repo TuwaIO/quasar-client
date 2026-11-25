@@ -2399,6 +2399,12 @@ Refused: `amount_exceeds_refundable` (default: `The amount is more than what is 
 
 Refused: `sender_blocked` (default: `A compliance check blocks the wallet to refund. Nothing can be sent to it.`)
 
+#### refusedExact
+
+> **refusedExact**: `string`
+
+Refused: `exact_refund_needs_whole_invoice` (default: `Part of this payment went back already, so the rest is refunded as an amount.`)
+
 #### refusedMayHaveLanded
 
 > **refusedMayHaveLanded**: `string`
@@ -2428,6 +2434,12 @@ Refused for a reason this package does not name (default: `Quasar refused this r
 > **refusedPrice**: `string`
 
 Refused: the price cannot be read (default: `The price cannot be read right now. Try again in a moment.`)
+
+#### refusedScreening
+
+> **refusedScreening**: `string`
+
+Refused: `screening_unavailable` (default: `The compliance check of the wallet did not answer. Nothing was sent. Try again in a moment.`)
 
 #### refusedTestOnly
 

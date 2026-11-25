@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **usePaymentHandOver**(`params`): (`payment`) => `void`
 
-Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:70](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L70)
+Defined in: [nova-payments/src/hooks/usePaymentHandOver.ts:72](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePaymentHandOver.ts#L72)
 
 Hands the invoice's payments to the app's Pulsar store, where Nova Transactions shows their toasts (owner test
 2026-11-09, finding 3: no toast for any crypto payment, as a payment went over only when the checkout closed before
@@ -14,9 +14,10 @@ Quasar settled it). A payment the wallet sends goes over at once, the checkout o
 send (a QR code, a relayed signature, another tab) goes over once Quasar records it, with its hash and the wallet that
 paid: only while the page watched the invoice take it, never for an invoice paid before the page opened it, and not
 when this page sent a payment of its own (a new hash is a speed-up, which Pulsar's tracker of that payment follows).
-Each payment goes over once.
+Each payment goes over once. How a payment ended, as Quasar knows it, ends its transaction in the store
+(`updateTxParams` of `pulsar`): Pulsar reads it through the page's own nodes, which may not answer.
 
-Side effects: on hand-over, a pending transaction in the Pulsar store and its tracker.
+Side effects: on hand-over, a pending transaction in the Pulsar store and its tracker; on its end, what became of it.
 
 ## Parameters
 

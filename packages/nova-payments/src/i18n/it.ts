@@ -540,7 +540,10 @@ export const itLabels: NovaPaymentsLabels = {
     refusedAmount: "L'importo supera quanto resta da rimborsare.",
     refusedNotRefundable: 'Questo pagamento non può più essere rimborsato.',
     refusedWhole: 'Un pagamento in revisione si rimborsa per intero.',
+    refusedExact: 'Una parte di questo pagamento è già stata restituita: il resto si rimborsa indicando un importo.',
     refusedBlocked: 'Un controllo di conformità blocca il wallet da rimborsare. Non è possibile inviargli nulla.',
+    refusedScreening:
+      'Il controllo di conformità del wallet non ha risposto. Non è stato inviato nulla. Riprova tra poco.',
     refusedNotWaiting: 'Questo rimborso non attende più una transazione. Non è stato inviato nulla.',
     refusedMayHaveLanded:
       'Una transazione precedente di questo rimborso potrebbe essere andata a buon fine. Controllala prima di richiederlo di nuovo.',

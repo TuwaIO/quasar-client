@@ -142,6 +142,14 @@ describe('RefundButton', () => {
     expect(refusalText({ code: 'something_new' }, labels)).toBe(labels.refusedOther);
   });
 
+  // "Quasar refused this refund" left the merchant with nothing to do: the first says to name an amount, the second to wait
+  it('says why everything received cannot go back, and that a screening did not answer', () => {
+    const labels = defaultLabels.refund;
+    expect(refusalText({ code: 'exact_refund_needs_whole_invoice' }, labels)).toBe(labels.refusedExact);
+    expect(refusalText({ code: 'screening_unavailable' }, labels)).toBe(labels.refusedScreening);
+    expect(new Set([labels.refusedExact, labels.refusedScreening, labels.refusedOther, undefined]).size).toBe(4);
+  });
+
   it('counts a refund as slow from when it last changed, not from when it was asked for', () => {
     const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
     expect(isSlow({ createdAt: ago(600), updatedAt: ago(1) } as never)).toBe(false);
@@ -195,6 +203,63 @@ describe('RefundButton', () => {
     tree = render(AmountStep, props);
     (button(tree, PrimaryButton).props.onClick as () => void)();
     await vi.waitFor(() => expect(flow.start).toHaveBeenCalledWith({ mode: 'fiat_value', amount: '3' }));
+  });
+
+  // Once part of a payment went back, Quasar takes no refund of the tokens as they came: the window offered it all the same
+  it('offers everything received only where the app says it can still go back', () => {
+    const props = { flow: flowOf({ step: 'amount' }), labels: defaultLabels, locale: 'en', currency: 'USD' };
+    const dialog = render(RefundSteps, { ...props, close: () => undefined, exactPossible: false });
+    expect(fixture.ofType(dialog, AmountStep)[0].props.exactPossible).toBe(false);
+    unmount();
+
+    expect(fixture.ofType(render(AmountStep, props), RadioCards)).toHaveLength(1);
+    unmount();
+    const tree = render(AmountStep, { ...props, exactPossible: false });
+    // One way is no choice: the amount stands alone
+    expect(fixture.ofType(tree, RadioCards)).toHaveLength(0);
+    expect(fixture.elements(tree).some((element) => element.props.inputMode === 'decimal')).toBe(true);
+  });
+
+  // Asking replaces the step with a wait: after a refusal it came back with the suggested amount, the other choice and no
+  // reason, whatever the merchant had chosen and typed
+  it('keeps what was chosen and typed when Quasar refuses the refund', () => {
+    const at = (step: RefundFlow['step'], extra: Partial<RefundFlow> = {}) =>
+      render(RefundSteps, {
+        flow: flowOf({ step, ...extra }),
+        labels: defaultLabels,
+        locale: 'en',
+        close: () => undefined,
+        defaultAmount: '4.75',
+      });
+    const step = (tree: unknown) => fixture.ofType(tree, AmountStep)[0] as ReactElement<Props>;
+    const typed = { mode: 'exact_received' as const, amount: '3', reason: 'Order cancelled' };
+    (step(at('amount')).props.onDraft as (draft: unknown) => void)(typed);
+    at('requesting');
+    const back = step(at('amount', { error: { code: 'something_new', message: 'No' } as never }));
+    expect(back.props.draft).toEqual(typed);
+    unmount();
+
+    const props = { flow: flowOf({ step: 'amount' }), labels: defaultLabels, locale: 'en', currency: 'USD' };
+    let tree = render(AmountStep, {
+      ...props,
+      defaultAmount: '4.75',
+      draft: { ...typed, mode: 'fiat_value' as const },
+    });
+    expect(fixture.elements(tree).find((element) => element.props.inputMode === 'decimal')!.props.value).toBe('3');
+    expect(fixture.elements(tree).find((element) => element.props.maxLength === 500)!.props.value).toBe(typed.reason);
+    unmount();
+    tree = render(AmountStep, { ...props, defaultAmount: '4.75', draft: typed });
+    expect(button(tree, RadioCards).props.value).toBe('exact_received');
+    unmount();
+    // A choice that can no longer be made is not kept
+    tree = render(AmountStep, { ...props, defaultAmount: '4.75', draft: typed, exactPossible: false });
+    expect(fixture.elements(tree).find((element) => element.props.inputMode === 'decimal')!.props.value).toBe('3');
+    unmount();
+    const onDraft = vi.fn();
+    tree = render(AmountStep, { ...props, defaultAmount: '4.75', onDraft });
+    const amount = fixture.elements(tree).find((element) => element.props.inputMode === 'decimal')!;
+    (amount.props.onChange as (event: unknown) => void)({ target: { value: '2' } });
+    expect(onDraft).toHaveBeenLastCalledWith({ mode: 'fiat_value', amount: '2', reason: '' });
   });
 
   describe('before a refund is asked for, since it then holds its amount', () => {
