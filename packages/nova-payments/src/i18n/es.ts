@@ -95,6 +95,7 @@ export const esLabels: NovaPaymentsLabels = {
     youSend: 'Envías',
     youSendRest: 'Envías el resto',
     copyAmount: 'Copiar el importe',
+    copyAddress: 'Copiar la dirección',
     copied: 'Copiado',
     onNetwork: 'en {network}',
     fiatValue: '= {amount} {currency}',

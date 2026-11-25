@@ -7,10 +7,19 @@ import type { NovaPaymentsLabels } from '../i18n';
 /**
  * Gives the parts of Nova Transactions the checkout reuses (progress, status, transaction link) the texts of the
  * checkout language: Sent, Confirming or Confirmed, Paid. Outside a checkout (the refund window) `labels` gives them.
+ * With `address` the link is of an address: its copy button copies the address.
  *
  * @internal
  */
-export function TxLabels({ children, labels: given }: { children: ReactNode; labels?: NovaPaymentsLabels }) {
+export function TxLabels({
+  children,
+  labels: given,
+  address = false,
+}: {
+  children: ReactNode;
+  labels?: NovaPaymentsLabels;
+  address?: boolean;
+}) {
   const context = useOptionalCheckoutContext();
   const labels = (given ?? context?.labels) as NovaPaymentsLabels;
   const base = useLabels();
@@ -26,10 +35,14 @@ export function TxLabels({ children, labels: given }: { children: ReactNode; lab
         },
       },
       statuses: { ...base.statuses, confirmed: labels.confirm.confirmed, failed: labels.confirm.failed },
-      actions: { ...base.actions, viewOnExplorer: labels.confirm.viewOnExplorer, copy: labels.confirm.copyHash },
+      actions: {
+        ...base.actions,
+        viewOnExplorer: labels.confirm.viewOnExplorer,
+        copy: address ? labels.pay.copyAddress : labels.confirm.copyHash,
+      },
       txError: { ...base.txError, copied: labels.pay.copied },
     }),
-    [base, labels],
+    [base, labels, address],
   );
   return <NovaTransactionsLabelsProvider labels={merged}>{children}</NovaTransactionsLabelsProvider>;
 }

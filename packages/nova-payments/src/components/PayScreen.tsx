@@ -1,5 +1,5 @@
 import { cn } from '@tuwaio/nova-core';
-import type { CheckoutError, CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
+import type { CheckoutMethod, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useState } from 'react';
 
 import { useAsyncValue, useRereadValue } from '../hooks/useAsyncValue';
@@ -8,8 +8,14 @@ import { usePayerProof } from '../hooks/usePayerProof';
 import { usePayment } from '../hooks/usePayment';
 import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
 import { useStepHeight } from '../hooks/useStepHeight';
-import { formatLabel, type NovaPaymentsLabels } from '../i18n';
-import { isQuoteEnding, QUOTE_WARNING_MS, screensPayingWallets } from '../utils/checkout';
+import { formatLabel } from '../i18n';
+import {
+  isQuoteEnding,
+  priceEndsWithInvoice,
+  priceLockMinutes,
+  QUOTE_WARNING_MS,
+  screensPayingWallets,
+} from '../utils/checkout';
 import {
   baseUnitsToDecimal,
   formatCountdown,
@@ -20,18 +26,12 @@ import {
   shortAddress,
 } from '../utils/format';
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
-import { leftTheWalletText, paymentFailedText, restRateText } from '../utils/outcome';
+import { restRateText } from '../utils/outcome';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
 import { payeeStatus } from '../utils/payee';
-import {
-  isConfirmationError,
-  isPayerProofError,
-  isSmartWallet,
-  needsPayerProof,
-  payerProofErrorText,
-} from '../utils/payerProof';
+import { isConfirmationError, isSmartWallet, needsPayerProof, payerProofErrorText } from '../utils/payerProof';
+import { problemText } from '../utils/problemText';
 import { solanaNetworkHint } from '../utils/solanaNetwork';
-import type { PaymentWalletErrorKind } from '../utils/walletErrors';
 import { CapsLabel } from './CapsLabel';
 import { focusRing, label, mono, pendingNote, screenHeading, smallAction, smallPrimaryAction } from './classes';
 import { ClockIcon, ExclamationTriangleIcon, InformationCircleIcon } from './icons';
@@ -57,43 +57,6 @@ import { WalletPrompt } from './WalletPrompt';
 function formatRate(rate: number, locale: string): string {
   if (rate >= 1) return formatFiat(rate, locale);
   return new Intl.NumberFormat(locale, { maximumSignificantDigits: 6 }).format(rate);
-}
-
-/** The text of a refusal of the wallet or of Quasar, with the action that follows it. */
-function problemText(
-  labels: NovaPaymentsLabels,
-  values: { wallet: string; network: string; merchant: string },
-  problem: PaymentWalletErrorKind | null,
-  error: CheckoutError | null | undefined,
-): string | null {
-  const errorCode = error?.code;
-  if (problem === 'declined') return formatLabel(labels.pay.declined, values);
-  if (problem === 'unsupported') return formatLabel(labels.pay.unsupported, values);
-  if (problem === 'wrongNetwork') return formatLabel(labels.pay.wrongCluster, values);
-  if (problem === 'switchFailed') return formatLabel(labels.pay.switchFailed, values);
-  if (problem === 'notAuthorized') return formatLabel(labels.pay.notAuthorized, values);
-  if (problem === 'alreadyPending') return formatLabel(labels.walletPrompt.stillWaiting, values);
-  if (problem === 'sentUnconfirmed') return formatLabel(labels.pay.sentUnconfirmed, values);
-  // The payment left the wallet, or may have (a transaction that does not pay the invoice or pays another one, closed
-  // after 24 hours without a result, taken by another invoice, confirmed and not recorded yet): never "it failed" or
-  // "only the fee"
-  const leftTheWallet = problem ? null : leftTheWalletText(error, labels, values.merchant);
-  if (leftTheWallet !== null) return leftTheWallet;
-  // Only a transaction that reverted on the network spent a fee (`paymentFailedText`). A wallet that did not do what it
-  // was asked sent nothing
-  if (problem === 'failed') return formatLabel(labels.pay.walletFailed, values);
-  if (error && errorCode === 'payment_failed') return paymentFailedText(error, labels, values.network);
-  if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
-  if (errorCode === 'request_failed') return labels.pay.noAnswer;
-  // A new price was refused: the feed or the network of the method cannot be read now, or the seller set up no RPC
-  // for that network
-  if (errorCode === 'price_unavailable' || errorCode === 'price_no_rpc') return labels.method.priceUnavailable;
-  if (errorCode === 'rate_limited') return labels.method.rateLimited;
-  if (errorCode === 'method_not_found' || errorCode === 'amount_out_of_range' || errorCode === 'testnet_required') {
-    return labels.method.methodUnavailable;
-  }
-  // Refusals of the confirmation have their text under it. Anything else must not end as a press that does nothing
-  return error && !isPayerProofError(error) ? labels.error.generic : null;
 }
 
 /** The sentences of one note: a space between them, none after a full-width stop (Chinese). */
@@ -248,7 +211,8 @@ export function PayScreen() {
       : token(amounts.send);
   const left = quote.expiresAt ? Date.parse(quote.expiresAt) - now : Number.POSITIVE_INFINITY;
   const expired = left <= 0;
-  const ending = isQuoteEnding(left);
+  // A price that ends with the invoice cannot be kept any longer: nothing to offer
+  const ending = isQuoteEnding(left) && !priceEndsWithInvoice(quote.expiresAt, checkout.invoice.dueAt);
   const quoting = state.phase === 'quoting';
   const rate = checkout.invoice.amountPaid ? null : quoteRate(quote, checkout.invoice.totalMinor);
   // The rest of an underpaid invoice: what is sent is not the total of the invoice
@@ -492,7 +456,13 @@ export function PayScreen() {
               <button type="button" onClick={renew} disabled={quoting} className={smallPrimaryAction}>
                 <CapsLabel
                   label={labels.pay.keepPrice}
-                  values={{ minutes: Math.round(checkout.quoteTtlSeconds / 60) }}
+                  values={{
+                    minutes: priceLockMinutes({
+                      ttlSeconds: checkout.quoteTtlSeconds,
+                      dueAt: checkout.invoice.dueAt,
+                      now,
+                    }),
+                  }}
                 />
               </button>
             </div>

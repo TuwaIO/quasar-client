@@ -171,6 +171,8 @@ export type NovaPaymentsLabels = {
     youSendRest: string;
     /** Accessible name of the copy button (default: `Copy amount`) */
     copyAmount: string;
+    /** Accessible name of the copy button of an address (default: `Copy the address`) */
+    copyAddress: string;
     /** After copying (default: `Copied`) */
     copied: string;
     /** Under the amount: `{network}` (default: `on {network}`) */

@@ -370,6 +370,42 @@ export function walletOnConfirmStep(params: {
 }
 
 /**
+ * How many minutes a price locked now is held: the time the seller gives a price, or what is left of the invoice, as its
+ * price ends with it. Past due, while the invoice still waits for a payment sent in time, only Quasar knows.
+ *
+ * @param params - What the price is locked for.
+ * @param params.ttlSeconds - How long the seller holds a price (`quoteTtlSeconds` of the checkout).
+ * @param params.dueAt - When the invoice is due; `null` without a due date.
+ * @param params.now - The time it is now.
+ * @returns The minutes, one at least.
+ * @internal
+ */
+export function priceLockMinutes({
+  ttlSeconds,
+  dueAt,
+  now,
+}: {
+  ttlSeconds: number;
+  dueAt: string | null | undefined;
+  now: number;
+}): number {
+  const held = ttlSeconds * 1000;
+  const left = dueAt ? Date.parse(dueAt) - now : Number.NaN;
+  return Math.max(1, Math.round((left > 0 ? Math.min(held, left) : held) / 60_000));
+}
+
+/**
+ * Whether a locked price lasts as long as its invoice, so that it cannot be kept any longer.
+ *
+ * @param expiresAt - When the price ends.
+ * @param dueAt - When the invoice is due; `null` without a due date.
+ * @internal
+ */
+export function priceEndsWithInvoice(expiresAt: string | null | undefined, dueAt: string | null | undefined): boolean {
+  return Boolean(expiresAt && dueAt) && Date.parse(expiresAt!) >= Date.parse(dueAt!) - 1_000;
+}
+
+/**
  * Whether a locked price is in its last minute, when the checkout offers to keep it.
  *
  * @param ms - Time left of the price lock.

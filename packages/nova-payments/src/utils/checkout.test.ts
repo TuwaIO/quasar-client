@@ -14,6 +14,8 @@ import {
   isPaymentOnTheWay,
   isQuoteEnding,
   lockedPriceOnWallet,
+  priceEndsWithInvoice,
+  priceLockMinutes,
   screensPayingWallets,
   sentBeforeDeadline,
   shownLocale,
@@ -764,5 +766,31 @@ describe('the language a checkout shows', () => {
     expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: 'zh-CN', invoice: 'de' })).toBe('zh-CN');
     // A page that stops saying its language leaves the invoice, which holds the pick
     expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: null, invoice: 'de' })).toBe('de');
+  });
+});
+
+// "+15 min" of an invoice due in 48 seconds: its price ends with the invoice
+describe('how long a price can be held', () => {
+  const now = Date.parse('2026-11-25T07:39:30Z');
+  const at = (seconds: number) => new Date(now + seconds * 1000).toISOString();
+
+  it('is the time the seller gives it, or what is left of the invoice', () => {
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: null, now })).toBe(15);
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(3600), now })).toBe(15);
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(130), now })).toBe(2);
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(48), now })).toBe(1);
+    // Never "0 minutes"
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(20), now })).toBe(1);
+    // Past due while a payment sent in time is on its way: what the engine gives it is not known here
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(-5), now })).toBe(15);
+  });
+
+  it('is no longer than the invoice once both end together, a second of rounding apart', () => {
+    expect(priceEndsWithInvoice(at(120), at(120))).toBe(true);
+    expect(priceEndsWithInvoice(at(120), new Date(now + 120_900).toISOString())).toBe(true);
+    expect(priceEndsWithInvoice(at(120), at(122))).toBe(false);
+    expect(priceEndsWithInvoice(at(120), null)).toBe(false);
+    // A price without an end (a refund, a QR of an address) has nothing to keep either
+    expect(priceEndsWithInvoice(null, at(120))).toBe(false);
   });
 });

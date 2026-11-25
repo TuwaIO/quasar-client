@@ -94,6 +94,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     youSend: 'You send',
     youSendRest: 'You send the rest',
     copyAmount: 'Copy amount',
+    copyAddress: 'Copy the address',
     copied: 'Copied',
     onNetwork: 'on {network}',
     fiatValue: '= {amount} {currency}',

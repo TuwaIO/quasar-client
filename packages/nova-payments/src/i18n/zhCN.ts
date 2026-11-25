@@ -94,6 +94,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     youSend: '您将发送',
     youSendRest: '您将发送剩余款项',
     copyAmount: '复制金额',
+    copyAddress: '复制地址',
     copied: '已复制',
     onNetwork: '在 {network} 上',
     fiatValue: '= {amount} {currency}',

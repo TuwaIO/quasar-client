@@ -752,7 +752,7 @@ export function ConfirmStep({
           {transfer && (
             <DetailRow name={text.to}>
               {stackedValue(
-                <ChainLink hash={transfer.to} explorerUrl={flow.addressUrl(transfer.to)} labels={labels} />,
+                <ChainLink hash={transfer.to} explorerUrl={flow.addressUrl(transfer.to)} labels={labels} address />,
                 flow.refund?.unmatchedTransfer ? text.theSender : text.thePayer,
               )}
             </DetailRow>
@@ -764,6 +764,7 @@ export function ConfirmStep({
                   hash={flow.wallet.address}
                   explorerUrl={flow.addressUrl(flow.wallet.address)}
                   labels={labels}
+                  address
                 />,
                 balance && formatLabel(text.balance, { amount: balance }),
               )}

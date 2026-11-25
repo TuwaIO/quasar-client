@@ -62,7 +62,8 @@ export function CheckoutWalletIcon({ walletId, icon }: { walletId: string; icon?
  * An address or transaction in a row: short, in the same form everywhere, linked to the explorer and with a copy button, as the
  * hash of a transaction is. In a checkout the link of an address comes from the adapter of its chain.
  *
- * @param props - The address or hash; its chain, or its link when the caller has it; the labels outside a checkout.
+ * @param props - The address or hash; its chain, or its link when the caller has it; the labels outside a checkout;
+ * whether it is an address, which its chain says (the copy button is named after it).
  * @returns The link.
  * @internal
  */
@@ -71,11 +72,13 @@ export function ChainLink({
   chainId,
   explorerUrl,
   labels,
+  address = chainId !== undefined,
 }: {
   hash: string;
   chainId?: string | null;
   explorerUrl?: string;
   labels?: NovaPaymentsLabels;
+  address?: boolean;
 }) {
   const context = useOptionalCheckoutContext();
   const url =
@@ -86,7 +89,7 @@ export function ChainLink({
           ?.explorerAddressUrl?.({ chainId, address: hash })
       : undefined);
   return (
-    <TxLabels labels={labels}>
+    <TxLabels labels={labels} address={address}>
       <HashLink
         hash={hash}
         explorerUrl={url}

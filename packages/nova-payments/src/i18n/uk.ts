@@ -94,6 +94,7 @@ export const ukLabels: NovaPaymentsLabels = {
     youSend: 'Ви надсилаєте',
     youSendRest: 'Ви надсилаєте решту',
     copyAmount: 'Скопіювати суму',
+    copyAddress: 'Скопіювати адресу',
     copied: 'Скопійовано',
     onNetwork: 'у мережі {network}',
     fiatValue: '= {amount} {currency}',
