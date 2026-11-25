@@ -36,6 +36,12 @@ describe('checkout languages', () => {
     expect(await loadLabels('uk')).toBe(uk);
   });
 
+  // Somebody who speaks to their device says the word they see (WCAG 2.5.3)
+  it.each(CHECKOUT_LOCALES.map((locale) => locale.code))('names a button with the word on it in %s', async (locale) => {
+    const { pay } = await loadLabels(locale);
+    expect(pay.changeWallet.toLowerCase()).toContain(pay.change.toLowerCase());
+  });
+
   it.each(CHECKOUT_LOCALES.filter((locale) => locale.code !== 'en').map((locale) => locale.code))(
     'translates every text of %s, with the placeholders of the English one',
     async (code) => {

@@ -92,7 +92,7 @@ export const deLabels: NovaPaymentsLabels = {
   pay: {
     title: 'Zahlen',
     walletLine: '{address} · {network}',
-    change: 'Ändern',
+    change: 'Wechseln',
     changeWallet: 'Wallet wechseln',
     youSend: 'Sie senden',
     youSendRest: 'Sie senden den Restbetrag',

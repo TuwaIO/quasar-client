@@ -365,7 +365,7 @@ export function MethodScreen() {
                   <span className="novapay:text-[13px] novapay:font-semibold">{labels.method.wallet}</span>
                   <span
                     className={cn(
-                      'novapay:truncate novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
+                      'novapay:break-words novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
                       wallet && mono,
                     )}
                   >

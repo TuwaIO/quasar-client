@@ -329,7 +329,10 @@ export function PayScreen() {
               <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col">
                 <span className="novapay:text-[13px] novapay:font-semibold">{wallet.name}</span>
                 <span
-                  className={cn(mono, 'novapay:truncate novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}
+                  className={cn(
+                    mono,
+                    'novapay:break-words novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
+                  )}
                 >
                   {formatLabel(labels.pay.walletLine, {
                     address: shortAddress(wallet.address),

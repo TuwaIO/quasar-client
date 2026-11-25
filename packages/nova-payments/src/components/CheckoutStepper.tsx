@@ -34,32 +34,32 @@ export interface CheckoutStepperProps {
 export function CheckoutStepper({ steps, labels, className, stepClassName }: CheckoutStepperProps) {
   const currentIndex = steps.findIndex((step) => step.state === 'current');
   const names = steps.map((step) => labels.steps[step.key]).join('');
-  const nav = useRef<HTMLElement>(null);
+  const list = useRef<HTMLOListElement>(null);
   const measure = useRef<HTMLSpanElement>(null);
   const [compact, setCompact] = useState(false);
-  // Every name in one line, plus a mark, two gaps and the shortest line that still reads as one per step
+  // Every name in one line, plus a mark and a gap per step, and a line with a gap on both sides between two of them. Measured in the
+  // list: the box around it has a padding on the page, and the last name of a long language was cut by as much
   useEffect(() => {
-    const box = nav.current;
+    const box = list.current;
     const text = measure.current;
     if (!box || !text || typeof ResizeObserver === 'undefined') return;
-    const update = () => setCompact(text.offsetWidth + steps.length * 32 + (steps.length - 1) * 24 > box.clientWidth);
+    const update = () => setCompact(text.offsetWidth + steps.length * 26 + (steps.length - 1) * 20 > box.clientWidth);
     update();
     const observer = new ResizeObserver(update);
     observer.observe(box);
     return () => observer.disconnect();
   }, [names, steps.length]);
   return (
-    <nav
-      ref={nav}
-      aria-label={labels.steps.label}
-      className={cn('novapay:relative novapay:min-w-0 novapay:flex-1', className)}
-    >
+    <nav aria-label={labels.steps.label} className={cn('novapay:relative novapay:min-w-0 novapay:flex-1', className)}>
       <span aria-hidden className="novapay:invisible novapay:absolute novapay:h-0 novapay:w-0 novapay:overflow-hidden">
         <span ref={measure} className={cn(caps, 'novapay:whitespace-nowrap novapay:text-[11px]')}>
           {names}
         </span>
       </span>
-      <ol className="novapay:m-0 novapay:flex novapay:list-none novapay:items-center novapay:gap-1.5 novapay:p-0">
+      <ol
+        ref={list}
+        className="novapay:m-0 novapay:flex novapay:list-none novapay:items-center novapay:gap-1.5 novapay:p-0"
+      >
         {steps.map((step, i) => {
           const name = labels.steps[step.key];
           return (

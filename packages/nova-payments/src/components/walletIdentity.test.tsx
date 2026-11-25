@@ -145,6 +145,15 @@ describe('the checkout names and shows the wallet as it calls itself', () => {
     expect(iconsOf(tree)).toEqual([{ walletId: 'switchwallet', icon: ICON }]);
   });
 
+  // Beside its button on a narrow phone the network of the wallet ended in points, under a note that says it is the wrong one
+  it('with the whole of its address and network, in as many lines as they take', () => {
+    payStep();
+    const line = fixture
+      .elements(render(PayScreen, {}))
+      .find((element) => String(element.props.children ?? '').includes('0x1111…1111'))!;
+    expect(String(line.props.className)).not.toContain('truncate');
+  });
+
   it('in the prompt while the wallet asks to switch the network', () => {
     payStep();
     payment.status = 'switching';
