@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.18.0...quasar-sdk-v0.19.0) (2026-11-26)
+
+
+### Features
+
+* the checkout of the Payments passes: several Solana RPC URLs, refunds, toasts and narrow phones ([#40](https://github.com/TuwaIO/quasar-client/issues/40)) ([1d6ccbd](https://github.com/TuwaIO/quasar-client/commit/1d6ccbd2e68566720f72da526219215c2123a46c))
+
 ## [0.18.0](https://github.com/TuwaIO/quasar-client/compare/quasar-sdk-v0.17.1...quasar-sdk-v0.18.0) (2026-11-21)
 
 
