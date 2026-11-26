@@ -123,7 +123,10 @@ export function ConfirmWalletScreen() {
               <span className="novapay:flex novapay:min-w-0 novapay:flex-1 novapay:flex-col">
                 <span className="novapay:text-[13px] novapay:font-semibold">{walletName}</span>
                 <span
-                  className={cn(mono, 'novapay:truncate novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]')}
+                  className={cn(
+                    mono,
+                    'novapay:break-words novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
+                  )}
                 >
                   {/* Where the wallet is now, as on the pay step: the line below says that it is asked to switch */}
                   {formatLabel(labels.pay.walletLine, {

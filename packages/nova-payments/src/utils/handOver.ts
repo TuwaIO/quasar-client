@@ -3,7 +3,7 @@
  * and Nova Transactions shows its toast.
  */
 
-import type { Transaction } from '@tuwaio/pulsar-core';
+import type { Transaction, UpdatableTransactionFields } from '@tuwaio/pulsar-core';
 import type { PaymentInstructions } from '@tuwaio/quasar-sdk/checkout';
 
 import type { PaymentsAdapter } from '../adapters/types';
@@ -23,7 +23,7 @@ export interface SentPayment {
 
 /**
  * The part of the app's Pulsar store (`createPulsarStore` of `@tuwaio/pulsar-core`) the checkout uses: pass
- * `injectExternalPendingTxs` of the store, as `pulsar` of `NovaPaymentsProvider`.
+ * `injectExternalPendingTxs` and `updateTxParams` of the store, as `pulsar` of `NovaPaymentsProvider`.
  */
 export interface PaymentsPulsar {
   /**
@@ -33,6 +33,15 @@ export interface PaymentsPulsar {
    * @returns Resolves when their trackers started.
    */
   injectExternalPendingTxs(transactions: Transaction[]): Promise<void>;
+  /**
+   * Writes what became of a transaction of the pool; one it does not hold, or one that ended, it leaves as it is. With it
+   * the checkout ends the transactions of its payments by what Quasar knows of them, which Pulsar may not learn by itself:
+   * while the nodes of the page do not answer, a toast would go on spinning beside "Payment received".
+   *
+   * @param txKey - The transaction.
+   * @param fields - What became of it.
+   */
+  updateTxParams?(txKey: string, fields: UpdatableTransactionFields): unknown;
 }
 
 /** Pulsar's limits for the texts of a transaction. */
@@ -83,12 +92,26 @@ export async function handOverPayment({
   const description = invoice.number
     ? formatLabel(labels.pay.txDescription, { amount, invoice: invoice.number })
     : amount;
+  const title = (label: string) => clip(formatLabel(label, { merchant }), TITLE_MAX);
   const transaction = adapter.pulsarTransaction({
     ...payment,
-    title: clip(formatLabel(labels.pay.txTitle, { merchant }), TITLE_MAX),
+    title: title(labels.pay.txTitle),
     description: clip(description, DESCRIPTION_MAX),
     payload: { quasarInvoice: invoice.id },
   });
-  await pulsar.injectExternalPendingTxs([transaction]);
+  // The toast and the history name the transfer in each of its states (`[pending, success, error, replaced]`): it may
+  // go through and pay nothing, which the page tells. "Success · Payment to TUWA" stood beside "Your payment could not
+  // be confirmed" for a transfer from a wallet that had not confirmed the invoice
+  await pulsar.injectExternalPendingTxs([
+    {
+      ...transaction,
+      title: [
+        title(labels.pay.txTitlePending),
+        title(labels.pay.txTitle),
+        title(labels.pay.txTitleFailed),
+        title(labels.pay.txTitleReplaced),
+      ],
+    },
+  ]);
   return true;
 }

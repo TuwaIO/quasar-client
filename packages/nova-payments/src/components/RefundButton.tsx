@@ -3,6 +3,7 @@ import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type { RefundState, RefundStore } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useEffect, useEffectEvent, useId, useRef, useState } from 'react';
 
+import { useConnectionLocale } from '../hooks/useConnectionLocale';
 import { usePaymentsLabels } from '../hooks/usePaymentsLabels';
 import { type RefundFlow, type RefundRequest, useRefund } from '../hooks/useRefund';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
@@ -53,6 +54,17 @@ export interface RefundDialogProps {
   currency?: string;
   /** What is left to refund, with its currency, shown under the amount (`20.00 USD`). */
   refundable?: string;
+  /**
+   * The amount the amount step starts with, in the invoice currency (`4.75`): what the app suggests, such as what the
+   * payment was worth after a discount of its method. The merchant may change it. Empty by default.
+   */
+  defaultAmount?: string;
+  /**
+   * Whether everything received can still go back as it came. Quasar takes such a refund of an accepted payment only while
+   * nothing of it was refunded (`exactPossible` of a refund preview): with `false` the amount step offers an amount alone.
+   * Defaults to `true`.
+   */
+  exactPossible?: boolean;
   /** The language (a BCP 47 tag). Defaults to `en`. */
   locale?: string;
   /** Rows the app adds: to the confirm step (what the refund takes back) and to the refunded step. */
@@ -137,6 +149,8 @@ export function RefundButton({ label, className, disabled, ...props }: RefundBut
  */
 export function RefundDialog({ open, onOpenChange, locale = 'en', onRefunded, ...props }: RefundDialogProps) {
   const labels = usePaymentsLabels(locale);
+  // Nova's own connect modal speaks the language of the window while it shows
+  useConnectionLocale(open ? locale : null);
   const flow = useRefund({
     store: props.store,
     invoiceId: props.invoiceId,
@@ -185,15 +199,19 @@ export function RefundSteps({
   close,
   currency = 'USD',
   refundable,
+  defaultAmount,
+  exactPossible,
   details,
   onRecord,
-}: Pick<RefundDialogProps, 'currency' | 'refundable' | 'details' | 'onRecord'> & {
+}: Pick<RefundDialogProps, 'currency' | 'refundable' | 'defaultAmount' | 'exactPossible' | 'details' | 'onRecord'> & {
   flow: RefundFlow;
   labels: NovaPaymentsLabels;
   locale: string;
   close: () => void;
 }) {
   const text = labels.refund;
+  // Asking replaces the amount step with a wait: after a refusal the step comes back with what was chosen and typed in it
+  const [draft, setDraft] = useState<RefundDraft | null>(null);
   const values = {
     network: flow.network,
     symbol: flow.transfer?.symbol ?? flow.refund?.assetId ?? '',
@@ -211,7 +229,19 @@ export function RefundSteps({
 
   switch (flow.step) {
     case 'amount':
-      return <AmountStep flow={flow} labels={labels} locale={locale} currency={currency} refundable={refundable} />;
+      return (
+        <AmountStep
+          flow={flow}
+          labels={labels}
+          locale={locale}
+          currency={currency}
+          refundable={refundable}
+          defaultAmount={defaultAmount}
+          exactPossible={exactPossible}
+          draft={draft}
+          onDraft={setDraft}
+        />
+      );
     case 'requesting':
     case 'submitting':
       return <Waiting>{flow.step === 'requesting' ? text.requesting : text.submitting}</Waiting>;
@@ -372,7 +402,9 @@ const REFUSAL_LABELS: Readonly<Record<string, keyof NovaPaymentsLabels['refund']
   payment_unknown: 'refusedNotRefundable',
   unmatched_transfer_not_refundable: 'refusedNotRefundable',
   review_refund_must_be_whole: 'refusedWhole',
+  exact_refund_needs_whole_invoice: 'refusedExact',
   sender_blocked: 'refusedBlocked',
+  screening_unavailable: 'refusedScreening',
   refund_not_waiting: 'refusedNotWaiting',
   refund_may_have_landed: 'refusedMayHaveLanded',
   refund_from_buyer: 'failedFromBuyer',
@@ -561,8 +593,16 @@ function Waiting({ walletId, walletIcon, children }: { walletId?: string; wallet
   );
 }
 
+/** What the merchant chose and typed in the amount step. */
+interface RefundDraft {
+  mode: 'fiat_value' | 'exact_received';
+  amount: string;
+  reason: string;
+}
+
 /**
- * What to refund: an amount of the invoice currency (everything left when empty) or everything received.
+ * What to refund: an amount of the invoice currency (everything left when empty) or, where it can still go back as it
+ * came, everything received.
  *
  * @internal
  */
@@ -572,19 +612,34 @@ export function AmountStep({
   locale,
   currency,
   refundable,
+  defaultAmount = '',
+  exactPossible = true,
+  draft,
+  onDraft,
 }: {
   flow: RefundFlow;
   labels: NovaPaymentsLabels;
   locale: string;
   currency: string;
   refundable?: string;
+  defaultAmount?: string;
+  exactPossible?: boolean;
+  /** What was chosen and typed before the step went away. */
+  draft?: RefundDraft | null;
+  /** Told of each change, to keep it while the step is away. */
+  onDraft?: (draft: RefundDraft) => void;
 }) {
   const text = labels.refund;
   const amountId = useId();
   const reasonId = useId();
-  const [mode, setMode] = useState<'fiat_value' | 'exact_received'>('fiat_value');
-  const [amount, setAmount] = useState('');
-  const [reason, setReason] = useState('');
+  const [values, setValues] = useState<RefundDraft>(draft ?? { mode: 'fiat_value', amount: defaultAmount, reason: '' });
+  const change = (next: Partial<RefundDraft>) => {
+    const all = { ...values, ...next };
+    setValues(all);
+    onDraft?.(all);
+  };
+  const { amount, reason } = values;
+  const mode = exactPossible ? values.mode : 'fiat_value';
   const ask = useAskRefund(flow);
   const valid = mode === 'exact_received' || amount.trim() === '' || /^\d{1,12}(\.\d{1,2})?$/.test(amount.trim());
   const modes = [
@@ -604,22 +659,24 @@ export function AmountStep({
       <ScreenContent title={text.amountTitle}>
         {/* Locked while it looks: what is asked for is what was typed */}
         <fieldset disabled={ask.checking} className="novapay:contents">
-          <RadioCards
-            label={text.amountTitle}
-            items={[...modes]}
-            value={mode}
-            getKey={(item) => item.key}
-            onChange={(key) => setMode(key as typeof mode)}
-            className="novapay:flex novapay:flex-col novapay:gap-2"
-            itemClassName={() => 'novapay:flex novapay:flex-col novapay:gap-0.5 novapay:px-3 novapay:py-2.5'}
-          >
-            {(item) => (
-              <>
-                <span className="novapay:text-sm novapay:font-semibold">{item.title}</span>
-                <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{item.hint}</span>
-              </>
-            )}
-          </RadioCards>
+          {exactPossible && (
+            <RadioCards
+              label={text.amountTitle}
+              items={[...modes]}
+              value={mode}
+              getKey={(item) => item.key}
+              onChange={(key) => change({ mode: key as typeof mode })}
+              className="novapay:flex novapay:flex-col novapay:gap-2"
+              itemClassName={() => 'novapay:flex novapay:flex-col novapay:gap-0.5 novapay:px-3 novapay:py-2.5'}
+            >
+              {(item) => (
+                <>
+                  <span className="novapay:text-sm novapay:font-semibold">{item.title}</span>
+                  <span className="novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{item.hint}</span>
+                </>
+              )}
+            </RadioCards>
+          )}
           {mode === 'fiat_value' && (
             <label htmlFor={amountId} className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-xs">
               <span>
@@ -636,7 +693,7 @@ export function AmountStep({
                 value={amount}
                 placeholder="0.00"
                 aria-invalid={!valid || undefined}
-                onChange={(event) => setAmount(event.target.value.replace(',', '.'))}
+                onChange={(event) => change({ amount: event.target.value.replace(',', '.') })}
                 className={cn(mono, field)}
               />
               {refundable && (
@@ -652,7 +709,7 @@ export function AmountStep({
               id={reasonId}
               value={reason}
               maxLength={500}
-              onChange={(event) => setReason(event.target.value)}
+              onChange={(event) => change({ reason: event.target.value })}
               className={field}
             />
           </label>
@@ -668,10 +725,9 @@ export function AmountStep({
   );
 }
 
-/** What goes where: the confirmation before the wallet asks, or why it was not sent. @internal */
 /**
  * A value with a note under it, both to the right edge of the row. An address link takes the whole width it is given, which left
- * it out of line with the note and with the rows above: the owner saw the step as smeared.
+ * it out of line with the note and with the rows above.
  */
 function stackedValue(value: ReactNode, note?: string | null) {
   return (
@@ -682,6 +738,7 @@ function stackedValue(value: ReactNode, note?: string | null) {
   );
 }
 
+/** What goes where: the confirmation before the wallet asks, or why it was not sent. @internal */
 export function ConfirmStep({
   flow,
   labels,
@@ -732,7 +789,7 @@ export function ConfirmStep({
           {transfer && (
             <DetailRow name={text.to}>
               {stackedValue(
-                <ChainLink hash={transfer.to} explorerUrl={flow.addressUrl(transfer.to)} labels={labels} />,
+                <ChainLink hash={transfer.to} explorerUrl={flow.addressUrl(transfer.to)} labels={labels} address />,
                 flow.refund?.unmatchedTransfer ? text.theSender : text.thePayer,
               )}
             </DetailRow>
@@ -744,6 +801,7 @@ export function ConfirmStep({
                   hash={flow.wallet.address}
                   explorerUrl={flow.addressUrl(flow.wallet.address)}
                   labels={labels}
+                  address
                 />,
                 balance && formatLabel(text.balance, { amount: balance }),
               )}

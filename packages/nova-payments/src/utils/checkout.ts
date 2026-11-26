@@ -83,8 +83,12 @@ const INVOICE_FULL = 'too_many_payments';
  * @param state.payerProof - Whether the connected wallet must confirm the invoice (`payerProof` of the checkout store;
  * left out by older stores).
  * @param state.error - The store's last error: a price refused after the signature shows on the method step.
+ * @param state.paymentOnTheWay - Whether a payment this page handed over is on its way, as a current store says.
+ * @param state.invoicePaymentOnTheWay - Whether Quasar reports a payment of the invoice on its way, as a current store
+ * says.
  * @param choices - What the buyer chose on the page.
- * @returns The screen: `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
+ * @returns The screen: `confirm` also for an expired invoice while a payment of it is on its way (with an error of its
+ * own, it keeps the words of the outcome), `confirmWallet` once the buyer continued (`choices.confirmWallet`) while the wallet must
  * confirm the invoice or confirms it, and after it until the price is locked (unless it was refused), also on an
  * underpaid invoice whose rest another wallet pays, `qr` instead of `pay` when the buyer pays
  * with a QR code (or the price was locked without a payer), `replaced` for an invoice the seller
@@ -100,6 +104,8 @@ export function checkoutScreen(
     quote?: CheckoutQuote | null;
     readonly payerProof?: string;
     error?: CheckoutError | null;
+    readonly paymentOnTheWay?: boolean;
+    readonly invoicePaymentOnTheWay?: boolean;
   },
   choices: CheckoutScreenChoices = {},
 ): CheckoutScreen {
@@ -140,6 +146,12 @@ export function checkoutScreen(
       return choices.payWith === 'qr' || state.quote?.payer === null ? 'qr' : 'pay';
     case 'confirming':
       return 'confirm';
+    case 'expired':
+      // What becomes of the payment comes before the deadline: a buyer who had just paid read "This invoice has expired"
+      // until Quasar had checked it. Only what the store says of now: `txHash` alone may be of a part paid long ago
+      return !state.error && (state.paymentOnTheWay || isInvoicePaymentOnTheWay(state, state.checkout))
+        ? 'confirm'
+        : 'expired';
     case 'cancelled':
       return state.checkout?.invoice.replacedBy ? 'replaced' : 'cancelled';
     default:
@@ -355,6 +367,42 @@ export function walletOnConfirmStep(params: {
   const { open, storePayer, payer, paysRest } = params;
   if (!open || payer === storePayer) return 'keep';
   return payer && paysRest ? 'follow' : 'leave';
+}
+
+/**
+ * How many minutes a price locked now is held: the time the seller gives a price, or what is left of the invoice, as its
+ * price ends with it. Past due, while the invoice still waits for a payment sent in time, only Quasar knows.
+ *
+ * @param params - What the price is locked for.
+ * @param params.ttlSeconds - How long the seller holds a price (`quoteTtlSeconds` of the checkout).
+ * @param params.dueAt - When the invoice is due; `null` without a due date.
+ * @param params.now - The time it is now.
+ * @returns The minutes, one at least.
+ * @internal
+ */
+export function priceLockMinutes({
+  ttlSeconds,
+  dueAt,
+  now,
+}: {
+  ttlSeconds: number;
+  dueAt: string | null | undefined;
+  now: number;
+}): number {
+  const held = ttlSeconds * 1000;
+  const left = dueAt ? Date.parse(dueAt) - now : Number.NaN;
+  return Math.max(1, Math.round((left > 0 ? Math.min(held, left) : held) / 60_000));
+}
+
+/**
+ * Whether a locked price lasts as long as its invoice, so that it cannot be kept any longer.
+ *
+ * @param expiresAt - When the price ends.
+ * @param dueAt - When the invoice is due; `null` without a due date.
+ * @internal
+ */
+export function priceEndsWithInvoice(expiresAt: string | null | undefined, dueAt: string | null | undefined): boolean {
+  return Boolean(expiresAt && dueAt) && Date.parse(expiresAt!) >= Date.parse(dueAt!) - 1_000;
 }
 
 /**
@@ -584,7 +632,9 @@ export function isInvoicePaymentUnresolved(
  * that the wallet that sent it confirmed, and the page shows the result while it follows the payment),
  * `settlementRetrying` (the network confirmed it, but Quasar has not recorded it yet and settles it again daily, for 30
  * days after it learned of it: `rechecked`), `settlementFailed` (the same, without Quasar saying that it still
- * tries) and `invoiceFull` (the invoice takes no more payments: Quasar keeps the hash for the seller and follows nothing). For all but `rechecked` and `retrying` the buyer contacts the seller with the transaction hash; after
+ * tries), `invoiceFull` (the invoice takes no more payments: Quasar keeps the hash for the seller and follows nothing) and
+ * `arrivedUnverified` (coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the
+ * money arrived, the seller checks it and credits it; the buyer never pays again). For all but `rechecked` and `retrying` the buyer contacts the seller with the transaction hash; after
  * `takenElsewhere`, `settlementRetrying` and `settlementFailed` the payment left the wallet, so the checkout offers no
  * payment.
  */
@@ -599,7 +649,8 @@ export type UnconfirmedFollowUp =
   | 'takenElsewhere'
   | 'settlementRetrying'
   | 'settlementFailed'
-  | 'invoiceFull';
+  | 'invoiceFull'
+  | 'arrivedUnverified';
 
 /**
  * What to tell the buyer about a payment Quasar did not confirm, from the store's error: `payment_unconfirmed` with
@@ -633,6 +684,7 @@ export function unconfirmedFollowUp(error: CheckoutError | null | undefined): Un
   if (reason === 'submit_retrying') return 'retrying';
   if (reason === 'submit_failed') return 'notReceived';
   if (reason === INVOICE_FULL) return 'invoiceFull';
+  if (reason === 'payment_unverified') return 'arrivedUnverified';
   return rechecked === true ? 'rechecked' : 'contact';
 }
 

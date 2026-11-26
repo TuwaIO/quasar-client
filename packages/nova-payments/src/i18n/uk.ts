@@ -21,7 +21,7 @@ export const ukLabels: NovaPaymentsLabels = {
     method: 'Спосіб',
     pay: 'Оплата',
     confirm: 'Підтвердження',
-    progress: 'Крок {current} з {total}: {name}',
+    progress: 'Крок {current}/{total}: {name}',
     label: 'Кроки оплати',
   },
   language: {
@@ -94,6 +94,7 @@ export const ukLabels: NovaPaymentsLabels = {
     youSend: 'Ви надсилаєте',
     youSendRest: 'Ви надсилаєте решту',
     copyAmount: 'Скопіювати суму',
+    copyAddress: 'Скопіювати адресу',
     copied: 'Скопійовано',
     onNetwork: 'у мережі {network}',
     fiatValue: '= {amount} {currency}',
@@ -185,7 +186,10 @@ export const ukLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'Перевірка гаманця зараз недоступна.',
     retryLater: 'Повторіть за хвилину',
     noAnswer: 'Платіжний сервер не відповів. Перевірте підключення й спробуйте знову.',
-    txTitle: 'Оплата: {merchant}',
+    txTitle: 'Переказ для {merchant} підтверджено',
+    txTitlePending: 'Надсилаємо переказ для {merchant}',
+    txTitleFailed: 'Переказ для {merchant} не пройшов',
+    txTitleReplaced: 'Переказ для {merchant} замінено',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {
@@ -280,7 +284,7 @@ export const ukLabels: NovaPaymentsLabels = {
     network: 'Мережа',
     transaction: 'Транзакція',
     lastTransfer: 'Останній переказ',
-    transferOf: 'Переказ {index} з {count}',
+    transferOf: 'Переказ {index}/{count}',
     from: 'Відправник',
     canClose: 'Це вікно можна закрити: платіж триватиме, а продавець надішле квитанцію.',
     afterDeadline: 'Ваш платіж надіслано до кінця строку оплати, і він підтверджується.',
@@ -337,6 +341,8 @@ export const ukLabels: NovaPaymentsLabels = {
     reviewOverpaid:
       'Ви надіслали більше за суму рахунку. {merchant} підтвердить замовлення або поверне різницю на ваш гаманець.',
     reviewQuoteExpired: 'Платіж надійшов після того, як минув строк фіксації ціни. {merchant} прийме його або поверне.',
+    reviewUnverifiedArrival:
+      'Платіж надійшов на адресу рахунку, але підтвердити його автоматично не можна. {merchant} перевірить і зарахує його.',
     reviewNote: 'Якщо щось знадобиться, продавець зв’яжеться з вами.',
     refundedTitle: 'Кошти повернено',
     refundedText: 'Продавець {merchant} повернув кошти за цим рахунком: {amount} {currency}.',
@@ -348,7 +354,7 @@ export const ukLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} може повернути її на гаманець, з якого платили; зверніться до {merchant}.',
     expiredNote: 'Платіж, надісланий після строку, однаково надходить продавцю, і він приймає його або повертає.',
     expiredWhileConfirming:
-      'Рахунок закрився, поки ваш платіж підтверджувався. Якщо платіж надійде, його буде записано й показано продавцю {merchant}, який прийме його або поверне.',
+      'Рахунок закрився раніше, ніж підтвердився ваш платіж. Якщо платіж надійде, його буде записано й показано продавцю {merchant}, який прийме його або поверне.',
     expiredAfterQr: 'Якщо ви оплатили за QR-кодом, {merchant} прийме платіж, коли він надійде, або поверне його.',
     expiredUnconfirmed:
       'Ваш платіж поки не вдалося підтвердити. Перевірте гаманець: якщо платіж із нього пішов, Quasar перевірятиме його ще 24 години. Якщо він надійде, його буде записано й показано продавцю {merchant}, який прийме його або поверне.',
@@ -372,6 +378,8 @@ export const ukLabels: NovaPaymentsLabels = {
       'Quasar читає цей платіж тиждень від часу, коли дізнався про нього, і записує його, якщо він пройде. Перевірте гаманець; якщо кошти пішли і потрібна допомога, зверніться до {merchant} з хешем цієї транзакції.',
     unconfirmedNonceSpent:
       'Ваш гаманець використав номер цієї транзакції для іншої, яку Quasar не зміг знайти, тож кошти могли вийти з гаманця. Поки не платіть ще раз. Якщо ви її прискорили, вкажіть її хеш нижче; інакше зверніться до {merchant} із цим хешем транзакції.',
+    unconfirmedArrivedUnverified:
+      'Платіж надійшов на адресу рахунку, але підтвердити його автоматично не можна. Продавець перевірить і зарахує його. Не платіть ще раз.',
     unconfirmedSettlementFailed:
       'Мережа підтвердила ваш платіж, але Quasar його не записав. Не платіть повторно; зверніться до продавця {merchant} і вкажіть хеш транзакції.',
     unconfirmedSettlementRetrying:
@@ -431,7 +439,7 @@ export const ukLabels: NovaPaymentsLabels = {
     taxRate: 'ПДВ {rate}%',
     tax: 'ПДВ',
     total: 'Разом',
-    secured: 'Під захистом Quasar',
+    poweredBy: 'Працює на Quasar',
     help: 'Допомога',
     compact: 'Позицій: {count} · з ПДВ {tax}',
     compactOne: '{count} позиція · з ПДВ {tax}',
@@ -521,7 +529,9 @@ export const ukLabels: NovaPaymentsLabels = {
     refusedAmount: 'Сума більша за те, що лишилося повернути.',
     refusedNotRefundable: 'Цей платіж більше не можна повернути.',
     refusedWhole: 'Платіж на перевірці повертається лише повністю.',
+    refusedExact: 'Частину цього платежу вже повернено, тому решту можна повернути лише сумою.',
     refusedBlocked: 'Перевірка відповідності блокує гаманець для повернення. Надіслати на нього не можна.',
+    refusedScreening: 'Перевірка відповідності гаманця не відповіла. Нічого не надіслано. Спробуйте трохи пізніше.',
     refusedNotWaiting: 'Це повернення більше не чекає на транзакцію. Нічого не надіслано.',
     refusedMayHaveLanded: 'Попередня транзакція цього повернення могла пройти. Перевірте її, перш ніж просити знову.',
     refusedPrice: 'Зараз не вдається прочитати ціну. Спробуйте трохи пізніше.',

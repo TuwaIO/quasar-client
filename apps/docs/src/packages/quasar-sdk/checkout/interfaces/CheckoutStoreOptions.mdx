@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # CheckoutStoreOptions
 
-Defined in: [checkout/store.ts:521](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L521)
+Defined in: [checkout/store.ts:522](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L522)
 
 Options of [createCheckoutStore](?path=/docs/packages-quasar-sdk-checkout-functions-createcheckoutstore--docs).
 
@@ -14,7 +14,7 @@ Options of [createCheckoutStore](?path=/docs/packages-quasar-sdk-checkout-functi
 
 > `optional` **api?**: [`CheckoutApi`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutapi--docs)
 
-Defined in: [checkout/store.ts:537](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L537)
+Defined in: [checkout/store.ts:538](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L538)
 
 The calls to make instead of the HTTP ones of `token` and `baseUrl`, for tests and simulations (the TUWA docs
 Playground). With your own calls, pass `EventSource: null` too, or the store opens `api.url('events')`.
@@ -25,7 +25,7 @@ Playground). With your own calls, pass `EventSource: null` too, or the store ope
 
 > `optional` **baseUrl?**: `string`
 
-Defined in: [checkout/store.ts:525](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L525)
+Defined in: [checkout/store.ts:526](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L526)
 
 The Quasar API. Defaults to [BASE\_API\_URL](?path=/docs/packages-quasar-sdk-server-variables-base-api-url--docs).
 
@@ -35,7 +35,7 @@ The Quasar API. Defaults to [BASE\_API\_URL](?path=/docs/packages-quasar-sdk-ser
 
 > `optional` **EventSource?**: [`EventSourceConstructor`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-eventsourceconstructor--docs) \| `null`
 
-Defined in: [checkout/store.ts:532](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L532)
+Defined in: [checkout/store.ts:533](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L533)
 
 The `EventSource` to follow the invoice with. Defaults to the global one; `null` reads the invoice every `pollMs`
 instead.
@@ -46,15 +46,16 @@ instead.
 
 > `optional` **handOverStorage?**: [`CheckoutHandOverStorage`](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkouthandoverstorage--docs) \| `null`
 
-Defined in: [checkout/store.ts:547](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L547)
+Defined in: [checkout/store.ts:549](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L549)
 
 Where the store keeps the hand-overs of transactions the wallet sent that Quasar has not taken yet
 ([CheckoutState.submit](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#submit)), so that the next [CheckoutState.load](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#load) of the same checkout hands them over
-again. Defaults to the browser's `sessionStorage` (the tab, until it closes), or none with your own `api`; `null`
-keeps nothing. The entry is `quasar-sdk:checkoutHandOvers:<token>`: a JSON array of
-`{ txKey, from?, connectorType?, at }` (the transaction, the sending wallet and the wallet connector as passed to
-`submit`, and when the store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it.
-Failures of the storage are ignored.
+again. Defaults to the browser's `localStorage` (every tab of the browser: the link opened again in a new tab still
+hands over a transaction the closed one sent), or none with your own `api`; `null` keeps nothing. The entry is
+`quasar-sdk:checkoutHandOvers:<token>`: a JSON array of `{ txKey, from?, connectorType?, methodId?, at }` (the
+transaction, the sending wallet, the wallet connector and the payment method as passed to `submit`, and when the
+store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it. A hand-over kept for 30
+days is dropped on the next `load` without being handed over. Failures of the storage are ignored.
 
 ***
 
@@ -62,7 +63,7 @@ Failures of the storage are ignored.
 
 > `optional` **payee?**: [`PayeeOptions`](?path=/docs/packages-quasar-sdk-checkout-interfaces-payeeoptions--docs)
 
-Defined in: [checkout/store.ts:553](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L553)
+Defined in: [checkout/store.ts:555](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L555)
 
 How the payee of each quote is checked before the page shows its address ([CheckoutState.payeeCheck](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstate--docs#payeecheck)): the
 verifier of the payout record's signature (the chain adapters of `@tuwaio/nova-payments` give one) and the
@@ -74,7 +75,7 @@ merchant's own receiving addresses. The places of the address are checked even w
 
 > `optional` **pollMs?**: `number`
 
-Defined in: [checkout/store.ts:527](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L527)
+Defined in: [checkout/store.ts:528](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L528)
 
 How often to read the invoice when there is no event stream, in milliseconds. Defaults to `5000`.
 
@@ -84,6 +85,6 @@ How often to read the invoice when there is no event stream, in milliseconds. De
 
 > **token**: `string`
 
-Defined in: [checkout/store.ts:523](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L523)
+Defined in: [checkout/store.ts:524](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L524)
 
 The checkout token of the invoice (from its `checkoutToken` or the end of its `payUrl`).

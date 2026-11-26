@@ -14,6 +14,8 @@ import {
   isPaymentOnTheWay,
   isQuoteEnding,
   lockedPriceOnWallet,
+  priceEndsWithInvoice,
+  priceLockMinutes,
   screensPayingWallets,
   sentBeforeDeadline,
   shownLocale,
@@ -115,6 +117,34 @@ describe('unconfirmedFollowUp of an invoice that takes no more payments', () => 
     expect(unconfirmedFollowUp({ code: 'payment_unconfirmed', message: 'm', reason: 'too_many_payments' })).toBe(
       'invoiceFull',
     );
+  });
+});
+
+// The buyer paid an invoice past its deadline and read "This invoice has expired" until Quasar had checked the payment
+describe('checkoutScreen of an expired invoice with a payment on its way', () => {
+  it('shows the payment being confirmed: one this page handed over, or one Quasar reports', () => {
+    expect(checkoutScreen({ phase: 'expired', checkout: view(), paymentOnTheWay: true })).toBe('confirm');
+    expect(
+      checkoutScreen({
+        phase: 'expired',
+        checkout: view(),
+        paymentOnTheWay: false,
+        invoicePaymentOnTheWay: true,
+      }),
+    ).toBe('confirm');
+    // An older store: the pending payments of the checkout it read
+    expect(checkoutScreen({ phase: 'expired', checkout: view({ pendingPayments: 1 } as never) })).toBe('confirm');
+  });
+
+  it('is the outcome once nothing is on its way, and for a payment with an error of its own', () => {
+    const idle = { phase: 'expired' as const, checkout: view(), paymentOnTheWay: false, invoicePaymentOnTheWay: false };
+    expect(checkoutScreen(idle)).toBe('expired');
+    const unconfirmed = { code: 'payment_unconfirmed', message: 'm', reason: 'tx_already_used' } as never;
+    expect(checkoutScreen({ ...idle, paymentOnTheWay: true, error: unconfirmed })).toBe('expired');
+  });
+
+  it('stays the outcome of a cancelled invoice: the seller gave it up', () => {
+    expect(checkoutScreen({ phase: 'cancelled', checkout: view(), paymentOnTheWay: true })).toBe('cancelled');
   });
 });
 
@@ -565,6 +595,12 @@ describe('unconfirmedFollowUp', () => {
     );
   });
 
+  // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the money arrived, the
+  // seller checks it, and the buyer must not pay again
+  it('says the money arrived and the seller checks it, for coin that reached the invoice address unverified', () => {
+    expect(unconfirmedFollowUp(unconfirmed({ reason: 'payment_unverified' }))).toBe('arrivedUnverified');
+  });
+
   it('has nothing to say for other errors', () => {
     expect(unconfirmedFollowUp({ code: 'payment_failed', message: '', reason: 'reverted' } as never)).toBeNull();
     expect(
@@ -730,5 +766,31 @@ describe('the language a checkout shows', () => {
     expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: 'zh-CN', invoice: 'de' })).toBe('zh-CN');
     // A page that stops saying its language leaves the invoice, which holds the pick
     expect(shownLocale({ picked: { locale: 'de', page: 'uk' }, page: null, invoice: 'de' })).toBe('de');
+  });
+});
+
+// "+15 min" of an invoice due in 48 seconds: its price ends with the invoice
+describe('how long a price can be held', () => {
+  const now = Date.parse('2026-11-25T07:39:30Z');
+  const at = (seconds: number) => new Date(now + seconds * 1000).toISOString();
+
+  it('is the time the seller gives it, or what is left of the invoice', () => {
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: null, now })).toBe(15);
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(3600), now })).toBe(15);
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(130), now })).toBe(2);
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(48), now })).toBe(1);
+    // Never "0 minutes"
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(20), now })).toBe(1);
+    // Past due while a payment sent in time is on its way: what the engine gives it is not known here
+    expect(priceLockMinutes({ ttlSeconds: 900, dueAt: at(-5), now })).toBe(15);
+  });
+
+  it('is no longer than the invoice once both end together, a second of rounding apart', () => {
+    expect(priceEndsWithInvoice(at(120), at(120))).toBe(true);
+    expect(priceEndsWithInvoice(at(120), new Date(now + 120_900).toISOString())).toBe(true);
+    expect(priceEndsWithInvoice(at(120), at(122))).toBe(false);
+    expect(priceEndsWithInvoice(at(120), null)).toBe(false);
+    // A price without an end (a refund, a QR of an address) has nothing to keep either
+    expect(priceEndsWithInvoice(null, at(120))).toBe(false);
   });
 });

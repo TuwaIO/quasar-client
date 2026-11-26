@@ -120,6 +120,13 @@ export interface CheckoutInvoice {
    */
   unresolvedPayments?: number;
   /**
+   * Coin that reached the invoice's own address inside a contract's call, which Quasar cannot confirm (an exchange's
+   * batch withdrawal, a Safe), the latest first: the money arrived and the merchant checks it. The store says so with
+   * `payment_unconfirmed` and `reason` `payment_unverified`, offers no payment and never says that nothing was charged.
+   * Quasar before November 22, 2026 leaves it out.
+   */
+  unverifiedArrivals?: CheckoutUnverifiedArrival[];
+  /**
    * Every key (`txKey`, hash, the hash a sped-up transaction replaced, a relay's `userOpHash`) of the payments that
    * count as sent in time: Quasar learned of them before `dueAt` (all of them when the invoice has none); at most the
    * latest 20 transactions and 10 relays. Match the page's own keys against it instead of the browser clock. Left out
@@ -142,16 +149,23 @@ export interface CheckoutInvoice {
  * - `overpaid`: more arrived than the invoice asks for, and the seller looks at it.
  * - `quote_expired`: it arrived after its locked quote expired, in an asset whose price moved; the seller accepts or
  *   returns it.
+ * - `unverified_arrival`: a contract sent the coin to the invoice's own address inside its own call (an exchange
+ *   withdrawal, a Safe, a smart account), which Quasar cannot confirm by itself; the seller checks it and credits it.
  *
  * A transfer Quasar could tie to no invoice never puts the invoice under review: it is a rejected payment with
  * `unmatched` ({@link CheckoutRejectedPayment.unmatched}), which the seller returns to the wallet that sent it.
  */
-export type CheckoutReview = { reason: 'screening' | 'late' | 'overpaid' | 'quote_expired' };
+export type CheckoutReview = { reason: 'screening' | 'late' | 'overpaid' | 'quote_expired' | 'unverified_arrival' };
 
 /** A transfer credited to the invoice, as the checkout lists it ({@link CheckoutInvoice.payments}). */
 export interface CheckoutPayment {
   /** The transaction: its hash, or its Solana signature. */
   txKey: string;
+  /**
+   * The hash the checkout handed the payment over as, when this one replaced it (sped up in the wallet). Quasar versions
+   * before November 26, 2026 leave it out.
+   */
+  original?: string;
   /** CAIP-2 chain of the transfer; `null` when the record of the payment names none. */
   chainId: string | null;
   /** What it credited to the invoice, in base units of the token. */
@@ -203,6 +217,11 @@ export interface CheckoutRejectedPayment {
   userOpHash?: string;
   /** The transaction the checkout handed over, when this one replaced it (a payment sped up in the wallet). */
   original?: string;
+  /**
+   * What took the place of a `cancelled` payment: the transaction the wallet cancelled it with. Quasar versions before
+   * November 26, 2026 leave it out.
+   */
+  replacedBy?: string;
   /**
    * `true` when the transaction succeeded on chain without paying the invoice (`no_matching_transfer`,
    * `reference_missing`, `too_early`, `tx_already_used`, `payer_mismatch`, `payer_unconfirmed`,
@@ -631,6 +650,20 @@ export interface CheckoutStatusEvent {
   paymentCountsUntil?: string | null;
   /** Payments that may still arrive, with no time limit, as {@link CheckoutInvoice.unresolvedPayments}. */
   unresolvedPayments?: number;
+  /** As {@link CheckoutInvoice.unverifiedArrivals}. */
+  unverifiedArrivals?: CheckoutUnverifiedArrival[];
   /** The keys of the payments that count as sent in time, as {@link CheckoutInvoice.onTimeTxKeys}. */
   onTimeTxKeys?: string[];
+}
+
+/** Coin that reached an invoice's own address inside a contract's call, which Quasar cannot confirm. */
+export interface CheckoutUnverifiedArrival {
+  /** The network, CAIP-2. */
+  chainId: string;
+  /** What arrived, in base units of the coin, when Quasar could tell. */
+  amount: string | null;
+  /** The block it arrived in. */
+  blockNumber: string;
+  /** When Quasar recorded it (ISO 8601). */
+  at: string;
 }

@@ -3,8 +3,16 @@ import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'v
 import { type CheckoutApi, createCheckoutStore } from '../checkout';
 import type { CheckoutInvoice, CheckoutRejectedPayment, CheckoutStatusEvent, CheckoutView } from '../checkout/types';
 
-// Node 26 has a `sessionStorage` of its own, which would carry the hand-overs of one test into the next
-beforeEach(() => globalThis.sessionStorage?.clear?.());
+// Node 26 has Web Storage of its own, which would carry the hand-overs of one test into the next
+beforeEach(() => {
+  for (const name of ['sessionStorage', 'localStorage'] as const) {
+    try {
+      globalThis[name]?.clear?.();
+    } catch {
+      // A Node without storage of its own
+    }
+  }
+});
 
 const BASE = 'https://quasar.example';
 const fetchMock = vi.fn();
@@ -220,7 +228,7 @@ describe('createCheckoutStore', () => {
     });
     expectTypeOf<CheckoutView['amlScreening']>().toEqualTypeOf<boolean>();
     expectTypeOf<NonNullable<CheckoutInvoice['review']>['reason']>().toExtend<
-      'screening' | 'late' | 'overpaid' | 'quote_expired'
+      'screening' | 'late' | 'overpaid' | 'quote_expired' | 'unverified_arrival'
     >();
     checkout.getState().destroy();
   });
@@ -555,6 +563,10 @@ describe('createCheckoutStore', () => {
     expect(lateEvents.closed).toBe(false);
     lateEvents.emit('status', status('needs_review', 6));
     expect(late.getState()).toMatchObject({ phase: 'needs_review', invoiceStatus: 'needs_review' });
+    // The merchant accepts or returns it: followed on
+    expect(lateEvents.closed).toBe(false);
+    lateEvents.emit('status', status('paid', 7));
+    expect(late.getState()).toMatchObject({ phase: 'paid', invoiceStatus: 'paid' });
     expect(lateEvents.closed).toBe(true);
 
     // The engine took the payment it learned of before the deadline
@@ -618,7 +630,8 @@ describe('createCheckoutStore', () => {
       .mockResolvedValueOnce(json({ txKey: '0xfeed', status: 'processing' }, 202))
       .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'processing' } })))
       .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'expired' } })))
-      .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'needs_review', amountPaid: '49000000' } })));
+      .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'needs_review', amountPaid: '49000000' } })))
+      .mockResolvedValueOnce(json(view({ invoice: { ...invoice, status: 'paid', amountPaid: '49000000' } })));
     const checkout = store({ EventSource: null });
     await checkout.getState().load();
     await checkout.getState().submit({ txKey: '0xfeed' });
@@ -630,10 +643,14 @@ describe('createCheckoutStore', () => {
     await vi.advanceTimersByTimeAsync(19_000);
     expect(fetchMock).toHaveBeenCalledTimes(4);
     await vi.advanceTimersByTimeAsync(1_000);
-    expect(checkout.getState().phase).toBe('needs_review');
-    // Under review: no more reads
-    await vi.advanceTimersByTimeAsync(60_000);
+    // Under review: read as calmly, and with no end of its own, until the merchant decides
+    expect(checkout.getState()).toMatchObject({ phase: 'needs_review', followingUntil: null });
+    await vi.advanceTimersByTimeAsync(19_000);
     expect(fetchMock).toHaveBeenCalledTimes(5);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(checkout.getState().phase).toBe('paid');
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fetchMock).toHaveBeenCalledTimes(6);
   });
 
   it("never expires a confirming payment by the clock: the deadline is the engine's", async () => {
@@ -754,7 +771,8 @@ describe('createCheckoutStore', () => {
     expect(events.closed).toBe(false);
     events.emit('status', signal('needs_review', 6, { pendingPayments: 0, rejectedTxKeys: [] }));
     expect(checkout.getState()).toMatchObject({ phase: 'needs_review', paymentOnTheWay: false });
-    expect(events.closed).toBe(true);
+    expect(events.closed).toBe(false);
+    checkout.getState().destroy();
   });
 
   it('reads an expired invoice slowly and briefly when the stream ends on it, instead of reconnecting', async () => {
@@ -1110,6 +1128,22 @@ describe('createCheckoutStore: payments on their way and why they failed', () =>
     expect(checkout.getState()).toMatchObject({ phase: 'paid' });
   });
 
+  // A page ends the toast of a payment by what Quasar says of it: the checkout it read first knew of no failed one
+  it('keeps the failed payments a status event lists on the checkout', async () => {
+    answer({ rejectedTxKeys: [], rejectedPayments: [] });
+    const checkout = store();
+    await checkout.getState().load();
+    const events = FakeEventSource.instances[0];
+    const failed = [rejection('0xfeed', 'cancelled', true, { replacedBy: '0xcancel' })];
+    events.emit('status', signal('open', 5, { pendingPayments: 0, rejectedPayments: failed }));
+    const { checkout: told } = checkout.getState();
+    expect(told?.invoice.rejectedPayments).toEqual(failed);
+    // The same list again is no change: the page renders nothing anew
+    events.emit('status', signal('open', 6, { pendingPayments: 0, rejectedPayments: [{ ...failed[0] }] }));
+    expect(checkout.getState().checkout).toBe(told);
+    checkout.getState().destroy();
+  });
+
   it('goes back to the payment once the buyer checked the wallet', async () => {
     answer({ rejectedTxKeys: [], rejectedPayments: [] });
     const checkout = store();
@@ -1438,6 +1472,43 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
     expect(checkout.getState()).toMatchObject({ phase: 'paid', invoicePaymentUnresolved: false });
   });
 
+  // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the page waited for a
+  // payment and would have said that nothing was charged
+  it('says the money arrived and offers no payment when coin reached the invoice address unverified', async () => {
+    const arrival = {
+      chainId: 'eip155:84532',
+      amount: '603408156521420',
+      blockNumber: '100',
+      at: '2026-11-22T06:35:00.000Z',
+    };
+    for (const status of ['open', 'expired'] as const) {
+      fetchMock.mockReset();
+      answer({ status, pendingPayments: 0, unresolvedPayments: 0, unverifiedArrivals: [arrival] } as never);
+      const checkout = store();
+      await checkout.getState().load();
+      expect(checkout.getState()).toMatchObject({
+        phase: 'unconfirmed',
+        error: { code: 'payment_unconfirmed', reason: 'payment_unverified' },
+      });
+    }
+    // Told by the stream of an open page as well
+    fetchMock.mockReset();
+    answer({ pendingPayments: 0, unresolvedPayments: 0 });
+    const checkout = store();
+    await checkout.getState().load();
+    expect(checkout.getState().phase).not.toBe('unconfirmed');
+    FakeEventSource.instances
+      .at(-1)!
+      .emit(
+        'status',
+        signal('open', 7, { pendingPayments: 0, unresolvedPayments: 0, unverifiedArrivals: [arrival] } as never),
+      );
+    expect(checkout.getState()).toMatchObject({
+      phase: 'unconfirmed',
+      error: { code: 'payment_unconfirmed', reason: 'payment_unverified' },
+    });
+  });
+
   it('reopens on the wallet check when a stuck payment stopped counting without a rejection', async () => {
     answer({ pendingPayments: 0, unresolvedPayments: 1, rejectedPayments: [rejection('0xold', 'reverted', true)] });
     const checkout = store();
@@ -1711,7 +1782,7 @@ describe('createCheckoutStore: reloads, late hand-overs and transfers that do no
   // Quasar does not say so on the next load: without the kept hand-over the page would offer to pay again
   it('stays on the refused transaction after a reload', async () => {
     const items = new Map<string, string>();
-    vi.stubGlobal('sessionStorage', {
+    vi.stubGlobal('localStorage', {
       getItem: (key: string) => items.get(key) ?? null,
       setItem: (key: string, value: string) => void items.set(key, value),
       removeItem: (key: string) => void items.delete(key),
@@ -2194,18 +2265,46 @@ describe('createCheckoutStore: honest re-check states, moved money, hand-overs k
     blocked.getState().destroy();
   });
 
-  it("uses the tab's sessionStorage by default, and none with the app's own calls", async () => {
-    const storage = new MemoryStorage();
-    vi.stubGlobal('sessionStorage', storage);
-    answer({ pendingPayments: 0, rejectedPayments: [] }, { submit: () => Promise.reject(new TypeError('Failed')) });
-    const checkout = store();
-    await checkout.getState().load();
-    await checkout.getState().submit({ txKey: '0xfeed' });
-    expect(storage.getItem(KEY)).not.toBeNull();
-    checkout.getState().destroy();
+  // A tab closed before Quasar answered took its `sessionStorage` along: the link opened again in a new tab offered to pay
+  // once more while the money had left the wallet, and Quasar never learned of the transfer (it learns of EVM transfers
+  // to the merchant's shared address only from the page)
+  it("keeps the hand-overs in the browser's localStorage by default, for the checkout opened again in another tab, and none with the app's own calls", async () => {
+    vi.useFakeTimers({ now: Date.parse('2026-11-21T12:00:00.000Z') });
+    const browser = new MemoryStorage();
+    vi.stubGlobal('localStorage', browser);
+    vi.stubGlobal('sessionStorage', new MemoryStorage());
+    let down = true;
+    answer(
+      { pendingPayments: 0, rejectedPayments: [] },
+      {
+        submit: () =>
+          down ? Promise.reject(new TypeError('Failed')) : Promise.resolve(json({ txKey: '0xfeed', status: 'open' })),
+      },
+    );
+    const closedTab = store();
+    await closedTab.getState().load();
+    expect(await closedTab.getState().submit({ txKey: '0xfeed', connectorType: 'evm:metamask' })).toBe(false);
+    closedTab.getState().destroy();
+    expect(browser.getItem(KEY)).not.toBeNull();
+
+    // The link opened in a new tab, whose `sessionStorage` is empty: the transfer reaches Quasar all the same
+    vi.stubGlobal('sessionStorage', new MemoryStorage());
+    down = false;
+    fetchMock.mockClear();
+    const newTab = store();
+    await newTab.getState().load();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(await sent(1)).toMatchObject({
+      path: '/v1/payments/checkout/tok_1/submit',
+      body: { txKey: '0xfeed', connectorType: 'evm:metamask' },
+    });
+    expect(newTab.getState()).toMatchObject({ phase: 'confirming', paymentOnTheWay: true, txKey: '0xfeed' });
+    expect(browser.getItem(KEY)).toBeNull();
+    newTab.getState().destroy();
+    vi.useRealTimers();
 
     const simulated = new MemoryStorage();
-    vi.stubGlobal('sessionStorage', simulated);
+    vi.stubGlobal('localStorage', simulated);
     const api: CheckoutApi = {
       view: async () => view({ quote: QUOTE as never }),
       quote: async () => QUOTE as never,
@@ -2223,6 +2322,37 @@ describe('createCheckoutStore: honest re-check states, moved money, hand-overs k
     await playground.getState().submit({ txKey: '0xfeed' });
     expect(simulated.items.size).toBe(0);
     playground.getState().destroy();
+  });
+
+  // Kept in the browser, not in the tab: a checkout never opened again must not leave its hand-overs there for good
+  it('drops, without handing it over, a hand-over kept for 30 days', async () => {
+    vi.useFakeTimers({ now: Date.parse('2026-11-21T12:00:00.000Z') });
+    const day = 24 * 60 * 60_000;
+    const storage = new MemoryStorage();
+    storage.setItem(
+      KEY,
+      JSON.stringify([
+        { txKey: '0xold', at: Date.now() - 30 * day },
+        { txKey: '0xfeed', at: Date.now() - 29 * day },
+      ]),
+    );
+    answer({ pendingPayments: 0, rejectedPayments: [] }, { submit: () => Promise.reject(new TypeError('Failed')) });
+    const checkout = storeWith(storage);
+    await checkout.getState().load();
+    await vi.advanceTimersByTimeAsync(0);
+    const handedOver = await Promise.all(fetchMock.mock.calls.map((_, index) => sent(index))).then((requests) =>
+      requests.filter(({ path }) => path.endsWith('/submit')).map(({ body }) => body.txKey),
+    );
+    expect(handedOver).toEqual(['0xfeed']);
+    expect(JSON.parse(storage.getItem(KEY) ?? 'null')).toEqual([{ txKey: '0xfeed', at: Date.now() - 29 * day }]);
+    checkout.getState().destroy();
+
+    // None left young enough: the entry goes
+    storage.setItem(KEY, JSON.stringify([{ txKey: '0xold', at: Date.now() - 31 * day }]));
+    const later = storeWith(storage);
+    await later.getState().load();
+    expect(storage.getItem(KEY)).toBeNull();
+    later.getState().destroy();
   });
 
   it('never turns a settled invoice back into a confirming payment when a late hand-over is taken', async () => {
@@ -2632,7 +2762,8 @@ describe('createCheckoutStore: a hash taken by another invoice, settlement failu
     expect(events.closed).toBe(false);
     events.emit('status', signal('needs_review', 6, { pendingPayments: 0, rejectedPayments: [] }));
     expect(checkout.getState()).toMatchObject({ phase: 'needs_review', paymentOnTheWay: false });
-    expect(events.closed).toBe(true);
+    expect(events.closed).toBe(false);
+    checkout.getState().destroy();
   });
 
   it('ends the follow of a cancelled invoice whose payment failed, and stops with nothing on the way', async () => {
@@ -3071,7 +3202,7 @@ describe('createCheckoutStore: the paying wallet confirms the invoice, unmatched
     expect(reopened.getState().error?.message).toMatch(/returns it to the wallet that sent it/);
     expect(reopened.getState().error?.message).toMatch(/can still be paid/);
     expectTypeOf<NonNullable<CheckoutInvoice['review']>['reason']>().toEqualTypeOf<
-      'screening' | 'late' | 'overpaid' | 'quote_expired'
+      'screening' | 'late' | 'overpaid' | 'quote_expired' | 'unverified_arrival'
     >();
     reopened.getState().destroy();
   });
@@ -3951,6 +4082,94 @@ describe('createCheckoutStore: a page left open', () => {
       expect(FakeEventSource.instances).toHaveLength(1);
       expect(FakeEventSource.instances[0].closed).toBe(false);
       checkout.getState().destroy();
+    });
+  });
+
+  // The merchant accepts or returns a payment under review in minutes or days. The stream closed on it, so a page left
+  // open went on saying that the seller checks a payment that was accepted long ago, until it was reloaded
+  describe('an invoice under review', () => {
+    const reviewed = { ...view().invoice, status: 'needs_review' as const, amountPaid: '49000000' };
+    const decided = (status: 'paid' | 'refunded') => view({ invoice: { ...reviewed, status } });
+
+    it.each(['paid', 'refunded'] as const)(
+      'is followed on its stream until the merchant decides: %s',
+      async (status) => {
+        answerReadsWith(view({ invoice: reviewed }));
+        const checkout = store();
+        await checkout.getState().load();
+        const events = FakeEventSource.instances[0];
+        events.emit('status', signal('needs_review', 6, { pendingPayments: 0 }));
+        expect(events.closed).toBe(false);
+
+        answerReadsWith(decided(status));
+        events.emit('status', signal(status, 7, { pendingPayments: 0 }));
+        await vi.advanceTimersByTimeAsync(0);
+        expect(checkout.getState()).toMatchObject({ phase: status, checkout: { invoice: { status } } });
+        expect(events.closed).toBe(true);
+      },
+    );
+
+    it('is read calmly where Quasar ends the stream on it, and a stream is tried again after a while', async () => {
+      answerReadsWith(view({ invoice: reviewed }));
+      const checkout = store();
+      await checkout.getState().load();
+      const atLoad = reads();
+      // Quasar ends this stream at once: the browser would reconnect to it every few seconds
+      FakeEventSource.instances[0].emit('status', signal('needs_review', 6, { pendingPayments: 0 }));
+      FakeEventSource.instances[0].end();
+      expect(FakeEventSource.instances[0].closed).toBe(true);
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(reads() - atLoad).toBe(3);
+      expect(FakeEventSource.instances).toHaveLength(1);
+      await vi.advanceTimersByTimeAsync(2 * 60_000);
+      expect(FakeEventSource.instances).toHaveLength(2);
+
+      FakeEventSource.instances[1].end();
+      answerReadsWith(decided('refunded'));
+      await vi.advanceTimersByTimeAsync(20_000);
+      expect(checkout.getState().phase).toBe('refunded');
+      const after = reads();
+      await vi.advanceTimersByTimeAsync(10 * 60_000);
+      expect(reads()).toBe(after);
+      expect(FakeEventSource.instances).toHaveLength(2);
+    });
+
+    it('is read calmly without an event stream, also when it was read every second before', async () => {
+      answerReadsWith(view({ invoice: { ...reviewed, status: 'processing' } }));
+      const checkout = store({ EventSource: null });
+      await checkout.getState().load();
+      answerReadsWith(view({ invoice: reviewed }));
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(checkout.getState().phase).toBe('needs_review');
+      const before = reads();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(reads() - before).toBe(3);
+      answerReadsWith(decided('paid'));
+      await vi.advanceTimersByTimeAsync(20_000);
+      expect(checkout.getState().phase).toBe('paid');
+    });
+
+    // The window of an expired invoice is for a payment on its way, which has arrived: it must not end this follow
+    it('is followed past the window of the expired invoice its late payment came to', async () => {
+      vi.setSystemTime(new Date('2026-10-28T12:00:00.000Z'));
+      const expired = { ...view().invoice, status: 'expired' as const, dueAt: '2026-10-28T11:59:00.000Z' };
+      answerReadsWith(view({ invoice: { ...expired, pendingPayments: 1 } }));
+      const checkout = store();
+      await checkout.getState().load();
+      expect(checkout.getState().followingUntil).not.toBeNull();
+      const events = FakeEventSource.instances[0];
+      events.emit('status', signal('expired', 5, { pendingPayments: 1 }));
+      answerReadsWith(view({ invoice: { ...reviewed, dueAt: expired.dueAt } }));
+      events.emit('status', signal('needs_review', 6, { pendingPayments: 0 }));
+      expect(checkout.getState().followingUntil).toBeNull();
+      for (let i = 0; i < 4 * 60; i += 1) {
+        await vi.advanceTimersByTimeAsync(15_000);
+        events.emit('ping', {});
+      }
+      expect(events.closed).toBe(false);
+      answerReadsWith(decided('paid'));
+      events.emit('status', signal('paid', 7, { pendingPayments: 0 }));
+      expect(checkout.getState().phase).toBe('paid');
     });
   });
 

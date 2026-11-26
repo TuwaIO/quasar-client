@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # InvoicePayment
 
-Defined in: [modules/payments/types.ts:396](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L396)
+Defined in: [modules/payments/types.ts:399](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L399)
 
 A transfer credited to an invoice. An invoice paid in parts has several.
 
@@ -14,7 +14,7 @@ A transfer credited to an invoice. An invoice paid in parts has several.
 
 > **amount**: `string`
 
-Defined in: [modules/payments/types.ts:402](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L402)
+Defined in: [modules/payments/types.ts:405](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L405)
 
 What it credited, in base units of the token of `methodId`.
 
@@ -24,7 +24,7 @@ What it credited, in base units of the token of `methodId`.
 
 > **at**: `string`
 
-Defined in: [modules/payments/types.ts:410](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L410)
+Defined in: [modules/payments/types.ts:413](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L413)
 
 When it was mined, or when it was verified if the network named no time.
 
@@ -34,7 +34,7 @@ When it was mined, or when it was verified if the network named no time.
 
 > **blockRef**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:408](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L408)
+Defined in: [modules/payments/types.ts:411](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L411)
 
 Block (EVM) or slot (Solana).
 
@@ -44,7 +44,7 @@ Block (EVM) or slot (Solana).
 
 > **chainId**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:400](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L400)
+Defined in: [modules/payments/types.ts:403](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L403)
 
 CAIP-2 chain ID of the transfer.
 
@@ -54,7 +54,7 @@ CAIP-2 chain ID of the transfer.
 
 > **methodId**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:404](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L404)
+Defined in: [modules/payments/types.ts:407](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L407)
 
 ID of the payment method paid with (see `listMethods`).
 
@@ -64,7 +64,7 @@ ID of the payment method paid with (see `listMethods`).
 
 > `optional` **revertedAt?**: `string`
 
-Defined in: [modules/payments/types.ts:417](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L417)
+Defined in: [modules/payments/types.ts:420](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L420)
 
 When the network dropped or reverted the transfer after it was credited (for example in a reorg). Such a transfer
 no longer pays the invoice: show it as taken back, never as paid. The `payment.reverted` webhook announces it, and
@@ -77,7 +77,7 @@ report it.
 
 > **senders**: `string`[]
 
-Defined in: [modules/payments/types.ts:406](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L406)
+Defined in: [modules/payments/types.ts:409](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L409)
 
 The addresses that sent it.
 
@@ -87,6 +87,6 @@ The addresses that sent it.
 
 > **txHash**: `string`
 
-Defined in: [modules/payments/types.ts:398](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L398)
+Defined in: [modules/payments/types.ts:401](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L401)
 
 Transaction hash or Solana signature.

@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # InvoiceWalletConfirmation
 
-Defined in: [modules/payments/types.ts:442](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L442)
+Defined in: [modules/payments/types.ts:445](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L445)
 
 What a wallet signed to confirm an invoice. A wallet that confirms may still not be the one that pays: `InvoicePayment.senders` names who did.
 
@@ -14,7 +14,7 @@ What a wallet signed to confirm an invoice. A wallet that confirms may still not
 
 > **account**: `string`
 
-Defined in: [modules/payments/types.ts:444](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L444)
+Defined in: [modules/payments/types.ts:447](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L447)
 
 The wallet, as a CAIP-10 account on the network it signed on.
 
@@ -24,7 +24,7 @@ The wallet, as a CAIP-10 account on the network it signed on.
 
 > **at**: `string`
 
-Defined in: [modules/payments/types.ts:461](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L461)
+Defined in: [modules/payments/types.ts:464](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L464)
 
 When it was confirmed.
 
@@ -34,7 +34,7 @@ When it was confirmed.
 
 > **chainId**: `string`
 
-Defined in: [modules/payments/types.ts:451](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L451)
+Defined in: [modules/payments/types.ts:454](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L454)
 
 CAIP-2 chain ID it signed on.
 
@@ -44,7 +44,7 @@ CAIP-2 chain ID it signed on.
 
 > **domain**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:457](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L457)
+Defined in: [modules/payments/types.ts:460](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L460)
 
 The domain the message names.
 
@@ -54,7 +54,7 @@ The domain the message names.
 
 > **kind**: `string`
 
-Defined in: [modules/payments/types.ts:449](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L449)
+Defined in: [modules/payments/types.ts:452](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L452)
 
 How it confirmed: `eoa`, `eip1271` and `eip6492` signed an EIP-4361 message; `authorization` signed the EIP-3009
 authorization of a relayed payment.
@@ -65,7 +65,7 @@ authorization of a relayed payment.
 
 > **message**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:455](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L455)
+Defined in: [modules/payments/types.ts:458](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L458)
 
 The EIP-4361 message it signed; `null` for an authorization.
 
@@ -75,7 +75,7 @@ The EIP-4361 message it signed; `null` for an authorization.
 
 > **nonce**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:459](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L459)
+Defined in: [modules/payments/types.ts:462](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L462)
 
 The nonce the message names.
 
@@ -85,6 +85,6 @@ The nonce the message names.
 
 > **signature**: `string` \| `null`
 
-Defined in: [modules/payments/types.ts:453](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L453)
+Defined in: [modules/payments/types.ts:456](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/modules/payments/types.ts#L456)
 
 The signature.

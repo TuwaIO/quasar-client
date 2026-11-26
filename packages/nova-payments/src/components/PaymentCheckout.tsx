@@ -15,6 +15,7 @@ import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { useCheckoutEvents } from '../hooks/useCheckoutEvents';
 import { useCheckoutState, useCheckoutStore } from '../hooks/useCheckoutStore';
 import { useConnectedWallet } from '../hooks/useConnectedWallet';
+import { useConnectionLocale } from '../hooks/useConnectionLocale';
 import { useHandOverTime } from '../hooks/useHandOverTime';
 import { useNovaPayments } from '../hooks/useNovaPayments';
 import { useNow } from '../hooks/useNow';
@@ -42,7 +43,7 @@ import { lockPrice } from '../utils/payerProof';
 import { BuyerScreen } from './BuyerScreen';
 import { CheckoutContextProvider, type CheckoutContextValue } from './checkoutContext';
 import { CheckoutHeader, MobileSteps } from './CheckoutHeader';
-import { CheckoutSummary, CompactSummary } from './CheckoutSummary';
+import { CheckoutSummary, CompactSummary, SellerRole } from './CheckoutSummary';
 import { checkoutLayout, checkoutWidthClasses, screenHeading, screenTitle } from './classes';
 import { ConfirmScreen } from './ConfirmScreen';
 import { ConfirmWalletScreen } from './ConfirmWalletScreen';
@@ -147,16 +148,17 @@ export interface PaymentCheckoutProps {
   customization?: PaymentCheckoutCustomization;
 }
 
-/** The checkout while it loads. @internal */
+/** The checkout while it loads, in its own language: no line of English first. @internal */
 function LoadingScreen() {
-  const { labels } = useCheckoutContext();
+  const { labels, locale } = useCheckoutContext();
   return (
     <div
       role="status"
       className="novapay:flex novapay:flex-1 novapay:flex-col novapay:items-center novapay:justify-center novapay:gap-3 novapay:p-8 novapay:text-sm novapay:text-[var(--tuwa-text-secondary)]"
     >
       <QuasarLoader size={48} />
-      {labels.common.loading}
+      {/* The labels of a language come in a file of their own: a space keeps their line until then */}
+      {hasLabels(locale) ? labels.common.loading : '\u00a0'}
     </div>
   );
 }
@@ -280,6 +282,9 @@ export function CheckoutFrame({
       );
     }
   }, [dueAt, now, labels, announcements, paying]);
+  // The live region keeps an announcement only while the buyer can still pay: past the deadline, or once the payment
+  // is on its way, it held "1 minute left to pay" for a screen reader reading the page to find
+  const heard = paying && dueAt !== null && dueAt > now ? announcement : '';
 
   const page = display === 'page';
   const layout = checkoutLayout[page ? 'page' : 'default'];
@@ -326,10 +331,14 @@ export function CheckoutFrame({
               <ScreenBody />
             )}
           </div>
+          {/* A phone has no order panel, whose footer says it */}
+          <div className="novapay:px-4 novapay:pt-2 novapay:pb-3 novapay:sm:hidden">
+            <SellerRole />
+          </div>
         </GlideHeight>
       </div>
       <div role="status" aria-live="polite" className="novapay:sr-only">
-        {announcement}
+        {heard}
       </div>
       {leave && <LeaveDialog onStay={leave.onStay} onLeave={leave.onLeave} />}
     </div>
@@ -513,14 +522,17 @@ export function PaymentCheckout({
     walletTxKey: walletSent?.store === store ? walletSent.txKey : null,
   });
   usePaidCallback(state.phase, checkout?.invoice, onPaid, firstRead?.store === store && firstRead.paid);
+  // Known once the invoice is read or the page said its own: not the English the checkout starts in before that
+  const knownLocale = checkout || pageLocale ? locale : null;
   useCheckoutEvents({
     state,
     screen,
     now,
-    // Known once the invoice is read or the page said its own: not the English the checkout starts in before that
-    locale: checkout || pageLocale ? locale : null,
+    locale: knownLocale,
     handlers: customization?.handlers,
   });
+  // Nova's own connect modal speaks the language of the checkout shown: a closed window of a list says nothing
+  useConnectionLocale(display !== 'modal' || open ? knownLocale : null);
   const adapterFor = (family: PaymentFamily) => adapters?.find((adapter) => adapter.family === family);
   // Every payment of the invoice goes to the app's Pulsar store, where Nova Transactions shows its toast
   const handOver = usePaymentHandOver({ store, adapterFor, pulsar: settings.pulsar, labels, locale });

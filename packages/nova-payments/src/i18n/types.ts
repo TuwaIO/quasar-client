@@ -171,6 +171,8 @@ export type NovaPaymentsLabels = {
     youSendRest: string;
     /** Accessible name of the copy button (default: `Copy amount`) */
     copyAmount: string;
+    /** Accessible name of the copy button of an address (default: `Copy the address`) */
+    copyAddress: string;
     /** After copying (default: `Copied`) */
     copied: string;
     /** Under the amount: `{network}` (default: `on {network}`) */
@@ -364,8 +366,18 @@ export type NovaPaymentsLabels = {
     retryLater: string;
     /** No answer from Quasar */
     noAnswer: string;
-    /** Title of the payment in the app's transaction history and toasts: `{merchant}` (default: `Payment to {merchant}`) */
+    /**
+     * Title of the payment's transfer in the app's transaction history and toasts once it went through: `{merchant}`
+     * (default: `Transfer to {merchant} confirmed`). They tell the transfer, the page tells what it did to the invoice: a
+     * transfer may go through and pay nothing (a wallet that did not confirm the invoice, a payment after its deadline).
+     */
     txTitle: string;
+    /** The same while the transfer is on its way: `{merchant}` (default: `Sending a transfer to {merchant}`) */
+    txTitlePending: string;
+    /** The same when the transfer failed: `{merchant}` (default: `Transfer to {merchant} failed`) */
+    txTitleFailed: string;
+    /** The same when the wallet replaced the transfer: `{merchant}` (default: `Transfer to {merchant} replaced`) */
+    txTitleReplaced: string;
     /** Its description: `{amount}` with its symbol, `{invoice}` the invoice number (default: `{amount} · {invoice}`) */
     txDescription: string;
   };
@@ -683,6 +695,12 @@ export type NovaPaymentsLabels = {
     reviewOverpaid: string;
     /** Reason `quote_expired`: `{merchant}` (default: `The payment arrived after the price lock ran out. {merchant} accepts it or returns it.`) */
     reviewQuoteExpired: string;
+    /**
+     * Reason `unverified_arrival`, coin a contract sent to the invoice's own address inside its own call: `{merchant}`
+     * (default: `The money reached the address of this invoice, but it cannot be confirmed automatically. {merchant}
+     * checks it and credits it.`)
+     */
+    reviewUnverifiedArrival: string;
     /** Under it (default: `The seller contacts you if anything is needed.`) */
     reviewNote: string;
     /** Heading of a refunded invoice (default: `Refunded`) */
@@ -704,10 +722,10 @@ export type NovaPaymentsLabels = {
     /** Under it */
     expiredNote: string;
     /**
-     * Instead of `expiredText` and `expiredNote` when the invoice expired while the payment this page sent was still
-     * confirming: `{merchant}`. Quasar records a payment that arrives after the invoice closed for the seller to review
-     * (default: `The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to
-     * {merchant}, who accepts it or returns it.`)
+     * Under a payment on its way to an invoice that has expired (the confirm step), and instead of `expiredText` and
+     * `expiredNote` once this page no longer follows it: `{merchant}`. Quasar records a payment that arrives after the
+     * invoice closed for the seller to review (default: `The invoice closed before your payment was confirmed. If it
+     * arrives, it is recorded and shown to {merchant}, who accepts it or returns it.`)
      */
     expiredWhileConfirming: string;
     /**
@@ -782,6 +800,8 @@ export type NovaPaymentsLabels = {
      * `{merchant}` (default: `The network confirmed your payment, but Quasar has not recorded it. Do not pay again;
      * contact {merchant} with the transaction hash.`)
      */
+    /** Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the money arrived, the seller checks it and credits it, and the buyer does not pay again. */
+    unconfirmedArrivedUnverified: string;
     unconfirmedSettlementFailed: string;
     /**
      * Instead of `unconfirmedText` and `unconfirmedNote`, when the wallet used the number of the transaction for another one
@@ -893,7 +913,7 @@ export type NovaPaymentsLabels = {
     refundPolicy: string;
     /** Link to the merchant's privacy notice (default: `Privacy`) */
     privacy: string;
-    /** What Quasar is and is not; `{seller}` is the seller's name */
+    /** Who sells, what Quasar is and is not: under the order, on a phone under each step; `{seller}` is the seller's name */
     sellerRole: string;
     /** Above the countdown, which also shows while the payment confirms (default: `Payment deadline`) */
     payWithin: string;
@@ -920,8 +940,8 @@ export type NovaPaymentsLabels = {
     tax: string;
     /** Total row (default: `Total`) */
     total: string;
-    /** Under the order (default: `Secured by Quasar`) */
-    secured: string;
+    /** Under the order (default: `Powered by Quasar`) */
+    poweredBy: string;
     /** Before the seller's support email (default: `Help`) */
     help: string;
     /**
@@ -1099,8 +1119,12 @@ export type NovaPaymentsLabels = {
     refusedNotRefundable: string;
     /** Refused: `review_refund_must_be_whole` (default: `A payment under review is refunded whole.`) */
     refusedWhole: string;
+    /** Refused: `exact_refund_needs_whole_invoice` (default: `Part of this payment went back already, so the rest is refunded as an amount.`) */
+    refusedExact: string;
     /** Refused: `sender_blocked` (default: `A compliance check blocks the wallet to refund. Nothing can be sent to it.`) */
     refusedBlocked: string;
+    /** Refused: `screening_unavailable` (default: `The compliance check of the wallet did not answer. Nothing was sent. Try again in a moment.`) */
+    refusedScreening: string;
     /** Refused: `refund_not_waiting` (default: `This refund no longer waits for a transaction. Nothing was sent.`) */
     refusedNotWaiting: string;
     /** Refused: `refund_may_have_landed` (default: `An earlier transaction of this refund may have gone through. Check it before asking again.`) */

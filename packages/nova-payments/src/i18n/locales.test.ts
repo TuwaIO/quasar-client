@@ -36,6 +36,12 @@ describe('checkout languages', () => {
     expect(await loadLabels('uk')).toBe(uk);
   });
 
+  // Somebody who speaks to their device says the word they see (WCAG 2.5.3)
+  it.each(CHECKOUT_LOCALES.map((locale) => locale.code))('names a button with the word on it in %s', async (locale) => {
+    const { pay } = await loadLabels(locale);
+    expect(pay.changeWallet.toLowerCase()).toContain(pay.change.toLowerCase());
+  });
+
   it.each(CHECKOUT_LOCALES.filter((locale) => locale.code !== 'en').map((locale) => locale.code))(
     'translates every text of %s, with the placeholders of the English one',
     async (code) => {
@@ -52,6 +58,13 @@ describe('checkout languages', () => {
       expect(same / own.size).toBeLessThan(0.1);
     },
   );
+
+  // «КРОК 2 З 4» reads "2 3 4": the letter is the digit in the capitals and in the monospace font of the steps
+  it('counts steps and transfers in Ukrainian with a slash, not with the letter that reads as a three', async () => {
+    const counted = texts(await loadLabels('uk')).filter(([, text]) => /\{(?:current|index)\}/.test(text));
+    expect(counted.map(([key]) => key)).toEqual(expect.arrayContaining(['steps.progress', 'confirm.transferOf']));
+    for (const [key, text] of counted) expect(text, key).not.toMatch(/\}\s+з\s+\{/);
+  });
 
   // A payment reaches the seller's wallet directly: words that read as escrow ("held", "on hold") would say that
   // someone else keeps the money, in the keys a page overrides and in the texts a buyer reads

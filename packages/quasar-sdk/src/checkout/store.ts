@@ -8,7 +8,7 @@ import { BASE_API_URL } from '../constants';
 import { type QuasarRequestIssue, QuasarSDKError } from '../core/errors';
 import type { Buyer, InvoiceLocale, InvoiceStatus } from '../modules/payments/types';
 import { checkoutApi } from './api';
-import { browserSessionStorage } from './browserStorage';
+import { browserLocalStorage } from './browserStorage';
 import { checkQuotePayee, type PayeeCheck, type PayeeOptions } from './payee';
 import type {
   CheckoutApi,
@@ -51,7 +51,8 @@ import type {
  *   Quasar reports) is not over: the payment may still arrive, and the invoice then becomes `paid` (Quasar lets a
  *   payment it learned of before `dueAt` confirm for up to 30 minutes) or `needs_review` (a late payment, or one to a
  *   cancelled invoice, that the merchant accepts or returns). The store keeps following it while {@link CheckoutState.paymentOnTheWay} or {@link CheckoutState.invoicePaymentOnTheWay} is
- *   `true`, for a limited time.
+ *   `true`, for a limited time. An invoice in `needs_review` is followed until the merchant accepts the payment (`paid`)
+ *   or returns it (`refunded`).
  * - `blocked`: AML screening refused the payer's wallet.
  * - `error`: the checkout could not be read (a wrong or retired link, the network).
  */
@@ -455,9 +456,9 @@ export interface CheckoutState {
    * ({@link CheckoutState.payAgain} does nothing) until Quasar decides. It is not handed over again. Any other refusal
    * (4xx) is not retried either.
    *
-   * Until Quasar takes or refuses it, the hand-over is kept in the tab's `sessionStorage`
+   * Until Quasar takes or refuses it, the hand-over is kept in the browser's `localStorage`
    * ({@link CheckoutStoreOptions.handOverStorage}), so a page closed or reloaded meanwhile hands it over again on the
-   * next {@link CheckoutState.load} of the same checkout.
+   * next {@link CheckoutState.load} of the same checkout, in any tab of the browser, for 30 days.
    *
    * @param params - `txKey`: transaction hash or Solana signature; `from`: the sender, for a Solana Pay quote without
    *   a payer; `connectorType`: the wallet connector, for the record.
@@ -538,11 +539,12 @@ export interface CheckoutStoreOptions {
   /**
    * Where the store keeps the hand-overs of transactions the wallet sent that Quasar has not taken yet
    * ({@link CheckoutState.submit}), so that the next {@link CheckoutState.load} of the same checkout hands them over
-   * again. Defaults to the browser's `sessionStorage` (the tab, until it closes), or none with your own `api`; `null`
-   * keeps nothing. The entry is `quasar-sdk:checkoutHandOvers:<token>`: a JSON array of
-   * `{ txKey, from?, connectorType?, at }` (the transaction, the sending wallet and the wallet connector as passed to
-   * `submit`, and when the store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it.
-   * Failures of the storage are ignored.
+   * again. Defaults to the browser's `localStorage` (every tab of the browser: the link opened again in a new tab still
+   * hands over a transaction the closed one sent), or none with your own `api`; `null` keeps nothing. The entry is
+   * `quasar-sdk:checkoutHandOvers:<token>`: a JSON array of `{ txKey, from?, connectorType?, methodId?, at }` (the
+   * transaction, the sending wallet, the wallet connector and the payment method as passed to `submit`, and when the
+   * store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it. A hand-over kept for 30
+   * days is dropped on the next `load` without being handed over. Failures of the storage are ignored.
    */
   handOverStorage?: CheckoutHandOverStorage | null;
   /**
@@ -553,7 +555,10 @@ export interface CheckoutStoreOptions {
   payee?: PayeeOptions;
 }
 
-/** The part of the browser's `Storage` (`sessionStorage`) the checkout store keeps its hand-overs in. */
+/**
+ * The part of the browser's `Storage` the checkout and refund stores keep their hand-overs in (by default
+ * `localStorage`).
+ */
 export interface CheckoutHandOverStorage {
   /** Reads an entry; `null` when there is none. */
   getItem: (key: string) => string | null;
@@ -570,14 +575,13 @@ export type CheckoutStore = StoreApi<CheckoutState>;
 type StateChange = { -readonly [Key in keyof CheckoutState]?: CheckoutState[Key] };
 
 /** Invoice states after which the page has nothing to follow. */
-const FINAL: ReadonlySet<string> = new Set([
-  'paid',
-  'needs_review',
-  'expired',
-  'cancelled',
-  'refunded',
-  'partially_refunded',
-]);
+const FINAL: ReadonlySet<string> = new Set(['paid', 'expired', 'cancelled', 'refunded', 'partially_refunded']);
+
+/**
+ * The state of a payment the merchant has yet to accept (`paid`) or return (`refunded`), in minutes or in days: the page
+ * follows the invoice until then. It ended there, and went on saying that the seller checks a payment accepted long ago.
+ */
+const UNDER_REVIEW = 'needs_review';
 
 /** Invoice states in which a payment has settled: it is no longer on its way. */
 const SETTLED: ReadonlySet<string> = new Set(['paid', 'needs_review', 'refunded', 'partially_refunded']);
@@ -618,7 +622,7 @@ const CANCELLED_FOLLOW_MS = 35 * 60_000;
 /** How long the store follows an expired invoice without a `dueAt` for a payment on its way. */
 const LATE_FOLLOW_WITHOUT_DUE_MS = 60 * 60_000;
 
-/** How often the store reads an expired invoice whose payment is on its way, at least. */
+/** How often the store reads an expired invoice whose payment is on its way, or one under review, at least. */
 const LATE_POLL_MS = 20_000;
 
 /** How long after a stream closed for good the store tries one again. */
@@ -695,10 +699,16 @@ const REFUSED_OFFERED_AGAIN_MS = [60_000, 5 * 60_000, 15 * 60_000];
  */
 const RE_READ_REASONS: ReadonlySet<string> = new Set(['timeout', 'not_found', 'replaced', 'nonce_spent']);
 
-/** The `sessionStorage` entry of the hand-overs Quasar has not taken yet, by checkout token. */
+/** The `localStorage` entry of the hand-overs Quasar has not taken yet, by checkout token. */
 const HAND_OVERS_KEY = 'quasar-sdk:checkoutHandOvers:';
 
-/** A hand-over kept in the tab until Quasar takes or refuses it ({@link CheckoutStoreOptions.handOverStorage}). */
+/**
+ * How long a hand-over stays kept for the next {@link CheckoutState.load}: Quasar takes a transaction whenever it comes,
+ * but the browser keeps nothing for good of a checkout never opened again.
+ */
+const HAND_OVER_KEPT_MS = 30 * 24 * 60 * 60_000;
+
+/** A hand-over kept in the browser until Quasar takes or refuses it ({@link CheckoutStoreOptions.handOverStorage}). */
 interface KeptHandOver {
   txKey: string;
   from?: string;
@@ -849,7 +859,7 @@ const quoteValid = (quote: CheckoutQuote | null, now: number): quote is Checkout
  * The outcomes whose details an event does not carry: why a payment waits (`review`), the refund, the invoice that
  * replaced a cancelled one. The checkout is read again for them.
  */
-const OUTCOMES: ReadonlySet<string> = new Set([...FINAL, 'underpaid']);
+const OUTCOMES: ReadonlySet<string> = new Set([...FINAL, UNDER_REVIEW, 'underpaid']);
 
 /**
  * Where a page stays while an underpaid invoice stays as it was: paying its rest, whose quote is itself an event, or
@@ -1067,6 +1077,23 @@ const settlementFailedError = (rechecked = false): CheckoutError => ({
   ...(rechecked ? { rechecked: true as const } : {}),
 });
 
+/** The reason of coin that reached the invoice's own address inside a contract's call ({@link unverifiedArrivalError}). */
+const PAYMENT_UNVERIFIED = 'payment_unverified';
+
+/**
+ * The error of coin that reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the
+ * merchant checks it and credits it. The page offers no payment and never says that nothing was charged.
+ */
+const unverifiedArrivalError = (): CheckoutError => ({
+  code: 'payment_unconfirmed',
+  message:
+    'Money reached the address of this invoice, but Quasar cannot confirm it automatically: the merchant checks it and credits it. Do not pay again.',
+  reason: PAYMENT_UNVERIFIED,
+});
+
+/** Whether coin reached the invoice's own address unverified ({@link CheckoutInvoice.unverifiedArrivals}). */
+const unverifiedOf = (invoice: { unverifiedArrivals?: unknown[] }) => (invoice.unverifiedArrivals?.length ?? 0) > 0;
+
 /** The error of a payment whose nonce went to a transaction Quasar could not find. */
 const nonceSpentError = (txKey?: string): CheckoutError => ({
   code: 'payment_unconfirmed',
@@ -1096,7 +1123,8 @@ const keepsPaymentShut = (error: CheckoutError | null) =>
   (error.reason === TAKEN_ELSEWHERE ||
     error.reason === SETTLEMENT_FAILED ||
     error.reason === NONCE_SPENT ||
-    error.reason === INVOICE_FULL);
+    error.reason === INVOICE_FULL ||
+    error.reason === PAYMENT_UNVERIFIED);
 
 /**
  * The rejection of a payment whose nonce went to a transaction nothing found, when Quasar still lists it: it lists none once
@@ -1171,9 +1199,10 @@ function errorOf(error: unknown): CheckoutError {
  * message through the `sign` passed to {@link CheckoutState.confirmPayer}, never by itself; after `load`, an `EventSource` on its `events` route (or a `GET` every `pollMs`) until
  * the invoice reaches a final state or `destroy` is called (an invoice that expired or was cancelled while a payment
  * confirms is followed on, for a limited time, until that payment ends it as `paid` or `needs_review`), and a `GET` of the
- * checkout when an event brings an outcome. A hand-over Quasar has not taken yet is kept in the tab's `sessionStorage` under
- * `quasar-sdk:checkoutHandOvers:<token>` ({@link CheckoutStoreOptions.handOverStorage}) until Quasar takes or refuses
- * it; nothing else is stored in the browser.
+ * checkout when an event brings an outcome. `needs_review` is not final: the store follows the invoice until the merchant
+ * accepts or returns the payment. A hand-over Quasar has not taken yet is kept in the browser's `localStorage`
+ * under `quasar-sdk:checkoutHandOvers:<token>` ({@link CheckoutStoreOptions.handOverStorage}) until Quasar takes or
+ * refuses it, for 30 days at most; nothing else is stored in the browser.
  *
  * @param options - The checkout token and optional overrides.
  * @returns The store; call `load()` first.
@@ -1253,21 +1282,28 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
   const confirmedHere: KnownProof[] = [];
   /** The wallets Quasar refused a quote for until they confirm the invoice (`409 payer_proof_required`). */
   const proofDemanded = new Set<string>();
+  // The browser's, not the tab's: a tab closed before Quasar answered took its `sessionStorage` along, and the link opened
+  // again in a new tab offered to pay once more while Quasar never learned of the transfer
   const handOverStorage =
-    options.handOverStorage !== undefined ? options.handOverStorage : options.api ? null : browserSessionStorage();
+    options.handOverStorage !== undefined ? options.handOverStorage : options.api ? null : browserLocalStorage();
   const handOversKey = `${HAND_OVERS_KEY}${options.token}`;
 
-  /** The hand-overs this tab kept for the checkout; none when the entry is missing, unreadable or malformed. */
+  /**
+   * The hand-overs kept for the checkout, younger than {@link HAND_OVER_KEPT_MS}; none when the entry is missing,
+   * unreadable or malformed.
+   */
   const keptHandOvers = (): KeptHandOver[] => {
     try {
       const kept: unknown = JSON.parse(handOverStorage?.getItem(handOversKey) ?? '[]');
       if (!Array.isArray(kept)) return [];
+      const now = Date.now();
       return kept.filter(
         (entry): entry is KeptHandOver =>
           typeof entry === 'object' &&
           entry !== null &&
           typeof (entry as KeptHandOver).txKey === 'string' &&
-          typeof (entry as KeptHandOver).at === 'number',
+          typeof (entry as KeptHandOver).at === 'number' &&
+          now - (entry as KeptHandOver).at < HAND_OVER_KEPT_MS,
       );
     } catch {
       return [];
@@ -1469,9 +1505,13 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
 
     const startPolling = () => {
       if (poll || destroyed) return;
-      // An expired invoice whose payment is on its way changes once at most, and an invoice nothing is on its way to whose
-      // stream ended waits for a stream again: read them calmly. Each read is the whole checkout on the server
-      const calm = lateUntil !== null || (streamLost && !get().paymentOnTheWay && !adopted);
+      // An expired invoice whose payment is on its way changes once at most, one under review waits for the merchant, and
+      // an invoice nothing is on its way to whose stream ended waits for a stream again: read them calmly. Each read is the
+      // whole checkout on the server
+      const calm =
+        lateUntil !== null ||
+        get().invoiceStatus === UNDER_REVIEW ||
+        (streamLost && !get().paymentOnTheWay && !adopted);
       pollEvery = calm ? Math.max(pollMs, LATE_POLL_MS) : pollMs;
       let reading = false;
       const timer = setInterval(() => {
@@ -1501,6 +1541,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           });
       }, pollEvery);
       poll = timer;
+    };
+
+    /** Goes on with calm reads, where the store reads the invoice at its usual rate. */
+    const slowDown = () => {
+      if (!poll || pollEvery >= LATE_POLL_MS) return;
+      clearInterval(poll);
+      poll = null;
+      startPolling();
     };
 
     /**
@@ -1555,11 +1603,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         );
         update({ followingUntil: new Date(lateUntil).toISOString() });
       }
-      if (poll && pollEvery < LATE_POLL_MS) {
-        clearInterval(poll);
-        poll = null;
-        startPolling();
-      }
+      slowDown();
     };
 
     /**
@@ -1586,9 +1630,18 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         const onTime = new Set(event.onTimeTxKeys.map(keyOf));
         partial.paymentSentInTime = ownKeys.some((key) => onTime.has(key));
       }
-      // What arrived is in the event: the underpaid and expired outcomes show it at once
-      if (!view && checkout && event.amountPaid !== undefined && event.amountPaid !== checkout.invoice.amountPaid) {
-        partial.checkout = { ...checkout, invoice: { ...checkout.invoice, amountPaid: event.amountPaid } };
+      // What arrived is in the event: the underpaid and expired outcomes show it at once. So is what failed, for a page that
+      // ends what it shows of a payment by it: the checkout read before knows of none
+      if (!view && checkout) {
+        const { amountPaid, rejectedPayments } = checkout.invoice;
+        const told: Partial<CheckoutView['invoice']> = {
+          ...(event.amountPaid !== undefined && event.amountPaid !== amountPaid && { amountPaid: event.amountPaid }),
+          ...(event.rejectedPayments &&
+            JSON.stringify(event.rejectedPayments) !== JSON.stringify(rejectedPayments ?? []) && {
+              rejectedPayments: event.rejectedPayments,
+            }),
+        };
+        if (Object.keys(told).length > 0) partial.checkout = { ...checkout, invoice: { ...checkout.invoice, ...told } };
       }
       const followed = paymentOnTheWay || adopted;
       const pending = event.pendingPayments ?? 0;
@@ -1712,10 +1765,24 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         // What spent it is on record: the page goes back to what the invoice takes
         Object.assign(partial, { error: null }, PAYABLE.has(event.status) ? retryPhase(event.status) : {});
       }
+      // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the merchant checks
+      // it. The page offers no payment and never says that nothing was charged
+      if (
+        current &&
+        unverifiedOf(event) &&
+        (PAYABLE.has(event.status) || CLOSED.has(event.status)) &&
+        !(partial.paymentOnTheWay ?? paymentOnTheWay)
+      ) {
+        Object.assign(partial, { error: unverifiedArrivalError(), phase: 'unconfirmed' });
+      }
       update(partial);
 
       if (!following()) {
         stopWatching();
+      } else if (event.status === UNDER_REVIEW) {
+        // The window of an expired or cancelled invoice was for the payment that has now arrived
+        stopLate();
+        slowDown();
       } else if (CLOSED.has(event.status)) {
         // Expired or cancelled while a payment is on its way: it may still end it (paid in the grace, or under review)
         streamFollows = (event.pendingPayments ?? 0) > 0;
@@ -1788,20 +1855,21 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       });
       events.onerror = () => {
         if (source !== events) return;
-        // Closed for good (the browser gave up reconnecting), or ended on an expired or cancelled invoice that Quasar
-        // does not follow (the browser would reconnect every few seconds to a stream that ends at once): read it
+        // Closed for good (the browser gave up reconnecting), or ended on an invoice that Quasar does not follow (the
+        // browser would reconnect every few seconds to a stream that ends at once): read it. An expired or cancelled one
+        // says whether it does; on one under review some versions of Quasar end the stream
         const { invoiceStatus, paymentOnTheWay } = get();
         const onItsWay = paymentOnTheWay || adopted;
-        const closedForGood = events.readyState === 2;
-        if (closedForGood || (CLOSED.has(invoiceStatus ?? '') && onItsWay && !streamFollows)) {
+        const lost = events.readyState === 2 || invoiceStatus === UNDER_REVIEW;
+        if (lost || (CLOSED.has(invoiceStatus ?? '') && onItsWay && !streamFollows)) {
           events.close();
           source = null;
           if (silence) clearTimeout(silence);
           silence = null;
-          streamLost = closedForGood;
+          streamLost = lost;
           startPolling();
           // Streams end every few minutes, and one deploy would move every open page to reads for the rest of its life
-          if (closedForGood && !streamRetry) {
+          if (lost && !streamRetry) {
             streamRetry = setTimeout(() => {
               streamRetry = null;
               if (destroyed || !poll || lateUntil !== null) return;
@@ -2033,12 +2101,14 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
     };
 
     /**
-     * Hands over again, oldest first, the transactions this tab kept that Quasar has not taken (the page closed or
-     * reloaded before it answered); the ones Quasar lists already (rejected, or among the payments sent in time) are
-     * forgotten.
+     * Hands over again, oldest first, the transactions kept for the checkout that Quasar has not taken (the page closed
+     * or reloaded before it answered, in this tab or another); the ones Quasar lists already (rejected, or among the
+     * payments sent in time) are forgotten, and so are the ones kept too long ({@link HAND_OVER_KEPT_MS}).
      */
     const resendKept = (view: CheckoutView) => {
       const kept = keptHandOvers();
+      // Rewritten without what was kept too long or cannot be read
+      keepHandOvers(kept);
       if (kept.length === 0) return;
       const listed = new Set([...(view.invoice.rejectedTxKeys ?? []), ...(view.invoice.onTimeTxKeys ?? [])].map(keyOf));
       const unsent = kept.filter(({ txKey }) => !listed.has(keyOf(txKey))).sort((a, b) => a.at - b.at);
@@ -2098,7 +2168,13 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
           if (!onItsWay && !get().paymentOnTheWay && reopenable) {
             // No plain payment while the latest one may still arrive or moved money without a final word
             let check = false;
-            if (nonceStillOpen) {
+            if (unverifiedOf(invoice)) {
+              // Coin reached the invoice's own address inside a contract's call, which Quasar cannot confirm: the merchant
+              // checks it. No payment, and never "nothing was charged", also on an expired invoice
+              error = unverifiedArrivalError();
+              check = true;
+              if (CLOSED.has(invoice.status)) phase = 'unconfirmed';
+            } else if (nonceStillOpen) {
               error = endedError(nonceStillOpen);
               check = true;
             } else if (latest && !latest.final && !resolvedSince(latest, invoice)) {

@@ -95,6 +95,7 @@ export const esLabels: NovaPaymentsLabels = {
     youSend: 'Envías',
     youSendRest: 'Envías el resto',
     copyAmount: 'Copiar el importe',
+    copyAddress: 'Copiar la dirección',
     copied: 'Copiado',
     onNetwork: 'en {network}',
     fiatValue: '= {amount} {currency}',
@@ -186,7 +187,10 @@ export const esLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'La comprobación de la billetera no está disponible ahora mismo.',
     retryLater: 'Reintentar en un minuto',
     noAnswer: 'El servidor de pagos no respondió. Comprueba tu conexión y vuelve a intentarlo.',
-    txTitle: 'Pago a {merchant}',
+    txTitle: 'Transferencia a {merchant} confirmada',
+    txTitlePending: 'Enviando una transferencia a {merchant}',
+    txTitleFailed: 'La transferencia a {merchant} falló',
+    txTitleReplaced: 'Transferencia a {merchant} reemplazada',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {
@@ -340,6 +344,8 @@ export const esLabels: NovaPaymentsLabels = {
     reviewOverpaid:
       'Enviaste más de lo que indica la factura. {merchant} confirma el pedido o te devuelve la diferencia a tu billetera.',
     reviewQuoteExpired: 'El pago llegó después de que venciera el precio fijado. {merchant} lo acepta o lo devuelve.',
+    reviewUnverifiedArrival:
+      'El dinero llegó a la dirección de esta factura, pero no se puede confirmar automáticamente. {merchant} lo revisará y lo acreditará.',
     reviewNote: 'El vendedor se pondrá en contacto contigo si hace falta algo.',
     refundedTitle: 'Reembolsado',
     refundedText: '{merchant} reembolsó esta factura: {amount} {currency}.',
@@ -351,7 +357,7 @@ export const esLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} puede reembolsarla a la billetera que pagó; contacta con {merchant}.',
     expiredNote: 'Un pago enviado después del plazo llega igualmente al vendedor, que lo acepta o lo reembolsa.',
     expiredWhileConfirming:
-      'La factura se cerró mientras se confirmaba tu pago. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
+      'La factura se cerró antes de que se confirmara tu pago. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
     expiredAfterQr: 'Si pagaste con el código QR, {merchant} acepta el pago cuando llegue o lo devuelve.',
     expiredUnconfirmed:
       'Aún no se pudo confirmar tu pago. Revisa tu billetera: si el pago salió de ella, Quasar lo vuelve a comprobar durante 24 horas. Si llega, se registra y se muestra a {merchant}, que lo acepta o lo devuelve.',
@@ -375,6 +381,8 @@ export const esLabels: NovaPaymentsLabels = {
       'Quasar lee este pago durante una semana desde que lo conoció y lo registra si se confirma. Revisa tu billetera; si salió y necesitas ayuda, contacta con {merchant} e indica el hash de esta transacción.',
     unconfirmedNonceSpent:
       'Tu billetera usó el número de esta transacción para otra que Quasar no pudo encontrar, así que puede haber salido dinero de tu billetera. No pagues de nuevo por ahora. Si la aceleraste, indica su hash abajo; si no, contacta a {merchant} con este hash de transacción.',
+    unconfirmedArrivedUnverified:
+      'El dinero llegó a la dirección de esta factura, pero no se puede confirmar automáticamente. El vendedor lo revisará y lo acreditará. No vuelvas a pagar.',
     unconfirmedSettlementFailed:
       'La red confirmó tu pago, pero Quasar no lo ha registrado. No vuelvas a pagar; contacta con {merchant} e indica el hash de la transacción.',
     unconfirmedSettlementRetrying:
@@ -434,7 +442,7 @@ export const esLabels: NovaPaymentsLabels = {
     taxRate: 'IVA {rate} %',
     tax: 'IVA',
     total: 'Total',
-    secured: 'Protegido por Quasar',
+    poweredBy: 'Con tecnología de Quasar',
     help: 'Ayuda',
     compact: '{count} artículos · IVA incl. {tax}',
     compactOne: '{count} artículo · IVA incl. {tax}',
@@ -525,7 +533,10 @@ export const esLabels: NovaPaymentsLabels = {
     refusedAmount: 'El importe supera lo que queda por reembolsar.',
     refusedNotRefundable: 'Este pago ya no se puede reembolsar.',
     refusedWhole: 'Un pago en revisión se reembolsa entero.',
+    refusedExact: 'Ya se devolvió una parte de este pago, así que el resto se reembolsa indicando un importe.',
     refusedBlocked: 'Un control de cumplimiento bloquea la billetera a reembolsar. No se le puede enviar nada.',
+    refusedScreening:
+      'El control de cumplimiento de la billetera no respondió. No se envió nada. Inténtalo de nuevo en un momento.',
     refusedNotWaiting: 'Este reembolso ya no espera una transacción. No se envió nada.',
     refusedMayHaveLanded:
       'Una transacción anterior de este reembolso puede haberse completado. Compruébala antes de volver a pedirlo.',

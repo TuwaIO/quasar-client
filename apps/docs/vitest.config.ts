@@ -13,7 +13,11 @@ export default defineConfig({
   test: {
     projects: [
       {
-        test: { name: 'unit', environment: 'node', include: ['i18n/**/*.test.ts', 'typedoc/**/*.test.ts'] },
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['i18n/**/*.test.ts', 'typedoc/**/*.test.ts', '.storybook/**/*.test.ts'],
+        },
       },
       {
         extends: true,

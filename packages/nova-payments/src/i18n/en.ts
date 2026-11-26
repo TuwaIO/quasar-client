@@ -94,6 +94,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     youSend: 'You send',
     youSendRest: 'You send the rest',
     copyAmount: 'Copy amount',
+    copyAddress: 'Copy the address',
     copied: 'Copied',
     onNetwork: 'on {network}',
     fiatValue: '= {amount} {currency}',
@@ -184,7 +185,10 @@ export const defaultLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'The wallet check is unavailable right now.',
     retryLater: 'Try again in a minute',
     noAnswer: 'The payment server did not answer. Check your connection and try again.',
-    txTitle: 'Payment to {merchant}',
+    txTitle: 'Transfer to {merchant} confirmed',
+    txTitlePending: 'Sending a transfer to {merchant}',
+    txTitleFailed: 'Transfer to {merchant} failed',
+    txTitleReplaced: 'Transfer to {merchant} replaced',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {
@@ -333,6 +337,8 @@ export const defaultLabels: NovaPaymentsLabels = {
     reviewOverpaid:
       'You sent more than the invoice. {merchant} confirms the order or returns the difference to your wallet.',
     reviewQuoteExpired: 'The payment arrived after the price lock ran out. {merchant} accepts it or returns it.',
+    reviewUnverifiedArrival:
+      'The money reached the address of this invoice, but it cannot be confirmed automatically. {merchant} checks it and credits it.',
     reviewNote: 'The seller contacts you if anything is needed.',
     refundedTitle: 'Refunded',
     refundedText: '{merchant} refunded this invoice: {amount} {currency}.',
@@ -344,7 +350,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} can refund it to the wallet that paid; contact {merchant}.',
     expiredNote: 'A payment sent after the deadline still reaches the seller, who accepts it or refunds it.',
     expiredWhileConfirming:
-      'The invoice closed while your payment was confirming. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
+      'The invoice closed before your payment was confirmed. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
     expiredAfterQr: 'If you paid with the QR code, {merchant} accepts the payment when it arrives or returns it.',
     expiredUnconfirmed:
       'Your payment could not be confirmed yet. Check your wallet: if the payment left it, Quasar checks it again for 24 hours. If it arrives, it is recorded and shown to {merchant}, who accepts it or returns it.',
@@ -368,6 +374,8 @@ export const defaultLabels: NovaPaymentsLabels = {
       'Quasar reads this payment for a week after it learned of it, and records it if it goes through. Check your wallet; if it left and you need help, contact {merchant} with this transaction hash.',
     unconfirmedNonceSpent:
       'Your wallet used the number of this transaction for another one, which Quasar could not find, so money may have left your wallet. Do not pay again yet. If you sped it up, name its hash below; otherwise contact {merchant} with this transaction hash.',
+    unconfirmedArrivedUnverified:
+      'The money reached the address of this invoice, but it cannot be confirmed automatically. The seller checks it and credits it. Do not pay again.',
     unconfirmedSettlementFailed:
       'The network confirmed your payment, but Quasar has not recorded it. Do not pay again; contact {merchant} with the transaction hash.',
     unconfirmedSettlementRetrying:
@@ -426,7 +434,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     taxRate: 'VAT {rate}%',
     tax: 'VAT',
     total: 'Total',
-    secured: 'Secured by Quasar',
+    poweredBy: 'Powered by Quasar',
     help: 'Help',
     compact: '{count} items · incl. VAT {tax}',
     compactOne: '{count} item · incl. VAT {tax}',
@@ -515,7 +523,9 @@ export const defaultLabels: NovaPaymentsLabels = {
     refusedAmount: 'The amount is more than what is left to refund.',
     refusedNotRefundable: 'This payment cannot be refunded any more.',
     refusedWhole: 'A payment under review is refunded whole.',
+    refusedExact: 'Part of this payment went back already, so the rest is refunded as an amount.',
     refusedBlocked: 'A compliance check blocks the wallet to refund. Nothing can be sent to it.',
+    refusedScreening: 'The compliance check of the wallet did not answer. Nothing was sent. Try again in a moment.',
     refusedNotWaiting: 'This refund no longer waits for a transaction. Nothing was sent.',
     refusedMayHaveLanded: 'An earlier transaction of this refund may have gone through. Check it before asking again.',
     refusedPrice: 'The price cannot be read right now. Try again in a moment.',

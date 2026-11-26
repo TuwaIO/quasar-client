@@ -94,6 +94,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     youSend: '您将发送',
     youSendRest: '您将发送剩余款项',
     copyAmount: '复制金额',
+    copyAddress: '复制地址',
     copied: '已复制',
     onNetwork: '在 {network} 上',
     fiatValue: '= {amount} {currency}',
@@ -178,7 +179,10 @@ export const zhCNLabels: NovaPaymentsLabels = {
     screeningUnavailable: '钱包检查暂时不可用。',
     retryLater: '请一分钟后重试',
     noAnswer: '付款服务器没有响应。请检查网络连接后重试。',
-    txTitle: '向 {merchant} 付款',
+    txTitle: '向 {merchant} 的转账已确认',
+    txTitlePending: '正在向 {merchant} 转账',
+    txTitleFailed: '向 {merchant} 的转账失败',
+    txTitleReplaced: '向 {merchant} 的转账已被替换',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {
@@ -316,6 +320,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     reviewLate: '付款在发票关闭后才到账。{merchant} 会接受或退回这笔款项。',
     reviewOverpaid: '您发送的金额超过了发票金额。{merchant} 会确认订单，或将差额退回您的钱包。',
     reviewQuoteExpired: '付款在价格锁定到期后才到账。{merchant} 会接受或退回这笔款项。',
+    reviewUnverifiedArrival: '款项已到达此账单的地址，但无法自动确认。{merchant} 会核实并入账。',
     reviewNote: '如有需要，卖方会与您联系。',
     refundedTitle: '已退款',
     refundedText: '{merchant} 已退还此发票的款项：{amount} {currency}。',
@@ -327,7 +332,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} 可以将这笔款项退回付款钱包；请联系 {merchant}。',
     expiredNote: '截止时间之后发送的付款仍会到达卖方，由卖方接受或退款。',
     expiredWhileConfirming:
-      '您的付款确认期间发票已关闭。如果付款到账，将被记录并显示给 {merchant}，由其接受或退回这笔款项。',
+      '发票在您的付款确认之前已关闭。如果付款到账，将被记录并显示给 {merchant}，由其接受或退回这笔款项。',
     expiredAfterQr: '如果您已通过二维码付款，{merchant} 会在款项到账后接受或退回这笔款项。',
     expiredUnconfirmed:
       '暂时无法确认您的付款。请检查您的钱包：如果款项已从钱包转出，Quasar 会在 24 小时内再次核查。如果付款到账，将被记录并显示给 {merchant}，由其接受或退回这笔款项。',
@@ -347,6 +352,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
       '自得知这笔付款起，Quasar 会读取一周，如果它成功就会记录。请检查您的钱包；如果款项已转出且需要帮助，请提供此交易哈希联系 {merchant}。',
     unconfirmedNonceSpent:
       '您的钱包把这笔交易的编号用于了另一笔交易，Quasar 无法找到它，因此款项可能已离开您的钱包。暂时不要再次付款。如果您加速了它，请在下方填写其哈希；否则请携带此交易哈希联系 {merchant}。',
+    unconfirmedArrivedUnverified: '款项已到达此账单的地址，但无法自动确认。卖家会核实并入账。请勿再次付款。',
     unconfirmedSettlementFailed: '网络已确认您的付款，但 Quasar 未记录。请勿再次付款；请提供交易哈希联系 {merchant}。',
     unconfirmedSettlementRetrying:
       '网络已确认您的付款，但 Quasar 尚未记录。Quasar 会在得知这笔付款后的 30 天内每天重试。请勿再次付款；请提供交易哈希联系 {merchant}。',
@@ -401,7 +407,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     taxRate: '增值税 {rate}%',
     tax: '增值税',
     total: '合计',
-    secured: '由 Quasar 提供保障',
+    poweredBy: '由 Quasar 提供技术支持',
     help: '帮助',
     compact: '{count} 件商品 · 含增值税 {tax}',
     compactOne: '{count} 件商品 · 含增值税 {tax}',
@@ -486,7 +492,9 @@ export const zhCNLabels: NovaPaymentsLabels = {
     refusedAmount: '金额超过了可退还的余额。',
     refusedNotRefundable: '此付款已无法退款。',
     refusedWhole: '待审核的付款只能全额退款。',
+    refusedExact: '此付款已退还一部分，其余部分只能按金额退还。',
     refusedBlocked: '合规检查已阻止要退款的钱包，无法向其发送。',
+    refusedScreening: '钱包的合规检查没有响应。未发送任何内容。请稍后重试。',
     refusedNotWaiting: '此退款已不再等待交易。未发送任何内容。',
     refusedMayHaveLanded: '此退款之前的交易可能已成功。请先核实，再重新申请。',
     refusedPrice: '目前无法读取价格。请稍后重试。',

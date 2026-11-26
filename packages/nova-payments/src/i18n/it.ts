@@ -95,6 +95,7 @@ export const itLabels: NovaPaymentsLabels = {
     youSend: 'Invii',
     youSendRest: 'Invii il resto',
     copyAmount: "Copia l'importo",
+    copyAddress: "Copia l'indirizzo",
     copied: 'Copiato',
     onNetwork: 'su {network}',
     fiatValue: '= {amount} {currency}',
@@ -188,7 +189,10 @@ export const itLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'Il controllo del wallet non è disponibile al momento.',
     retryLater: 'Riprova tra un minuto',
     noAnswer: 'Il server dei pagamenti non ha risposto. Controlla la connessione e riprova.',
-    txTitle: 'Pagamento a {merchant}',
+    txTitle: 'Trasferimento a {merchant} confermato',
+    txTitlePending: 'Invio di un trasferimento a {merchant}',
+    txTitleFailed: 'Trasferimento a {merchant} non riuscito',
+    txTitleReplaced: 'Trasferimento a {merchant} sostituito',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {
@@ -345,6 +349,8 @@ export const itLabels: NovaPaymentsLabels = {
       "Hai inviato più dell'importo della fattura. {merchant} conferma l'ordine o restituisce la differenza al tuo wallet.",
     reviewQuoteExpired:
       'Il pagamento è arrivato dopo la scadenza del blocco del prezzo. {merchant} lo accetta o lo restituisce.',
+    reviewUnverifiedArrival:
+      "Il denaro è arrivato all'indirizzo di questa fattura, ma non si può confermare automaticamente. {merchant} lo verificherà e lo accrediterà.",
     reviewNote: 'Il venditore ti contatterà se serve qualcosa.',
     refundedTitle: 'Rimborsato',
     refundedText: '{merchant} ha rimborsato questa fattura: {amount} {currency}.',
@@ -356,7 +362,7 @@ export const itLabels: NovaPaymentsLabels = {
     expiredPartRefund: '{merchant} può rimborsarla al wallet che ha pagato; contatta {merchant}.',
     expiredNote: 'Un pagamento inviato dopo la scadenza arriva comunque al venditore, che lo accetta o lo rimborsa.',
     expiredWhileConfirming:
-      'La fattura si è chiusa mentre il pagamento veniva confermato. Se arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.',
+      'La fattura si è chiusa prima che il pagamento fosse confermato. Se arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.',
     expiredAfterQr: 'Se hai pagato con il codice QR, {merchant} accetta il pagamento quando arriva o lo restituisce.',
     expiredUnconfirmed:
       'Non è stato ancora possibile confermare il pagamento. Controlla il wallet: se il pagamento è partito, Quasar lo ricontrolla per 24 ore. Se arriva, viene registrato e mostrato a {merchant}, che lo accetta o lo restituisce.',
@@ -380,6 +386,8 @@ export const itLabels: NovaPaymentsLabels = {
       'Quasar legge questo pagamento per una settimana da quando ne è venuto a conoscenza e lo registra se va a buon fine. Controlla il tuo wallet; se è uscito e hai bisogno di aiuto, contatta {merchant} indicando l’hash di questa transazione.',
     unconfirmedNonceSpent:
       'Il tuo wallet ha usato il numero di questa transazione per un’altra che Quasar non è riuscito a trovare, quindi potrebbe essere uscito denaro dal wallet. Per ora non pagare di nuovo. Se l’hai accelerata, indica il suo hash qui sotto; altrimenti contatta {merchant} con questo hash di transazione.',
+    unconfirmedArrivedUnverified:
+      "Il denaro è arrivato all'indirizzo di questa fattura, ma non si può confermare automaticamente. Il venditore lo verificherà e lo accrediterà. Non pagare di nuovo.",
     unconfirmedSettlementFailed:
       "La rete ha confermato il tuo pagamento, ma Quasar non l'ha registrato. Non pagare di nuovo; contatta {merchant} indicando l'hash della transazione.",
     unconfirmedSettlementRetrying:
@@ -439,7 +447,7 @@ export const itLabels: NovaPaymentsLabels = {
     taxRate: 'IVA {rate}%',
     tax: 'IVA',
     total: 'Totale',
-    secured: 'Protetto da Quasar',
+    poweredBy: 'Con tecnologia Quasar',
     help: 'Aiuto',
     compact: '{count} articoli · IVA incl. {tax}',
     compactOne: '{count} articolo · IVA incl. {tax}',
@@ -532,7 +540,10 @@ export const itLabels: NovaPaymentsLabels = {
     refusedAmount: "L'importo supera quanto resta da rimborsare.",
     refusedNotRefundable: 'Questo pagamento non può più essere rimborsato.',
     refusedWhole: 'Un pagamento in revisione si rimborsa per intero.',
+    refusedExact: 'Una parte di questo pagamento è già stata restituita: il resto si rimborsa indicando un importo.',
     refusedBlocked: 'Un controllo di conformità blocca il wallet da rimborsare. Non è possibile inviargli nulla.',
+    refusedScreening:
+      'Il controllo di conformità del wallet non ha risposto. Non è stato inviato nulla. Riprova tra poco.',
     refusedNotWaiting: 'Questo rimborso non attende più una transazione. Non è stato inviato nulla.',
     refusedMayHaveLanded:
       'Una transazione precedente di questo rimborso potrebbe essere andata a buon fine. Controllala prima di richiederlo di nuovo.',

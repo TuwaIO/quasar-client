@@ -170,6 +170,30 @@ describe('the transfers of a paid invoice', () => {
     ]);
   });
 
+  // The owner's pass of the stand, an invoice paid in two transfers: each amount stood at the right edge, the link of
+  // its transaction under it at the left (the link is a block of its own), unlike the sender's link at the right
+  it('keeps the transaction of each transfer at the right edge, under its amount, as the sender', () => {
+    paid('page', 0);
+    const checkout = {
+      ...ctx.checkout,
+      invoice: { ...ctx.checkout?.invoice, payments: parts },
+    } as typeof fixture.checkout;
+    ctx = { ...ctx, checkout, state: { ...ctx.state, checkout, quote: rest, txHash: SECOND } as never };
+    const rows = (fixture.ofType(render(PaidScreen, {}), DetailRow) as ReactElement<Props>[]).filter((row) =>
+      fixture.text(row.props.name).startsWith('Transfer'),
+    );
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      const column = row.props.children as ReactElement<{ className?: string; children: unknown }>;
+      expect(column.props.className).toContain('novapay:items-end');
+      expect(column.props.className).toContain('novapay:flex-col');
+      const hashes = fixture
+        .elements(column.props.children as never)
+        .filter((element) => typeof element.props.hash === 'string');
+      expect(hashes).toHaveLength(1);
+    }
+  });
+
   it('is the one row it was, for an invoice paid by one transfer', () => {
     expect(transactionRows([parts[0]], { txHash: FIRST })).toEqual([{ name: 'Transaction', shows: '', hash: FIRST }]);
   });

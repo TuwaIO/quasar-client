@@ -92,11 +92,12 @@ export const deLabels: NovaPaymentsLabels = {
   pay: {
     title: 'Zahlen',
     walletLine: '{address} · {network}',
-    change: 'Ändern',
+    change: 'Wechseln',
     changeWallet: 'Wallet wechseln',
     youSend: 'Sie senden',
     youSendRest: 'Sie senden den Restbetrag',
     copyAmount: 'Betrag kopieren',
+    copyAddress: 'Adresse kopieren',
     copied: 'Kopiert',
     onNetwork: 'im Netzwerk {network}',
     fiatValue: '= {amount} {currency}',
@@ -193,7 +194,10 @@ export const deLabels: NovaPaymentsLabels = {
     screeningUnavailable: 'Die Wallet-Prüfung ist derzeit nicht verfügbar.',
     retryLater: 'In einer Minute erneut versuchen',
     noAnswer: 'Der Zahlungsserver hat nicht geantwortet. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
-    txTitle: 'Zahlung an {merchant}',
+    txTitle: 'Überweisung an {merchant} bestätigt',
+    txTitlePending: 'Überweisung an {merchant} wird gesendet',
+    txTitleFailed: 'Überweisung an {merchant} fehlgeschlagen',
+    txTitleReplaced: 'Überweisung an {merchant} ersetzt',
     txDescription: '{amount} · {invoice}',
   },
   walletPrompt: {
@@ -353,6 +357,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Sie haben mehr als den Rechnungsbetrag gesendet. {merchant} bestätigt die Bestellung oder erstattet die Differenz an Ihr Wallet.',
     reviewQuoteExpired:
       'Die Zahlung ging nach Ablauf der Preisbindung ein. {merchant} nimmt sie an oder erstattet sie.',
+    reviewUnverifiedArrival:
+      'Das Geld ist an der Adresse dieser Rechnung eingegangen, lässt sich aber nicht automatisch bestätigen. {merchant} prüft es und schreibt es gut.',
     reviewNote: 'Der Verkäufer meldet sich, falls etwas benötigt wird.',
     refundedTitle: 'Erstattet',
     refundedText: '{merchant} hat für diese Rechnung {amount} {currency} erstattet.',
@@ -365,7 +371,7 @@ export const deLabels: NovaPaymentsLabels = {
     expiredNote:
       'Eine nach Fristende gesendete Zahlung erreicht den Verkäufer trotzdem; er nimmt sie an oder erstattet sie.',
     expiredWhileConfirming:
-      'Die Rechnung wurde geschlossen, während Ihre Zahlung bestätigt wurde. Wenn sie eingeht, wird sie erfasst und {merchant} angezeigt, der sie annimmt oder erstattet.',
+      'Die Rechnung wurde geschlossen, bevor Ihre Zahlung bestätigt war. Wenn sie eingeht, wird sie erfasst und {merchant} angezeigt, der sie annimmt oder erstattet.',
     expiredAfterQr:
       'Wenn Sie per QR-Code bezahlt haben, nimmt {merchant} die Zahlung bei Eingang an oder erstattet sie.',
     expiredUnconfirmed:
@@ -390,6 +396,8 @@ export const deLabels: NovaPaymentsLabels = {
       'Quasar liest diese Zahlung eine Woche lang, nachdem es von ihr erfahren hat, und erfasst sie, wenn sie durchgeht. Prüfen Sie Ihre Wallet; wenn sie abgegangen ist und Sie Hilfe brauchen, wenden Sie sich mit diesem Transaktions-Hash an {merchant}.',
     unconfirmedNonceSpent:
       'Ihre Wallet hat die Nummer dieser Transaktion für eine andere verwendet, die Quasar nicht finden konnte. Es kann also Geld aus Ihrer Wallet abgeflossen sein. Zahlen Sie vorerst nicht erneut. Wenn Sie sie beschleunigt haben, geben Sie unten ihren Hash an, sonst wenden Sie sich mit diesem Transaktions-Hash an {merchant}.',
+    unconfirmedArrivedUnverified:
+      'Das Geld ist an der Adresse dieser Rechnung eingegangen, lässt sich aber nicht automatisch bestätigen. Der Verkäufer prüft es und schreibt es gut. Bitte nicht erneut zahlen.',
     unconfirmedSettlementFailed:
       'Das Netzwerk hat Ihre Zahlung bestätigt, aber Quasar hat sie nicht erfasst. Zahlen Sie nicht erneut; wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedSettlementRetrying:
@@ -449,7 +457,7 @@ export const deLabels: NovaPaymentsLabels = {
     taxRate: 'USt. {rate} %',
     tax: 'USt.',
     total: 'Gesamt',
-    secured: 'Gesichert durch Quasar',
+    poweredBy: 'Powered by Quasar',
     help: 'Hilfe',
     compact: '{count} Positionen · inkl. USt. {tax}',
     compactOne: '{count} Position · inkl. USt. {tax}',
@@ -548,8 +556,11 @@ export const deLabels: NovaPaymentsLabels = {
     refusedAmount: 'Der Betrag ist höher als das, was noch zu erstatten ist.',
     refusedNotRefundable: 'Diese Zahlung kann nicht mehr erstattet werden.',
     refusedWhole: 'Eine Zahlung in Prüfung wird nur vollständig erstattet.',
+    refusedExact: 'Ein Teil dieser Zahlung ging bereits zurück, daher wird der Rest als Betrag erstattet.',
     refusedBlocked:
       'Eine Compliance-Prüfung sperrt das Wallet für die Erstattung. Es kann nichts dorthin gesendet werden.',
+    refusedScreening:
+      'Die Compliance-Prüfung des Wallets hat nicht geantwortet. Es wurde nichts gesendet. Versuchen Sie es gleich noch einmal.',
     refusedNotWaiting: 'Diese Erstattung wartet nicht mehr auf eine Transaktion. Es wurde nichts gesendet.',
     refusedMayHaveLanded:
       'Eine frühere Transaktion dieser Erstattung könnte durchgegangen sein. Prüfen Sie sie, bevor Sie erneut anfragen.',

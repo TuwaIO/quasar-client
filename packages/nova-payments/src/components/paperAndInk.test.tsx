@@ -72,7 +72,6 @@ describe('the checkout in paper and ink', () => {
       'ArrowUturnLeftIcon',
       'DevicePhoneMobileIcon',
       'FingerPrintIcon',
-      'LockClosedIcon',
       'MagnifyingGlassIcon',
       'NoSymbolIcon',
       'QrCodeIcon',

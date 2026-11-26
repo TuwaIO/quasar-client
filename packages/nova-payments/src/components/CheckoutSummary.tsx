@@ -9,7 +9,7 @@ import { formatCountdown, formatFiat, minorToDecimal } from '../utils/format';
 import { invoiceTotals } from '../utils/totals';
 import { chip, chipTone, focusRing, heroAmountClass, label, mono } from './classes';
 import { checkoutClassName } from './customization';
-import { ChevronDownIcon, ClockIcon, LockClosedIcon } from './icons';
+import { ChevronDownIcon, ClockIcon } from './icons';
 
 /** The host name of a website link, for display. */
 const hostOf = (url: string) => {
@@ -89,8 +89,44 @@ export function MerchantBadge({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** The seller as the invoice document names them, the merchant's policies and what Quasar is. @internal */
+/** Whether the invoice says anything of the seller besides the name: without it there are no details to unfold. */
+function hasSellerDetails({ merchant: { seller, supportEmail, links } }: CheckoutView): boolean {
+  return Boolean(
+    seller?.legalName ||
+    seller?.address ||
+    seller?.country ||
+    seller?.registrationNumber ||
+    seller?.taxId ||
+    supportEmail ||
+    links.terms ||
+    links.refundPolicy ||
+    links.privacy,
+  );
+}
+
+/**
+ * Who sells, and what Quasar is and is not: never behind a click, so that nobody takes Quasar for the guarantor of the
+ * purchase or for the one who holds the money. @internal
+ */
+export function SellerRole({ className }: { className?: string }) {
+  const { checkout, labels } = useCheckoutContext();
+  if (!checkout) return null;
+  const { merchant } = checkout;
+  return (
+    <p
+      className={cn(
+        'novapay:m-0 novapay:text-[11px] novapay:leading-snug novapay:text-[var(--tuwa-text-secondary)]',
+        className,
+      )}
+    >
+      {formatLabel(labels.summary.sellerRole, { seller: merchant.seller?.legalName || merchant.name })}
+    </p>
+  );
+}
+
+/** The seller as the invoice document names them and the merchant's policies, if it names any. @internal */
 export function SellerDetailsContent({ checkout, labels }: { checkout: CheckoutView; labels: NovaPaymentsLabels }) {
+  if (!hasSellerDetails(checkout)) return null;
   const { merchant } = checkout;
   const seller = merchant.seller;
   const links = [
@@ -141,7 +177,6 @@ export function SellerDetailsContent({ checkout, labels }: { checkout: CheckoutV
           ))}
         </span>
       )}
-      <span>{formatLabel(labels.summary.sellerRole, { seller: seller?.legalName || merchant.name })}</span>
     </div>
   );
 }
@@ -265,15 +300,15 @@ export function OrderTotal() {
   );
 }
 
-/** "Secured by Quasar" and the seller's support email, at the same place on every step (WCAG 3.2.6). @internal */
+/**
+ * "Powered by Quasar", who sells and the seller's support email, at the same place on every step (WCAG 3.2.6). @internal
+ */
 export function SummaryFooter() {
   const { checkout, labels } = useCheckoutContext();
   return (
     <div className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
-      <span className="novapay:flex novapay:items-center novapay:gap-1.5">
-        <LockClosedIcon aria-hidden className="novapay:h-3.5 novapay:w-3.5 novapay:shrink-0" />
-        {labels.summary.secured}
-      </span>
+      <span>{labels.summary.poweredBy}</span>
+      <SellerRole />
       {checkout?.merchant.supportEmail && (
         <span>
           {labels.summary.help}:{' '}
@@ -471,9 +506,11 @@ function PageSummary() {
       </div>
       <div className="novapay:mt-auto novapay:flex novapay:flex-col novapay:gap-3 novapay:pt-5">
         <DeadlineTimer />
-        <Disclosure label={labels.summary.sellerDetails} buttonClassName="novapay:min-h-6" growsUp>
-          <SellerDetailsContent checkout={checkout} labels={labels} />
-        </Disclosure>
+        {hasSellerDetails(checkout) && (
+          <Disclosure label={labels.summary.sellerDetails} buttonClassName="novapay:min-h-6" growsUp>
+            <SellerDetailsContent checkout={checkout} labels={labels} />
+          </Disclosure>
+        )}
         <SummaryFooter />
       </div>
     </div>
@@ -483,7 +520,7 @@ function PageSummary() {
 /**
  * The order panel on the left of the checkout (from 640 px): the merchant, the seller details (unfolded in place, the
  * lines scroll while the deadline and the total stay), the countdown to the deadline (through every step of the
- * payment, also while it confirms, until it succeeded), the lines and the total, and the help.
+ * payment, also while it confirms, until it succeeded), the lines and the total, who sells and the help.
  *
  * @returns The order panel.
  */
@@ -495,9 +532,11 @@ export function CheckoutSummary() {
     <div className="novapay:flex novapay:h-full novapay:flex-col novapay:gap-3.5">
       <div className="novapay:flex novapay:flex-col novapay:gap-1.5">
         <MerchantBadge />
-        <Disclosure label={labels.summary.sellerDetails}>
-          <SellerDetailsContent checkout={checkout} labels={labels} />
-        </Disclosure>
+        {hasSellerDetails(checkout) && (
+          <Disclosure label={labels.summary.sellerDetails}>
+            <SellerDetailsContent checkout={checkout} labels={labels} />
+          </Disclosure>
+        )}
       </div>
       <DeadlineTimer />
       <div className="novapay:-mr-2.5 novapay:min-h-0 novapay:flex-1 novapay:overflow-y-auto novapay:pr-2.5">

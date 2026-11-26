@@ -8,6 +8,7 @@ import { networkName } from '../utils/methods';
 import { addressOfWallet, restRateText } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { payeeStatus } from '../utils/payee';
+import { problemText } from '../utils/problemText';
 import { mono, pendingNote, primaryAction } from './classes';
 import { checkoutClassName } from './customization';
 import { ExclamationTriangleIcon } from './icons';
@@ -16,6 +17,7 @@ import { QrCode } from './QrCode';
 import {
   ChainLink,
   CopyButton,
+  FailedTransaction,
   PrimaryButton,
   ScreenContent,
   ScreenError,
@@ -85,6 +87,10 @@ export function QrScreen() {
   // The rest of an underpaid invoice: what is sent is not the total of the invoice
   const rest = (state.invoiceStatus ?? checkout.invoice.status) === 'underpaid';
   const restRate = rest ? restRateText(quote, now, labels, checkout.merchant.name, locale) : null;
+  // What became of the last transfer, or of a new price: sent by hand without the reference, a transfer is held for the
+  // seller to return, and the step went on waiting for the payment with no word of it
+  const shownError = state.phase === 'awaitingPayment' ? state.error : undefined;
+  const problem = problemText(labels, { wallet: '', network, merchant: checkout.merchant.name }, null, shownError);
   // Another sender's transfer is an unmatched transfer, refunded only, so the hint names the wallet that paid first
   const firstWallet = rest ? checkout.invoice.originWallet : null;
   const hint = firstWallet
@@ -114,15 +120,27 @@ export function QrScreen() {
               <li>{labels.qr.approveStep}</li>
             </ol>
             {rest && <span className="novapay:text-[var(--tuwa-text-secondary)]">{labels.pay.youSendRest}</span>}
-            <div className="novapay:flex novapay:items-baseline novapay:gap-2">
-              <span className={cn(mono, 'novapay:text-2xl novapay:font-bold')}>
+            {/* An amount of ETH to 18 decimals pushed its copy button out of the card: the row wraps, the amount breaks
+                anywhere when even alone it is too wide, and the button keeps its size */}
+            <div
+              data-amount-row
+              className="novapay:flex novapay:flex-wrap novapay:items-baseline novapay:gap-x-2 novapay:gap-y-1"
+            >
+              <span
+                className={cn(
+                  mono,
+                  'novapay:min-w-0 novapay:text-2xl novapay:font-bold novapay:[overflow-wrap:anywhere]',
+                )}
+              >
                 {formatTokenAmount(quote.amountToSend, quote.decimals, locale)}
               </span>
-              <CopyButton
-                text={baseUnitsToDecimal(quote.amountToSend, quote.decimals)}
-                label={labels.pay.copyAmount}
-                copiedLabel={labels.pay.copied}
-              />
+              <span className="novapay:inline-flex novapay:shrink-0">
+                <CopyButton
+                  text={baseUnitsToDecimal(quote.amountToSend, quote.decimals)}
+                  label={labels.pay.copyAmount}
+                  copiedLabel={labels.pay.copied}
+                />
+              </span>
             </div>
             {/* Each part in one piece with its "·", wrapping only between them: the address broke over two lines with a
                 "·" at the start of the second (owner test 2026-11-09, finding 2) */}
@@ -159,6 +177,8 @@ export function QrScreen() {
           </div>
         </div>
         {expired && <ScreenError>{labels.pay.priceExpired}</ScreenError>}
+        {problem && <ScreenError>{problem}</ScreenError>}
+        <FailedTransaction error={shownError} />
         {restRate && (
           <p className="novapay:m-0 novapay:text-xs novapay:text-[var(--tuwa-text-secondary)]">{restRate}</p>
         )}

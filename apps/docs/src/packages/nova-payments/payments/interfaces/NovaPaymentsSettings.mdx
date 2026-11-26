@@ -90,3 +90,26 @@ The chain family of the payment.
 Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:36](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L36)
 
 The app's Pulsar store, which takes over the payments a checkout closed on.
+
+***
+
+### setCheckoutLocale?
+
+> `optional` **setCheckoutLocale?**: (`locale`) => `void`
+
+Defined in: [nova-payments/src/providers/novaPaymentsContext.ts:51](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/providers/novaPaymentsContext.ts#L51)
+
+Tells Nova's own connection the language of the checkout shown, for the texts of its connect modal; unset on the
+app's connection, whose Nova Connect speaks the app's language.
+
+#### Parameters
+
+##### locale
+
+`string`
+
+The language of the checkout.
+
+#### Returns
+
+`void`

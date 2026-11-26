@@ -173,6 +173,49 @@ describe('createRefundStore', () => {
       await first.getState().submit(SENT);
       expect(first.getState().sentTransaction).toEqual(SENT);
     });
+
+    // A tab closed before Quasar answered took its `sessionStorage` along: the refund window opened again in a new tab
+    // asked the merchant's wallet to send the refund a second time
+    it("is kept in the browser's localStorage by default, so the window opened again in another tab hands it over", async () => {
+      vi.stubGlobal('localStorage', memory());
+      vi.stubGlobal('sessionStorage', memory());
+      try {
+        const calls = {
+          request: vi.fn().mockResolvedValue(START),
+          submit: noAnswer(),
+          get: noAnswer(),
+          pollMs: 60_000,
+        };
+        const closedTab = createRefundStore(calls);
+        await closedTab.getState().start('inv_1');
+        expect(await closedTab.getState().submit(SENT)).toBe(false);
+
+        // The new tab has a `sessionStorage` of its own
+        vi.stubGlobal('sessionStorage', memory());
+        const request = vi.fn();
+        const newTab = createRefundStore({ ...calls, request, get: vi.fn().mockResolvedValue(refund('requested')) });
+        await newTab.getState().start('inv_1');
+        expect(request).not.toHaveBeenCalled();
+        expect(newTab.getState()).toMatchObject({ sentTransaction: SENT, instructions: START.instructions });
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    // Kept in the browser, not in the tab: an entry nobody can read must not break the refunds of every tab
+    it('skips kept entries that are not refund transactions', async () => {
+      const storage = memory();
+      const kept = { refundId: 'ref_1', invoiceId: 'inv_1', instructions: START.instructions, ...SENT };
+      storage.setItem(
+        'quasar-sdk:refundHandOvers',
+        JSON.stringify([null, 7, 'refund', { refundId: 'ref_2' }, { invoiceId: 'inv_1' }, kept]),
+      );
+      const request = vi.fn();
+      const reloaded = page(storage, { request, get: vi.fn().mockResolvedValue(refund('requested')) });
+      await expect(reloaded.getState().start('inv_1')).resolves.toBe(true);
+      expect(request).not.toHaveBeenCalled();
+      expect(reloaded.getState().sentTransaction).toEqual(SENT);
+    });
   });
 
   describe('a Server Action, which passes no fields of an error to the browser', () => {

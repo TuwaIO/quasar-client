@@ -242,6 +242,7 @@ describe('usePayment', () => {
     afterEach(() => vi.unstubAllGlobals());
 
     const paidBeforeTheReload = async () => {
+      vi.stubGlobal('localStorage', memory());
       vi.stubGlobal('sessionStorage', memory());
       const { adapter, renderHook, props } = setup();
       adapter.sendSponsoredCalls = vi.fn(async ({ onAccepted, onSent }) => {
@@ -281,7 +282,26 @@ describe('usePayment', () => {
       expect(sendSponsoredCalls).not.toHaveBeenCalled();
       lands('0xlate');
       expect(reloaded.submit).toHaveBeenCalledWith(expect.objectContaining({ txKey: '0xlate', methodId: 'ap_1' }));
-      expect(sessionStorage.getItem('nova-payments:sponsoredBatches')).toBeNull();
+      expect(localStorage.getItem('nova-payments:sponsoredBatches')).toBeNull();
+    });
+
+    // A tab closed while the batch was on its way took its `sessionStorage` along: the link opened again in a new tab
+    // offered Pay next to a batch that could still land, and its hash never reached Quasar
+    it('keeps Pay shut and follows the batch in a new tab of the same browser', async () => {
+      await paidBeforeTheReload();
+      vi.stubGlobal('sessionStorage', memory());
+      const newTab = setup();
+      const followSponsoredCalls = vi.fn();
+      Object.assign(newTab.adapter, { followSponsoredCalls });
+      Object.assign(newTab.props, {
+        path: 'paymaster',
+        paymasterUrl: 'https://quasar/paymaster',
+        quote: paymasterQuote,
+        invoiceId: 'inv_1',
+      });
+      expect(newTab.renderHook().problem).toBe('sentUnconfirmed');
+      await tick();
+      expect(followSponsoredCalls).toHaveBeenCalledWith(expect.objectContaining({ batchId: 'batch-1' }));
     });
 
     it('says nothing of it for another invoice', async () => {
@@ -291,7 +311,8 @@ describe('usePayment', () => {
       expect(reloaded.renderHook().problem).toBeNull();
     });
 
-    it('lets it go once the wait is over', async () => {
+    // Kept in the browser, not in the tab: nothing of it may stay there once it no longer counts
+    it('lets it go once the wait is over, from the browser too', async () => {
       await paidBeforeTheReload();
       const later = Date.now() + 36 * 60_000;
       const now = vi.spyOn(Date, 'now').mockReturnValue(later);
@@ -299,6 +320,8 @@ describe('usePayment', () => {
         const reloaded = setup();
         Object.assign(reloaded.props, { invoiceId: 'inv_1' });
         expect(reloaded.renderHook().problem).toBeNull();
+        await tick();
+        expect(localStorage.getItem('nova-payments:sponsoredBatches')).toBeNull();
       } finally {
         now.mockRestore();
       }

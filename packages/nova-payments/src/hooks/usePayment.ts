@@ -122,11 +122,16 @@ export function usePayment({
   });
   const reportLate = useEffectEvent((payment: SentPayment) => onSent?.(payment));
 
-  // The page was reloaded after the wallet took a batch: it can still land, so Pay stays shut, and its hash reaches Quasar
+  // The page was reloaded, or opened again in another tab, after the wallet took a batch: it can still land, so Pay stays
+  // shut, and its hash reaches Quasar
   useEffect(() => {
     if (!invoiceId || openRequests.has(store)) return;
     const kept = keptBatchOf(invoiceId);
-    if (!kept) return;
+    if (!kept) {
+      // Kept in the browser: a batch that no longer counts leaves it
+      forgetBatch(invoiceId);
+      return;
+    }
     const paying = Promise.reject(
       new PaymentWalletError('sentUnconfirmed', 'The sponsored payment is not confirmed yet'),
     );

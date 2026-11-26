@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentsSolanaAdapterOptions
 
-Defined in: [nova-payments/src/solana/paymentsSolanaAdapter.ts:59](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/solana/paymentsSolanaAdapter.ts#L59)
+Defined in: [nova-payments/src/solana/paymentsSolanaAdapter.ts:60](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/solana/paymentsSolanaAdapter.ts#L60)
 
 Options of [paymentsSolanaAdapter](?path=/docs/packages-nova-payments-solana-functions-paymentssolanaadapter--docs).
 
@@ -12,8 +12,9 @@ Options of [paymentsSolanaAdapter](?path=/docs/packages-nova-payments-solana-fun
 
 ### rpcUrls?
 
-> `optional` **rpcUrls?**: `Partial`\<`Record`\<`SolanaClusterMoniker`, `string`\>\>
+> `optional` **rpcUrls?**: `Partial`\<`Record`\<`SolanaClusterMoniker`, `SolanaRpcUrl`\>\>
 
-Defined in: [nova-payments/src/solana/paymentsSolanaAdapter.ts:61](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/solana/paymentsSolanaAdapter.ts#L61)
+Defined in: [nova-payments/src/solana/paymentsSolanaAdapter.ts:65](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/solana/paymentsSolanaAdapter.ts#L65)
 
-RPC URLs by cluster (`devnet`, `mainnet`…); the public endpoint of a cluster without one.
+RPC URLs by cluster (`devnet`, `mainnet`…), one or several a cluster (`devnet: [first, second]`): a read goes to the
+next one when one does not answer. The public endpoint of a cluster without one.

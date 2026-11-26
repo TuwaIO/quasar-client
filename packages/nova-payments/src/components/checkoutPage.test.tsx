@@ -148,6 +148,19 @@ describe('the method step on its own page', () => {
     expect(sizer.props['aria-hidden']).toBe(true);
   });
 
+  // Two cards in a row of a phone have no room for a line of them: the names of the wallets and the connected address ended in points,
+  // where the words of the QR code beside them took a second line
+  it('says the whole of what a way to pay is with, in as many lines as it takes', () => {
+    onPage({}, { methods: [fixture.method('m1', 'ETH', 'eip155:1')] });
+    ctx = { ...ctx, state: { ...ctx.state, methodId: 'm1' } } as CheckoutContextValue;
+    const ways = fixture.ofType(render(MethodScreen, {}), RadioCards).at(-1)!;
+    const card = (ways.props.children as (item: string) => unknown)('wallet');
+    const hint = fixture
+      .elements(card)
+      .find((element) => (element.props as { children?: unknown }).children === ctx.labels.method.walletHint)!;
+    expect(classesOf(hint)).not.toContain('novapay:truncate');
+  });
+
   it('keeps a token with one network out of a phone, and leaves the other displays as they were', () => {
     onPage({}, { methods: [fixture.method('m1', 'ETH', 'eip155:1')] });
     ctx = { ...ctx, state: { ...ctx.state, methodId: 'm1' } } as CheckoutContextValue;

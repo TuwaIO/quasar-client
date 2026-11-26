@@ -171,3 +171,47 @@ describe('the line under the amount of the QR code', () => {
     expect(text(parts[1])).toMatch(/·$/);
   });
 });
+
+// An amount of ETH to 18 decimals pushed its copy button out of the card on the QR step. The row
+// of an amount wraps, the amount breaks anywhere when even alone it is too wide, and the button keeps its size
+describe('the amount and its copy button', () => {
+  it('stay inside the card on the QR step, however long the amount', () => {
+    const quote = {
+      methodId: 'eth',
+      amountToSend: '603408156521420',
+      decimals: 18,
+      expiresAt: null,
+      // The price of an invoice's own address, paid by its EIP-681 request
+      invoiceAddress: '0xd03a000000000000000000000000000000001ba8',
+      instructions: {
+        family: 'eip155',
+        chainId: 'eip155:84532',
+        symbol: 'ETH',
+        to: '0xd03a000000000000000000000000000000001ba8',
+      },
+    };
+    ctx = fixture.checkoutContextValue(
+      {},
+      {
+        screen: 'qr',
+        state: { ...fixture.checkoutContextValue({}).state, quote } as unknown as CheckoutContextValue['state'],
+      },
+    );
+    const tree = fixture.elements(render(QrScreen, {}));
+    const row = tree.find((element) => element.props['data-amount-row'] !== undefined);
+    expect(row).toBeDefined();
+    expect(classesOf(row)).toEqual(expect.arrayContaining(['novapay:flex-wrap']));
+    const [amount, copy] = fixture.elements(row!.props.children);
+    expect(classesOf(amount)).toEqual(expect.arrayContaining(['novapay:min-w-0', 'novapay:[overflow-wrap:anywhere]']));
+    expect(classesOf(copy)).toEqual(expect.arrayContaining(['novapay:shrink-0']));
+  });
+
+  it('stay inside the card on the step of the wallet too', async () => {
+    const { readFileSync } = await import('node:fs');
+    const source = readFileSync(new URL('./PayScreen.tsx', import.meta.url), 'utf8');
+    const row = source.slice(source.indexOf('data-amount-row'), source.indexOf('labels.pay.copyAmount'));
+    expect(row).toContain('novapay:flex-wrap');
+    expect(row).toContain('novapay:[overflow-wrap:anywhere]');
+    expect(row).toContain('novapay:shrink-0');
+  });
+});

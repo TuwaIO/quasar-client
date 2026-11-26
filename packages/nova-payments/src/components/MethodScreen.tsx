@@ -5,7 +5,7 @@ import { type ReactNode, useEffect, useEffectEvent, useId, useMemo, useState } f
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
 import { formatLabel, formatLabelParts, type NovaPaymentsLabels } from '../i18n';
-import { type CheckoutTokenGroup, groupMethodsByToken } from '../utils/checkout';
+import { type CheckoutTokenGroup, groupMethodsByToken, priceLockMinutes } from '../utils/checkout';
 import { shortAddress } from '../utils/format';
 import { canPayWithQr, methodFamily, networkName, payerFor, priceAdjustment } from '../utils/methods';
 import { methodErrorText } from '../utils/outcome';
@@ -258,7 +258,13 @@ export function MethodScreen() {
     <>
       <ScreenContent
         title={labels.method.title}
-        subtitle={formatLabel(labels.method.subtitle, { minutes: Math.round(checkout.quoteTtlSeconds / 60) })}
+        subtitle={formatLabel(labels.method.subtitle, {
+          minutes: priceLockMinutes({
+            ttlSeconds: checkout.quoteTtlSeconds,
+            dueAt: checkout.invoice.dueAt,
+            now: context.now,
+          }),
+        })}
       >
         <GroupLabel>{labels.method.token}</GroupLabel>
         <RadioCards
@@ -359,7 +365,7 @@ export function MethodScreen() {
                   <span className="novapay:text-[13px] novapay:font-semibold">{labels.method.wallet}</span>
                   <span
                     className={cn(
-                      'novapay:truncate novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
+                      'novapay:break-words novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]',
                       wallet && mono,
                     )}
                   >

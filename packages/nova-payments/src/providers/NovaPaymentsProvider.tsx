@@ -100,10 +100,10 @@ export interface NovaPaymentsProviderProps {
    */
   adapters?: PaymentsAdapter[];
   /**
-   * The app's Pulsar store (`injectExternalPendingTxs` of `createPulsarStore` from `@tuwaio/pulsar-core`). Every payment
-   * of a checkout goes to it, which tracks it and keeps it in the history, and Nova Transactions shows its toast: one the
-   * wallet sends at once, one the page did not send (a QR code, a relayed signature) once Quasar records it, with its
-   * hash.
+   * The app's Pulsar store (`injectExternalPendingTxs` and `updateTxParams` of the state of `createPulsarStore` from
+   * `@tuwaio/pulsar-core`). Every payment of a checkout goes to it, which tracks it and keeps it in the history, and Nova
+   * Transactions shows its toast: one the wallet sends at once, one the page did not send (a QR code, a relayed signature)
+   * once Quasar records it, with its hash. How a payment ended, as Quasar knows it, ends it there.
    */
   pulsar?: PaymentsPulsar;
   /**
@@ -192,10 +192,23 @@ export function NovaPaymentsProvider({
     outer.connection !== undefined &&
     outer.connection !== 'none';
   const walletAdapters = own ? own.adapters : (adapters ?? (onOuterConnection ? outer.adapters : undefined));
+  // The language of the checkout shown, for the connect modal of Nova's own connection: on a Ukrainian checkout it
+  // spoke English. A provider on the connection of one above tells that one
+  const [checkoutLocale, setCheckoutLocale] = useState<string | null>(null);
+  const tellsLocale = own ? setCheckoutLocale : onOuterConnection ? outer.setCheckoutLocale : undefined;
 
   const value = useMemo(
-    () => ({ baseUrl, labels, customization, adapters: walletAdapters, pulsar, connection, onConnectWallet }),
-    [baseUrl, labels, customization, walletAdapters, pulsar, connection, onConnectWallet],
+    () => ({
+      baseUrl,
+      labels,
+      customization,
+      adapters: walletAdapters,
+      pulsar,
+      connection,
+      onConnectWallet,
+      setCheckoutLocale: tellsLocale,
+    }),
+    [baseUrl, labels, customization, walletAdapters, pulsar, connection, onConnectWallet, tellsLocale],
   );
 
   const warned = useRef<Set<string> | null>(null);
@@ -239,7 +252,9 @@ export function NovaPaymentsProvider({
     <NovaPaymentsContext.Provider value={value}>
       {own ? (
         <Suspense fallback={null}>
-          <LazyOwnConnection own={own}>{children}</LazyOwnConnection>
+          <LazyOwnConnection own={own} locale={checkoutLocale}>
+            {children}
+          </LazyOwnConnection>
         </Suspense>
       ) : (
         children
