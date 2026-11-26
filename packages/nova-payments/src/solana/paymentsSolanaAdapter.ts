@@ -32,6 +32,7 @@ import {
   getCluster,
   getSolanaExplorerLink,
   type SolanaClusterMoniker,
+  type SolanaRpcUrl,
 } from '@tuwaio/orbit-solana';
 import { type SolanaTransaction, TransactionTracker } from '@tuwaio/pulsar-core';
 import { type PaymentInstructions, payoutRecordText } from '@tuwaio/quasar-sdk/checkout';
@@ -57,8 +58,11 @@ type ParsedMint = {
 
 /** Options of {@link paymentsSolanaAdapter}. */
 export interface PaymentsSolanaAdapterOptions {
-  /** RPC URLs by cluster (`devnet`, `mainnet`…); the public endpoint of a cluster without one. */
-  rpcUrls?: Partial<Record<SolanaClusterMoniker, string>>;
+  /**
+   * RPC URLs by cluster (`devnet`, `mainnet`…), one or several a cluster (`devnet: [first, second]`): a read goes to the
+   * next one when one does not answer. The public endpoint of a cluster without one.
+   */
+  rpcUrls?: Partial<Record<SolanaClusterMoniker, SolanaRpcUrl>>;
 }
 
 /** The Solana instructions of a quote. */
@@ -111,7 +115,8 @@ const withReference = <T extends Instruction>(instruction: T, reference: string)
  * themselves), throws `PaymentWalletError` with the kind `wrongNetwork`: nothing was paid. Pass it in `adapters` of
  * `NovaPaymentsProvider`.
  *
- * Side effects: RPC reads (the URLs of `rpcUrls`, else the public endpoints of the clusters); wallet prompts.
+ * Side effects: RPC reads (the URLs of `rpcUrls`, the next one when one does not answer, else the public endpoints of the
+ * clusters); wallet prompts.
  *
  * @param options - See {@link PaymentsSolanaAdapterOptions}.
  * @returns The Solana adapter.

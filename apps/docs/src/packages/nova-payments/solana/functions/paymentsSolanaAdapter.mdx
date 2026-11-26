@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **paymentsSolanaAdapter**(`options?`): [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)
 
-Defined in: [nova-payments/src/solana/paymentsSolanaAdapter.ts:131](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/solana/paymentsSolanaAdapter.ts#L131)
+Defined in: [nova-payments/src/solana/paymentsSolanaAdapter.ts:136](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/solana/paymentsSolanaAdapter.ts#L136)
 
 The adapter that pays Solana methods of a Nova Payments checkout from the Wallet Standard wallet connected through
 Satellite Connect. It reads balances and estimates fees on the network, and sends SOL with a system transfer or a
@@ -17,7 +17,8 @@ for an unknown blockhash, because the wallet sent it on another cluster (Solana 
 themselves), throws `PaymentWalletError` with the kind `wrongNetwork`: nothing was paid. Pass it in `adapters` of
 `NovaPaymentsProvider`.
 
-Side effects: RPC reads (the URLs of `rpcUrls`, else the public endpoints of the clusters); wallet prompts.
+Side effects: RPC reads (the URLs of `rpcUrls`, the next one when one does not answer, else the public endpoints of the
+clusters); wallet prompts.
 
 ## Parameters
 
