@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0](https://github.com/TuwaIO/quasar-client/compare/payments-sdk-v0.2.6...payments-sdk-v0.3.0) (2026-11-26)
+
+
+### Features
+
+* the checkout of the Payments passes: several Solana RPC URLs, refunds, toasts and narrow phones ([#40](https://github.com/TuwaIO/quasar-client/issues/40)) ([1d6ccbd](https://github.com/TuwaIO/quasar-client/commit/1d6ccbd2e68566720f72da526219215c2123a46c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @tuwaio/nova-payments bumped to 0.8.0
+    * @tuwaio/quasar-sdk bumped to 0.19.0
+
 ## [0.2.6](https://github.com/TuwaIO/quasar-client/compare/payments-sdk-v0.2.5...payments-sdk-v0.2.6) (2026-11-21)
 
 
