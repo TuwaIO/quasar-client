@@ -588,6 +588,27 @@ export const PayAgainAfterFailure: Story = {
   },
 };
 
+/**
+ * The payment ran out of gas: the wallet set a gas limit of its own, below what a recipient with an EIP-7702 delegation
+ * takes on receipt. Under the reason, the step says what limit to set in the wallet before paying again (the one the
+ * page asks for the transfer, in whole thousands). Before, the buyer read only that the payment failed and paid again
+ * with the same limit.
+ */
+export const OutOfGas: Story = {
+  args: { ...PendingToFailed.args, walletOptions: { ranOutOfGas: true } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Payment failed' }, { timeout: 10_000 })).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByText(
+          /^The payment failed on Base Sepolia Testnet\. .* set the gas limit in the wallet to at least 31000\.$/,
+        ),
+      ).toBeVisible(),
+    );
+  },
+};
+
 /** A transfer of the sample invoice, as the checkout lists the ones Quasar credited (`invoice.payments`). */
 const creditedTransfer = (fill: string, amount: string, at: string) => ({
   txKey: `0x${fill.repeat(32)}`,

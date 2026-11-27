@@ -43,6 +43,11 @@ export interface SimulatedWalletOptions {
   cannotSign?: boolean;
   /** The signature request stays open in the wallet, never answered (to look at the wallet window). */
   signPending?: boolean;
+  /**
+   * An EVM payment that reverted ran out of gas: the wallet set a limit of its own below what the transfer takes, and
+   * the page asks 30492 for it.
+   */
+  ranOutOfGas?: boolean;
 }
 
 /** The wallets "Connect" gives, by family: MetaMask on Ethereum (the wrong network for Base Sepolia), Phantom on devnet. */
@@ -99,6 +104,7 @@ export function SimulatedWallet({
     otherCluster = false,
     cannotSign = false,
     signPending = false,
+    ranOutOfGas = false,
   } = options;
 
   const adapters = useMemo<PaymentsAdapter[]>(() => {
@@ -113,6 +119,11 @@ export function SimulatedWallet({
         family: 'eip155',
         getBalance: balanceOf,
         estimateFee: async () => ({ amount: 42_000_000_000_000n, decimals: 18, symbol: 'ETH' }),
+        // What the network has of a payment that reverted: nothing to tell, unless the wallet's limit was too low
+        outOfGas: async () => {
+          await wait(300);
+          return ranOutOfGas ? { needed: 30_492n } : null;
+        },
         canSponsorCalls: async () => sponsor,
         switchChain: async (chainId) => {
           await wait(900);
@@ -150,7 +161,7 @@ export function SimulatedWallet({
         pulsarTransaction: (params) => ({ adapter: 'solana', ...params }) as unknown as Transaction,
       },
     ];
-  }, [store, balance, balances, decline, sponsor, otherCluster, cannotSign, signPending]);
+  }, [store, balance, balances, decline, sponsor, otherCluster, cannotSign, signPending, ranOutOfGas]);
 
   const novaConnect = useMemo(
     () =>
