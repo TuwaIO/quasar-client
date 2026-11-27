@@ -1141,6 +1141,8 @@ export type NovaPaymentsLabels = {
     nothingSent: string;
     /** The wallet sent it, Quasar did not take it (default: `The refund was sent, but Quasar hasn't taken its transaction yet. Hand it over again: nothing is sent twice.`) */
     notHandedOver: string;
+    /** Title of a refund its wallet sent and Quasar has not taken yet, in any window that holds its transaction (default: `Refund sent`) */
+    sentTitle: string;
     /** Button that hands the transaction over again (default: `Hand it over again`) */
     handOver: string;
     /** Button of the other way: record a refund sent elsewhere (default: `Record refund`) */

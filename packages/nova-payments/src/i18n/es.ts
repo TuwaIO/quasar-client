@@ -548,6 +548,7 @@ export const esLabels: NovaPaymentsLabels = {
     nothingSent: 'No se envió nada: el reembolso espera su transacción.',
     notHandedOver:
       'El reembolso se envió, pero Quasar aún no recibió su transacción. Entrégala de nuevo: no se envía nada dos veces.',
+    sentTitle: 'Reembolso enviado',
     handOver: 'Entregarla de nuevo',
     record: 'Registrar reembolso',
     recordHint:

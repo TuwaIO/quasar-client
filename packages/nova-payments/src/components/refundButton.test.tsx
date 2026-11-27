@@ -31,7 +31,7 @@ vi.mock('../hooks/useRefund', () => ({
 const { render, unmount } = await import('../testing/hookHarness');
 const { defaultLabels } = await import('../i18n');
 const fixture = await import('../testing/checkoutFixture');
-const { PrimaryButton, SecondaryButton, ScreenContent, ScreenError } = await import('./ScreenParts');
+const { ChainLink, PrimaryButton, SecondaryButton, ScreenContent, ScreenError } = await import('./ScreenParts');
 const { RadioCards } = await import('./RadioCards');
 const { isSlow, refusalText, AmountStep, ConfirmStep, FailedStep, RefundButton, RefundDialog, RefundSteps } =
   await import('./RefundButton');
@@ -474,6 +474,18 @@ describe('RefundButton', () => {
     const tree = confirm(flowOf({ txKey: '0xrefund', error: { code: 'request_failed', message: 'x' } }));
     expect(button(tree, PrimaryButton).props.children).toBe('Hand it over again');
     expect(textOf(tree)).toContain("Quasar hasn't taken its transaction yet");
+  });
+
+  // Opened again in another tab, a refund its wallet had sent said "Confirm the refund", without its hash or a word
+  // that it was sent: the line that says so stood only in the window where handing it over failed
+  it('says that a refund it holds the transaction of was sent, with its hash, before anything fails', () => {
+    const tree = confirm(flowOf({ txKey: '0x41be00000000009a07' }));
+    expect(button(tree, ScreenContent).props.title).toBe('Refund sent');
+    expect(fixture.ofType(tree, ChainLink).map((link) => (link.props as Props).hash)).toContain('0x41be00000000009a07');
+    expect(textOf(tree)).toContain("Quasar hasn't taken its transaction yet");
+    // Not an error until handing it over fails
+    expect(fixture.ofType(tree, ScreenError)).toHaveLength(0);
+    expect(button(tree, PrimaryButton).props.children).toBe('Hand it over again');
   });
 
   it('follows the refund, then shows its credit note and the rows of the app', () => {

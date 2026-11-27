@@ -782,10 +782,17 @@ export function ConfirmStep({
   const handOver = Boolean(flow.txKey);
   return (
     <>
-      <ScreenContent title={notSent ? text.notSent : text.confirmTitle}>
+      {/* A window that holds the transaction its wallet sent says so, wherever it was opened: in another tab the refund
+          read "Confirm the refund", with no hash, until handing it over failed */}
+      <ScreenContent title={handOver ? text.sentTitle : notSent ? text.notSent : text.confirmTitle}>
         <DetailsCard>
           <DetailRow name={text.send}>{values.amount}</DetailRow>
           <DetailRow name={text.network}>{values.network}</DetailRow>
+          {flow.txKey && (
+            <DetailRow name={text.transaction}>
+              <ChainLink hash={flow.txKey} explorerUrl={flow.transactionUrl(flow.txKey)} labels={labels} />
+            </DetailRow>
+          )}
           {transfer && (
             <DetailRow name={text.to}>
               {stackedValue(
@@ -814,7 +821,13 @@ export function ConfirmStep({
         {flow.problem && !['noRecipient', 'unreachable', 'stillInWallet'].includes(flow.problem) && (
           <FooterNote>{text.nothingSent}</FooterNote>
         )}
-        {handOver && flow.error && <ScreenError>{text.notHandedOver}</ScreenError>}
+        {/* Why the button hands it over again; an error once handing it over failed */}
+        {handOver &&
+          (flow.error ? (
+            <ScreenError>{text.notHandedOver}</ScreenError>
+          ) : (
+            <FooterNote>{text.notHandedOver}</FooterNote>
+          ))}
         {/* Quasar refused the transaction for good: it is forgotten, and the page says why instead of offering it again */}
         {!handOver && flow.error && flow.problem !== 'unreachable' && (
           <ScreenError>{refusalText(flow.error, text)}</ScreenError>

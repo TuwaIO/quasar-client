@@ -503,6 +503,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     slowNote: 'Quasar 尚未看到此交易上链。如果钱包显示了另一个哈希（因为在钱包中加速或取消了它），请记录该哈希。',
     nothingSent: '未发送任何内容：退款正在等待其交易。',
     notHandedOver: '退款已发送，但 Quasar 尚未收到其交易。请再次提交：不会重复发送。',
+    sentTitle: '退款已发送',
     handOver: '再次提交',
     record: '登记退款',
     recordHint: '通过其他方式发送？请登记退款及其交易：Quasar 会在链上核实。',

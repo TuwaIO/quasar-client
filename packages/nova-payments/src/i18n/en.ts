@@ -536,6 +536,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     nothingSent: 'Nothing was sent: the refund waits for its transaction.',
     notHandedOver:
       "The refund was sent, but Quasar hasn't taken its transaction yet. Hand it over again: nothing is sent twice.",
+    sentTitle: 'Refund sent',
     handOver: 'Hand it over again',
     record: 'Record refund',
     recordHint: 'Sent it another way? Record the refund with its transaction: Quasar checks it on-chain.',

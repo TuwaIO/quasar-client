@@ -572,6 +572,7 @@ export const deLabels: NovaPaymentsLabels = {
     nothingSent: 'Es wurde nichts gesendet: Die Erstattung wartet auf ihre Transaktion.',
     notHandedOver:
       'Die Erstattung wurde gesendet, aber Quasar hat ihre Transaktion noch nicht übernommen. Übergeben Sie sie erneut: Es wird nichts doppelt gesendet.',
+    sentTitle: 'Erstattung gesendet',
     handOver: 'Erneut übergeben',
     record: 'Erstattung erfassen',
     recordHint:
