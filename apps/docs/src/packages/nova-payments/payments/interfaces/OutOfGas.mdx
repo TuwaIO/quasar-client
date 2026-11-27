@@ -1,0 +1,21 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Interfaces/OutOfGas" />
+
+# OutOfGas
+
+Defined in: [nova-payments/src/adapters/types.ts:25](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L25)
+
+A transfer of a payment that ran out of gas on the network: its wallet gave it a gas limit below what it takes, and
+it reverted, spending the whole limit, for [PaymentsAdapter.outOfGas](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs#outofgas).
+
+## Properties
+
+### needed
+
+> **needed**: `bigint` \| `null`
+
+Defined in: [nova-payments/src/adapters/types.ts:30](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L30)
+
+The gas limit this page asks for the same transfer (the app RPC's estimate with headroom), or `null` when it
+cannot be estimated now.

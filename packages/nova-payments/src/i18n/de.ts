@@ -167,6 +167,10 @@ export const deLabels: NovaPaymentsLabels = {
     tryAgain: 'Erneut versuchen',
     failed:
       'Die Zahlung ist im Netzwerk {network} fehlgeschlagen. Es wurde nur die Netzwerkgebühr verbraucht; die Rechnung bleibt offen.',
+    outOfGas:
+      'Der Transaktion ist das Gas ausgegangen: Das Wallet hat das Gaslimit zu niedrig angesetzt. Setzen Sie das Gaslimit im Wallet vor der nächsten Zahlung auf mindestens {gas}.',
+    outOfGasUnknown:
+      'Der Transaktion ist das Gas ausgegangen: Das Wallet hat das Gaslimit zu niedrig angesetzt. Erhöhen Sie das Gaslimit im Wallet vor der nächsten Zahlung.',
     failedExpired:
       'Die Transaktion wurde nicht rechtzeitig bestätigt und ist abgelaufen; es wurde nichts gesendet. Die Rechnung bleibt offen.',
     failedCancelled: 'Die Transaktion wurde im Wallet abgebrochen. Die Rechnung bleibt offen.',

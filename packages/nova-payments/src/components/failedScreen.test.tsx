@@ -39,8 +39,8 @@ const quote = {
   instructions: { family: 'eip155', chainId: 8453, symbol: 'USDC' },
 };
 
-/** The failed step after a payment ended with `error`. */
-function failed(error: object | null, state: object = {}) {
+/** The failed step after a payment ended with `error`, with the adapter's `outOfGas` if given. */
+function failed(error: object | null, state: object = {}, outOfGas?: (params: unknown) => Promise<unknown>) {
   const payAfterFailure = vi.fn();
   ctx = fixture.checkoutContextValue(
     {},
@@ -51,6 +51,7 @@ function failed(error: object | null, state: object = {}) {
         ({
           family: 'eip155',
           explorerUrl: ({ txKey }: { txKey: string }) => `https://scan.example/tx/${txKey}`,
+          outOfGas,
         }) as never,
       state: {
         ...fixture.checkoutContextValue({}).state,
@@ -115,6 +116,22 @@ describe('the failed step', () => {
     expect(said({ code: 'payment_failed', reason: 'expired', message: '' })).toBe(ctx.labels.pay.failedExpired);
     expect(said({ code: 'payment_failed', reason: 'cancelled', message: '' })).toBe(ctx.labels.pay.failedCancelled);
     expect(said({ code: 'payment_failed', message: '' })).toBe(ctx.labels.pay.didNotGoThrough);
+  });
+
+  // A wallet set a gas limit of its own below what the transfer takes: the buyer read only that the payment failed and
+  // paid again the same way
+  it('says what gas limit to set once the network tells that the transaction ran out of gas', async () => {
+    const outOfGas = vi.fn(async () => ({ needed: 30_492n }));
+    const status = (tree: unknown) =>
+      fixture.text(fixture.elements(tree).find((element) => element.props.role === 'status'));
+    const { tree } = failed(reverted, {}, outOfGas);
+    expect(status(tree)).toBe('The payment failed on Base. Only the network fee was spent; the invoice is still open.');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(status(render(FailedScreen, {}))).toBe(
+      'The payment failed on Base. Only the network fee was spent; the invoice is still open. The transaction ran out of gas: the wallet set its gas limit too low. Before you pay again, set the gas limit in the wallet to at least 31000.',
+    );
+    // The transaction the page handed over, as Quasar names none
+    expect(outOfGas).toHaveBeenCalledWith({ instructions: quote.instructions, txKey: SENT });
   });
 
   it('offers to pay again, which leaves the step, and to contact the seller', () => {

@@ -156,6 +156,8 @@ export const zhCNLabels: NovaPaymentsLabels = {
     declined: '您在 {wallet} 中拒绝了请求。',
     tryAgain: '重试',
     failed: '付款在 {network} 上失败。只消耗了网络费，发票仍可支付。',
+    outOfGas: '交易的 Gas 已耗尽：钱包设置的 Gas 上限过低。再次支付前，请在钱包中将 Gas 上限设为至少 {gas}。',
+    outOfGasUnknown: '交易的 Gas 已耗尽：钱包设置的 Gas 上限过低。再次支付前，请在钱包中调高 Gas 上限。',
     failedExpired: '交易未能及时确认并已过期，因此没有发送任何款项。发票仍可支付。',
     failedCancelled: '交易已在钱包中取消。发票仍可支付。',
     didNotGoThrough: '付款未成功。发票仍可支付。',

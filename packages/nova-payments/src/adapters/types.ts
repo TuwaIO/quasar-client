@@ -18,6 +18,18 @@ export interface NativeFee {
   symbol: string;
 }
 
+/**
+ * A transfer of a payment that ran out of gas on the network: its wallet gave it a gas limit below what it takes, and
+ * it reverted, spending the whole limit, for {@link PaymentsAdapter.outOfGas}.
+ */
+export interface OutOfGas {
+  /**
+   * The gas limit this page asks for the same transfer (the app RPC's estimate with headroom), or `null` when it
+   * cannot be estimated now.
+   */
+  needed: bigint | null;
+}
+
 /** A payment the wallet sent, with the texts of its transaction, for {@link PaymentsAdapter.pulsarTransaction}. */
 export interface PulsarTransactionParams {
   /** The transaction hash (EVM) or signature (Solana). */
@@ -59,6 +71,18 @@ export interface PaymentsAdapter {
    * @returns The fee, or `null` when it cannot be estimated.
    */
   estimateFee?: (params: { instructions: PaymentInstructions; account: string }) => Promise<NativeFee | null>;
+  /**
+   * Whether a payment that reverted on the network ran out of gas, read from the network in the browser: a transfer
+   * of the payment (the coin to its recipient, or the token's `transfer` to it) sent by the buyer's wallet that spent
+   * its whole gas limit. Some wallets set a limit of their own below what a recipient with an EIP-7702 delegation takes
+   * on receipt, whatever the page asks for. A transaction of a relay or a bundler, whose gas no wallet of the buyer
+   * set, is not one. The checkout then says what limit to set in the wallet before paying again.
+   *
+   * @param params - What the payment sends (its network is the transaction's) and the transaction hash.
+   * @returns The gas the transfer needs, or `null` when it did not run out of gas, is no transfer of the payment, or
+   *   cannot be read.
+   */
+  outOfGas?: (params: { instructions: PaymentInstructions; txKey: string }) => Promise<OutOfGas | null>;
   /**
    * Whether the wallet sends `wallet_sendCalls` with the `paymasterService` capability on the chain (EIP-5792,
    * ERC-7677).

@@ -1,12 +1,14 @@
 import type { CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 import { describe, expect, it } from 'vitest';
 
+import { formatLabel, loadLabels } from '../i18n';
 import { defaultLabels } from '../i18n/en';
 import {
   contactHref,
   failedPaymentTx,
   methodErrorText,
   needsLeaveConfirm,
+  outOfGasText,
   paymentFailedText,
   receivedAmount,
   underpaidRest,
@@ -373,6 +375,48 @@ describe('what the checkout says about a payment that failed for good', () => {
     // On the method step too: it said that the fee was spent of every one of them
     expect(methodErrorText(failed('expired'), defaultLabels)).toBe(defaultLabels.pay.failedExpired);
     expect(methodErrorText(failed(), defaultLabels)).toBe(defaultLabels.pay.didNotGoThrough);
+  });
+});
+
+// A wallet set a gas limit of its own below what the transfer takes, and the page only said that the payment failed:
+// the buyer paid again the same way, with the same limit
+describe('what the checkout says about a payment that ran out of gas', () => {
+  const failed = (reason?: string) =>
+    ({ code: 'payment_failed', message: 'raw', ...(reason ? { reason } : {}) }) as never;
+  const OUT_OF_GAS =
+    'The transaction ran out of gas: the wallet set its gas limit too low. Before you pay again, set the gas limit in the wallet to at least 31000.';
+
+  it('says what gas limit to set before paying again, in whole thousands, as digits to type', () => {
+    expect(paymentFailedText(failed('reverted'), defaultLabels, 'Sepolia', { needed: 30_492n })).toBe(
+      `The payment failed on Sepolia. Only the network fee was spent; the invoice is still open. ${OUT_OF_GAS}`,
+    );
+    expect(outOfGasText({ needed: 31_000n }, defaultLabels)).toBe(OUT_OF_GAS);
+    expect(outOfGasText({ needed: 30_001n }, defaultLabels)).toBe(OUT_OF_GAS);
+  });
+
+  it('says to raise the limit when the page cannot tell how much', () => {
+    expect(outOfGasText({ needed: null }, defaultLabels)).toBe(
+      'The transaction ran out of gas: the wallet set its gas limit too low. Before you pay again, raise the gas limit in the wallet.',
+    );
+  });
+
+  it('joins it to a Chinese text without a space', async () => {
+    const zh = await loadLabels('zh-CN');
+    expect(paymentFailedText(failed('reverted'), zh, 'Sepolia', { needed: 30_492n })).toBe(
+      `${formatLabel(zh.pay.failed, { network: 'Sepolia' })}${formatLabel(zh.pay.outOfGas, { gas: '31000' })}`,
+    );
+  });
+
+  it('says nothing of gas for a failure of another kind, or on the method step', () => {
+    for (const reason of ['expired', 'cancelled', 'user_operation_lost', undefined]) {
+      expect(paymentFailedText(failed(reason), defaultLabels, 'Base', { needed: 30_492n }), String(reason)).not.toMatch(
+        /gas/i,
+      );
+    }
+    expect(paymentFailedText(failed('reverted'), defaultLabels, 'Base', null)).not.toMatch(/gas/i);
+    expect(paymentFailedText(failed('reverted'), defaultLabels, undefined, { needed: 30_492n })).toBe(
+      defaultLabels.method.paymentFailed,
+    );
   });
 });
 

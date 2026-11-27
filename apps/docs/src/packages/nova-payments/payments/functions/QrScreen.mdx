@@ -6,13 +6,16 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **QrScreen**(): `Element` \| `null`
 
-Defined in: [nova-payments/src/components/QrScreen.tsx:64](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/QrScreen.tsx#L64)
+Defined in: [nova-payments/src/components/QrScreen.tsx:68](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/components/QrScreen.tsx#L68)
 
 The QR code step. For Solana, a Solana Pay transfer request a phone wallet scans (or opens with "Open in wallet
 app"), with the exact amount, the recipient, the price lock and a warning against paying from an exchange; the page
 waits for the payment, which Quasar finds by the reference key. For an EVM quote to an invoice's own address, an
 EIP-681 request of the same kind, which an exchange may pay too: Quasar finds the payment by the address. For another
-EVM method, the QR code of the payment page opens this checkout on the phone, before any price.
+EVM method, the QR code of the payment page opens this checkout on the phone, before any price. After a transfer
+whose transaction ran out of the gas the phone's wallet gave it, the error says what gas limit to set.
+
+Side effects: the chain adapter's reads of a transaction that reverted (`outOfGas`), once per transaction.
 
 ## Returns
 

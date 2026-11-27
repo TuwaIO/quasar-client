@@ -4,9 +4,9 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # paymentFailedText()
 
-> **paymentFailedText**(`error`, `labels`, `network?`): `string`
+> **paymentFailedText**(`error`, `labels`, `network?`, `outOfGas?`): `string`
 
-Defined in: [nova-payments/src/utils/outcome.ts:65](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L65)
+Defined in: [nova-payments/src/utils/outcome.ts:69](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L69)
 
 What the checkout says about a payment Quasar ended as failed for good (`payment_failed`), by the reason Quasar gives.
 Only a transaction that reverted on the network spent a fee, and only that one is said to have: a transaction whose
@@ -33,6 +33,13 @@ The labels of the checkout language.
 `string`
 
 The name of the network of the payment, on the pay step; the method step does not know it.
+
+### outOfGas?
+
+[`OutOfGas`](?path=/docs/packages-nova-payments-payments-interfaces-outofgas--docs) \| `null`
+
+What the chain adapter told of the transaction that reverted, when it ran out of gas
+  (`outOfGas`): the text then says what gas limit to set in the wallet ([outOfGasText](?path=/docs/packages-nova-payments-payments-functions-outofgastext--docs)).
 
 ## Returns
 

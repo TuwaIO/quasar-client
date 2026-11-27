@@ -1,11 +1,12 @@
 import { cn, QuasarLoader } from '@tuwaio/nova-core';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
+import { useOutOfGas } from '../hooks/useOutOfGas';
 import { formatLabel } from '../i18n';
 import { eip681Of } from '../utils/eip681';
 import { baseUnitsToDecimal, formatCountdown, formatTokenAmount, shortAddress } from '../utils/format';
 import { networkName } from '../utils/methods';
-import { addressOfWallet, restRateText } from '../utils/outcome';
+import { addressOfWallet, failedPaymentTx, restRateText } from '../utils/outcome';
 import { instructionsChainId } from '../utils/pay';
 import { payeeStatus } from '../utils/payee';
 import { problemText } from '../utils/problemText';
@@ -57,7 +58,10 @@ function HandoffQr({ payUrl }: { payUrl: string }) {
  * app"), with the exact amount, the recipient, the price lock and a warning against paying from an exchange; the page
  * waits for the payment, which Quasar finds by the reference key. For an EVM quote to an invoice's own address, an
  * EIP-681 request of the same kind, which an exchange may pay too: Quasar finds the payment by the address. For another
- * EVM method, the QR code of the payment page opens this checkout on the phone, before any price.
+ * EVM method, the QR code of the payment page opens this checkout on the phone, before any price. After a transfer
+ * whose transaction ran out of the gas the phone's wallet gave it, the error says what gas limit to set.
+ *
+ * Side effects: the chain adapter's reads of a transaction that reverted (`outOfGas`), once per transaction.
  *
  * @returns The QR code step.
  */
@@ -65,6 +69,9 @@ export function QrScreen() {
   const context = useCheckoutContext();
   const { checkout, state, store, labels, locale, now, payUrl, backToMethods } = context;
   const quote = state.quote;
+  // A transfer by code that reverted may have run out of the gas the phone's wallet gave it: the step then says what
+  // limit to set, or the buyer pays with the same limit again
+  const outOfGas = useOutOfGas(state.error, failedPaymentTx(state.error));
   if (!checkout) return null;
   // A price of an invoice's own address is paid by its EIP-681 request; another EVM method on the phone's checkout
   const ownAddress = quote?.instructions.family === 'eip155' && Boolean(quote.invoiceAddress);
@@ -90,7 +97,13 @@ export function QrScreen() {
   // What became of the last transfer, or of a new price: sent by hand without the reference, a transfer is held for the
   // seller to return, and the step went on waiting for the payment with no word of it
   const shownError = state.phase === 'awaitingPayment' ? state.error : undefined;
-  const problem = problemText(labels, { wallet: '', network, merchant: checkout.merchant.name }, null, shownError);
+  const problem = problemText(
+    labels,
+    { wallet: '', network, merchant: checkout.merchant.name },
+    null,
+    shownError,
+    outOfGas,
+  );
   // Another sender's transfer is an unmatched transfer, refunded only, so the hint names the wallet that paid first
   const firstWallet = rest ? checkout.invoice.originWallet : null;
   const hint = firstWallet

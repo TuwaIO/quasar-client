@@ -41,6 +41,14 @@ const flow: PayerProofFlow = {
   dismiss: vi.fn(),
 };
 vi.mock('../hooks/usePayerProof', () => ({ usePayerProof: () => flow }));
+// What the chain adapter tells of a transaction that reverted, and what the step asked of it
+const gas = vi.hoisted(() => ({ told: null as unknown, asked: [] as unknown[][] }));
+vi.mock('../hooks/useOutOfGas', () => ({
+  useOutOfGas: (...args: unknown[]) => {
+    gas.asked.push(args);
+    return gas.told;
+  },
+}));
 
 const { render, unmount } = await import('../testing/hookHarness');
 const fixture = await import('../testing/checkoutFixture');
@@ -133,6 +141,8 @@ afterEach(() => {
   asyncValue.balances = null;
   flow.step = 'idle';
   flow.request = null;
+  gas.told = null;
+  gas.asked = [];
 });
 
 // The page said that a payment failed and left the same "Pay 89.54 USDC": nothing to look at, and no word that the next
@@ -160,6 +170,24 @@ describe('the pay step after a payment that ended without paying the invoice', (
     const { button, errors } = ended({ code: 'payment_failed', message: 'raw', reason: 'expired' });
     expect(errors).toEqual([defaultLabels.pay.failedExpired]);
     expect(fixture.text(button.props.children)).toBe(defaultLabels.pay.payAgain);
+  });
+
+  // "Pay again" opens this step, where the buyer pays with the wallet's limit again unless the step says what to set
+  it('says what gas limit to set when the transaction ran out of gas', () => {
+    const error = { code: 'payment_failed', message: 'raw', reason: 'reverted', txKey: '0xfeed' };
+    gas.told = { needed: 30_492n };
+    expect(ended(error).errors).toEqual([
+      'The payment failed on Base. Only the network fee was spent; the invoice is still open. The transaction ran out of gas: the wallet set its gas limit too low. Before you pay again, set the gas limit in the wallet to at least 31000.',
+    ]);
+    expect(gas.asked.at(-1)).toEqual([error, '0xfeed']);
+  });
+
+  it('says what the wallet did to the new request, with no word about gas', () => {
+    gas.told = { needed: 30_492n };
+    paymentProblem.current = 'declined';
+    const { errors } = ended({ code: 'payment_failed', message: 'raw', reason: 'reverted', txKey: '0xfeed' });
+    expect(errors).toHaveLength(1);
+    expect(String(errors[0])).not.toMatch(/gas/i);
   });
 
   it('keeps the usual button while nothing has ended', () => {

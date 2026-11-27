@@ -4,6 +4,7 @@ import { type ReactNode, useState } from 'react';
 
 import { useAsyncValue, useRereadValue } from '../hooks/useAsyncValue';
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
+import { useOutOfGas } from '../hooks/useOutOfGas';
 import { usePayerProof } from '../hooks/usePayerProof';
 import { usePayment } from '../hooks/usePayment';
 import { useSolanaClusterSync } from '../hooks/useSolanaClusterSync';
@@ -22,11 +23,12 @@ import {
   formatFeeAmount,
   formatFiat,
   formatTokenAmount,
+  joinSentences,
   minorToDecimal,
   shortAddress,
 } from '../utils/format';
 import { methodFamily, methodToken, networkName, payerFor } from '../utils/methods';
-import { restRateText } from '../utils/outcome';
+import { failedPaymentTx, restRateText } from '../utils/outcome';
 import { balanceShortfall, instructionsChainId, payPath, quoteAmounts, quoteRate } from '../utils/pay';
 import { payeeStatus } from '../utils/payee';
 import { isConfirmationError, isSmartWallet, needsPayerProof, payerProofErrorText } from '../utils/payerProof';
@@ -58,10 +60,6 @@ function formatRate(rate: number, locale: string): string {
   if (rate >= 1) return formatFiat(rate, locale);
   return new Intl.NumberFormat(locale, { maximumSignificantDigits: 6 }).format(rate);
 }
-
-/** The sentences of one note: a space between them, none after a full-width stop (Chinese). */
-const sentences = (...parts: string[]) =>
-  parts.reduce((text, part) => (text && !/[。！？]$/.test(text) ? `${text} ${part}` : `${text}${part}`), '');
 
 /** The methods of the wallet's family it holds a balance of, for "Pay from what this wallet has". */
 function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null, short: boolean) {
@@ -98,11 +96,12 @@ function useAlternatives(methods: CheckoutMethod[], quote: CheckoutQuote | null,
  * the pay button. A Solana payment off mainnet reminds the buyer to switch the wallet to its cluster (Solana wallets
  * choose their network themselves), with the steps of Phantom and Solflare. The note under the buttons says that the
  * payment goes straight to the merchant and, when the merchant checks paying wallets (`amlScreening` of the
- * checkout), that it does.
+ * checkout), that it does. After a payment whose transaction ran out of the gas its wallet gave it, the error says what
+ * gas limit to set.
  *
- * Side effects: balance, fee and wallet capability reads from the network through the chain adapter (no request to
- * Quasar); wallet prompts; checkout requests to Quasar; on a Solana payment, `switchNetwork` of the Satellite store
- * moves the app's Solana connection to the payment's cluster (no wallet request).
+ * Side effects: balance, fee and wallet capability reads from the network through the chain adapter, and the reads of a
+ * transaction that reverted (no request to Quasar); wallet prompts; checkout requests to Quasar; on a Solana payment,
+ * `switchNetwork` of the Satellite store moves the app's Solana connection to the payment's cluster (no wallet request).
  *
  * @returns The pay step.
  */
@@ -179,6 +178,9 @@ export function PayScreen() {
     payment.status === 'wallet' ||
     state.phase === 'submitting';
   const [stepRef, stepHeight] = useStepHeight(prompting);
+  // "Pay again" opens this step after a payment that reverted: if it ran out of the gas its wallet gave it, the step
+  // says what limit to set, or the buyer pays with the same limit again
+  const outOfGas = useOutOfGas(state.error, failedPaymentTx(state.error));
 
   // The merchant turned the method of a locked price off: a page reloaded on it must not be an empty pane with no way on
   if (checkout && quote && !method) {
@@ -244,7 +246,13 @@ export function PayScreen() {
   // The confirmation's own failures show once, under it
   const shownError =
     state.phase === 'awaitingPayment' && !(confirmFirst && isConfirmationError(state.error)) ? state.error : undefined;
-  const problem = problemText(labels, { wallet: wallet?.name ?? '', network, merchant }, payment.problem, shownError);
+  const problem = problemText(
+    labels,
+    { wallet: wallet?.name ?? '', network, merchant },
+    payment.problem,
+    shownError,
+    outOfGas,
+  );
   // The last payment of this page ended without paying the invoice, and the screen says so: the button pays again
   const paysAgain =
     !payment.problem && (shownError?.code === 'payment_failed' || shownError?.code === 'payment_mismatch');
@@ -586,7 +594,7 @@ export function PayScreen() {
             {rest ? labels.pay.backFromRest : labels.pay.back}
           </SecondaryButton>
           <FooterNote>
-            {sentences(
+            {joinSentences(
               formatLabel(labels.pay.disclaimer, { merchant }),
               // Only a merchant that checks paying wallets says so (an older Quasar always did)
               ...(screensPayingWallets(checkout) ? [formatLabel(labels.pay.disclaimerScreening, { merchant })] : []),

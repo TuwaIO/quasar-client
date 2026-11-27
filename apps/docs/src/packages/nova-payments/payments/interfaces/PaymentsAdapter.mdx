@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # PaymentsAdapter
 
-Defined in: [nova-payments/src/adapters/types.ts:45](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L45)
+Defined in: [nova-payments/src/adapters/types.ts:57](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L57)
 
 What the checkout needs from a chain family to pay from the connected wallet. `@tuwaio/nova-payments/evm` and
 `@tuwaio/nova-payments/solana` make them; the checkout itself imports no chain library. Chains are CAIP-2 IDs, and
@@ -17,7 +17,7 @@ error, which the checkout reads with `walletErrorKind`).
 
 > `optional` **canSponsorCalls?**: (`params`) => `Promise`\<`boolean`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:69](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L69)
+Defined in: [nova-payments/src/adapters/types.ts:93](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L93)
 
 Whether the wallet sends `wallet_sendCalls` with the `paymasterService` capability on the chain (EIP-5792,
 ERC-7677).
@@ -48,7 +48,7 @@ The chain and the account.
 
 > `optional` **estimateFee?**: (`params`) => `Promise`\<[`NativeFee`](?path=/docs/packages-nova-payments-payments-interfaces-nativefee--docs) \| `null`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:61](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L61)
+Defined in: [nova-payments/src/adapters/types.ts:73](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L73)
 
 Estimates the network fee of the transfer, paid in the native coin.
 
@@ -78,7 +78,7 @@ The fee, or `null` when it cannot be estimated.
 
 > `optional` **explorerAddressUrl?**: (`params`) => `string` \| `undefined`
 
-Defined in: [nova-payments/src/adapters/types.ts:158](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L158)
+Defined in: [nova-payments/src/adapters/types.ts:182](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L182)
 
 The link of a wallet address on a block explorer of its chain.
 
@@ -108,7 +108,7 @@ The link, or `undefined` when the chain has no known explorer.
 
 > `optional` **explorerUrl?**: (`params`) => `string` \| `undefined`
 
-Defined in: [nova-payments/src/adapters/types.ts:151](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L151)
+Defined in: [nova-payments/src/adapters/types.ts:175](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L175)
 
 The link of a transaction on a block explorer of its chain.
 
@@ -138,7 +138,7 @@ The link, or `undefined` when the chain has no known explorer.
 
 > **family**: [`PaymentFamily`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentfamily--docs)
 
-Defined in: [nova-payments/src/adapters/types.ts:47](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L47)
+Defined in: [nova-payments/src/adapters/types.ts:59](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L59)
 
 The chain family it pays on.
 
@@ -148,7 +148,7 @@ The chain family it pays on.
 
 > `optional` **followSponsoredCalls?**: (`params`) => `void`
 
-Defined in: [nova-payments/src/adapters/types.ts:172](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L172)
+Defined in: [nova-payments/src/adapters/types.ts:196](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L196)
 
 Follows a batch the wallet took before the page was reloaded, until its transaction comes or `until` passes.
 
@@ -180,7 +180,7 @@ The batch, until when to follow it (a timestamp) and what to call with its trans
 
 > **getBalance**: (`params`) => `Promise`\<`bigint`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:54](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L54)
+Defined in: [nova-payments/src/adapters/types.ts:66](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L66)
 
 Reads a balance from the network in the browser (no request to Quasar).
 
@@ -210,11 +210,46 @@ The balance, in base units.
 
 ***
 
+### outOfGas?
+
+> `optional` **outOfGas?**: (`params`) => `Promise`\<[`OutOfGas`](?path=/docs/packages-nova-payments-payments-interfaces-outofgas--docs) \| `null`\>
+
+Defined in: [nova-payments/src/adapters/types.ts:85](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L85)
+
+Whether a payment that reverted on the network ran out of gas, read from the network in the browser: a transfer
+of the payment (the coin to its recipient, or the token's `transfer` to it) sent by the buyer's wallet that spent
+its whole gas limit. Some wallets set a limit of their own below what a recipient with an EIP-7702 delegation takes
+on receipt, whatever the page asks for. A transaction of a relay or a bundler, whose gas no wallet of the buyer
+set, is not one. The checkout then says what limit to set in the wallet before paying again.
+
+#### Parameters
+
+##### params
+
+What the payment sends (its network is the transaction's) and the transaction hash.
+
+###### instructions
+
+[`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs)
+
+###### txKey
+
+`string`
+
+#### Returns
+
+`Promise`\<[`OutOfGas`](?path=/docs/packages-nova-payments-payments-interfaces-outofgas--docs) \| `null`\>
+
+The gas the transfer needs, or `null` when it did not run out of gas, is no transfer of the payment, or
+  cannot be read.
+
+***
+
 ### pulsarTransaction?
 
 > `optional` **pulsarTransaction?**: (`params`) => `Transaction`
 
-Defined in: [nova-payments/src/adapters/types.ts:166](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L166)
+Defined in: [nova-payments/src/adapters/types.ts:190](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L190)
 
 Describes a sent payment as a pending transaction of `@tuwaio/pulsar-core`, so that the app's Pulsar store tracks
 it (and Nova Transactions shows its toast) once the checkout closes.
@@ -239,7 +274,7 @@ The pending transaction, for `injectExternalPendingTxs` of the Pulsar store.
 
 > `optional` **sendOneTimeRelay?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:193](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L193)
+Defined in: [nova-payments/src/adapters/types.ts:217](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L217)
 
 Sends the call Quasar authorized for a gasless payment (`relayFromPage` of the checkout store) from a one-time
 account of the page: a key made in memory for this payment only, delegated (EIP-7702) to the account code Quasar's
@@ -284,7 +319,7 @@ The hash of the user operation.
 
 > `optional` **sendSponsoredCalls?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:173](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L173)
+Defined in: [nova-payments/src/adapters/types.ts:197](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L197)
 
 #### Parameters
 
@@ -332,7 +367,7 @@ Called with the transaction of a batch that landed after the adapter gave up wai
 
 > **sendTransfer**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:83](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L83)
+Defined in: [nova-payments/src/adapters/types.ts:107](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L107)
 
 Sends the transfer the quote describes, with the wallet's prompt.
 
@@ -367,7 +402,7 @@ The transaction hash (EVM) or signature (Solana).
 
 > `optional` **signMessage?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:109](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L109)
+Defined in: [nova-payments/src/adapters/types.ts:133](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L133)
 
 Signs a message with `personal_sign` (EIP-191), with the wallet's prompt: the EIP-4361 message by which the paying
 wallet confirms the invoice before an EVM payment it sends itself (`confirmPayer` of the checkout store of
@@ -406,7 +441,7 @@ The signature, as hex.
 
 > `optional` **signTransferAuthorization?**: (`params`) => `Promise`\<`string`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:94](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L94)
+Defined in: [nova-payments/src/adapters/types.ts:118](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L118)
 
 Signs the EIP-3009 authorization of a gasless quote (`eth_signTypedData_v4`), with the wallet's prompt.
 
@@ -436,7 +471,7 @@ The 65-byte signature.
 
 > `optional` **switchChain?**: (`chainId`) => `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:75](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L75)
+Defined in: [nova-payments/src/adapters/types.ts:99](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L99)
 
 Asks the wallet to switch to the chain of the payment.
 
@@ -458,7 +493,7 @@ The chain.
 
 > `optional` **verifyInvoiceAddress?**: (`params`) => `Promise`\<`boolean`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:132](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L132)
+Defined in: [nova-payments/src/adapters/types.ts:156](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L156)
 
 Checks an invoice's own address (`quote.invoiceAddress`, ERC-5564), without the wallet: the address of the quote's
 instructions must come from the meta-address of the payout wallet's signed record and the address's one-time key,
@@ -496,7 +531,7 @@ Whether the address comes from the signed meta-address.
 
 > `optional` **verifyPayoutRecord?**: (`params`) => `Promise`\<`boolean`\>
 
-Defined in: [nova-payments/src/adapters/types.ts:121](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L121)
+Defined in: [nova-payments/src/adapters/types.ts:145](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/adapters/types.ts#L145)
 
 Checks the signature of the payout record of a quote's receiving address (`quote.payee`), without the wallet: the
 checkout shows the address and asks the wallet to pay only once the record is signed by the address it names

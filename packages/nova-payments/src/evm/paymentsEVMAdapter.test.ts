@@ -29,6 +29,8 @@ const wagmi = vi.hoisted(() => ({
   waitForCallsStatus: vi.fn(),
   signMessage: vi.fn(),
   verifyMessage: vi.fn(),
+  getTransaction: vi.fn(),
+  getTransactionReceipt: vi.fn(),
 }));
 vi.mock('@wagmi/core', () => wagmi);
 
@@ -562,5 +564,80 @@ describe("paymentsEVMAdapter: an invoice's own address", () => {
     ).resolves.toBe(false);
     // A smart wallet's contract is never asked: only an ordinary wallet makes the keys
     expect(wagmi.verifyMessage).not.toHaveBeenCalled();
+  });
+});
+
+// A wallet set its own gas limit for ETH to a merchant with an EIP-7702 delegation, below what the recipient's code
+// takes on receipt, ignoring the one the page passed: the transaction ran out of gas twice, and the page only said that
+// the payment failed
+describe('paymentsEVMAdapter: a payment that ran out of gas', () => {
+  const HASH = `0x${'c'.repeat(64)}`;
+  const sent = { from: ACCOUNT, to: MERCHANT, value: 37_308_333_333_333_334n, input: '0x', gas: 21_862n };
+  const ranOut = { status: 'reverted', gasUsed: 21_862n };
+  const tokenSent = {
+    from: ACCOUNT,
+    to: USDC,
+    value: 0n,
+    input: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [MERCHANT, 89_540_000n] }),
+    gas: 40_000n,
+  };
+
+  /** What the adapter tells of the transaction `HASH` of a payment of `instructions`, as the network has it. */
+  const told = (instructions: PaymentInstructions, tx: object, receipt: object) => {
+    wagmi.getTransaction.mockResolvedValueOnce(tx);
+    wagmi.getTransactionReceipt.mockResolvedValueOnce(receipt);
+    return paymentsEVMAdapter(config).outOfGas!({ instructions, txKey: HASH });
+  };
+
+  it('tells a transfer that used all the gas its wallet gave it, with the gas this page asks for it', async () => {
+    wagmi.estimateGas.mockResolvedValue(24_393n);
+    await expect(told(eth, sent, ranOut)).resolves.toEqual({ needed: 30_492n });
+    expect(wagmi.getTransaction).toHaveBeenCalledWith(config, { hash: HASH, chainId: 84532 });
+    expect(wagmi.getTransactionReceipt).toHaveBeenCalledWith(config, { hash: HASH, chainId: 84532 });
+    // The same estimate as before a transfer, from the wallet that sent it: a QR payment has no wallet on the page
+    expect(wagmi.estimateGas).toHaveBeenCalledWith(config, {
+      account: ACCOUNT,
+      chainId: 84532,
+      to: MERCHANT,
+      value: 37_308_333_333_333_334n,
+    });
+  });
+
+  it('tells a token transfer that ran out of gas', async () => {
+    wagmi.estimateGas.mockResolvedValue(52_000n);
+    await expect(told(usdc, tokenSent, { status: 'reverted', gasUsed: 40_000n })).resolves.toEqual({
+      needed: 65_000n,
+    });
+  });
+
+  it('names no gas when the transfer cannot be estimated now', async () => {
+    wagmi.estimateGas.mockRejectedValue(new Error('insufficient funds for transfer'));
+    await expect(told(eth, sent, ranOut)).resolves.toEqual({ needed: null });
+  });
+
+  it('says nothing of gas for a payment that failed for another reason, or that its wallet did not send', async () => {
+    // Reverted with gas to spare: the recipient's code refused it; succeeded: nothing ran out
+    expect(await told(eth, sent, { status: 'reverted', gasUsed: 21_500n })).toBeNull();
+    expect(await told(eth, sent, { status: 'success', gasUsed: 21_862n })).toBeNull();
+    // Another recipient, or no coin sent: not a transfer of this payment
+    expect(await told(eth, { ...sent, to: USDC }, ranOut)).toBeNull();
+    expect(await told(eth, { ...sent, value: 0n }, ranOut)).toBeNull();
+    // A relay's or a bundler's transaction moves the token another way, and its gas is not the wallet's
+    const pulled = encodeFunctionData({ abi: erc20Abi, functionName: 'transferFrom', args: [ACCOUNT, MERCHANT, 1n] });
+    expect(await told(usdc, { ...tokenSent, input: pulled }, { status: 'reverted', gasUsed: 40_000n })).toBeNull();
+    expect(
+      await told(usdc, { ...tokenSent, input: '0xe3ee160e' }, { status: 'reverted', gasUsed: 40_000n }),
+    ).toBeNull();
+    const elsewhere = encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [ACCOUNT, 1n] });
+    expect(await told(usdc, { ...tokenSent, input: elsewhere }, { status: 'reverted', gasUsed: 40_000n })).toBeNull();
+    expect(wagmi.estimateGas).not.toHaveBeenCalled();
+  });
+
+  it('says nothing when the network does not have the transaction, or for a key that is no hash', async () => {
+    wagmi.getTransaction.mockRejectedValueOnce(new Error('TransactionNotFoundError'));
+    wagmi.getTransactionReceipt.mockRejectedValueOnce(new Error('TransactionReceiptNotFoundError'));
+    await expect(paymentsEVMAdapter(config).outOfGas!({ instructions: eth, txKey: HASH })).resolves.toBeNull();
+    await expect(paymentsEVMAdapter(config).outOfGas!({ instructions: eth, txKey: '0xnative' })).resolves.toBeNull();
+    expect(wagmi.getTransaction).toHaveBeenCalledOnce();
   });
 });

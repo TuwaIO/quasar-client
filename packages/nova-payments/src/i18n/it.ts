@@ -164,6 +164,10 @@ export const itLabels: NovaPaymentsLabels = {
     tryAgain: 'Riprova',
     failed:
       'Il pagamento non è riuscito su {network}. È stata spesa solo la commissione di rete; la fattura è ancora aperta.',
+    outOfGas:
+      'La transazione ha esaurito il gas: il wallet ha impostato un limite di gas troppo basso. Prima di pagare di nuovo, imposta nel wallet un limite di gas di almeno {gas}.',
+    outOfGasUnknown:
+      'La transazione ha esaurito il gas: il wallet ha impostato un limite di gas troppo basso. Prima di pagare di nuovo, aumenta il limite di gas nel wallet.',
     failedExpired:
       'La transazione non è stata confermata in tempo ed è scaduta, quindi non è stato inviato nulla. La fattura è ancora aperta.',
     failedCancelled: 'La transazione è stata annullata nel wallet. La fattura è ancora aperta.',

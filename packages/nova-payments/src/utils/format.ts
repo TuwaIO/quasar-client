@@ -1,5 +1,6 @@
 /**
- * @file Numbers, amounts, addresses and countdowns as the checkout shows them, in the language of the page.
+ * @file Numbers, amounts, addresses, countdowns and notes of several sentences as the checkout shows them, in the
+ * language of the page.
  */
 
 import { formatBaseUnits } from '@tuwaio/orbit-core';
@@ -102,4 +103,18 @@ export function formatCountdown(ms: number): string {
   if (days > 0) return `${days}d ${pad(hours)}:${pad(minutes)}`;
   if (hours > 0) return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   return `${pad(minutes)}:${pad(seconds)}`;
+}
+
+/**
+ * The sentences of one note: a space between them, none after a full-width stop (Chinese).
+ *
+ * @param parts - The sentences; empty ones are left out.
+ * @returns The note.
+ * @internal
+ */
+export function joinSentences(...parts: Array<string | null | undefined>): string {
+  return parts.reduce<string>((text, part) => {
+    if (!part) return text;
+    return text && !/[。！？]$/.test(text) ? `${text} ${part}` : `${text}${part}`;
+  }, '');
 }

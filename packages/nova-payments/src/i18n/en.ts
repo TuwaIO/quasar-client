@@ -160,6 +160,10 @@ export const defaultLabels: NovaPaymentsLabels = {
     declined: 'You declined the request in {wallet}.',
     tryAgain: 'Try again',
     failed: 'The payment failed on {network}. Only the network fee was spent; the invoice is still open.',
+    outOfGas:
+      'The transaction ran out of gas: the wallet set its gas limit too low. Before you pay again, set the gas limit in the wallet to at least {gas}.',
+    outOfGasUnknown:
+      'The transaction ran out of gas: the wallet set its gas limit too low. Before you pay again, raise the gas limit in the wallet.',
     failedExpired:
       'The transaction was not confirmed in time and expired, so nothing was sent. The invoice is still open.',
     failedCancelled: 'The transaction was cancelled in the wallet. The invoice is still open.',

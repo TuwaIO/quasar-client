@@ -162,6 +162,10 @@ export const esLabels: NovaPaymentsLabels = {
     declined: 'Rechazaste la solicitud en {wallet}.',
     tryAgain: 'Reintentar',
     failed: 'El pago falló en {network}. Solo se gastó la comisión de red; la factura sigue abierta.',
+    outOfGas:
+      'La transacción se quedó sin gas: la billetera fijó un límite de gas demasiado bajo. Antes de volver a pagar, fija en la billetera un límite de gas de al menos {gas}.',
+    outOfGasUnknown:
+      'La transacción se quedó sin gas: la billetera fijó un límite de gas demasiado bajo. Antes de volver a pagar, sube el límite de gas en la billetera.',
     failedExpired:
       'La transacción no se confirmó a tiempo y caducó, así que no se envió nada. La factura sigue abierta.',
     failedCancelled: 'La transacción se canceló en la billetera. La factura sigue abierta.',

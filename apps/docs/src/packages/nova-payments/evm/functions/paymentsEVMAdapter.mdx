@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 > **paymentsEVMAdapter**(`config`): [`PaymentsAdapter`](?path=/docs/packages-nova-payments-payments-interfaces-paymentsadapter--docs)
 
-Defined in: [nova-payments/src/evm/paymentsEVMAdapter.ts:168](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/evm/paymentsEVMAdapter.ts#L168)
+Defined in: [nova-payments/src/evm/paymentsEVMAdapter.ts:197](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/evm/paymentsEVMAdapter.ts#L197)
 
 The adapter that pays EVM methods of a Nova Payments checkout from the wallet connected through wagmi (the config
 Satellite Connect and Nova Connect use). It reads balances and estimates fees on the network, asks the wallet to
@@ -22,11 +22,13 @@ paymaster and bundler); the key is never stored or sent. Before each of the four
 another network than the request's is asked to switch (wagmi would refuse the request before the wallet saw it); a
 switch that fails is a `PaymentWalletError` of the kind `switchFailed`, a refused one stays `declined`, both with
 `step: 'switch'`. A Safe wallet
-is refused: it returns a Safe transaction hash, not the transaction Quasar follows. Pass it in `adapters` of
-`NovaPaymentsProvider`.
+is refused: it returns a Safe transaction hash, not the transaction Quasar follows. After a payment that reverted,
+it tells whether its transfer ran out of the gas its wallet gave it, and the limit to set instead (`outOfGas`). Pass
+it in `adapters` of `NovaPaymentsProvider`.
 
 Side effects: RPC reads through the wagmi transports (`eth_estimateGas` before each transfer; the one-time account's
-nonce and code); wallet prompts, including a network switch; requests to the checkout's paymaster route.
+nonce and code; the transaction, its receipt and an `eth_estimateGas` of a payment that reverted); wallet prompts,
+including a network switch; requests to the checkout's paymaster route.
 
 ## Parameters
 

@@ -1,5 +1,6 @@
 import type { CheckoutError } from '@tuwaio/quasar-sdk/checkout';
 
+import type { OutOfGas } from '../adapters/types';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { leftTheWalletText, paymentFailedText } from './outcome';
 import { isPayerProofError } from './payerProof';
@@ -12,6 +13,8 @@ import type { PaymentWalletErrorKind } from './walletErrors';
  * @param values - The wallet, the network and the seller the text names.
  * @param problem - What the wallet did, if it refused; it comes before the store's error.
  * @param error - The store's error, if any.
+ * @param outOfGas - What the chain adapter told of a transaction that reverted, when it ran out of gas: the text of the
+ *   failure then says what gas limit to set.
  * @returns The text, or `null` with nothing to say (a refusal of the confirmation has its text under it).
  * @internal
  */
@@ -20,6 +23,7 @@ export function problemText(
   values: { wallet: string; network: string; merchant: string },
   problem: PaymentWalletErrorKind | null,
   error: CheckoutError | null | undefined,
+  outOfGas?: OutOfGas | null,
 ): string | null {
   const errorCode = error?.code;
   if (problem === 'declined') return formatLabel(labels.pay.declined, values);
@@ -37,7 +41,7 @@ export function problemText(
   // Only a transaction that reverted on the network spent a fee (`paymentFailedText`). A wallet that did not do what it
   // was asked sent nothing
   if (problem === 'failed') return formatLabel(labels.pay.walletFailed, values);
-  if (error && errorCode === 'payment_failed') return paymentFailedText(error, labels, values.network);
+  if (error && errorCode === 'payment_failed') return paymentFailedText(error, labels, values.network, outOfGas);
   if (errorCode === 'screening_unavailable') return labels.pay.screeningUnavailable;
   if (errorCode === 'request_failed') return labels.pay.noAnswer;
   // A new price was refused: the feed or the network of the method cannot be read now, or the seller set up no RPC

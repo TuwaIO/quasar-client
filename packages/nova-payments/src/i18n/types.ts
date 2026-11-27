@@ -296,6 +296,17 @@ export type NovaPaymentsLabels = {
     /** The transaction reverted on the network, so its fee was spent: `{network}` */
     failed: string;
     /**
+     * After `failed`: the transaction ran out of gas, as its wallet set too low a gas limit, and the limit to set before
+     * paying again, in digits: `{gas}` (default: `The transaction ran out of gas: the wallet set its gas limit too low.
+     * Before you pay again, set the gas limit in the wallet to at least {gas}.`)
+     */
+    outOfGas: string;
+    /**
+     * The same when the page cannot tell the limit the transfer needs (default: `The transaction ran out of gas: the
+     * wallet set its gas limit too low. Before you pay again, raise the gas limit in the wallet.`)
+     */
+    outOfGasUnknown: string;
+    /**
      * The transaction never landed and its time ran out (a Solana blockhash expired), so nothing was sent and no fee was
      * spent (default: `The transaction was not confirmed in time and expired, so nothing was sent. The invoice is still open.`)
      */

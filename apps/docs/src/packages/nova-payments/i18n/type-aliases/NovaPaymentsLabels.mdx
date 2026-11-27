@@ -181,7 +181,7 @@ Retry buttons (default: `Try again`)
 
 > **confirm**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:549](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L549)
+Defined in: [nova-payments/src/i18n/types.ts:560](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L560)
 
 The confirm step: the transaction is on its way.
 
@@ -334,7 +334,7 @@ Heading (default: `The checkout can't be opened`)
 
 > **failed**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:626](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L626)
+Defined in: [nova-payments/src/i18n/types.ts:637](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L637)
 
 The step after a payment on its way failed for good: the buyer may pay again.
 
@@ -390,7 +390,7 @@ Title of the menu (default: `Language`)
 
 > **leave**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:884](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L884)
+Defined in: [nova-payments/src/i18n/types.ts:895](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L895)
 
 The question when the buyer closes the checkout before a transaction is sent.
 
@@ -630,7 +630,7 @@ Badge of the connected wallet's network (default: `Your wallet`)
 
 > **outcome**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:654](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L654)
+Defined in: [nova-payments/src/i18n/types.ts:665](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L665)
 
 The outcomes other than paid.
 
@@ -1066,7 +1066,7 @@ Button that connects another wallet (default: `Use another wallet`)
 
 > **paid**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:633](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L633)
+Defined in: [nova-payments/src/i18n/types.ts:644](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L644)
 
 The paid outcome.
 
@@ -1387,6 +1387,21 @@ Heading of a short balance (default: `Not enough`)
 
 Under the amount: `{network}` (default: `on {network}`)
 
+#### outOfGas
+
+> **outOfGas**: `string`
+
+After `failed`: the transaction ran out of gas, as its wallet set too low a gas limit, and the limit to set before
+paying again, in digits: `{gas}` (default: `The transaction ran out of gas: the wallet set its gas limit too low.
+Before you pay again, set the gas limit in the wallet to at least {gas}.`)
+
+#### outOfGasUnknown
+
+> **outOfGasUnknown**: `string`
+
+The same when the page cannot tell the limit the transfer needs (default: `The transaction ran out of gas: the
+wallet set its gas limit too low. Before you pay again, raise the gas limit in the wallet.`)
+
 #### payAgain
 
 > **payAgain**: `string`
@@ -1697,7 +1712,7 @@ Instead of `youSend` on the quote of the rest of an underpaid invoice (default: 
 
 > **payerProof**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:422](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L422)
+Defined in: [nova-payments/src/i18n/types.ts:433](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L433)
 
 The step that confirms the paying wallet: right after the wallet and the method, before the price, the wallet signs
 Quasar's message (a free signature that moves no money) for an EVM payment it sends itself; one signature per
@@ -1888,7 +1903,7 @@ The wallet is on another network than the method's (`payer_chain_mismatch`): `{w
 
 > **qr**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:506](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L506)
+Defined in: [nova-payments/src/i18n/types.ts:517](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L517)
 
 The QR code step: Solana Pay, or this checkout on a phone.
 
@@ -2018,7 +2033,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:965](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L965)
+Defined in: [nova-payments/src/i18n/types.ts:976](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L976)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2597,7 +2612,7 @@ The wallet sent it on another network; `{wallet}`, `{network}` (default: `{walle
 
 > **status**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:601](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L601)
+Defined in: [nova-payments/src/i18n/types.ts:612](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L612)
 
 The chip over the heading of a status screen: one or two words that name the state of the payment.
 
@@ -2719,7 +2734,7 @@ Accessible name of the current step: `{current}`, `{total}`, `{name}` (default: 
 
 > **summary**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:899](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L899)
+Defined in: [nova-payments/src/i18n/types.ts:910](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L910)
 
 The order panel: the seller, the deadline, the lines and the total.
 
@@ -2894,7 +2909,7 @@ Under the countdown; `{date}` is the deadline (default: `until {date}`)
 
 > **walletPrompt**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:385](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L385)
+Defined in: [nova-payments/src/i18n/types.ts:396](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L396)
 
 The window while the wallet asks the buyer.
 

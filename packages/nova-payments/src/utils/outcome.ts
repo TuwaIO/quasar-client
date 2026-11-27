@@ -7,8 +7,10 @@ import { parseCaip10AccountId } from '@tuwaio/orbit-core';
 import type { RefundPreview } from '@tuwaio/quasar-sdk';
 import type { CheckoutError, CheckoutMerchant, CheckoutPhase, CheckoutQuote } from '@tuwaio/quasar-sdk/checkout';
 
+import type { OutOfGas } from '../adapters/types';
 import { formatLabel, type NovaPaymentsLabels } from '../i18n';
 import { isMovedMoneyFailure, isPaidElsewhere, type UnconfirmedFollowUp, unconfirmedFollowUp } from './checkout';
+import { joinSentences } from './format';
 
 /**
  * Where "Contact <seller>" leads: an email to the seller's support address about the invoice, else the seller's site.
@@ -60,14 +62,45 @@ const LEFT_THE_WALLET: Partial<
  * @param error - The store's `payment_failed` error.
  * @param labels - The labels of the checkout language.
  * @param network - The name of the network of the payment, on the pay step; the method step does not know it.
+ * @param outOfGas - What the chain adapter told of the transaction that reverted, when it ran out of gas
+ *   (`outOfGas`): the text then says what gas limit to set in the wallet ({@link outOfGasText}).
  * @returns The text.
  */
-export function paymentFailedText(error: CheckoutError, labels: NovaPaymentsLabels, network?: string): string {
+export function paymentFailedText(
+  error: CheckoutError,
+  labels: NovaPaymentsLabels,
+  network?: string,
+  outOfGas?: OutOfGas | null,
+): string {
   const reason = (error as { reason?: string }).reason;
   if (reason === 'expired') return labels.pay.failedExpired;
   if (reason === 'cancelled') return labels.pay.failedCancelled;
-  if (reason === 'reverted') return network ? formatLabel(labels.pay.failed, { network }) : labels.method.paymentFailed;
+  if (reason === 'reverted') {
+    if (!network) return labels.method.paymentFailed;
+    const failed = formatLabel(labels.pay.failed, { network });
+    return outOfGas ? joinSentences(failed, outOfGasText(outOfGas, labels)) : failed;
+  }
   return labels.pay.didNotGoThrough;
+}
+
+/** A gas limit to set in a wallet is rounded up to whole thousands: a round number to type, with a little more room. */
+const GAS_ROUNDING = 1000n;
+
+/**
+ * What the checkout says about a payment that ran out of gas (`outOfGas` of the chain adapter): its wallet set the gas
+ * limit too low, and what limit to set in the wallet before paying again. Some wallets set a limit of their own
+ * whatever the page asks for, and the buyer who only reads that the payment failed pays again with the same limit. The
+ * limit is the one this page asks for the transfer, rounded up to whole thousands and written in digits only, as the
+ * wallet's field takes it; without it, the text says to raise the limit.
+ *
+ * @param outOfGas - What the adapter told of the transaction.
+ * @param labels - The labels of the checkout language.
+ * @returns The text, for example `… set the gas limit in the wallet to at least 31000.` for a limit of 30492.
+ */
+export function outOfGasText(outOfGas: OutOfGas, labels: NovaPaymentsLabels): string {
+  if (outOfGas.needed === null) return labels.pay.outOfGasUnknown;
+  const gas = ((outOfGas.needed + GAS_ROUNDING - 1n) / GAS_ROUNDING) * GAS_ROUNDING;
+  return formatLabel(labels.pay.outOfGas, { gas: gas.toString() });
 }
 
 /**

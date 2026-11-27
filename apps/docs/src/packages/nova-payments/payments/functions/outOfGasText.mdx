@@ -1,0 +1,35 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Packages/nova-payments/payments/Functions/outOfGasText" />
+
+# outOfGasText()
+
+> **outOfGasText**(`outOfGas`, `labels`): `string`
+
+Defined in: [nova-payments/src/utils/outcome.ts:100](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/utils/outcome.ts#L100)
+
+What the checkout says about a payment that ran out of gas (`outOfGas` of the chain adapter): its wallet set the gas
+limit too low, and what limit to set in the wallet before paying again. Some wallets set a limit of their own
+whatever the page asks for, and the buyer who only reads that the payment failed pays again with the same limit. The
+limit is the one this page asks for the transfer, rounded up to whole thousands and written in digits only, as the
+wallet's field takes it; without it, the text says to raise the limit.
+
+## Parameters
+
+### outOfGas
+
+[`OutOfGas`](?path=/docs/packages-nova-payments-payments-interfaces-outofgas--docs)
+
+What the adapter told of the transaction.
+
+### labels
+
+[`NovaPaymentsLabels`](?path=/docs/packages-nova-payments-i18n-type-aliases-novapaymentslabels--docs)
+
+The labels of the checkout language.
+
+## Returns
+
+`string`
+
+The text, for example `… set the gas limit in the wallet to at least 31000.` for a limit of 30492.

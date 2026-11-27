@@ -10,6 +10,8 @@ import {
   getConnection,
   getConnectorClient,
   getPublicClient,
+  getTransaction,
+  getTransactionReceipt,
   readContract,
   sendCalls,
   sendTransaction,
@@ -21,6 +23,7 @@ import {
 } from '@wagmi/core';
 import {
   type Address,
+  decodeFunctionData,
   encodeFunctionData,
   erc20Abi,
   type Hex,
@@ -28,6 +31,7 @@ import {
   http,
   isAddress,
   isAddressEqual,
+  isHash,
   isHex,
   recoverMessageAddress,
 } from 'viem';
@@ -99,6 +103,29 @@ async function gasLimit(
 }
 
 /**
+ * Whether a transaction is a transfer of the payment as a buyer's wallet sends it: the coin to the recipient, or the
+ * token's `transfer` to it. The amount is not compared, as the price may have changed since. A relay moves the token
+ * with another call (`transferWithAuthorization`, `transferFrom`) and a bundler's transaction goes to the EntryPoint:
+ * neither is one, and its gas is not the wallet's.
+ */
+function isTransferOf(
+  tx: { to: Address | null; value: bigint; input: Hex },
+  instructions: Extract<PaymentInstructions, { family: 'eip155' }>,
+): boolean {
+  if (!tx.to) return false;
+  const recipient = instructions.to as Address;
+  if (instructions.token === 'native') return tx.value > 0n && isAddressEqual(tx.to, recipient);
+  if (!isAddressEqual(tx.to, instructions.token as Address)) return false;
+  try {
+    const call = decodeFunctionData({ abi: erc20Abi, data: tx.input });
+    return call.functionName === 'transfer' && isAddressEqual(call.args[0], recipient);
+  } catch {
+    // Not a call of an ERC-20 function
+    return false;
+  }
+}
+
+/**
  * Whether the wallet behind a WalletConnect session is a Safe. Safe{Wallet} connects with the connector `walletConnect`
  * too, and then only the peer's name tells it apart. `SafePal` is another wallet that sends its own transactions, so the
  * name must be the whole word. A session that cannot be read says nothing about the wallet, which may pay.
@@ -144,11 +171,13 @@ async function routeRequest(url: string, method: string): Promise<unknown> {
  * another network than the request's is asked to switch (wagmi would refuse the request before the wallet saw it); a
  * switch that fails is a `PaymentWalletError` of the kind `switchFailed`, a refused one stays `declined`, both with
  * `step: 'switch'`. A Safe wallet
- * is refused: it returns a Safe transaction hash, not the transaction Quasar follows. Pass it in `adapters` of
- * `NovaPaymentsProvider`.
+ * is refused: it returns a Safe transaction hash, not the transaction Quasar follows. After a payment that reverted,
+ * it tells whether its transfer ran out of the gas its wallet gave it, and the limit to set instead (`outOfGas`). Pass
+ * it in `adapters` of `NovaPaymentsProvider`.
  *
  * Side effects: RPC reads through the wagmi transports (`eth_estimateGas` before each transfer; the one-time account's
- * nonce and code); wallet prompts, including a network switch; requests to the checkout's paymaster route.
+ * nonce and code; the transaction, its receipt and an `eth_estimateGas` of a payment that reverted); wallet prompts,
+ * including a network switch; requests to the checkout's paymaster route.
  *
  * @param config - The wagmi config of the app.
  * @returns The EVM adapter.
@@ -249,6 +278,28 @@ export function paymentsEVMAdapter(config: Config): PaymentsAdapter {
       if (price === undefined) return null;
       const native = config.chains.find((chain) => chain.id === evm.chainId)?.nativeCurrency;
       return { amount: gas * price, decimals: native?.decimals ?? 18, symbol: native?.symbol ?? 'ETH' };
+    },
+
+    outOfGas: async ({ instructions, txKey }) => {
+      const evm = evmInstructions(instructions);
+      if (!isHash(txKey)) return null;
+      let sent: Awaited<ReturnType<typeof getTransaction>>;
+      let receipt: Awaited<ReturnType<typeof getTransactionReceipt>>;
+      try {
+        [sent, receipt] = await Promise.all([
+          getTransaction(config, { hash: txKey, chainId: evm.chainId }),
+          getTransactionReceipt(config, { hash: txKey, chainId: evm.chainId }),
+        ]);
+      } catch {
+        // A node that does not have it, or does not answer: nothing to tell
+        return null;
+      }
+      // Out of gas, the transaction spent its whole limit; one that reverted with gas left was refused for another
+      // reason, and more gas would not help it
+      if (receipt.status !== 'reverted' || receipt.gasUsed < sent.gas || !isTransferOf(sent, evm)) return null;
+      // The limit this page asks for the transfer, from the wallet that sent it: a QR payment has no wallet on the page
+      const { gas } = await gasLimit(config, sent.from, evm);
+      return { needed: gas ?? null };
     },
 
     canSponsorCalls: async ({ chainId, account }) => {
