@@ -295,6 +295,125 @@ const ErrorResponseSchema = z
   .openapi('ErrorResponse');
 registry.register('ErrorResponse', ErrorResponseSchema);
 
+// --- The erasure and the export of what an app keeps of a wallet address (the rights of the person behind it) ---
+const ErasedAddressSchema = z.string().min(1).max(100).openapi({
+  description:
+    'The wallet address of the person: an EVM address (`0x` and 40 hex digits, in any letter case) or a Solana address. It goes in the body only, never in the path or the query.',
+  example: '0x52908400098527886E0F7030069857D2E4169EE7',
+});
+
+const AddressEraseRequestSchema = z
+  .object({
+    address: ErasedAddressSchema,
+    block: z.boolean().optional().default(false).openapi({
+      description:
+        'Refuse the syncs of transactions from the address from now on (`403 address_blocked`). The app keeps only a keyed hash of the address for that, never the address.',
+    }),
+    dryRun: z
+      .boolean()
+      .optional()
+      .default(false)
+      .openapi({ description: 'Only count what would be erased; nothing is erased or blocked.' }),
+  })
+  .strict()
+  .openapi('AddressEraseRequest');
+registry.register('AddressEraseRequest', AddressEraseRequestSchema);
+
+const AddressErasureSchema = z
+  .object({
+    erasure: z
+      .string()
+      .nullable()
+      .openapi({ description: 'The ID of the record of the erasure; `null` in a dry run.' }),
+    transactions: z
+      .number()
+      .int()
+      .openapi({ description: 'The transactions that name the address and are erased (in a dry run, would be).' }),
+    deliveries: z.number().int().openapi({ description: 'Their webhook deliveries, erased with them.' }),
+    keptPayments: z.number().int().openapi({
+      description: 'Payments of invoices and refunds that name the address: accounting records, which stay.',
+    }),
+    keptReason: z
+      .enum(['invoice_records'])
+      .nullable()
+      .openapi({ description: '`invoice_records` while `keptPayments` stay; otherwise `null`.' }),
+    blocked: z.boolean().openapi({ description: 'Whether the app refuses the syncs of the address now.' }),
+    dryRun: z.boolean().openapi({ description: 'Whether this was a dry run.' }),
+    erasedAt: z
+      .string()
+      .nullable()
+      .openapi({ description: 'When the address was erased (ISO 8601); `null` in a dry run.' }),
+  })
+  .openapi('AddressErasure');
+registry.register('AddressErasure', AddressErasureSchema);
+
+const AddressExportRequestSchema = z
+  .object({
+    address: ErasedAddressSchema,
+    cursor: z
+      .string()
+      .min(1)
+      .max(500)
+      .optional()
+      .openapi({ description: 'The `next` of the page before; none for the first page.' }),
+  })
+  .strict()
+  .openapi('AddressExportRequest');
+registry.register('AddressExportRequest', AddressExportRequestSchema);
+
+const ExportedDeliverySchema = z
+  .object({
+    id: z.string(),
+    eventType: z.string().openapi({ description: 'The webhook event the delivery carried.' }),
+    txKey: z.string().openapi({ description: 'The key of its transaction.' }),
+    httpStatus: z.string().nullable().openapi({ description: 'The HTTP status the endpoint answered.' }),
+    success: z.boolean().openapi({ description: 'Whether the endpoint took it.' }),
+    attempts: z.string().nullable().openapi({ description: 'How many times it was sent.' }),
+    requestPayload: z.unknown().openapi({ description: 'The body sent to the endpoint.' }),
+    createdAt: z.string().openapi({ description: 'When it was recorded (ISO 8601).' }),
+  })
+  .openapi('ExportedDelivery');
+registry.register('ExportedDelivery', ExportedDeliverySchema);
+
+const AddressExportSchema = z
+  .object({
+    export: z.string().openapi({ description: 'The ID of the record of this page.' }),
+    transactions: z
+      .array(
+        TransactionSchema.and(
+          z.object({
+            kept: z.boolean().openapi({
+              description: 'Whether an erasure keeps this transaction: a payment of an invoice or a refund.',
+            }),
+          }),
+        ),
+      )
+      .openapi({
+        description:
+          'The transactions that name the address, oldest first, with the fields of the history; at most 500 a page.',
+      }),
+    deliveries: z
+      .array(ExportedDeliverySchema)
+      .openapi({ description: 'The webhook deliveries of these transactions, as they were sent.' }),
+    next: z.string().nullable().openapi({ description: 'The cursor of the next page; `null` on the last one.' }),
+    total: z
+      .number()
+      .int()
+      .nullable()
+      .openapi({ description: 'How many transactions name the address, on the first page only; `null` after it.' }),
+  })
+  .openapi('AddressExport');
+registry.register('AddressExport', AddressExportSchema);
+
+const AddressRateLimitedSchema = ErrorResponseSchema.extend({
+  retryAfterSeconds: z
+    .number()
+    .int()
+    .optional()
+    .openapi({ description: 'Seconds until the minute ends and the app may erase or export again (`rate_limited`).' }),
+}).openapi('AddressRateLimited');
+registry.register('AddressRateLimited', AddressRateLimitedSchema);
+
 // ---------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------
@@ -342,7 +461,7 @@ registry.registerPath({
     },
     403: {
       description:
-        'Public key (read-only), disabled app, app being deleted, or IP address or origin not allowed by the app settings. In Quasar Cloud also an organization whose data processing is not set up (`code: data_processing_required`): transactions are accepted once an owner concludes the Data Processing Addendum, and the standard contractual clauses where they apply, in the dashboard.',
+        "Public key (read-only), disabled app, app being deleted, or IP address or origin not allowed by the app settings. In Quasar Cloud also an organization whose data processing is not set up (`code: data_processing_required`): transactions are accepted once an owner concludes the Data Processing Addendum, and the standard contractual clauses where they apply, in the dashboard. `address_blocked`: the app erased the data of the sending wallet at its owner's request and refuses its transactions from then on (`POST /v1/engine/pulsar/address/erase` with `block: true`).",
       content: { 'application/json': { schema: ErrorResponseSchema } },
     },
     422: {
@@ -463,6 +582,91 @@ registry.registerPath({
     },
     429: {
       description: 'Too many requests per second for the app.',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
+  },
+});
+
+const ADDRESS_ERASURE_GUIDE = 'https://github.com/TuwaIO/quasar-community/blob/main/docs/ADDRESS_ERASURE.md';
+
+/** The answers the erasure and the export share, besides their own 200, 400 and 503. */
+const addressResponses = (what: 'Erasing' | 'Exporting') => ({
+  401: {
+    description: 'Missing or invalid key.',
+    content: { 'application/json': { schema: ErrorResponseSchema } },
+  },
+  403: {
+    description: `\`secret_key_required\`: a public key. ${what} needs the secret key of the app; call it from your server. Also a disabled app, an app being deleted, or an IP address or origin not allowed by the app settings. Never refused for the quota or for the data processing of the organization.`,
+    content: { 'application/json': { schema: ErrorResponseSchema } },
+  },
+  404: {
+    description: '`app_not_found`: the app is gone.',
+    content: { 'application/json': { schema: ErrorResponseSchema } },
+  },
+  409: {
+    description: '`app_deleting`: the app is being deleted, and its data with it.',
+    content: { 'application/json': { schema: ErrorResponseSchema } },
+  },
+  429: {
+    description:
+      '`rate_limited`: an app erases or exports at most 10 times a minute, dry runs and every page of an export included; `retryAfterSeconds` says how long to wait. Also too many requests per second for the app.',
+    content: { 'application/json': { schema: AddressRateLimitedSchema } },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/engine/pulsar/address/erase',
+  summary: 'Erase a wallet address',
+  description: `Erases what the app keeps of a wallet address when the person behind it asks to be forgotten (GDPR Article 17): the transactions that name it (as the sender, the recipient, the smart account or the contract, or in the call data, the instructions of a Solana transaction, the title, the description, the payload or the error) and their webhook deliveries. Payments of invoices and refunds that name it stay as accounting records (\`keptPayments\`). With \`block: true\` the app also refuses the syncs of the address from then on; \`dryRun: true\` only counts what would go. Free: an erasure costs no quota. An erasure runs 30 seconds at most; an app that keeps more is erased by the operator, as [the erasure guide](${ADDRESS_ERASURE_GUIDE}) describes. Each erasure is recorded, never with the address.`,
+  tags: ['Pulsar'],
+  security: [{ [secretKeyAuth.name]: [] }],
+  request: {
+    body: { content: { 'application/json': { schema: AddressEraseRequestSchema } }, required: true },
+  },
+  responses: {
+    200: {
+      description: 'Erased, or counted in a dry run.',
+      content: { 'application/json': { schema: AddressErasureSchema } },
+    },
+    400: {
+      description:
+        '`invalid_request` (the body names `address` and, as `true` or `false`, `block` and `dryRun`, nothing else; `issues` says what is wrong) or `address_invalid` (neither an EVM nor a Solana address).',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
+    ...addressResponses('Erasing'),
+    503: {
+      description:
+        '`erase_too_large`: nothing was erased, because the app keeps too many transactions to erase the address within 30 seconds; the operator erases it by hand.',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/v1/engine/pulsar/address/export',
+  summary: 'Export a wallet address',
+  description: `Gives a copy of what the app keeps of a wallet address, for the person behind it (GDPR Articles 15 and 20), a page at a time: the transactions that name it, found exactly as an erasure finds them, with their webhook deliveries, and whether an erasure would keep each one. Ask for the next page with the \`next\` of the page before, until it is \`null\`. An export gives at most 10,000 transactions; each page takes one of the 10 erasures and exports of the minute and runs 30 seconds at most. A larger export is done by the operator, as [the erasure guide](${ADDRESS_ERASURE_GUIDE}) describes. Free: an export costs no quota. Each page is recorded, never with the address.`,
+  tags: ['Pulsar'],
+  security: [{ [secretKeyAuth.name]: [] }],
+  request: {
+    body: { content: { 'application/json': { schema: AddressExportRequestSchema } }, required: true },
+  },
+  responses: {
+    200: {
+      description: 'A page of the export.',
+      content: { 'application/json': { schema: AddressExportSchema } },
+    },
+    400: {
+      description:
+        '`invalid_request` (the body names `address` and, after the first page, `cursor`, nothing else; `issues` says what is wrong), `address_invalid` (neither an EVM nor a Solana address) or `invalid_cursor` (a cursor other than the `next` of a page).',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
+    ...addressResponses('Exporting'),
+    503: {
+      description:
+        '`export_too_large`: more than 10,000 transactions name the address, or reading them takes longer than 30 seconds; the operator exports them by hand.',
       content: { 'application/json': { schema: ErrorResponseSchema } },
     },
   },
