@@ -39,7 +39,7 @@ const showsHash = (node: unknown, hash: string) =>
 const CONTACT =
   'Quasar does not check this payment again. If it left your wallet, contact Cosmos with the transaction hash.';
 const NOT_RECEIVED =
-  'Quasar did not receive this payment. If it left your wallet, contact Cosmos with the transaction hash.';
+  'Quasar has no record of this payment. If it left your wallet, contact Cosmos with the transaction hash.';
 const CLOSED =
   'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact Cosmos with the transaction hash.';
 
@@ -401,7 +401,7 @@ describe('an invoice that expired while the payment of this page was confirming'
   });
 
   // N7a: the store gave up handing the transaction over, so Quasar never received it
-  it('says that Quasar did not receive a payment the store gave up handing over', () => {
+  it('says that Quasar has no record of a payment the store gave up sending it', () => {
     show('expired', { status: 'expired', amountPaid: null });
     const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'submit_failed' };
     ctx = {
@@ -415,7 +415,7 @@ describe('an invoice that expired while the payment of this page was confirming'
     expect(text).not.toContain('nothing was charged');
   });
 
-  it('asks to keep the page open while the store hands the payment over again', () => {
+  it('asks to keep the page open while the store sends the transaction again', () => {
     show('expired', { status: 'expired', amountPaid: null });
     const unconfirmed = { code: 'payment_unconfirmed', message: '', reason: 'submit_retrying' };
     ctx = {
@@ -424,7 +424,7 @@ describe('an invoice that expired while the payment of this page was confirming'
       state: { ...ctx.state, phase: 'expired', txKey: '0xabc', paymentOnTheWay: false, error: unconfirmed } as never,
     };
     const text = textOf(OutcomeScreen({ kind: 'expired' }));
-    expect(text).toContain('This page keeps handing your payment over to Quasar.');
+    expect(text).toContain('This page keeps sending the transaction of your payment to Quasar.');
     expect(text).not.toContain('24 hours');
     expect(text).not.toContain('nothing was charged');
   });
@@ -710,11 +710,11 @@ describe('a payment Quasar could not confirm', () => {
   });
 
   // N7a: after an hour of hand-overs without an answer the store gives up; Quasar never received the transaction
-  it('says that Quasar did not receive a payment the store gave up handing over', () => {
+  it('says that Quasar has no record of a payment the store gave up sending it', () => {
     const tree = unconfirmedScreen(undefined, { reason: 'submit_failed', rechecked: false, txKey: '0xabc' });
     const text = textOf(tree);
     expect(text).toContain(NOT_RECEIVED);
-    expect(text).not.toContain('This page keeps handing your payment over');
+    expect(text).not.toContain('This page keeps sending the transaction of your payment');
     expect(text).not.toContain('24 hours');
     expect(showsHash(tree, '0xabc')).toBe(true);
   });
@@ -736,10 +736,10 @@ describe('a payment Quasar could not confirm', () => {
   });
 
   // F8: the wallet sent the transaction, and the store keeps handing it over to Quasar, which has not received it yet
-  it('asks to keep the page open while the store hands the payment over again', () => {
+  it('asks to keep the page open while the store sends the transaction again', () => {
     const text = textOf(unconfirmedScreen(undefined, { reason: 'submit_retrying', rechecked: false }));
     expect(text).toContain(
-      'This page keeps handing your payment over to Quasar. Keep it open until the payment shows here.',
+      'This page keeps sending the transaction of your payment to Quasar. Keep it open until the payment shows here.',
     );
     expect(text).not.toContain('Quasar checks your payment again for 24 hours');
   });

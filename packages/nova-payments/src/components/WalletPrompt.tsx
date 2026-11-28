@@ -9,7 +9,7 @@ import { DetailRow, DetailsCard, FooterAction, SecondaryButton, WalletWait } fro
 
 /**
  * What the wallet asks for: a gasless signature, a transaction, a network switch, the signature that confirms the
- * paying wallet (`proof`), or Quasar takes the payment.
+ * paying wallet (`proof`), or the page sends the transaction of the payment to Quasar.
  */
 export type WalletPromptKind = 'sign' | 'confirm' | 'switch' | 'proof' | 'submitting';
 

@@ -39,7 +39,7 @@ Reads the refund, for example through `quasar.payments.getRefund`.
 
 Defined in: [checkout/refundStore.ts:119](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L119)
 
-Where a transaction the wallet sent is kept until Quasar takes or refuses it, so that a page closed or reloaded meanwhile
+Where a transaction the wallet sent is kept until Quasar has recorded or refused it, so that a page closed or reloaded meanwhile
 hands it over instead of having the wallet send the refund again. Defaults to the browser's `localStorage` (every tab of
 the browser: the refund window opened again in a new tab hands over a transaction the closed one sent); `null` keeps it
 in memory only. Entries that are not such transactions are skipped.

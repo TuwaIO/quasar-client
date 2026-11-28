@@ -213,7 +213,7 @@ export const esLabels: NovaPaymentsLabels = {
     tryAgain: 'Reintentar',
     stillWaiting: '¿No aparece la ventana? Abre {wallet}: la solicitud te espera allí.',
     cancel: 'Cancelar',
-    submitting: 'Entregando el pago a Quasar…',
+    submitting: 'Enviando la transacción a Quasar…',
   },
   payerProof: {
     title: 'Confirma tu billetera',
@@ -372,11 +372,11 @@ export const esLabels: NovaPaymentsLabels = {
     unconfirmedContact:
       'Quasar ya no vuelve a comprobar este pago. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
     unconfirmedNotReceived:
-      'Quasar no recibió este pago. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
+      'Quasar no tiene registro de este pago. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
     unconfirmedClosed:
       'Quasar no encontró este pago en la red en 24 horas y ya no lo comprueba. Si salió de tu billetera, contacta con {merchant} e indica el hash de la transacción.',
     unconfirmedRetrying:
-      'Esta página sigue entregando tu pago a Quasar. Mantenla abierta hasta que el pago aparezca aquí.',
+      'Esta página sigue enviando a Quasar la transacción de tu pago. Mantenla abierta hasta que el pago aparezca aquí.',
     unconfirmedInvoiceFull:
       'Esta factura no admite más pagos y Quasar no sigue este. No vuelvas a pagar; si salió de tu wallet, contacta con {merchant} indicando el hash de la transacción.',
     unconfirmedTakenElsewhere:
@@ -420,7 +420,7 @@ export const esLabels: NovaPaymentsLabels = {
     text: 'Todavía no se ha enviado nada. La factura sigue abierta hasta el {date}: vuelve a abrirla desde el enlace de tu correo o desde la web del vendedor.',
     textNoDate:
       'Todavía no se ha enviado nada. La factura sigue abierta: vuelve a abrirla desde el enlace de tu correo o desde la web del vendedor.',
-    price: 'El precio fijado se libera; al volver obtendrás uno nuevo.',
+    price: 'El precio fijado no se conserva; al volver obtendrás uno nuevo.',
     stay: 'Quedarme y pagar',
     leave: 'Salir',
   },
@@ -433,8 +433,6 @@ export const esLabels: NovaPaymentsLabels = {
     terms: 'Términos',
     refundPolicy: 'Política de reembolso',
     privacy: 'Privacidad',
-    sellerRole:
-      '{seller} es el vendedor. Quasar es el software de pago: nunca guarda tus fondos y no es parte de esta compra.',
     payWithin: 'Plazo de pago',
     refundAfter: 'Reembolso posible después de',
     until: 'hasta el {date}',

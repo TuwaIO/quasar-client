@@ -331,8 +331,9 @@ export function CheckoutFrame({
               <ScreenBody />
             )}
           </div>
-          {/* A phone has no order panel, whose footer says it */}
-          <div className="novapay:px-4 novapay:pt-2 novapay:pb-3 novapay:sm:hidden">
+          {/* Who sells and what Quasar is, under every step on every width: the frame draws it, outside every part a page
+              replaces and every class it gives, so an order panel of its own or a screen of its own never takes it away */}
+          <div className="novapay:px-4 novapay:pt-2 novapay:pb-3">
             <SellerRole />
           </div>
         </GlideHeight>

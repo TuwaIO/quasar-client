@@ -18,7 +18,7 @@ import type { CheckoutError, CheckoutHandOverStorage } from './store';
 export type RefundPhase =
   'idle' | 'requesting' | 'awaitingTransfer' | 'submitting' | 'confirming' | 'confirmed' | 'failed';
 
-/** A refund transaction the wallet sent, kept until Quasar takes it or refuses it for good. */
+/** A refund transaction the wallet sent, kept until Quasar has recorded it (or refused it for good). */
 export interface SentRefundTransaction {
   /** The transaction (hash or Solana signature). */
   txHash: string;
@@ -51,7 +51,7 @@ export interface RefundState {
   preview: (invoiceId: string, params?: RefundParams) => Promise<RefundPreview | null>;
   /**
    * Asks for a refund of an invoice through `request`. When a transaction sent for an earlier refund of the invoice was
-   * not handed over, that refund comes back instead (`sentTransaction`), or is followed when Quasar took it after all, and
+   * not handed over, that refund comes back instead (`sentTransaction`), or is followed when Quasar recorded it after all, and
    * nothing new is asked for while Quasar does not say what became of it.
    *
    * @param invoiceId - The paid invoice, or one that needs review.
@@ -78,8 +78,8 @@ export interface RefundState {
   recheck: () => Promise<boolean>;
   /**
    * Hands over the refund transaction through `submit`, then follows the refund through `get` until it is final. The
-   * transaction stays in `sentTransaction`, and in {@link RefundStoreOptions.handOverStorage}, until Quasar takes it or
-   * refuses it for good: a refusal of 4xx, other than one that says nothing about it (401, 403, 408, 425, 429).
+   * transaction stays in `sentTransaction`, and in {@link RefundStoreOptions.handOverStorage}, until Quasar has recorded
+   * it or refused it for good: a refusal of 4xx, other than one that says nothing about it (401, 403, 408, 425, 429).
    *
    * @param params - The transaction and the merchant wallet it was sent from.
    * @returns Whether it was taken; `phase` is then `confirming`.
@@ -111,7 +111,7 @@ export interface RefundStoreOptions {
   /** How often to read a refund being confirmed, in milliseconds. Defaults to `5000`. */
   pollMs?: number;
   /**
-   * Where a transaction the wallet sent is kept until Quasar takes or refuses it, so that a page closed or reloaded meanwhile
+   * Where a transaction the wallet sent is kept until Quasar has recorded or refused it, so that a page closed or reloaded meanwhile
    * hands it over instead of having the wallet send the refund again. Defaults to the browser's `localStorage` (every tab of
    * the browser: the refund window opened again in a new tab hands over a transaction the closed one sent); `null` keeps it
    * in memory only. Entries that are not such transactions are skipped.

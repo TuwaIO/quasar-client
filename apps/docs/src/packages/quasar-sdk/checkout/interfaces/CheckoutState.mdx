@@ -125,7 +125,7 @@ Whether the buyer ticked the merchant's consent (`checkout.consent`).
 
 > **destroy**: () => `void`
 
-Defined in: [checkout/store.ts:503](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L503)
+Defined in: [checkout/store.ts:504](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L504)
 
 Stops following the invoice (closes the event stream or the reads). Call it when the page goes away.
 
@@ -271,7 +271,7 @@ The chosen payment method.
 
 > **payAgain**: () => `void`
 
-Defined in: [checkout/store.ts:501](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L501)
+Defined in: [checkout/store.ts:502](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L502)
 
 Goes back to the payment from `unconfirmed`, once the buyer checked that the payment did not leave the wallet:
 `awaitingPayment` while the locked quote is valid, `underpaid` for the rest of an underpaid invoice, otherwise
@@ -414,7 +414,7 @@ The receipt PDF of a paid invoice (a plain `GET`, for a link); `null` before.
 
 > **relay**: (`signature`) => `Promise`\<`boolean`\>
 
-Defined in: [checkout/store.ts:479](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L479)
+Defined in: [checkout/store.ts:480](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L480)
 
 Sends the payer's signature of `quote.gasless.relay.typedData` (`POST relay`): Quasar sends the transfer and the
 merchant pays the gas.
@@ -440,7 +440,7 @@ Whether it was relayed; `phase` is then `confirming` and [CheckoutState.paymentO
 
 > **relayFromPage**: (`signature`, `send`) => `Promise`\<`boolean`\>
 
-Defined in: [checkout/store.ts:493](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L493)
+Defined in: [checkout/store.ts:494](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L494)
 
 Pays the quote without gas from the page's one-time account, and Quasar signs nothing for it: Quasar takes the
 payer's signature of `quote.gasless.relay.typedData` (`POST relay/authorize`) and answers the one call to make;
@@ -648,7 +648,7 @@ CAIP-10 account (`eip155:8453:0x…`, `solana:<genesis hash>:<address>`), or `nu
 
 > **submit**: (`params`) => `Promise`\<`boolean`\>
 
-Defined in: [checkout/store.ts:470](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L470)
+Defined in: [checkout/store.ts:471](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/store.ts#L471)
 
 Hands Quasar the transaction the wallet sent (`POST submit`). For an EIP-5792 batch, pass the hash of its
 transaction (from `wallet_getCallsStatus`), not the batch ID.
@@ -656,11 +656,12 @@ transaction (from `wallet_getCallsStatus`), not the batch ID.
 The wallet has already sent the transaction, so a hand-over that gets no answer (the network, HTTP 408, 429 or
 5xx, `too_many_pending`) is not a failed payment: `txKey` keeps the transaction, `phase` is `unconfirmed` with
 `error` `payment_unconfirmed` (`reason` `submit_retrying`), and the store hands it over again after 2, 4, 8, 16
-and then every 30 seconds (Quasar takes a transaction once per `txKey`), for up to an hour or until `destroy`;
-after the hour `error.reason` is `submit_failed` (Quasar never received it: the buyer contacts the merchant with
-the transaction hash if money left the wallet). Once Quasar takes it, the store follows it as below; taken while
-the invoice is already `paid`, `needs_review` or `refunded`, it leaves the phase as it is (Quasar records it for
-the merchant) and the store reads the checkout once more; taken while it is `expired` or `cancelled`, the phase stays
+and then every 30 seconds (Quasar records a transaction once per `txKey`), for up to an hour or until `destroy`;
+after the hour `error.reason` is `submit_failed` (Quasar never recorded it: the buyer contacts the merchant with
+the transaction hash if money left the wallet). Once Quasar has recorded it, the store follows it as below;
+recorded while the invoice is already `paid`, `needs_review` or `refunded`, it leaves the phase as it is (Quasar
+records it for the merchant) and the store reads the checkout once more; recorded while it is `expired` or
+`cancelled`, the phase stays
 and the store follows the payment until Quasar records it for review (or pays the expired invoice in its grace).
 
 Quasar answers `409 tx_already_used` when it tracks the transaction for another invoice whose page handed it over
@@ -671,7 +672,7 @@ cancelled invoice) and `error` `payment_unconfirmed` with `reason` `tx_already_u
 ([CheckoutState.payAgain](#payagain) does nothing) until Quasar decides. It is not handed over again. Any other refusal
 (4xx) is not retried either.
 
-Until Quasar takes or refuses it, the hand-over is kept in the browser's `localStorage`
+Until Quasar has recorded or refused it, the hand-over is kept in the browser's `localStorage`
 ([CheckoutStoreOptions.handOverStorage](?path=/docs/packages-quasar-sdk-checkout-interfaces-checkoutstoreoptions--docs#handoverstorage)), so a page closed or reloaded meanwhile hands it over again on the
 next [CheckoutState.load](#load) of the same checkout, in any tab of the browser, for 30 days.
 
@@ -702,8 +703,8 @@ next [CheckoutState.load](#load) of the same checkout, in any tab of the browser
 
 `Promise`\<`boolean`\>
 
-Whether Quasar took it; `phase` is then `confirming` (`expired` or `cancelled` when the invoice expired or
-  was cancelled meanwhile: Quasar still takes the transaction, and records it as a late payment to review) and
+Whether Quasar recorded it; `phase` is then `confirming` (`expired` or `cancelled` when the invoice expired
+  or was cancelled meanwhile: Quasar still records the transaction, as a late payment to review) and
   [CheckoutState.paymentOnTheWay](#paymentontheway) `true`. `false` while the hand-over is retried, after a refusal, and for
   `tx_already_used` (followed all the same).
 

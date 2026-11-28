@@ -210,7 +210,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     tryAgain: 'Try again',
     stillWaiting: 'No window? Open {wallet}: the request waits there.',
     cancel: 'Cancel',
-    submitting: 'Handing the payment to Quasar…',
+    submitting: 'Sending the transaction to Quasar…',
   },
   payerProof: {
     title: 'Confirm your wallet',
@@ -365,11 +365,11 @@ export const defaultLabels: NovaPaymentsLabels = {
     unconfirmedContact:
       'Quasar does not check this payment again. If it left your wallet, contact {merchant} with the transaction hash.',
     unconfirmedNotReceived:
-      'Quasar did not receive this payment. If it left your wallet, contact {merchant} with the transaction hash.',
+      'Quasar has no record of this payment. If it left your wallet, contact {merchant} with the transaction hash.',
     unconfirmedClosed:
       'Quasar did not find this payment on the network within 24 hours and no longer checks it. If it left your wallet, contact {merchant} with the transaction hash.',
     unconfirmedRetrying:
-      'This page keeps handing your payment over to Quasar. Keep it open until the payment shows here.',
+      'This page keeps sending the transaction of your payment to Quasar. Keep it open until the payment shows here.',
     unconfirmedInvoiceFull:
       'This invoice takes no more payments, and Quasar does not follow this one. Do not pay again; if it left your wallet, contact {merchant} with the transaction hash.',
     unconfirmedTakenElsewhere:
@@ -412,7 +412,7 @@ export const defaultLabels: NovaPaymentsLabels = {
     text: "Nothing is sent yet. The invoice stays open until {date}: reopen it from the link in your email or on the seller's site.",
     textNoDate:
       "Nothing is sent yet. The invoice stays open: reopen it from the link in your email or on the seller's site.",
-    price: 'The locked price is released; you get a new one when you come back.',
+    price: 'The locked price is not kept; you get a new one when you come back.',
     stay: 'Stay and pay',
     leave: 'Leave',
   },
@@ -425,8 +425,6 @@ export const defaultLabels: NovaPaymentsLabels = {
     terms: 'Terms',
     refundPolicy: 'Refund policy',
     privacy: 'Privacy',
-    sellerRole:
-      '{seller} is the seller. Quasar is the payment software: it never holds your funds and is not a party to this purchase.',
     payWithin: 'Payment deadline',
     refundAfter: 'Refund possible after',
     until: 'until {date}',

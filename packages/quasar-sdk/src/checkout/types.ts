@@ -162,7 +162,8 @@ export interface CheckoutPayment {
   /** The transaction: its hash, or its Solana signature. */
   txKey: string;
   /**
-   * The hash the checkout handed the payment over as, when this one replaced it (sped up in the wallet). Quasar versions
+   * The hash under which the checkout handed the transaction of the payment over to Quasar, when this one replaced it
+   * (sped up in the wallet). Quasar versions
    * before November 26, 2026 leave it out.
    */
   original?: string;

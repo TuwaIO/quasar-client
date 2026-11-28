@@ -441,11 +441,12 @@ export interface CheckoutState {
    * The wallet has already sent the transaction, so a hand-over that gets no answer (the network, HTTP 408, 429 or
    * 5xx, `too_many_pending`) is not a failed payment: `txKey` keeps the transaction, `phase` is `unconfirmed` with
    * `error` `payment_unconfirmed` (`reason` `submit_retrying`), and the store hands it over again after 2, 4, 8, 16
-   * and then every 30 seconds (Quasar takes a transaction once per `txKey`), for up to an hour or until `destroy`;
-   * after the hour `error.reason` is `submit_failed` (Quasar never received it: the buyer contacts the merchant with
-   * the transaction hash if money left the wallet). Once Quasar takes it, the store follows it as below; taken while
-   * the invoice is already `paid`, `needs_review` or `refunded`, it leaves the phase as it is (Quasar records it for
-   * the merchant) and the store reads the checkout once more; taken while it is `expired` or `cancelled`, the phase stays
+   * and then every 30 seconds (Quasar records a transaction once per `txKey`), for up to an hour or until `destroy`;
+   * after the hour `error.reason` is `submit_failed` (Quasar never recorded it: the buyer contacts the merchant with
+   * the transaction hash if money left the wallet). Once Quasar has recorded it, the store follows it as below;
+   * recorded while the invoice is already `paid`, `needs_review` or `refunded`, it leaves the phase as it is (Quasar
+   * records it for the merchant) and the store reads the checkout once more; recorded while it is `expired` or
+   * `cancelled`, the phase stays
    * and the store follows the payment until Quasar records it for review (or pays the expired invoice in its grace).
    *
    * Quasar answers `409 tx_already_used` when it tracks the transaction for another invoice whose page handed it over
@@ -456,14 +457,14 @@ export interface CheckoutState {
    * ({@link CheckoutState.payAgain} does nothing) until Quasar decides. It is not handed over again. Any other refusal
    * (4xx) is not retried either.
    *
-   * Until Quasar takes or refuses it, the hand-over is kept in the browser's `localStorage`
+   * Until Quasar has recorded or refused it, the hand-over is kept in the browser's `localStorage`
    * ({@link CheckoutStoreOptions.handOverStorage}), so a page closed or reloaded meanwhile hands it over again on the
    * next {@link CheckoutState.load} of the same checkout, in any tab of the browser, for 30 days.
    *
    * @param params - `txKey`: transaction hash or Solana signature; `from`: the sender, for a Solana Pay quote without
    *   a payer; `connectorType`: the wallet connector, for the record.
-   * @returns Whether Quasar took it; `phase` is then `confirming` (`expired` or `cancelled` when the invoice expired or
-   *   was cancelled meanwhile: Quasar still takes the transaction, and records it as a late payment to review) and
+   * @returns Whether Quasar recorded it; `phase` is then `confirming` (`expired` or `cancelled` when the invoice expired
+   *   or was cancelled meanwhile: Quasar still records the transaction, as a late payment to review) and
    *   {@link CheckoutState.paymentOnTheWay} `true`. `false` while the hand-over is retried, after a refusal, and for
    *   `tx_already_used` (followed all the same).
    */
@@ -543,7 +544,7 @@ export interface CheckoutStoreOptions {
    * hands over a transaction the closed one sent), or none with your own `api`; `null` keeps nothing. The entry is
    * `quasar-sdk:checkoutHandOvers:<token>`: a JSON array of `{ txKey, from?, connectorType?, methodId?, at }` (the
    * transaction, the sending wallet, the wallet connector and the payment method as passed to `submit`, and when the
-   * store first got it, in milliseconds since 1970), removed once Quasar takes or refuses it. A hand-over kept for 30
+   * store first got it, in milliseconds since 1970), removed once Quasar has recorded or refused it. A hand-over kept for 30
    * days is dropped on the next `load` without being handed over. Failures of the storage are ignored.
    */
   handOverStorage?: CheckoutHandOverStorage | null;
@@ -703,12 +704,12 @@ const RE_READ_REASONS: ReadonlySet<string> = new Set(['timeout', 'not_found', 'r
 const HAND_OVERS_KEY = 'quasar-sdk:checkoutHandOvers:';
 
 /**
- * How long a hand-over stays kept for the next {@link CheckoutState.load}: Quasar takes a transaction whenever it comes,
+ * How long a hand-over stays kept for the next {@link CheckoutState.load}: Quasar records a transaction whenever it comes,
  * but the browser keeps nothing for good of a checkout never opened again.
  */
 const HAND_OVER_KEPT_MS = 30 * 24 * 60 * 60_000;
 
-/** A hand-over kept in the browser until Quasar takes or refuses it ({@link CheckoutStoreOptions.handOverStorage}). */
+/** A hand-over kept in the browser until Quasar has recorded or refused it ({@link CheckoutStoreOptions.handOverStorage}). */
 interface KeptHandOver {
   txKey: string;
   from?: string;
@@ -1200,9 +1201,9 @@ function errorOf(error: unknown): CheckoutError {
  * the invoice reaches a final state or `destroy` is called (an invoice that expired or was cancelled while a payment
  * confirms is followed on, for a limited time, until that payment ends it as `paid` or `needs_review`), and a `GET` of the
  * checkout when an event brings an outcome. `needs_review` is not final: the store follows the invoice until the merchant
- * accepts or returns the payment. A hand-over Quasar has not taken yet is kept in the browser's `localStorage`
- * under `quasar-sdk:checkoutHandOvers:<token>` ({@link CheckoutStoreOptions.handOverStorage}) until Quasar takes or
- * refuses it, for 30 days at most; nothing else is stored in the browser.
+ * accepts or returns the payment. A hand-over Quasar has not recorded yet is kept in the browser's `localStorage`
+ * under `quasar-sdk:checkoutHandOvers:<token>` ({@link CheckoutStoreOptions.handOverStorage}) until Quasar has
+ * recorded or refused it, for 30 days at most; nothing else is stored in the browser.
  *
  * @param options - The checkout token and optional overrides.
  * @returns The store; call `load()` first.
@@ -1317,7 +1318,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
       // A full or blocked storage: the hand-over is retried while the page lives
     }
   };
-  /** Keeps a hand-over until Quasar takes or refuses it: the transaction, its sender and connector, when first kept. */
+  /** Keeps a hand-over until Quasar has recorded or refused it: the transaction, its sender and connector, when first kept. */
   const keepHandOver = (params: { txKey: string; from?: string; connectorType?: string; methodId?: string }) => {
     if (!handOverStorage) return;
     const kept = keptHandOvers();
@@ -1983,7 +1984,7 @@ export function createCheckoutStore(options: CheckoutStoreOptions): CheckoutStor
         }, pause);
         submitRetries.set(body.txKey, timer);
       };
-      // A hash named on the unconfirmed page changes nothing there until Quasar takes it: the page says what it says about the
+      // A hash named on the unconfirmed page changes nothing there until Quasar has recorded it: the page says what it says about the
       // payment, and the form that named it stays to show a refusal
       const named = before === 'unconfirmed';
       if (!quiet() && !closed() && !named) update({ phase: 'submitting', error: null });

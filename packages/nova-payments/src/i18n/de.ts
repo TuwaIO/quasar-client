@@ -220,7 +220,7 @@ export const deLabels: NovaPaymentsLabels = {
     tryAgain: 'Erneut versuchen',
     stillWaiting: 'Kein Fenster? Öffnen Sie {wallet}: Die Anfrage wartet dort.',
     cancel: 'Abbrechen',
-    submitting: 'Zahlung wird an Quasar übergeben…',
+    submitting: 'Transaktion wird an Quasar gesendet…',
   },
   payerProof: {
     title: 'Wallet bestätigen',
@@ -387,11 +387,11 @@ export const deLabels: NovaPaymentsLabels = {
     unconfirmedContact:
       'Quasar prüft diese Zahlung nicht erneut. Wenn sie Ihr Wallet verlassen hat, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedNotReceived:
-      'Quasar hat diese Zahlung nicht erhalten. Wenn sie Ihr Wallet verlassen hat, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
+      'Quasar hat keinen Eintrag zu dieser Zahlung. Wenn sie Ihr Wallet verlassen hat, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedClosed:
       'Quasar hat diese Zahlung innerhalb von 24 Stunden nicht im Netzwerk gefunden und prüft sie nicht mehr. Wenn sie Ihr Wallet verlassen hat, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedRetrying:
-      'Diese Seite übergibt Ihre Zahlung weiterhin an Quasar. Lassen Sie sie geöffnet, bis die Zahlung hier erscheint.',
+      'Diese Seite sendet die Transaktion Ihrer Zahlung weiterhin an Quasar. Lassen Sie sie geöffnet, bis die Zahlung hier erscheint.',
     unconfirmedInvoiceFull:
       'Diese Rechnung nimmt keine weiteren Zahlungen an, und Quasar verfolgt diese Zahlung nicht. Zahlen Sie nicht erneut; wenn sie Ihr Wallet verlassen hat, wenden Sie sich mit dem Transaktions-Hash an {merchant}.',
     unconfirmedTakenElsewhere:
@@ -435,7 +435,7 @@ export const deLabels: NovaPaymentsLabels = {
     text: 'Es wurde noch nichts gesendet. Die Rechnung bleibt bis {date} offen: Öffnen Sie sie über den Link in Ihrer E-Mail oder auf der Website des Verkäufers erneut.',
     textNoDate:
       'Es wurde noch nichts gesendet. Die Rechnung bleibt offen: Öffnen Sie sie über den Link in Ihrer E-Mail oder auf der Website des Verkäufers erneut.',
-    price: 'Der festgelegte Preis wird freigegeben; wenn Sie zurückkehren, erhalten Sie einen neuen.',
+    price: 'Der festgelegte Preis bleibt nicht erhalten; wenn Sie zurückkehren, erhalten Sie einen neuen.',
     stay: 'Bleiben und zahlen',
     leave: 'Verlassen',
   },
@@ -448,8 +448,6 @@ export const deLabels: NovaPaymentsLabels = {
     terms: 'AGB',
     refundPolicy: 'Erstattungsrichtlinie',
     privacy: 'Datenschutz',
-    sellerRole:
-      '{seller} ist der Verkäufer. Quasar ist die Zahlungssoftware: Quasar verwahrt Ihre Mittel nie und ist nicht Partei dieses Kaufvertrags.',
     payWithin: 'Zahlungsfrist',
     refundAfter: 'Erstattung möglich nach',
     until: 'bis {date}',

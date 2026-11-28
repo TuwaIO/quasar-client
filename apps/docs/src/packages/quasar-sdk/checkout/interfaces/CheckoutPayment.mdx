@@ -14,7 +14,7 @@ A transfer credited to the invoice, as the checkout lists it ([CheckoutInvoice.p
 
 > **amount**: `string`
 
-Defined in: [checkout/types.ts:172](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L172)
+Defined in: [checkout/types.ts:173](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L173)
 
 What it credited to the invoice, in base units of the token.
 
@@ -24,7 +24,7 @@ What it credited to the invoice, in base units of the token.
 
 > **at**: `string`
 
-Defined in: [checkout/types.ts:180](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L180)
+Defined in: [checkout/types.ts:181](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L181)
 
 When the network included it (ISO), or when Quasar verified it if the network named no time.
 
@@ -34,7 +34,7 @@ When the network included it (ISO), or when Quasar verified it if the network na
 
 > **chainId**: `string` \| `null`
 
-Defined in: [checkout/types.ts:170](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L170)
+Defined in: [checkout/types.ts:171](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L171)
 
 CAIP-2 chain of the transfer; `null` when the record of the payment names none.
 
@@ -44,7 +44,7 @@ CAIP-2 chain of the transfer; `null` when the record of the payment names none.
 
 > **decimals**: `number` \| `null`
 
-Defined in: [checkout/types.ts:176](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L176)
+Defined in: [checkout/types.ts:177](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L177)
 
 The decimals of that token; `null` like `symbol`.
 
@@ -54,7 +54,7 @@ The decimals of that token; `null` like `symbol`.
 
 > **from**: `string` \| `null`
 
-Defined in: [checkout/types.ts:178](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L178)
+Defined in: [checkout/types.ts:179](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L179)
 
 The address that sent it (the first one, when a Solana transfer names several); `null` when none is on record.
 
@@ -64,9 +64,10 @@ The address that sent it (the first one, when a Solana transfer names several); 
 
 > `optional` **original?**: `string`
 
-Defined in: [checkout/types.ts:168](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L168)
+Defined in: [checkout/types.ts:169](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L169)
 
-The hash the checkout handed the payment over as, when this one replaced it (sped up in the wallet). Quasar versions
+The hash under which the checkout handed the transaction of the payment over to Quasar, when this one replaced it
+(sped up in the wallet). Quasar versions
 before November 26, 2026 leave it out.
 
 ***
@@ -75,7 +76,7 @@ before November 26, 2026 leave it out.
 
 > **symbol**: `string` \| `null`
 
-Defined in: [checkout/types.ts:174](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L174)
+Defined in: [checkout/types.ts:175](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/types.ts#L175)
 
 The token it was paid in; `null` when the merchant no longer has that payment method.
 

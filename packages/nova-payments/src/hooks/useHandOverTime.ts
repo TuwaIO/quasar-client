@@ -2,7 +2,8 @@ import type { CheckoutStore } from '@tuwaio/quasar-sdk/checkout';
 import { useEffect, useState } from 'react';
 
 /**
- * When this page handed its current payment over to Quasar: the moment the phase of the checkout store went from
+ * When this page handed the transaction of its current payment over to Quasar: the moment the phase of the checkout
+ * store went from
  * `submitting` to `confirming`, by the clock of the page. The store does not tell it, and the confirm step needs it to
  * say "sent before the deadline" only for a payment handed over before the deadline (with a Quasar that does not report
  * `paymentCountsUntil`), and never for one handed over after it. A payment the store found on its way (when it loaded

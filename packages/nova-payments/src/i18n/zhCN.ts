@@ -202,7 +202,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     tryAgain: '重试',
     stillWaiting: '没有看到窗口？请打开 {wallet}：请求正在那里等待。',
     cancel: '取消',
-    submitting: '正在将付款交给 Quasar…',
+    submitting: '正在将交易发送至 Quasar…',
   },
   payerProof: {
     title: '确认您的钱包',
@@ -342,10 +342,10 @@ export const zhCNLabels: NovaPaymentsLabels = {
     unconfirmedText: '重新付款前请检查您的钱包：您的付款可能仍在途中。',
     unconfirmedNote: 'Quasar 会在 24 小时内再次核查您的付款。如果付款到账，将被记录并显示给 {merchant}。',
     unconfirmedContact: 'Quasar 不会再核查这笔付款。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
-    unconfirmedNotReceived: 'Quasar 未收到这笔付款。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
+    unconfirmedNotReceived: 'Quasar 没有这笔付款的记录。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
     unconfirmedClosed:
       'Quasar 在 24 小时内未在网络上找到这笔付款，且不再核查。如果款项已从您的钱包转出，请提供交易哈希联系 {merchant}。',
-    unconfirmedRetrying: '此页面会继续将您的付款提交给 Quasar。请保持页面打开，直到付款显示在此处。',
+    unconfirmedRetrying: '此页面会继续将您付款的交易发送至 Quasar。请保持页面打开，直到付款显示在此处。',
     unconfirmedInvoiceFull:
       '此发票不再接受付款,Quasar 也不再跟踪这笔付款。请勿重复付款;如果款项已从您的钱包转出,请携带交易哈希联系 {merchant}。',
     unconfirmedTakenElsewhere:
@@ -384,7 +384,7 @@ export const zhCNLabels: NovaPaymentsLabels = {
     title: '要离开付款页面吗？',
     text: '尚未发送任何款项。发票在 {date} 之前仍然有效：可通过电子邮件中的链接或卖方网站重新打开。',
     textNoDate: '尚未发送任何款项。发票仍然有效：可通过电子邮件中的链接或卖方网站重新打开。',
-    price: '已锁定的价格将被释放；您回来时会获得新的价格。',
+    price: '已锁定的价格不会保留；您回来时会获得新的价格。',
     stay: '留下付款',
     leave: '离开',
   },
@@ -397,7 +397,6 @@ export const zhCNLabels: NovaPaymentsLabels = {
     terms: '条款',
     refundPolicy: '退款政策',
     privacy: '隐私',
-    sellerRole: '{seller} 是卖方。Quasar 是付款软件：它从不持有您的资金，也不是此次购买的一方。',
     payWithin: '付款期限',
     refundAfter: '此后可退款',
     until: '截至 {date}',

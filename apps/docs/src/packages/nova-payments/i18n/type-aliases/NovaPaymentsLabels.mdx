@@ -404,7 +404,7 @@ Closes it (default: `Leave`)
 
 > **price**: `string`
 
-About the locked price (default: `The locked price is released; you get a new one when you come back.`)
+About the locked price (default: `The locked price is not kept; you get a new one when you come back.`)
 
 #### stay
 
@@ -938,8 +938,8 @@ again for 24 hours. If it arrives, it is recorded and shown to {merchant}.`)
 
 > **unconfirmedNotReceived**: `string`
 
-Instead of `unconfirmedContact` when the checkout gave up handing over a transaction the wallet sent (an hour
-without an answer): `{merchant}` (default: `Quasar did not receive this payment. If it left your wallet, contact
+Instead of `unconfirmedContact` when the checkout gave up sending Quasar a transaction the wallet sent (an hour
+without an answer): `{merchant}` (default: `Quasar has no record of this payment. If it left your wallet, contact
 {merchant} with the transaction hash.`)
 
 #### unconfirmedPayAgain
@@ -953,9 +953,9 @@ my wallet`)
 
 > **unconfirmedRetrying**: `string`
 
-Under it instead of `unconfirmedNote` while the checkout hands over again a transaction the wallet sent, which
-Quasar has not received yet (default: `This page keeps handing your payment over to Quasar. Keep it open until the
-payment shows here.`)
+Under it instead of `unconfirmedNote` while the checkout sends again a transaction the wallet sent, which Quasar
+has not recorded yet (default: `This page keeps sending the transaction of your payment to Quasar. Keep it open
+until the payment shows here.`)
 
 #### unconfirmedSettlementFailed
 
@@ -2033,7 +2033,7 @@ While waiting (default: `Waiting for the payment…`)
 
 > **refund**: `object`
 
-Defined in: [nova-payments/src/i18n/types.ts:976](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L976)
+Defined in: [nova-payments/src/i18n/types.ts:974](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/i18n/types.ts#L974)
 
 A refund the merchant sends from a wallet (`RefundButton`).
 
@@ -2837,12 +2837,6 @@ Company number of the seller (default: `Company number`)
 
 Button that shows the seller details (default: `Seller details`)
 
-#### sellerRole
-
-> **sellerRole**: `string`
-
-Who sells, what Quasar is and is not: under the order, on a phone under each step; `{seller}` is the seller's name
-
 #### showOrder
 
 > **showOrder**: `string`
@@ -2983,7 +2977,7 @@ For a transaction that may still wait in the wallet: `{wallet}`
 
 > **submitting**: `string`
 
-While Quasar takes the payment (default: `Handing the payment to Quasar…`)
+While the page sends the transaction of the payment to Quasar (default: `Sending the transaction to Quasar…`)
 
 #### switchIn
 

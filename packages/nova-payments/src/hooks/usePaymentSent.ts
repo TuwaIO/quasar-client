@@ -26,7 +26,7 @@ export interface UsePaymentSentParams {
  * reopened, another tab paid, Quasar reads a payment again whose result it did not see): once `true` it stays `true` for
  * the invoice of the store, also after the store stopped following the payment (35 minutes past the deadline) or Quasar
  * could not confirm it, so an invoice that expires or is cancelled afterwards never says that nothing was charged. A
- * payment counts as sent as soon as the wallet returned its hash (`walletTxKey`), before Quasar took it: an invoice the
+ * payment counts as sent as soon as the wallet returned its hash (`walletTxKey`), before Quasar recorded it: an invoice the
  * seller cancelled meanwhile keeps its outcome in the store while Quasar records the payment. It is `false` again only
  * when Quasar says that the payment failed for good or does not pay the invoice (`isFinalPaymentFailure`), until the
  * next one (a new hash counts again).

@@ -8,4 +8,5 @@ export * from './en';
 export * from './formatLabel';
 export * from './formatLabelParts';
 export * from './locales';
+export * from './sellerRole';
 export * from './types';

@@ -174,7 +174,7 @@ again: hand it over with [RefundState.submit](#submit), or the buyer is refunded
 Defined in: [checkout/refundStore.ts:61](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L61)
 
 Asks for a refund of an invoice through `request`. When a transaction sent for an earlier refund of the invoice was
-not handed over, that refund comes back instead (`sentTransaction`), or is followed when Quasar took it after all, and
+not handed over, that refund comes back instead (`sentTransaction`), or is followed when Quasar recorded it after all, and
 nothing new is asked for while Quasar does not say what became of it.
 
 #### Parameters
@@ -220,8 +220,8 @@ Stops reading the refund and keeps everything else, for when the window goes awa
 Defined in: [checkout/refundStore.ts:87](https://github.com/TuwaIO/quasar-client/blob/main/packages/quasar-sdk/src/checkout/refundStore.ts#L87)
 
 Hands over the refund transaction through `submit`, then follows the refund through `get` until it is final. The
-transaction stays in `sentTransaction`, and in [RefundStoreOptions.handOverStorage](?path=/docs/packages-quasar-sdk-checkout-interfaces-refundstoreoptions--docs#handoverstorage), until Quasar takes it or
-refuses it for good: a refusal of 4xx, other than one that says nothing about it (401, 403, 408, 425, 429).
+transaction stays in `sentTransaction`, and in [RefundStoreOptions.handOverStorage](?path=/docs/packages-quasar-sdk-checkout-interfaces-refundstoreoptions--docs#handoverstorage), until Quasar has recorded
+it or refused it for good: a refusal of 4xx, other than one that says nothing about it (401, 403, 408, 425, 429).
 
 #### Parameters
 

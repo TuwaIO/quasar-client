@@ -10,7 +10,10 @@ import { payInvoice, type PayInvoiceParams } from '../utils/payInvoice';
 import { OPEN_REQUEST_MS } from '../utils/settlesWithin';
 import { PaymentWalletError, type PaymentWalletErrorKind, walletErrorKind } from '../utils/walletErrors';
 
-/** Where a payment from the wallet stands: `wallet` while the wallet asks the buyer, `submitting` while Quasar takes it. */
+/**
+ * Where a payment from the wallet stands: `wallet` while the wallet asks the buyer, `submitting` while the page sends
+ * its transaction to Quasar.
+ */
 export type PaymentStatus = 'idle' | 'switching' | 'wallet' | 'submitting';
 
 export { OPEN_REQUEST_MS };
@@ -21,7 +24,7 @@ interface OpenRequest {
   account: string;
   /** How it was asked: a signature can be asked for again, a transaction cannot. */
   path: PayPath;
-  /** Settles when the wallet answers and Quasar took it. */
+  /** Settles when the wallet answers and Quasar has recorded the transaction. */
   paying: Promise<unknown>;
   /** Until when no other request goes to this wallet. */
   until: number;
@@ -84,7 +87,7 @@ export interface Payment {
   askedWallet: CheckoutWallet | null;
   /** What the wallet was asked to send, for the window: a request that waits keeps its amount under a new price. */
   askedInstructions: PaymentInstructions | null;
-  /** Pays the quote from the wallet; resolves when Quasar took it or the wallet refused. */
+  /** Pays the quote from the wallet; resolves when Quasar has recorded the transaction or the wallet refused. */
   pay: () => Promise<void>;
   /** Asks the wallet to switch to the quote's chain. */
   switchNetwork: () => Promise<void>;

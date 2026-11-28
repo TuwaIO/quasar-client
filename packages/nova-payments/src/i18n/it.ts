@@ -215,7 +215,7 @@ export const itLabels: NovaPaymentsLabels = {
     tryAgain: 'Riprova',
     stillWaiting: 'Nessuna finestra? Apri {wallet}: la richiesta ti aspetta lì.',
     cancel: 'Annulla',
-    submitting: 'Consegna del pagamento a Quasar…',
+    submitting: 'Invio della transazione a Quasar…',
   },
   payerProof: {
     title: 'Conferma il tuo wallet',
@@ -377,11 +377,11 @@ export const itLabels: NovaPaymentsLabels = {
     unconfirmedContact:
       "Quasar non ricontrolla più questo pagamento. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
     unconfirmedNotReceived:
-      "Quasar non ha ricevuto questo pagamento. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
+      "Quasar non ha alcuna registrazione di questo pagamento. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
     unconfirmedClosed:
       "Quasar non ha trovato questo pagamento sulla rete entro 24 ore e non lo controlla più. Se è partito dal tuo wallet, contatta {merchant} indicando l'hash della transazione.",
     unconfirmedRetrying:
-      'Questa pagina continua a consegnare il pagamento a Quasar. Tienila aperta finché il pagamento non compare qui.',
+      'Questa pagina continua a inviare a Quasar la transazione del tuo pagamento. Tienila aperta finché il pagamento non compare qui.',
     unconfirmedInvoiceFull:
       "Questa fattura non accetta altri pagamenti e Quasar non segue questo. Non pagare di nuovo; se è uscito dal tuo wallet, contatta {merchant} con l'hash della transazione.",
     unconfirmedTakenElsewhere:
@@ -425,7 +425,7 @@ export const itLabels: NovaPaymentsLabels = {
     text: 'Non è ancora stato inviato nulla. La fattura resta aperta fino al {date}: riaprila dal link nella tua email o dal sito del venditore.',
     textNoDate:
       'Non è ancora stato inviato nulla. La fattura resta aperta: riaprila dal link nella tua email o dal sito del venditore.',
-    price: 'Il prezzo bloccato viene rilasciato; al ritorno ne ottieni uno nuovo.',
+    price: 'Il prezzo bloccato non viene conservato; al ritorno ne ottieni uno nuovo.',
     stay: 'Resta e paga',
     leave: 'Esci',
   },
@@ -438,8 +438,6 @@ export const itLabels: NovaPaymentsLabels = {
     terms: 'Termini',
     refundPolicy: 'Politica di rimborso',
     privacy: 'Privacy',
-    sellerRole:
-      '{seller} è il venditore. Quasar è il software di pagamento: non detiene mai i tuoi fondi e non è parte di questo acquisto.',
     payWithin: 'Termine di pagamento',
     refundAfter: 'Rimborso possibile dopo',
     until: 'fino al {date}',

@@ -60,7 +60,7 @@ export interface RefundDialogProps {
    */
   defaultAmount?: string;
   /**
-   * Whether everything received can still go back as it came. Quasar takes such a refund of an accepted payment only while
+   * Whether everything received can still go back as it came. Quasar allows such a refund of an accepted payment only while
    * nothing of it was refunded (`exactPossible` of a refund preview): with `false` the amount step offers an amount alone.
    * Defaults to `true`.
    */

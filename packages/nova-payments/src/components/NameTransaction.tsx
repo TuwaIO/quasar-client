@@ -11,7 +11,7 @@ const SOLANA_SIGNATURE = /^[1-9A-HJ-NP-Za-km-z]{64,90}$/;
 /**
  * The way to name the real transaction of a payment Quasar could not confirm. A payment sped up in the wallet goes out under
  * another hash than the one the page handed over, and only the buyer can see it. Quasar reads what is named from the chain:
- * naming a hash proves nothing by itself. Shown only while a price is locked, as Quasar takes a transaction only then.
+ * naming a hash proves nothing by itself. Shown only while a price is locked, as Quasar records a named transaction only then.
  *
  * Side effects: hands the transaction to Quasar through `submit` of the checkout store.
  *

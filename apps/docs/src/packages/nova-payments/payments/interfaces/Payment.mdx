@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Payment
 
-Defined in: [nova-payments/src/hooks/usePayment.ts:78](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L78)
+Defined in: [nova-payments/src/hooks/usePayment.ts:81](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L81)
 
 What [usePayment](?path=/docs/packages-nova-payments-payments-functions-usepayment--docs) returns.
 
@@ -14,7 +14,7 @@ What [usePayment](?path=/docs/packages-nova-payments-payments-functions-usepayme
 
 > **askedInstructions**: [`PaymentInstructions`](?path=/docs/packages-quasar-sdk-checkout-type-aliases-paymentinstructions--docs) \| `null`
 
-Defined in: [nova-payments/src/hooks/usePayment.ts:86](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L86)
+Defined in: [nova-payments/src/hooks/usePayment.ts:89](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L89)
 
 What the wallet was asked to send, for the window: a request that waits keeps its amount under a new price.
 
@@ -24,7 +24,7 @@ What the wallet was asked to send, for the window: a request that waits keeps it
 
 > **askedWallet**: [`CheckoutWallet`](?path=/docs/packages-nova-payments-payments-interfaces-checkoutwallet--docs) \| `null`
 
-Defined in: [nova-payments/src/hooks/usePayment.ts:84](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L84)
+Defined in: [nova-payments/src/hooks/usePayment.ts:87](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L87)
 
 The wallet asked, for the window: it keeps its name when the buyer disconnects it while the request waits there.
 
@@ -34,7 +34,7 @@ The wallet asked, for the window: it keeps its name when the buyer disconnects i
 
 > **dismiss**: () => `void`
 
-Defined in: [nova-payments/src/hooks/usePayment.ts:95](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L95)
+Defined in: [nova-payments/src/hooks/usePayment.ts:98](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L98)
 
 Closes the wallet window. A request the wallet still shows stays open there: a transaction it sends later is
 still handed to Quasar, a refusal is not shown.
@@ -49,9 +49,9 @@ still handed to Quasar, a refusal is not shown.
 
 > **pay**: () => `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/hooks/usePayment.ts:88](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L88)
+Defined in: [nova-payments/src/hooks/usePayment.ts:91](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L91)
 
-Pays the quote from the wallet; resolves when Quasar took it or the wallet refused.
+Pays the quote from the wallet; resolves when Quasar has recorded the transaction or the wallet refused.
 
 #### Returns
 
@@ -63,7 +63,7 @@ Pays the quote from the wallet; resolves when Quasar took it or the wallet refus
 
 > **problem**: [`PaymentWalletErrorKind`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentwalleterrorkind--docs) \| `null`
 
-Defined in: [nova-payments/src/hooks/usePayment.ts:82](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L82)
+Defined in: [nova-payments/src/hooks/usePayment.ts:85](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L85)
 
 Why the wallet did not pay or switch, until the next try.
 
@@ -73,7 +73,7 @@ Why the wallet did not pay or switch, until the next try.
 
 > **status**: [`PaymentStatus`](?path=/docs/packages-nova-payments-payments-type-aliases-paymentstatus--docs)
 
-Defined in: [nova-payments/src/hooks/usePayment.ts:80](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L80)
+Defined in: [nova-payments/src/hooks/usePayment.ts:83](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L83)
 
 Where the payment stands.
 
@@ -83,7 +83,7 @@ Where the payment stands.
 
 > **switchNetwork**: () => `Promise`\<`void`\>
 
-Defined in: [nova-payments/src/hooks/usePayment.ts:90](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L90)
+Defined in: [nova-payments/src/hooks/usePayment.ts:93](https://github.com/TuwaIO/quasar-client/blob/main/packages/nova-payments/src/hooks/usePayment.ts#L93)
 
 Asks the wallet to switch to the quote's chain.
 

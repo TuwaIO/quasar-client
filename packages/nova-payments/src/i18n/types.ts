@@ -422,7 +422,7 @@ export type NovaPaymentsLabels = {
     stillWaiting: string;
     /** Closes the window (default: `Cancel`) */
     cancel: string;
-    /** While Quasar takes the payment (default: `Handing the payment to Quasar…`) */
+    /** While the page sends the transaction of the payment to Quasar (default: `Sending the transaction to Quasar…`) */
     submitting: string;
   };
   /**
@@ -775,8 +775,8 @@ export type NovaPaymentsLabels = {
      */
     unconfirmedContact: string;
     /**
-     * Instead of `unconfirmedContact` when the checkout gave up handing over a transaction the wallet sent (an hour
-     * without an answer): `{merchant}` (default: `Quasar did not receive this payment. If it left your wallet, contact
+     * Instead of `unconfirmedContact` when the checkout gave up sending Quasar a transaction the wallet sent (an hour
+     * without an answer): `{merchant}` (default: `Quasar has no record of this payment. If it left your wallet, contact
      * {merchant} with the transaction hash.`)
      */
     unconfirmedNotReceived: string;
@@ -788,9 +788,9 @@ export type NovaPaymentsLabels = {
      */
     unconfirmedClosed: string;
     /**
-     * Under it instead of `unconfirmedNote` while the checkout hands over again a transaction the wallet sent, which
-     * Quasar has not received yet (default: `This page keeps handing your payment over to Quasar. Keep it open until the
-     * payment shows here.`)
+     * Under it instead of `unconfirmedNote` while the checkout sends again a transaction the wallet sent, which Quasar
+     * has not recorded yet (default: `This page keeps sending the transaction of your payment to Quasar. Keep it open
+     * until the payment shows here.`)
      */
     unconfirmedRetrying: string;
     /**
@@ -899,7 +899,7 @@ export type NovaPaymentsLabels = {
     text: string;
     /** Its text without a deadline */
     textNoDate: string;
-    /** About the locked price (default: `The locked price is released; you get a new one when you come back.`) */
+    /** About the locked price (default: `The locked price is not kept; you get a new one when you come back.`) */
     price: string;
     /** Keeps the checkout open (default: `Stay and pay`) */
     stay: string;
@@ -924,8 +924,6 @@ export type NovaPaymentsLabels = {
     refundPolicy: string;
     /** Link to the merchant's privacy notice (default: `Privacy`) */
     privacy: string;
-    /** Who sells, what Quasar is and is not: under the order, on a phone under each step; `{seller}` is the seller's name */
-    sellerRole: string;
     /** Above the countdown, which also shows while the payment confirms (default: `Payment deadline`) */
     payWithin: string;
     /**

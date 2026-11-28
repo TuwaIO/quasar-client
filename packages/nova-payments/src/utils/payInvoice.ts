@@ -31,7 +31,7 @@ export interface PayInvoiceParams {
    * authorized call from a one-time account through it when the adapter can (`sendOneTimeRelay`).
    */
   paymasterUrl: string | null;
-  /** Called when the wallet answered, before the payment is handed to Quasar. */
+  /** Called when the wallet answered, before the transaction of the payment is handed over to Quasar. */
   onWalletDone?: () => void;
   /**
    * Called with the ID of a sponsored batch as soon as the wallet took it, before it has a transaction.
@@ -40,7 +40,7 @@ export interface PayInvoiceParams {
    */
   onBatchAccepted?: (batchId: string) => void;
   /**
-   * Called with the transaction the wallet sent (its hash), before Quasar takes it; not for a gasless signature, whose
+   * Called with the transaction the wallet sent (its hash), before Quasar has recorded it; not for a gasless signature, whose
    * transaction Quasar sends.
    *
    * @param txKey - The transaction hash (EVM) or signature (Solana).
@@ -60,7 +60,7 @@ const unsupported = (what: string) => new PaymentWalletError('unsupported', `${w
  * Side effects: a wallet prompt; requests to the checkout routes of Quasar.
  *
  * @param params - See {@link PayInvoiceParams}.
- * @returns Whether Quasar took the payment (the store's `error` says why not).
+ * @returns Whether Quasar recorded the transaction of the payment (the store's `error` says why not).
  * @throws {@link PaymentWalletError} `unsupported` when the store has not verified the payee of this quote
  *   (`payeeCheck`), or the adapter or the quote cannot take the path; the wallet's error when it refuses or fails.
  */

@@ -68,7 +68,7 @@ exports[`the classes of the inline checkout > frame 1`] = `
   "novapay:relative novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col",
   "novapay:sm:hidden",
   "novapay:@container novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto",
-  "novapay:px-4 novapay:pt-2 novapay:pb-3 novapay:sm:hidden",
+  "novapay:px-4 novapay:pt-2 novapay:pb-3",
   "novapay:sr-only",
 ]
 `;
@@ -251,7 +251,7 @@ exports[`the classes of the modal checkout > frame 1`] = `
   "novapay:relative novapay:flex novapay:min-h-0 novapay:min-w-0 novapay:flex-1 novapay:flex-col",
   "novapay:sm:hidden",
   "novapay:@container novapay:flex novapay:min-h-0 novapay:flex-1 novapay:flex-col novapay:overflow-y-auto",
-  "novapay:px-4 novapay:pt-2 novapay:pb-3 novapay:sm:hidden",
+  "novapay:px-4 novapay:pt-2 novapay:pb-3",
   "novapay:sr-only",
 ]
 `;

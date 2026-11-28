@@ -3,7 +3,7 @@ import type { CheckoutView } from '@tuwaio/quasar-sdk/checkout';
 import { type ReactNode, useId, useState } from 'react';
 
 import { useCheckoutContext } from '../hooks/useCheckoutContext';
-import { formatCountLabel, formatLabel, type NovaPaymentsLabels } from '../i18n';
+import { formatCountLabel, formatLabel, type NovaPaymentsLabels, sellerRoleText } from '../i18n';
 import { deadlineState } from '../utils/checkout';
 import { formatCountdown, formatFiat, minorToDecimal } from '../utils/format';
 import { invoiceTotals } from '../utils/totals';
@@ -106,10 +106,11 @@ function hasSellerDetails({ merchant: { seller, supportEmail, links } }: Checkou
 
 /**
  * Who sells, and what Quasar is and is not: never behind a click, so that nobody takes Quasar for the guarantor of the
- * purchase or for the one who holds the money. @internal
+ * purchase or for the one who holds the money. Its text is the package's (`SELLER_ROLE`), in the language of the
+ * checkout, and no label: a page that embeds the checkout cannot take it away or change it. @internal
  */
 export function SellerRole({ className }: { className?: string }) {
-  const { checkout, labels } = useCheckoutContext();
+  const { checkout, locale } = useCheckoutContext();
   if (!checkout) return null;
   const { merchant } = checkout;
   return (
@@ -119,7 +120,7 @@ export function SellerRole({ className }: { className?: string }) {
         className,
       )}
     >
-      {formatLabel(labels.summary.sellerRole, { seller: merchant.seller?.legalName || merchant.name })}
+      {sellerRoleText(locale, merchant.seller?.legalName || merchant.name)}
     </p>
   );
 }
@@ -308,7 +309,6 @@ export function SummaryFooter() {
   return (
     <div className="novapay:flex novapay:flex-col novapay:gap-1 novapay:text-[11px] novapay:text-[var(--tuwa-text-secondary)]">
       <span>{labels.summary.poweredBy}</span>
-      <SellerRole />
       {checkout?.merchant.supportEmail && (
         <span>
           {labels.summary.help}:{' '}
