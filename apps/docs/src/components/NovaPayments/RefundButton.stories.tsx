@@ -292,7 +292,7 @@ export const NotHandedOver: Story = {
   play: async ({ canvasElement }) => {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(await page.findByRole('button', { name: 'Send refund' }));
-    await expect(await page.findByRole('button', { name: 'Hand it over again' }, { timeout: 5000 })).toBeVisible();
+    await expect(await page.findByRole('button', { name: 'Send to Quasar again' }, { timeout: 5000 })).toBeVisible();
   },
 };
 

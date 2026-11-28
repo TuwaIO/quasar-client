@@ -2250,7 +2250,7 @@ Row: the sending wallet (default: `From`)
 
 > **handOver**: `string`
 
-Button that hands the transaction over again (default: `Hand it over again`)
+Button that sends the transaction to Quasar again (default: `Send to Quasar again`)
 
 #### modeExact
 
@@ -2352,7 +2352,8 @@ The wallet holds too little; `{symbol}`, `{address}`, `{balance}` (default: `Not
 
 > **notHandedOver**: `string`
 
-The wallet sent it, Quasar did not take it (default: `The refund was sent, but Quasar hasn't taken its transaction yet. Hand it over again: nothing is sent twice.`)
+The wallet sent it, and Quasar has not recorded its transaction yet (default: `The refund was sent, but Quasar has not
+recorded its transaction yet. Send the transaction to Quasar again: the refund is not sent twice.`)
 
 #### nothingSent
 
@@ -2472,7 +2473,7 @@ Refused: `review_refund_must_be_whole` (default: `A payment under review is refu
 
 > **requesting**: `string`
 
-While Quasar prices the refund (default: `Asking Quasar for the refund…`)
+While Quasar prepares the refund (default: `Asking Quasar to prepare the refund…`)
 
 #### send
 
@@ -2508,7 +2509,7 @@ Row: status (default: `Status`)
 
 > **submitting**: `string`
 
-While Quasar takes the transaction (default: `Handing the refund to Quasar…`)
+While the window sends the transaction of the refund to Quasar (default: `Sending the transaction to Quasar…`)
 
 #### switchTitle
 

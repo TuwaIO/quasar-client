@@ -470,10 +470,10 @@ describe('RefundButton', () => {
     expect(onRecord).toHaveBeenCalled();
   });
 
-  it('hands a sent refund over again instead of sending it twice', () => {
+  it('sends the transaction of a sent refund to Quasar again instead of sending the refund twice', () => {
     const tree = confirm(flowOf({ txKey: '0xrefund', error: { code: 'request_failed', message: 'x' } }));
-    expect(button(tree, PrimaryButton).props.children).toBe('Hand it over again');
-    expect(textOf(tree)).toContain("Quasar hasn't taken its transaction yet");
+    expect(button(tree, PrimaryButton).props.children).toBe('Send to Quasar again');
+    expect(textOf(tree)).toContain('Quasar has not recorded its transaction yet');
   });
 
   // Opened again in another tab, a refund its wallet had sent said "Confirm the refund", without its hash or a word
@@ -482,10 +482,10 @@ describe('RefundButton', () => {
     const tree = confirm(flowOf({ txKey: '0x41be00000000009a07' }));
     expect(button(tree, ScreenContent).props.title).toBe('Refund sent');
     expect(fixture.ofType(tree, ChainLink).map((link) => (link.props as Props).hash)).toContain('0x41be00000000009a07');
-    expect(textOf(tree)).toContain("Quasar hasn't taken its transaction yet");
-    // Not an error until handing it over fails
+    expect(textOf(tree)).toContain('Quasar has not recorded its transaction yet');
+    // Not an error until sending it to Quasar fails
     expect(fixture.ofType(tree, ScreenError)).toHaveLength(0);
-    expect(button(tree, PrimaryButton).props.children).toBe('Hand it over again');
+    expect(button(tree, PrimaryButton).props.children).toBe('Send to Quasar again');
   });
 
   it('follows the refund, then shows its credit note and the rows of the app', () => {

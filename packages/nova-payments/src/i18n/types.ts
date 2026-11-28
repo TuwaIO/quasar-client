@@ -1010,7 +1010,7 @@ export type NovaPaymentsLabels = {
     movedContinue: string;
     /** Goes back to the amount (default: `Back`) */
     movedBack: string;
-    /** While Quasar prices the refund (default: `Asking Quasar for the refund…`) */
+    /** While Quasar prepares the refund (default: `Asking Quasar to prepare the refund…`) */
     requesting: string;
     /** Heading of the wallet step (default: `Connect a wallet`) */
     connectTitle: string;
@@ -1049,7 +1049,7 @@ export type NovaPaymentsLabels = {
     walletText: string;
     /** While the wallet switches network; `{wallet}` (default: `Approve the switch in {wallet}`) */
     switchTitle: string;
-    /** While Quasar takes the transaction (default: `Handing the refund to Quasar…`) */
+    /** While the window sends the transaction of the refund to Quasar (default: `Sending the transaction to Quasar…`) */
     submitting: string;
     /** Heading while the network confirms it (default: `On its way`) */
     onItsWay: string;
@@ -1148,11 +1148,14 @@ export type NovaPaymentsLabels = {
     slowNote: string;
     /** Under a refusal: nothing went out (default: `Nothing was sent: the refund waits for its transaction.`) */
     nothingSent: string;
-    /** The wallet sent it, Quasar did not take it (default: `The refund was sent, but Quasar hasn't taken its transaction yet. Hand it over again: nothing is sent twice.`) */
+    /**
+     * The wallet sent it, and Quasar has not recorded its transaction yet (default: `The refund was sent, but Quasar has not
+     * recorded its transaction yet. Send the transaction to Quasar again: the refund is not sent twice.`)
+     */
     notHandedOver: string;
     /** Title of a refund its wallet sent and Quasar has not taken yet, in any window that holds its transaction (default: `Refund sent`) */
     sentTitle: string;
-    /** Button that hands the transaction over again (default: `Hand it over again`) */
+    /** Button that sends the transaction to Quasar again (default: `Send to Quasar again`) */
     handOver: string;
     /** Button of the other way: record a refund sent elsewhere (default: `Record refund`) */
     record: string;

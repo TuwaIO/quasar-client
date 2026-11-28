@@ -488,7 +488,7 @@ export const deLabels: NovaPaymentsLabels = {
     movedExact: 'Um die Token so zurückzugeben, wie sie eingegangen sind, gehen Sie zurück und wählen Sie „{exact}“.',
     movedContinue: 'Mit diesem Betrag fortfahren',
     movedBack: 'Zurück',
-    requesting: 'Erstattung wird bei Quasar angefragt…',
+    requesting: 'Quasar wird gebeten, die Erstattung vorzubereiten…',
     connectTitle: 'Wallet verbinden',
     connectText:
       'Die Erstattung läuft über {network}, das Netzwerk der Zahlung. Jedes Wallet, das dort {symbol} hält, kann sie senden.',
@@ -509,7 +509,7 @@ export const deLabels: NovaPaymentsLabels = {
     walletTitle: 'In {wallet} bestätigen',
     walletText: 'Bestätigen Sie den Transfer von {amount} im Netzwerk {network}.',
     switchTitle: 'Wechsel in {wallet} bestätigen',
-    submitting: 'Erstattung wird an Quasar übergeben…',
+    submitting: 'Transaktion wird an Quasar gesendet…',
     onItsWay: 'Unterwegs',
     status: 'Status',
     pending: 'Ausstehend',
@@ -573,9 +573,9 @@ export const deLabels: NovaPaymentsLabels = {
       'Quasar sieht diese Transaktion noch nicht im Netzwerk. Wenn Ihr Wallet einen anderen Hash zeigt, weil sie dort beschleunigt oder abgebrochen wurde, erfassen Sie diesen.',
     nothingSent: 'Es wurde nichts gesendet: Die Erstattung wartet auf ihre Transaktion.',
     notHandedOver:
-      'Die Erstattung wurde gesendet, aber Quasar hat ihre Transaktion noch nicht übernommen. Übergeben Sie sie erneut: Es wird nichts doppelt gesendet.',
+      'Die Erstattung wurde gesendet, aber Quasar hat ihre Transaktion noch nicht erfasst. Senden Sie die Transaktion erneut an Quasar: Die Erstattung wird nicht doppelt gesendet.',
     sentTitle: 'Erstattung gesendet',
-    handOver: 'Erneut übergeben',
+    handOver: 'Erneut an Quasar senden',
     record: 'Erstattung erfassen',
     recordHint:
       'Auf anderem Weg gesendet? Erfassen Sie die Erstattung mit ihrer Transaktion: Quasar prüft sie on-chain.',

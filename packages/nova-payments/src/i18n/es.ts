@@ -472,7 +472,7 @@ export const esLabels: NovaPaymentsLabels = {
     movedExact: 'Para devolver los tokens tal como llegaron, vuelve atrás y elige «{exact}».',
     movedContinue: 'Continuar con este importe',
     movedBack: 'Atrás',
-    requesting: 'Pidiendo el reembolso a Quasar…',
+    requesting: 'Pidiendo a Quasar que prepare el reembolso…',
     connectTitle: 'Conecta una billetera',
     connectText:
       'El reembolso sale en {network}, la red del pago. Cualquier billetera con {symbol} en esa red puede enviarlo.',
@@ -493,7 +493,7 @@ export const esLabels: NovaPaymentsLabels = {
     walletTitle: 'Confirma en {wallet}',
     walletText: 'Confirma la transferencia de {amount} en {network}.',
     switchTitle: 'Aprueba el cambio en {wallet}',
-    submitting: 'Entregando el reembolso a Quasar…',
+    submitting: 'Enviando la transacción a Quasar…',
     onItsWay: 'En camino',
     status: 'Estado',
     pending: 'Pendiente',
@@ -549,9 +549,9 @@ export const esLabels: NovaPaymentsLabels = {
       'Quasar aún no ve esta transacción en la red. Si tu billetera muestra otro hash, porque se aceleró o canceló allí, regístralo.',
     nothingSent: 'No se envió nada: el reembolso espera su transacción.',
     notHandedOver:
-      'El reembolso se envió, pero Quasar aún no recibió su transacción. Entrégala de nuevo: no se envía nada dos veces.',
+      'El reembolso se envió, pero Quasar aún no ha registrado su transacción. Envía la transacción a Quasar de nuevo: el reembolso no se envía dos veces.',
     sentTitle: 'Reembolso enviado',
-    handOver: 'Entregarla de nuevo',
+    handOver: 'Enviar a Quasar de nuevo',
     record: 'Registrar reembolso',
     recordHint:
       '¿Lo enviaste de otra forma? Registra el reembolso con su transacción: Quasar la verifica en la cadena.',
